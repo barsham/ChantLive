@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { CheckCircle } from "lucide-react";
 import { SiGoogle } from "react-icons/si";
 import { Link, useLocation, useSearch } from "wouter";
-import logoImg from "@assets/ChatLive_Logo_1770545987999.png";
+import logoImg from "@assets/ChatLive_Logo_1770546398510.png";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";

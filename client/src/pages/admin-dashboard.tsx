@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Plus, Megaphone, Radio, Archive, Eye, Users, LogOut } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import logoImg from "@assets/ChatLive_Logo_1770545987999.png";
+import logoImg from "@assets/ChatLive_Logo_1770546398510.png";
 import { useToast } from "@/hooks/use-toast";
 import type { Demonstration } from "@shared/schema";
 import { useState } from "react";

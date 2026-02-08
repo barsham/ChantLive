@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Zap, Users, ArrowRight, Megaphone } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useLocation, Link } from "wouter";
-import logoImg from "@assets/ChatLive_Logo_1770545987999.png";
+import logoImg from "@assets/ChatLive_Logo_1770546398510.png";
 
 export default function Landing() {
   const { isAuthenticated } = useAuth();

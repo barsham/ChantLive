@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, CheckCircle } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import logoImg from "@assets/ChatLive_Logo_1770545987999.png";
+import logoImg from "@assets/ChatLive_Logo_1770546398510.png";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
