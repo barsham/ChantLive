@@ -38,6 +38,25 @@ async function getResendClient() {
   };
 }
 
+export async function sendInviteEmail(toEmail: string, inviteeName: string, inviterName: string, demoTitle: string, demoUrl: string) {
+  const { client, fromEmail } = await getResendClient();
+
+  await client.emails.send({
+    from: fromEmail || 'ChantLive <noreply@resend.dev>',
+    to: toEmail,
+    subject: `You've been invited to manage "${demoTitle}" on ChantLive`,
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 16px;">
+        <h2 style="color: #111; margin-bottom: 8px;">You're invited, ${inviteeName}!</h2>
+        <p style="color: #555; line-height: 1.5;"><strong>${inviterName}</strong> has added you as an admin for the event <strong>"${demoTitle}"</strong> on ChantLive.</p>
+        <p style="color: #555; line-height: 1.5;">You can now manage chants, go live, and control the event in real time.</p>
+        <a href="${demoUrl}" style="display: inline-block; background: #111; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500; margin: 16px 0;">Open Event</a>
+        <p style="color: #888; font-size: 13px; margin-top: 24px;">If you weren't expecting this invitation, you can safely ignore this email.</p>
+      </div>
+    `,
+  });
+}
+
 export async function sendVerificationEmail(toEmail: string, name: string, verificationUrl: string) {
   const { client, fromEmail } = await getResendClient();
 

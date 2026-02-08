@@ -90,9 +90,96 @@ export async function registerRoutes(
       const state = await storage.getDemoState(demo.id);
       const viewerCount = getViewerCount(demo.id);
 
-      res.json({ demo, chants: chantsList, state, viewerCount });
+      const adminLinks = await storage.getDemoAdmins(demo.id);
+      const admins = await Promise.all(
+        adminLinks.map(async (a) => {
+          const u = await storage.getUser(a.userId);
+          return u ? { id: u.id, email: u.email, name: u.name, avatarUrl: u.avatarUrl } : null;
+        })
+      );
+
+      res.json({ demo, chants: chantsList, state, viewerCount, admins: admins.filter(Boolean) });
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch demonstration" });
+    }
+  });
+
+  app.patch("/api/demos/:id", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await storage.getDemonstration(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      const { title } = req.body;
+      if (!title || typeof title !== "string" || title.trim().length === 0) {
+        return res.status(400).json({ message: "Title is required" });
+      }
+
+      const updated = await storage.updateDemoTitle(demo.id, title.trim());
+      res.json(updated);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to update demonstration" });
+    }
+  });
+
+  app.post("/api/demos/:id/admins", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await storage.getDemonstration(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Not found" });
+      if (demo.createdBy !== user.id && user.role !== "super_admin") {
+        return res.status(403).json({ message: "Only the demo creator or super admin can invite admins" });
+      }
+
+      const { email } = req.body;
+      if (!email || typeof email !== "string" || !email.includes("@")) {
+        return res.status(400).json({ message: "Valid email is required" });
+      }
+
+      const targetUser = await storage.getUserByEmail(email.trim().toLowerCase());
+      if (!targetUser) {
+        return res.status(404).json({ message: "No account found with that email. They need to register first." });
+      }
+
+      const alreadyAdmin = await storage.isDemoAdmin(demo.id, targetUser.id);
+      if (alreadyAdmin) {
+        return res.status(400).json({ message: "This person is already an admin for this event" });
+      }
+
+      await storage.addDemoAdmin(demo.id, targetUser.id);
+
+      try {
+        const { sendInviteEmail } = await import("./email");
+        const demoUrl = `${req.protocol}://${req.get("host")}/admin/demos/${demo.id}`;
+        await sendInviteEmail(targetUser.email, targetUser.name, user.name, demo.title, demoUrl);
+      } catch (emailErr) {
+        console.error("Failed to send invite email:", emailErr);
+      }
+
+      res.json({ success: true, admin: { id: targetUser.id, email: targetUser.email, name: targetUser.name, avatarUrl: targetUser.avatarUrl } });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to invite admin" });
+    }
+  });
+
+  app.delete("/api/demos/:id/admins/:userId", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await storage.getDemonstration(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Not found" });
+      if (demo.createdBy !== user.id && user.role !== "super_admin") {
+        return res.status(403).json({ message: "Only the demo creator or super admin can remove admins" });
+      }
+
+      if (req.params.userId === demo.createdBy) {
+        return res.status(400).json({ message: "Cannot remove the creator from the admin list" });
+      }
+
+      await storage.removeDemoAdmin(demo.id, req.params.userId);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to remove admin" });
     }
   });
 

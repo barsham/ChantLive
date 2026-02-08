@@ -27,6 +27,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
+  Separator,
+} from "@/components/ui/separator";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar";
+import {
   Megaphone,
   ArrowLeft,
   Plus,
@@ -44,17 +52,28 @@ import {
   Pause,
   Play,
   Timer,
+  Users,
+  UserPlus,
+  X,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Demonstration, Chant, DemoState } from "@shared/schema";
 import { useState, useEffect, useCallback } from "react";
 
+type AdminInfo = {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl: string | null;
+};
+
 type DemoDetail = {
   demo: Demonstration;
   chants: Chant[];
   state: DemoState | null;
   viewerCount: number;
+  admins: AdminInfo[];
 };
 
 export default function DemoEditor() {
@@ -74,6 +93,10 @@ export default function DemoEditor() {
   const [editResponseText, setEditResponseText] = useState("");
 
   const [rotationInterval, setRotationInterval] = useState(60);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleValue, setTitleValue] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [adminDialogOpen, setAdminDialogOpen] = useState(false);
 
   const { data, isLoading, refetch } = useQuery<DemoDetail>({
     queryKey: ["/api/demos", id],
@@ -85,6 +108,8 @@ export default function DemoEditor() {
   const state = data?.state;
   const viewerCount = data?.viewerCount ?? 0;
   const autoRotate = state?.autoRotate ?? false;
+  const admins = data?.admins ?? [];
+  const { user: currentUser } = useAuth();
 
   useEffect(() => {
     if (state?.rotationInterval) {
@@ -216,6 +241,49 @@ export default function DemoEditor() {
     },
   });
 
+  const updateTitle = useMutation({
+    mutationFn: async (title: string) => {
+      await apiRequest("PATCH", `/api/demos/${id}`, { title });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/demos"] });
+      setEditingTitle(false);
+      toast({ title: "Event name updated" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const inviteAdmin = useMutation({
+    mutationFn: async (email: string) => {
+      const res = await apiRequest("POST", `/api/demos/${id}/admins`, { email });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
+      setInviteEmail("");
+      toast({ title: "Admin invited successfully" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const removeAdmin = useMutation({
+    mutationFn: async (userId: string) => {
+      await apiRequest("DELETE", `/api/demos/${id}/admins/${userId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
+      toast({ title: "Admin removed" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
   const loadQr = useCallback(async () => {
     if (!demo) return;
     try {
@@ -288,7 +356,56 @@ export default function DemoEditor() {
             </Button>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="font-semibold text-lg" data-testid="text-demo-title">{demo.title}</h1>
+                {editingTitle ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      value={titleValue}
+                      onChange={(e) => setTitleValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && titleValue.trim()) {
+                          updateTitle.mutate(titleValue.trim());
+                        }
+                        if (e.key === "Escape") setEditingTitle(false);
+                      }}
+                      className="text-lg font-semibold w-64"
+                      autoFocus
+                      data-testid="input-edit-title"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        if (titleValue.trim()) updateTitle.mutate(titleValue.trim());
+                      }}
+                      disabled={!titleValue.trim() || updateTitle.isPending}
+                      data-testid="button-save-title"
+                    >
+                      <Check className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setEditingTitle(false)}
+                      data-testid="button-cancel-title"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <button
+                    className="flex items-center gap-1.5 group cursor-pointer bg-transparent border-0 p-0"
+                    onClick={() => {
+                      if (!isEnded) {
+                        setTitleValue(demo.title);
+                        setEditingTitle(true);
+                      }
+                    }}
+                    data-testid="button-edit-title"
+                  >
+                    <h1 className="font-semibold text-lg" data-testid="text-demo-title">{demo.title}</h1>
+                    {!isEnded && <Pencil className="w-3.5 h-3.5 text-muted-foreground invisible group-hover:visible" />}
+                  </button>
+                )}
                 <Badge variant={demo.status === "live" ? "default" : demo.status === "draft" ? "secondary" : "outline"}>
                   {isLive && <Radio className="w-3 h-3 mr-1" />}
                   {demo.status}
@@ -426,6 +543,109 @@ export default function DemoEditor() {
             </CardContent>
           </Card>
         )}
+
+        <Card className="mb-6">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between gap-4 mb-3 flex-wrap">
+              <div className="flex items-center gap-3">
+                <Users className="w-4 h-4 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Event Admins ({admins.length})</p>
+                  <p className="text-xs text-muted-foreground">People who can manage this event</p>
+                </div>
+              </div>
+              {(demo.createdBy === currentUser?.id || currentUser?.role === "super_admin") && !isEnded && (
+                <Dialog open={adminDialogOpen} onOpenChange={setAdminDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" data-testid="button-manage-admins">
+                      <UserPlus className="w-3.5 h-3.5 mr-1" />
+                      Invite Admin
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Invite Admin</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-2">
+                      <p className="text-sm text-muted-foreground">
+                        Enter the email address of a registered user to give them admin access to this event.
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="email"
+                          placeholder="admin@example.com"
+                          value={inviteEmail}
+                          onChange={(e) => setInviteEmail(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && inviteEmail.trim()) {
+                              inviteAdmin.mutate(inviteEmail.trim());
+                            }
+                          }}
+                          data-testid="input-invite-email"
+                        />
+                        <Button
+                          onClick={() => inviteAdmin.mutate(inviteEmail.trim())}
+                          disabled={!inviteEmail.trim() || inviteAdmin.isPending}
+                          data-testid="button-send-invite"
+                        >
+                          {inviteAdmin.isPending ? "Inviting..." : "Invite"}
+                        </Button>
+                      </div>
+                    </div>
+                    {admins.length > 0 && (
+                      <div className="pt-2">
+                        <Separator className="mb-3" />
+                        <p className="text-xs text-muted-foreground mb-2">Current admins</p>
+                        <div className="space-y-2">
+                          {admins.map((admin) => (
+                            <div key={admin.id} className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Avatar className="h-7 w-7">
+                                  <AvatarImage src={admin.avatarUrl || undefined} />
+                                  <AvatarFallback className="text-xs">{admin.name.charAt(0).toUpperCase()}</AvatarFallback>
+                                </Avatar>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium truncate">{admin.name}</p>
+                                  <p className="text-xs text-muted-foreground truncate">{admin.email}</p>
+                                </div>
+                              </div>
+                              {admin.id === demo.createdBy ? (
+                                <Badge variant="secondary" className="text-xs shrink-0">Creator</Badge>
+                              ) : (
+                                (demo.createdBy === currentUser?.id || currentUser?.role === "super_admin") && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => removeAdmin.mutate(admin.id)}
+                                    disabled={removeAdmin.isPending}
+                                    data-testid={`button-remove-admin-${admin.id}`}
+                                  >
+                                    <X className="w-3.5 h-3.5 text-muted-foreground" />
+                                  </Button>
+                                )
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              {admins.map((admin) => (
+                <div key={admin.id} className="flex items-center gap-1.5">
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src={admin.avatarUrl || undefined} />
+                    <AvatarFallback className="text-xs">{admin.name.charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <span className="text-xs text-muted-foreground">{admin.name}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
           <h2 className="text-lg font-semibold">Chants ({chantsList.length})</h2>

@@ -26,6 +26,7 @@ export interface IStorage {
   getDemonstrationByPublicId(publicId: string): Promise<Demonstration | undefined>;
   getDemonstrations(userId: string, role: string): Promise<Demonstration[]>;
   updateDemoStatus(id: string, status: string): Promise<void>;
+  updateDemoTitle(id: string, title: string): Promise<Demonstration | undefined>;
 
   getChants(demonstrationId: string): Promise<Chant[]>;
   addChant(data: InsertChant): Promise<Chant>;
@@ -39,6 +40,7 @@ export interface IStorage {
   updateAutoRotation(demonstrationId: string, autoRotate: boolean, rotationInterval: number): Promise<void>;
 
   addDemoAdmin(demonstrationId: string, userId: string): Promise<void>;
+  removeDemoAdmin(demonstrationId: string, userId: string): Promise<void>;
   getDemoAdmins(demonstrationId: string): Promise<DemoAdmin[]>;
   isDemoAdmin(demonstrationId: string, userId: string): Promise<boolean>;
 }
@@ -111,9 +113,22 @@ export class DatabaseStorage implements IStorage {
     if (role === "super_admin") {
       return db.select().from(demonstrations).orderBy(desc(demonstrations.createdAt));
     }
-    return db.select().from(demonstrations)
-      .where(eq(demonstrations.createdBy, userId))
+    const adminLinks = await db.select().from(demoAdmins).where(eq(demoAdmins.userId, userId));
+    const adminDemoIds = adminLinks.map((a) => a.demonstrationId);
+
+    const allDemos = await db.select().from(demonstrations)
+      .where(
+        adminDemoIds.length > 0
+          ? sql`${demonstrations.id} IN (${sql.join(adminDemoIds.map(id => sql`${id}`), sql`, `)}) OR ${demonstrations.createdBy} = ${userId}`
+          : eq(demonstrations.createdBy, userId)
+      )
       .orderBy(desc(demonstrations.createdAt));
+    return allDemos;
+  }
+
+  async updateDemoTitle(id: string, title: string): Promise<Demonstration | undefined> {
+    const [demo] = await db.update(demonstrations).set({ title }).where(eq(demonstrations.id, id)).returning();
+    return demo;
   }
 
   async updateDemoStatus(id: string, status: string): Promise<void> {
@@ -191,6 +206,12 @@ export class DatabaseStorage implements IStorage {
 
   async addDemoAdmin(demonstrationId: string, userId: string): Promise<void> {
     await db.insert(demoAdmins).values({ demonstrationId, userId }).onConflictDoNothing();
+  }
+
+  async removeDemoAdmin(demonstrationId: string, userId: string): Promise<void> {
+    await db.delete(demoAdmins).where(
+      and(eq(demoAdmins.demonstrationId, demonstrationId), eq(demoAdmins.userId, userId))
+    );
   }
 
   async getDemoAdmins(demonstrationId: string): Promise<DemoAdmin[]> {
