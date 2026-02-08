@@ -450,10 +450,10 @@ export default function DemoEditor() {
               </DialogContent>
             </Dialog>
 
-            {isDraft && (
+            {(isDraft || isEnded) && (
               <Button onClick={() => goLive.mutate()} disabled={goLive.isPending || chantsList.length === 0} data-testid="button-go-live">
                 <Radio className="w-4 h-4 mr-1" />
-                {goLive.isPending ? "Going live..." : "Go Live"}
+                {goLive.isPending ? "Going live..." : isEnded ? "Reactivate" : "Go Live"}
               </Button>
             )}
             {isLive && (
@@ -468,7 +468,7 @@ export default function DemoEditor() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>End this demonstration?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This will stop the live feed for all participants. This cannot be undone.
+                      This will stop the live feed for all participants. You can reactivate it later if needed.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -485,7 +485,7 @@ export default function DemoEditor() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
-        {(isLive || isDraft) && (
+        {(isLive || isDraft || isEnded) && (
           <Card className="mb-6">
             <CardContent className="py-4">
               <div className="flex items-center justify-between gap-4 flex-wrap">

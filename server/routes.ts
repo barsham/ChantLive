@@ -326,7 +326,7 @@ export async function registerRoutes(
       const demo = await storage.getDemonstration(req.params.id);
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
-      if (demo.status !== "draft") return res.status(400).json({ message: "Demo can only go live from draft" });
+      if (demo.status === "live") return res.status(400).json({ message: "Demo is already live" });
 
       const chantsList = await storage.getChants(demo.id);
       if (chantsList.length === 0) return res.status(400).json({ message: "Add at least one chant before going live" });
