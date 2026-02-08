@@ -20,8 +20,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Megaphone, MoreVertical, Radio, Archive, Eye, Users, LogOut } from "lucide-react";
+import { Plus, Megaphone, Radio, Archive, Eye, Users, LogOut } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import logoImg from "@assets/ChatLive_Logo_1770545987999.png";
 import { useToast } from "@/hooks/use-toast";
 import type { Demonstration } from "@shared/schema";
 import { useState } from "react";
@@ -89,10 +90,7 @@ export default function AdminDashboard() {
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
-              <Megaphone className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-semibold text-lg">ChantLive</span>
+            <img src={logoImg} alt="ChantLive" className="h-8" />
             <Badge variant="secondary" className="text-xs">Admin</Badge>
           </div>
           <div className="flex items-center gap-3 flex-wrap">

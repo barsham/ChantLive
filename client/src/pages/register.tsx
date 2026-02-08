@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Megaphone, ArrowLeft, Mail, CheckCircle } from "lucide-react";
+import { Mail, CheckCircle } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import logoImg from "@assets/ChatLive_Logo_1770545987999.png";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -70,11 +71,8 @@ export default function Register() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <Link href="/">
-            <div className="flex items-center justify-center gap-2 mb-4 cursor-pointer">
-              <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
-                <Megaphone className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span className="font-semibold text-lg">ChantLive</span>
+            <div className="flex items-center justify-center mb-4 cursor-pointer">
+              <img src={logoImg} alt="ChantLive" className="h-8" />
             </div>
           </Link>
           <CardTitle>Create your account</CardTitle>

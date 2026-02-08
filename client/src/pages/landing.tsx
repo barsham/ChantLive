@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Megaphone, Shield, Zap, Users, ArrowRight } from "lucide-react";
+import { Shield, Zap, Users, ArrowRight, Megaphone } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useLocation, Link } from "wouter";
+import logoImg from "@assets/ChatLive_Logo_1770545987999.png";
 
 export default function Landing() {
   const { isAuthenticated } = useAuth();
@@ -13,10 +14,7 @@ export default function Landing() {
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
-              <Megaphone className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-semibold text-lg" data-testid="text-brand">ChantLive</span>
+            <img src={logoImg} alt="ChantLive" className="h-8" data-testid="text-brand" />
           </div>
           {isAuthenticated ? (
             <Button onClick={() => navigate("/admin")} data-testid="button-go-dashboard">

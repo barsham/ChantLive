@@ -33,8 +33,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Megaphone, ArrowLeft, Shield, UserCog, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Shield, Trash2, Users } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import logoImg from "@assets/ChatLive_Logo_1770545987999.png";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@shared/schema";
 import { useState } from "react";
@@ -87,9 +88,7 @@ export default function AdminUsers() {
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
-              <Megaphone className="w-4 h-4 text-primary-foreground" />
-            </div>
+            <img src={logoImg} alt="ChantLive" className="h-8" />
             <span className="font-semibold text-lg">Manage Admins</span>
           </div>
         </div>
