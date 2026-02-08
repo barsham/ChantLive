@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Megaphone, Shield, Zap, Users, ArrowRight } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 
 export default function Landing() {
   const { isAuthenticated } = useAuth();
@@ -24,9 +24,14 @@ export default function Landing() {
               <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
           ) : (
-            <Button asChild data-testid="button-admin-login">
-              <a href="/auth/google">Admin Sign In</a>
-            </Button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button variant="outline" onClick={() => navigate("/login")} data-testid="button-sign-in">
+                Sign In
+              </Button>
+              <Button onClick={() => navigate("/register")} data-testid="button-register">
+                Register
+              </Button>
+            </div>
           )}
         </div>
       </header>
@@ -52,12 +57,15 @@ export default function Landing() {
                   <ArrowRight className="w-4 h-4 ml-1" />
                 </Button>
               ) : (
-                <Button size="lg" asChild data-testid="button-get-started">
-                  <a href="/auth/google">
+                <>
+                  <Button size="lg" onClick={() => navigate("/register")} data-testid="button-get-started">
                     Get Started
                     <ArrowRight className="w-4 h-4 ml-1" />
-                  </a>
-                </Button>
+                  </Button>
+                  <Button size="lg" variant="outline" onClick={() => navigate("/login")} data-testid="button-hero-sign-in">
+                    Sign In
+                  </Button>
+                </>
               )}
             </div>
           </div>

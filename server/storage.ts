@@ -13,7 +13,9 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByGoogleId(googleId: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByVerificationToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(userId: string, data: Partial<InsertUser & { emailVerified: boolean; verificationToken: string | null; verificationTokenExpires: Date | null; passwordHash: string | null }>): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   updateUserRole(userId: string, role: string): Promise<void>;
   deleteUser(userId: string): Promise<void>;
@@ -55,8 +57,18 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserByVerificationToken(token: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.verificationToken, token));
+    return user;
+  }
+
   async createUser(data: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(data).returning();
+    return user;
+  }
+
+  async updateUser(userId: string, data: Partial<InsertUser & { emailVerified: boolean; verificationToken: string | null; verificationTokenExpires: Date | null; passwordHash: string | null }>): Promise<User | undefined> {
+    const [user] = await db.update(users).set(data).where(eq(users.id, userId)).returning();
     return user;
   }
 

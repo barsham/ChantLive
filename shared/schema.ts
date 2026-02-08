@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, primaryKey, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -11,6 +11,10 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("admin"),
   googleId: text("google_id").unique(),
   avatarUrl: text("avatar_url"),
+  passwordHash: text("password_hash"),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  verificationToken: text("verification_token"),
+  verificationTokenExpires: timestamp("verification_token_expires"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

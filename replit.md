@@ -5,7 +5,7 @@
 ChantLive is a real-time demonstration/protest chant management platform. Admins create "demonstrations," add a list of chants, then push a "current chant" live. Participants scan a QR code on their phones and see a full-screen chant page that updates automatically via WebSockets — no login or app download required.
 
 The app has two audiences:
-- **Admins** (authenticated via Google OAuth) who create demonstrations, manage chant lists, and drive the live chant selection.
+- **Admins** (authenticated via email/password or Google OAuth) who create demonstrations, manage chant lists, and drive the live chant selection.
 - **Participants** (unauthenticated) who join via a short public URL/QR code and see the current chant in real time.
 
 ## User Preferences
@@ -27,8 +27,10 @@ Preferred communication style: Simple, everyday language.
 - **Runtime:** Node.js with Express (TypeScript via tsx)
 - **HTTP server:** Node `http.createServer` wrapping Express (needed for Socket.IO)
 - **Real-time:** Socket.IO server for pushing chant changes and viewer counts to participants
-- **Authentication:** Passport.js with Google OAuth 2.0 strategy; sessions stored in PostgreSQL via `connect-pg-simple`
+- **Authentication:** Email/password registration with email verification via Resend, plus Passport.js with Google OAuth 2.0 strategy; sessions stored in PostgreSQL via `connect-pg-simple`
 - **Session management:** Express-session with 30-day cookie, stored in a `session` table (auto-created)
+- **Password security:** bcryptjs with 12 rounds for hashing; verification tokens hashed with SHA-256 before storage
+- **Email service:** Resend integration for sending verification emails
 - **QR Code generation:** `qrcode` library for generating participant join QR codes
 
 ### Roles & Authorization
@@ -44,7 +46,7 @@ Preferred communication style: Simple, everyday language.
 - **Migrations output:** `./migrations` directory
 
 ### Database Tables
-- **users** — id, email, name, provider, role, googleId, avatarUrl, createdAt
+- **users** — id, email, name, provider, role, googleId, avatarUrl, passwordHash, emailVerified, verificationToken, verificationTokenExpires, createdAt
 - **demonstrations** — id, publicId (short unique ID for participant URLs), title, status (draft/live/ended), createdBy, createdAt
 - **chants** — id, demonstrationId, orderIndex, text
 - **demo_admins** — composite PK (demonstrationId, userId) linking admins to demos
@@ -54,10 +56,15 @@ Preferred communication style: Simple, everyday language.
 
 ### Key Routes
 - `/api/auth/me` — get current authenticated user
+- `/api/auth/register` — POST email/password registration
+- `/api/auth/login` — POST email/password login
+- `/api/auth/verify?token=` — GET email verification callback
 - `/auth/google` — initiate Google OAuth flow
 - `/api/demos` — CRUD for demonstrations
 - `/api/admin/users` — user management (super_admin only)
 - `/d/:publicId` — participant view (client-side route)
+- `/login` — login page (client-side route)
+- `/register` — registration page (client-side route)
 - Socket.IO events: `join_demo`, `chant_update`, `viewer_count`
 
 ### Build & Deploy

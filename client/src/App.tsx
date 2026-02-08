@@ -9,10 +9,14 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import DemoEditor from "@/pages/demo-editor";
 import AdminUsers from "@/pages/admin-users";
 import Participant from "@/pages/participant";
+import Login from "@/pages/login";
+import Register from "@/pages/register";
 import NotFound from "@/pages/not-found";
+import { useLocation } from "wouter";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { isAuthenticated, isLoading } = useAuth();
+  const [, navigate] = useLocation();
 
   if (isLoading) {
     return (
@@ -23,7 +27,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   }
 
   if (!isAuthenticated) {
-    window.location.href = "/auth/google";
+    navigate("/login");
     return null;
   }
 
@@ -34,6 +38,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Landing} />
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
       <Route path="/admin">
         {() => <ProtectedRoute component={AdminDashboard} />}
       </Route>
