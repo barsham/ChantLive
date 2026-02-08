@@ -1,0 +1,178 @@
+Core goal
+
+Admins run a demonstration plan and push a “current chant” live. Participants (clients) scan a QR code and see a full-screen chant page on their phones/tablets with no login. The page updates automatically and shows a live viewer count.
+
+Tech constraints (Replit-friendly)
+
+Use Node.js + Express backend.
+
+Use SQLite for persistence (via better-sqlite3).
+
+Use EJS templates or simple HTML + minimal JS (no heavy frontend frameworks).
+
+Use Socket.IO for real-time updates (chant changes + viewer count).
+
+Deploy and run entirely inside Replit.
+
+Authentication requirements
+
+Admins must sign in.
+
+Support Google OAuth for admin login (use Passport.js).
+
+Apple Sign-In is optional; implement only if feasible on Replit without paid Apple developer setup. If not feasible, stub it as “planned”.
+
+Participants do not authenticate.
+
+Roles
+
+super_admin: can create demonstrations, manage admins, end demos.
+
+admin: can control chants for a demonstration they are assigned to (drive chants live).
+
+Data model (SQLite tables)
+
+users
+
+id, email, name, provider (google), role, created_at
+
+demonstrations
+
+id, title, status (draft/live/ended), created_by, created_at
+
+chants
+
+id, demonstration_id, order_index, text
+
+demo_admins
+
+demonstration_id, user_id
+
+demo_state
+
+demonstration_id, current_chant_id, updated_at
+
+view_sessions
+
+id, demonstration_id, session_id, first_seen_at, last_seen_at
+
+Key features
+Admin portal
+
+Admin login.
+
+Dashboard: list demonstrations (create, edit, go live, end).
+
+Demo editor:
+
+Add/edit/reorder up to 10–30 chants (text only).
+
+Select “current chant” (set live chant).
+
+Generate a public participant URL: /d/:publicId
+
+Show QR code for the public URL.
+
+Admin management:
+
+Super admin can add/remove admins by email (invite flow can be simple: user logs in once with Google, then can be assigned).
+
+Assign admins to a demo via demo_admins.
+
+Participant (client) page
+
+Public route: /d/:publicId
+
+Full-screen chant display (high contrast, huge text).
+
+Auto-updates in real time when admin changes chant (Socket.IO).
+
+Shows live viewer count at bottom: “Viewing now: N”.
+
+No login, no cookies banner beyond minimal.
+
+Viewer counting logic
+
+When a participant opens /d/:publicId, create or reuse an anonymous session_id stored in localStorage.
+
+Track presence via Socket.IO:
+
+On connect, mark session as active for that demonstration.
+
+On disconnect, mark inactive.
+
+Viewer count should represent “currently connected” sockets for that demonstration (primary), and optionally store counts in DB for analytics.
+
+Routes
+
+GET / (landing page)
+
+GET /auth/google and callback routes
+
+GET /admin (dashboard, requires admin auth)
+
+GET /admin/demos/new
+
+POST /admin/demos
+
+GET /admin/demos/:id
+
+POST /admin/demos/:id/chants (add/edit/reorder)
+
+POST /admin/demos/:id/live (start live)
+
+POST /admin/demos/:id/end (end)
+
+POST /admin/demos/:id/current (set current chant)
+
+GET /admin/demos/:id/qrcode (or generate QR in page)
+
+GET /d/:publicId (participant page)
+
+UI requirements
+
+Admin UI can be simple and functional.
+
+Participant UI must be clean:
+
+Black background, white text.
+
+Chant number small above, chant text huge.
+
+Viewer count in a footer bar.
+
+Deliverables
+
+Working Replit project with:
+
+server.js (Express app)
+
+db.js (SQLite init + queries)
+
+auth.js (Passport Google OAuth)
+
+views/ for EJS templates (admin + participant)
+
+public/ for CSS + client JS + Socket.IO client code
+
+Seed script for first super_admin (via env var email match or manual DB insert).
+
+.env usage for:
+
+GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET, BASE_URL
+
+Important notes
+
+Use environment variables for all secrets.
+
+Use secure session cookies where possible.
+
+Keep code minimal and readable.
+
+Provide instructions in README:
+
+How to set env vars in Replit
+
+How to run migrations/init DB
+
+How to test participant page with QR
