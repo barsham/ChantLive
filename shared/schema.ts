@@ -31,7 +31,8 @@ export const chants = pgTable("chants", {
   id: varchar("id", { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
   demonstrationId: varchar("demonstration_id", { length: 255 }).notNull().references(() => demonstrations.id, { onDelete: "cascade" }),
   orderIndex: integer("order_index").notNull(),
-  text: text("text").notNull(),
+  callText: text("call_text").notNull().default(""),
+  responseText: text("response_text").notNull().default(""),
 });
 
 export const demoAdmins = pgTable("demo_admins", {

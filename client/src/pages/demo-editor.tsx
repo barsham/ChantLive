@@ -58,7 +58,8 @@ export default function DemoEditor() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [newChantText, setNewChantText] = useState("");
+  const [newCallText, setNewCallText] = useState("");
+  const [newResponseText, setNewResponseText] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState("");
@@ -75,13 +76,14 @@ export default function DemoEditor() {
   const viewerCount = data?.viewerCount ?? 0;
 
   const addChant = useMutation({
-    mutationFn: async (text: string) => {
-      await apiRequest("POST", `/api/demos/${id}/chants`, { text });
+    mutationFn: async ({ callText, responseText }: { callText: string; responseText: string }) => {
+      await apiRequest("POST", `/api/demos/${id}/chants`, { callText, responseText });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
       setAddDialogOpen(false);
-      setNewChantText("");
+      setNewCallText("");
+      setNewResponseText("");
     },
     onError: (err: Error) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -311,21 +313,39 @@ export default function DemoEditor() {
                 </DialogHeader>
                 <div className="space-y-4 pt-2">
                   <div className="space-y-2">
-                    <Label htmlFor="chant-text">Chant Text</Label>
+                    <Label htmlFor="call-text" className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: "#f97316" }} />
+                      Leader says (Call)
+                    </Label>
                     <Textarea
-                      id="chant-text"
-                      placeholder="Enter the chant text..."
-                      value={newChantText}
-                      onChange={(e) => setNewChantText(e.target.value)}
+                      id="call-text"
+                      placeholder="What the leader calls out..."
+                      value={newCallText}
+                      onChange={(e) => setNewCallText(e.target.value)}
                       className="resize-none"
-                      rows={3}
-                      data-testid="input-chant-text"
+                      rows={2}
+                      data-testid="input-call-text"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="response-text" className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: "#38bdf8" }} />
+                      Crowd responds (Response)
+                    </Label>
+                    <Textarea
+                      id="response-text"
+                      placeholder="What the crowd responds..."
+                      value={newResponseText}
+                      onChange={(e) => setNewResponseText(e.target.value)}
+                      className="resize-none"
+                      rows={2}
+                      data-testid="input-response-text"
                     />
                   </div>
                   <Button
                     className="w-full"
-                    onClick={() => addChant.mutate(newChantText.trim())}
-                    disabled={!newChantText.trim() || addChant.isPending}
+                    onClick={() => addChant.mutate({ callText: newCallText.trim(), responseText: newResponseText.trim() })}
+                    disabled={(!newCallText.trim() && !newResponseText.trim()) || addChant.isPending}
                     data-testid="button-confirm-add-chant"
                   >
                     {addChant.isPending ? "Adding..." : "Add Chant"}
@@ -393,9 +413,20 @@ export default function DemoEditor() {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm font-medium break-words" data-testid={`text-chant-${chant.id}`}>
-                        {chant.text}
-                      </p>
+                      <div className="space-y-1" data-testid={`text-chant-${chant.id}`}>
+                        {chant.callText && (
+                          <p className="text-sm font-medium break-words flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: "#f97316" }} />
+                            <span>{chant.callText}</span>
+                          </p>
+                        )}
+                        {chant.responseText && (
+                          <p className="text-sm font-medium break-words flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: "#38bdf8" }} />
+                            <span>{chant.responseText}</span>
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-1 shrink-0">

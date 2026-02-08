@@ -102,9 +102,10 @@ export async function registerRoutes(
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
-      const { text } = req.body;
-      if (!text || typeof text !== "string" || text.trim().length === 0) {
-        return res.status(400).json({ message: "Chant text is required" });
+      const { callText, responseText } = req.body;
+      if ((!callText || typeof callText !== "string" || callText.trim().length === 0) &&
+          (!responseText || typeof responseText !== "string" || responseText.trim().length === 0)) {
+        return res.status(400).json({ message: "At least one of call or response text is required" });
       }
 
       const existingChants = await storage.getChants(demo.id);
@@ -115,7 +116,8 @@ export async function registerRoutes(
       const chant = await storage.addChant({
         demonstrationId: demo.id,
         orderIndex: existingChants.length,
-        text: text.trim(),
+        callText: (callText || "").trim(),
+        responseText: (responseText || "").trim(),
       });
 
       res.json(chant);
@@ -168,7 +170,8 @@ export async function registerRoutes(
       const chantIndex = chantsList.findIndex((c) => c.id === chantId);
 
       io.to(`demo:${demo.publicId}`).emit("chant_update", {
-        chantText: chant?.text || null,
+        callText: chant?.callText || null,
+        responseText: chant?.responseText || null,
         chantIndex: chantIndex >= 0 ? chantIndex : null,
         totalChants: chantsList.length,
         demoTitle: demo.title,
@@ -200,7 +203,8 @@ export async function registerRoutes(
       await storage.setCurrentChant(demo.id, chantsList[0].id);
 
       io.to(`demo:${demo.publicId}`).emit("chant_update", {
-        chantText: chantsList[0].text,
+        callText: chantsList[0].callText,
+        responseText: chantsList[0].responseText,
         chantIndex: 0,
         totalChants: chantsList.length,
         demoTitle: demo.title,
@@ -317,7 +321,8 @@ export async function registerRoutes(
           : null;
 
         socket.emit("chant_update", {
-          chantText: currentChant?.text || null,
+          callText: currentChant?.callText || null,
+          responseText: currentChant?.responseText || null,
           chantIndex,
           totalChants: chantsList.length,
           demoTitle: demo.title,

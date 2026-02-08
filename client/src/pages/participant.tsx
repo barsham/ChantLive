@@ -4,7 +4,8 @@ import { getSocket } from "@/lib/socket";
 import { Users, Megaphone } from "lucide-react";
 
 type ChantData = {
-  chantText: string | null;
+  callText: string | null;
+  responseText: string | null;
   chantIndex: number | null;
   totalChants: number;
   demoTitle: string;
@@ -51,7 +52,7 @@ export default function Participant() {
 
     socket.on("demo_ended", () => {
       setChantData((prev) =>
-        prev ? { ...prev, demoStatus: "ended", chantText: null } : null
+        prev ? { ...prev, demoStatus: "ended", callText: null, responseText: null } : null
       );
     });
 
@@ -80,6 +81,8 @@ export default function Participant() {
       socket.off("disconnect");
     };
   }, [publicId]);
+
+  const hasChantContent = chantData?.callText || chantData?.responseText;
 
   if (error) {
     return (
@@ -137,22 +140,43 @@ export default function Participant() {
       <div className="flex-1 flex items-center justify-center p-6">
         <div className={`text-center transition-opacity duration-300 ${fadeIn ? "opacity-100" : "opacity-0"}`}>
           {chantData.chantIndex !== null && (
-            <p className="text-neutral-500 text-sm font-mono mb-4 tracking-wider" data-testid="text-chant-number">
+            <p className="text-neutral-500 text-sm font-mono mb-6 tracking-wider" data-testid="text-chant-number">
               {chantData.chantIndex + 1} / {chantData.totalChants}
             </p>
           )}
-          {chantData.chantText ? (
-            <h1
-              className="text-white font-bold leading-tight break-words"
-              style={{
-                fontSize: "clamp(2rem, 8vw, 5rem)",
-                lineHeight: 1.15,
-                maxWidth: "90vw",
-              }}
-              data-testid="text-chant"
-            >
-              {chantData.chantText}
-            </h1>
+          {hasChantContent ? (
+            <div className="space-y-6" style={{ maxWidth: "90vw" }}>
+              {chantData.callText && (
+                <div data-testid="text-call">
+                  <p className="text-neutral-400 text-xs font-mono uppercase tracking-widest mb-2">Leader</p>
+                  <h1
+                    className="font-bold leading-tight break-words"
+                    style={{
+                      fontSize: "clamp(1.75rem, 7vw, 4.5rem)",
+                      lineHeight: 1.15,
+                      color: "#f97316",
+                    }}
+                  >
+                    {chantData.callText}
+                  </h1>
+                </div>
+              )}
+              {chantData.responseText && (
+                <div data-testid="text-response">
+                  <p className="text-neutral-400 text-xs font-mono uppercase tracking-widest mb-2">Everyone</p>
+                  <h1
+                    className="font-bold leading-tight break-words"
+                    style={{
+                      fontSize: "clamp(1.75rem, 7vw, 4.5rem)",
+                      lineHeight: 1.15,
+                      color: "#38bdf8",
+                    }}
+                  >
+                    {chantData.responseText}
+                  </h1>
+                </div>
+              )}
+            </div>
           ) : (
             <p className="text-neutral-500 text-xl" data-testid="text-no-chant">
               Waiting for next chant...
