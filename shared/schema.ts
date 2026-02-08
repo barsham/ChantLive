@@ -45,6 +45,8 @@ export const demoAdmins = pgTable("demo_admins", {
 export const demoState = pgTable("demo_state", {
   demonstrationId: varchar("demonstration_id", { length: 255 }).primaryKey().references(() => demonstrations.id, { onDelete: "cascade" }),
   currentChantId: varchar("current_chant_id", { length: 255 }).references(() => chants.id),
+  autoRotate: boolean("auto_rotate").notNull().default(false),
+  rotationInterval: integer("rotation_interval").notNull().default(60),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 

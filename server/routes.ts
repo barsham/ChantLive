@@ -22,6 +22,7 @@ declare global {
 }
 
 const demoViewers = new Map<string, Set<string>>();
+const autoRotateTimers = new Map<string, NodeJS.Timeout>();
 
 function getViewerCount(demoId: string): number {
   return demoViewers.get(demoId)?.size ?? 0;
@@ -126,10 +127,56 @@ export async function registerRoutes(
     }
   });
 
+  app.patch("/api/demos/:id/chants/:chantId", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await storage.getDemonstration(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      const demoChants = await storage.getChants(demo.id);
+      const existingChant = demoChants.find((c) => c.id === req.params.chantId);
+      if (!existingChant) return res.status(404).json({ message: "Chant not found in this demonstration" });
+
+      const { callText, responseText } = req.body;
+      if ((!callText || typeof callText !== "string" || callText.trim().length === 0) &&
+          (!responseText || typeof responseText !== "string" || responseText.trim().length === 0)) {
+        return res.status(400).json({ message: "At least one of call or response text is required" });
+      }
+
+      const chant = await storage.updateChant(req.params.chantId, {
+        callText: (callText || "").trim(),
+        responseText: (responseText || "").trim(),
+      });
+      if (!chant) return res.status(404).json({ message: "Chant not found" });
+
+      const state = await storage.getDemoState(demo.id);
+      if (state?.currentChantId === chant.id && demo.status === "live") {
+        const chantsList = await storage.getChants(demo.id);
+        const chantIndex = chantsList.findIndex((c) => c.id === chant.id);
+        io.to(`demo:${demo.publicId}`).emit("chant_update", {
+          callText: chant.callText,
+          responseText: chant.responseText,
+          chantIndex: chantIndex >= 0 ? chantIndex : null,
+          totalChants: chantsList.length,
+          demoTitle: demo.title,
+          demoStatus: demo.status,
+        });
+      }
+
+      res.json(chant);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to update chant" });
+    }
+  });
+
   app.delete("/api/demos/:id/chants/:chantId", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
       if (!(await canAccessDemo(user, req.params.id))) return res.status(403).json({ message: "Access denied" });
+      const demoChants = await storage.getChants(req.params.id);
+      const chantExists = demoChants.some((c) => c.id === req.params.chantId);
+      if (!chantExists) return res.status(404).json({ message: "Chant not found in this demonstration" });
       await storage.deleteChant(req.params.chantId);
       res.json({ success: true });
     } catch (err) {
@@ -211,6 +258,11 @@ export async function registerRoutes(
         demoStatus: "live",
       });
 
+      const state = await storage.getDemoState(demo.id);
+      if (state?.autoRotate) {
+        await startAutoRotation(demo.id, demo.publicId, state.rotationInterval);
+      }
+
       res.json({ success: true });
     } catch (err) {
       res.status(500).json({ message: "Failed to go live" });
@@ -225,12 +277,94 @@ export async function registerRoutes(
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
       await storage.updateDemoStatus(demo.id, "ended");
+      stopAutoRotation(demo.id);
 
       io.to(`demo:${demo.publicId}`).emit("demo_ended");
 
       res.json({ success: true });
     } catch (err) {
       res.status(500).json({ message: "Failed to end demo" });
+    }
+  });
+
+  function stopAutoRotation(demoId: string) {
+    const timer = autoRotateTimers.get(demoId);
+    if (timer) {
+      clearInterval(timer);
+      autoRotateTimers.delete(demoId);
+    }
+  }
+
+  async function startAutoRotation(demoId: string, publicId: string, intervalSeconds: number) {
+    stopAutoRotation(demoId);
+
+    const timer = setInterval(async () => {
+      try {
+        const demo = await storage.getDemonstration(demoId);
+        if (!demo || demo.status !== "live") {
+          stopAutoRotation(demoId);
+          return;
+        }
+
+        const state = await storage.getDemoState(demoId);
+        if (!state?.autoRotate) {
+          stopAutoRotation(demoId);
+          return;
+        }
+
+        const chantsList = await storage.getChants(demoId);
+        if (chantsList.length === 0) return;
+
+        const currentIndex = state.currentChantId
+          ? chantsList.findIndex((c) => c.id === state.currentChantId)
+          : -1;
+        const nextIndex = (currentIndex + 1) % chantsList.length;
+        const nextChant = chantsList[nextIndex];
+
+        await storage.setCurrentChant(demoId, nextChant.id);
+
+        io.to(`demo:${publicId}`).emit("chant_update", {
+          callText: nextChant.callText,
+          responseText: nextChant.responseText,
+          chantIndex: nextIndex,
+          totalChants: chantsList.length,
+          demoTitle: demo.title,
+          demoStatus: demo.status,
+        });
+      } catch (err) {
+        console.error("Auto-rotation error:", err);
+      }
+    }, intervalSeconds * 1000);
+
+    autoRotateTimers.set(demoId, timer);
+  }
+
+  app.post("/api/demos/:id/auto-rotate", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await storage.getDemonstration(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      const { autoRotate, rotationInterval } = req.body;
+      if (typeof autoRotate !== "boolean") {
+        return res.status(400).json({ message: "autoRotate must be a boolean" });
+      }
+      const interval = typeof rotationInterval === "number" && rotationInterval >= 5 && rotationInterval <= 300
+        ? rotationInterval
+        : 60;
+
+      await storage.updateAutoRotation(demo.id, autoRotate, interval);
+
+      if (autoRotate && demo.status === "live") {
+        await startAutoRotation(demo.id, demo.publicId, interval);
+      } else {
+        stopAutoRotation(demo.id);
+      }
+
+      res.json({ success: true, autoRotate, rotationInterval: interval });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to update auto-rotation" });
     }
   });
 

@@ -8,7 +8,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -36,11 +35,15 @@ import {
   Square,
   QrCode,
   ExternalLink,
-  GripVertical,
   Check,
   Copy,
   ChevronUp,
   ChevronDown,
+  Pencil,
+  RotateCw,
+  Pause,
+  Play,
+  Timer,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -65,6 +68,13 @@ export default function DemoEditor() {
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [copied, setCopied] = useState(false);
 
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingChant, setEditingChant] = useState<Chant | null>(null);
+  const [editCallText, setEditCallText] = useState("");
+  const [editResponseText, setEditResponseText] = useState("");
+
+  const [rotationInterval, setRotationInterval] = useState(60);
+
   const { data, isLoading, refetch } = useQuery<DemoDetail>({
     queryKey: ["/api/demos", id],
     refetchInterval: 5000,
@@ -74,6 +84,13 @@ export default function DemoEditor() {
   const chantsList = data?.chants ?? [];
   const state = data?.state;
   const viewerCount = data?.viewerCount ?? 0;
+  const autoRotate = state?.autoRotate ?? false;
+
+  useEffect(() => {
+    if (state?.rotationInterval) {
+      setRotationInterval(state.rotationInterval);
+    }
+  }, [state?.rotationInterval]);
 
   const addChant = useMutation({
     mutationFn: async ({ callText, responseText }: { callText: string; responseText: string }) => {
@@ -84,6 +101,21 @@ export default function DemoEditor() {
       setAddDialogOpen(false);
       setNewCallText("");
       setNewResponseText("");
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const editChant = useMutation({
+    mutationFn: async ({ chantId, callText, responseText }: { chantId: string; callText: string; responseText: string }) => {
+      await apiRequest("PATCH", `/api/demos/${id}/chants/${chantId}`, { callText, responseText });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
+      setEditDialogOpen(false);
+      setEditingChant(null);
+      toast({ title: "Chant updated" });
     },
     onError: (err: Error) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -152,6 +184,38 @@ export default function DemoEditor() {
     },
   });
 
+  const toggleAutoRotate = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      await apiRequest("POST", `/api/demos/${id}/auto-rotate`, {
+        autoRotate: enabled,
+        rotationInterval,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
+      toast({ title: autoRotate ? "Auto-rotation paused" : "Auto-rotation started" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const updateRotationInterval = useMutation({
+    mutationFn: async (interval: number) => {
+      await apiRequest("POST", `/api/demos/${id}/auto-rotate`, {
+        autoRotate,
+        rotationInterval: interval,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
+      toast({ title: "Rotation interval updated" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
   const loadQr = useCallback(async () => {
     if (!demo) return;
     try {
@@ -164,6 +228,13 @@ export default function DemoEditor() {
   useEffect(() => {
     if (qrDialogOpen) loadQr();
   }, [qrDialogOpen, loadQr]);
+
+  const openEditDialog = (chant: Chant) => {
+    setEditingChant(chant);
+    setEditCallText(chant.callText);
+    setEditResponseText(chant.responseText);
+    setEditDialogOpen(true);
+  };
 
   const publicUrl = demo ? `${window.location.origin}/d/${demo.publicId}` : "";
 
@@ -297,6 +368,65 @@ export default function DemoEditor() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
+        {(isLive || isDraft) && (
+          <Card className="mb-6">
+            <CardContent className="py-4">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <RotateCw className="w-4 h-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Auto-rotation</p>
+                    <p className="text-xs text-muted-foreground">
+                      {autoRotate ? "Cycling through chants automatically" : "Manually control which chant is shown"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Timer className="w-3.5 h-3.5 text-muted-foreground" />
+                    <Input
+                      type="number"
+                      min={5}
+                      max={300}
+                      value={rotationInterval}
+                      onChange={(e) => setRotationInterval(Number(e.target.value))}
+                      onBlur={() => {
+                        const val = Math.max(5, Math.min(300, rotationInterval));
+                        setRotationInterval(val);
+                        if (val !== state?.rotationInterval) {
+                          updateRotationInterval.mutate(val);
+                        }
+                      }}
+                      className="w-20 text-sm"
+                      data-testid="input-rotation-interval"
+                    />
+                    <span className="text-xs text-muted-foreground">sec</span>
+                  </div>
+                  <Button
+                    variant={autoRotate ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => toggleAutoRotate.mutate(!autoRotate)}
+                    disabled={toggleAutoRotate.isPending}
+                    data-testid="button-toggle-auto-rotate"
+                  >
+                    {autoRotate ? (
+                      <>
+                        <Pause className="w-3.5 h-3.5 mr-1" />
+                        Pause
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-3.5 h-3.5 mr-1" />
+                        Start
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
           <h2 className="text-lg font-semibold">Chants ({chantsList.length})</h2>
           {!isEnded && (
@@ -355,6 +485,62 @@ export default function DemoEditor() {
             </Dialog>
           )}
         </div>
+
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Chant</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label htmlFor="edit-call-text" className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: "#f97316" }} />
+                  Leader says (Call)
+                </Label>
+                <Textarea
+                  id="edit-call-text"
+                  placeholder="What the leader calls out..."
+                  value={editCallText}
+                  onChange={(e) => setEditCallText(e.target.value)}
+                  className="resize-none"
+                  rows={2}
+                  data-testid="input-edit-call-text"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-response-text" className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: "#38bdf8" }} />
+                  Crowd responds (Response)
+                </Label>
+                <Textarea
+                  id="edit-response-text"
+                  placeholder="What the crowd responds..."
+                  value={editResponseText}
+                  onChange={(e) => setEditResponseText(e.target.value)}
+                  className="resize-none"
+                  rows={2}
+                  data-testid="input-edit-response-text"
+                />
+              </div>
+              <Button
+                className="w-full"
+                onClick={() => {
+                  if (editingChant) {
+                    editChant.mutate({
+                      chantId: editingChant.id,
+                      callText: editCallText.trim(),
+                      responseText: editResponseText.trim(),
+                    });
+                  }
+                }}
+                disabled={(!editCallText.trim() && !editResponseText.trim()) || editChant.isPending}
+                data-testid="button-confirm-edit-chant"
+              >
+                {editChant.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {chantsList.length === 0 ? (
           <Card>
@@ -442,15 +628,25 @@ export default function DemoEditor() {
                         </Button>
                       )}
                       {!isEnded && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => deleteChant.mutate(chant.id)}
-                          disabled={deleteChant.isPending}
-                          data-testid={`button-delete-chant-${chant.id}`}
-                        >
-                          <Trash2 className="w-4 h-4 text-muted-foreground" />
-                        </Button>
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openEditDialog(chant)}
+                            data-testid={`button-edit-chant-${chant.id}`}
+                          >
+                            <Pencil className="w-4 h-4 text-muted-foreground" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteChant.mutate(chant.id)}
+                            disabled={deleteChant.isPending}
+                            data-testid={`button-delete-chant-${chant.id}`}
+                          >
+                            <Trash2 className="w-4 h-4 text-muted-foreground" />
+                          </Button>
+                        </>
                       )}
                     </div>
                   </CardContent>

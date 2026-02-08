@@ -29,12 +29,14 @@ export interface IStorage {
 
   getChants(demonstrationId: string): Promise<Chant[]>;
   addChant(data: InsertChant): Promise<Chant>;
+  updateChant(id: string, data: { callText: string; responseText: string }): Promise<Chant | undefined>;
   deleteChant(id: string): Promise<void>;
   reorderChants(demonstrationId: string, chantId: string, direction: "up" | "down"): Promise<void>;
 
   getDemoState(demonstrationId: string): Promise<DemoState | undefined>;
   setCurrentChant(demonstrationId: string, chantId: string): Promise<void>;
   initDemoState(demonstrationId: string): Promise<void>;
+  updateAutoRotation(demonstrationId: string, autoRotate: boolean, rotationInterval: number): Promise<void>;
 
   addDemoAdmin(demonstrationId: string, userId: string): Promise<void>;
   getDemoAdmins(demonstrationId: string): Promise<DemoAdmin[]>;
@@ -129,6 +131,11 @@ export class DatabaseStorage implements IStorage {
     return chant;
   }
 
+  async updateChant(id: string, data: { callText: string; responseText: string }): Promise<Chant | undefined> {
+    const [chant] = await db.update(chants).set(data).where(eq(chants.id, id)).returning();
+    return chant;
+  }
+
   async deleteChant(id: string): Promise<void> {
     await db.delete(chants).where(eq(chants.id, id));
   }
@@ -168,6 +175,17 @@ export class DatabaseStorage implements IStorage {
     const existing = await this.getDemoState(demonstrationId);
     if (!existing) {
       await db.insert(demoState).values({ demonstrationId, currentChantId: null });
+    }
+  }
+
+  async updateAutoRotation(demonstrationId: string, autoRotate: boolean, rotationInterval: number): Promise<void> {
+    const existing = await this.getDemoState(demonstrationId);
+    if (existing) {
+      await db.update(demoState)
+        .set({ autoRotate, rotationInterval, updatedAt: new Date() })
+        .where(eq(demoState.demonstrationId, demonstrationId));
+    } else {
+      await db.insert(demoState).values({ demonstrationId, currentChantId: null, autoRotate, rotationInterval });
     }
   }
 
