@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { type Server } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import { storage } from "./storage";
+import { ensureUserAuthColumns } from "./db";
 import { setupAuth, requireAuth, requireSuperAdmin } from "./auth";
 import QRCode from "qrcode";
 import type { User } from "@shared/schema";
@@ -59,6 +60,7 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  await ensureUserAuthColumns();
   setupAuth(app);
 
   const io = new SocketIOServer(httpServer, {
