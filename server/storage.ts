@@ -13,8 +13,9 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByVerificationToken(token: string): Promise<User | undefined>;
+  getUserByPasswordResetToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  updateUser(userId: string, data: Partial<InsertUser & { emailVerified: boolean; verificationToken: string | null; verificationTokenExpires: Date | null; passwordHash: string | null }>): Promise<User | undefined>;
+  updateUser(userId: string, data: Partial<InsertUser & { emailVerified: boolean; verificationToken: string | null; verificationTokenExpires: Date | null; passwordHash: string | null; passwordResetToken: string | null; passwordResetExpires: Date | null }>): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   updateUserRole(userId: string, role: string): Promise<void>;
   deleteUser(userId: string): Promise<void>;
@@ -36,7 +37,8 @@ export interface IStorage {
   getDemoState(demonstrationId: string): Promise<DemoState | undefined>;
   setCurrentChant(demonstrationId: string, chantId: string): Promise<void>;
   initDemoState(demonstrationId: string): Promise<void>;
-  updateAutoRotation(demonstrationId: string, autoRotate: boolean, rotationInterval: number): Promise<void>;
+  setRotationPhase(demonstrationId: string, currentPhase: "leader" | "people", currentCycle: number): Promise<void>;
+  updateAutoRotation(demonstrationId: string, autoRotate: boolean, rotationInterval: number, cycleCount: number, leaderDuration: number, peopleDuration: number): Promise<void>;
 
   addDemoAdmin(demonstrationId: string, userId: string): Promise<void>;
   removeDemoAdmin(demonstrationId: string, userId: string): Promise<void>;
@@ -61,12 +63,17 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserByPasswordResetToken(token: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.passwordResetToken, token));
+    return user;
+  }
+
   async createUser(data: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(data).returning();
     return user;
   }
 
-  async updateUser(userId: string, data: Partial<InsertUser & { emailVerified: boolean; verificationToken: string | null; verificationTokenExpires: Date | null; passwordHash: string | null }>): Promise<User | undefined> {
+  async updateUser(userId: string, data: Partial<InsertUser & { emailVerified: boolean; verificationToken: string | null; verificationTokenExpires: Date | null; passwordHash: string | null; passwordResetToken: string | null; passwordResetExpires: Date | null }>): Promise<User | undefined> {
     const [user] = await db.update(users).set(data).where(eq(users.id, userId)).returning();
     return user;
   }
@@ -174,10 +181,10 @@ export class DatabaseStorage implements IStorage {
     const existing = await this.getDemoState(demonstrationId);
     if (existing) {
       await db.update(demoState)
-        .set({ currentChantId: chantId, updatedAt: new Date() })
+        .set({ currentChantId: chantId, currentPhase: "leader", currentCycle: 1, updatedAt: new Date() })
         .where(eq(demoState.demonstrationId, demonstrationId));
     } else {
-      await db.insert(demoState).values({ demonstrationId, currentChantId: chantId });
+      await db.insert(demoState).values({ demonstrationId, currentChantId: chantId, currentPhase: "leader", currentCycle: 1 });
     }
   }
 
@@ -188,14 +195,24 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async updateAutoRotation(demonstrationId: string, autoRotate: boolean, rotationInterval: number): Promise<void> {
+
+  async setRotationPhase(demonstrationId: string, currentPhase: "leader" | "people", currentCycle: number): Promise<void> {
     const existing = await this.getDemoState(demonstrationId);
     if (existing) {
       await db.update(demoState)
-        .set({ autoRotate, rotationInterval, updatedAt: new Date() })
+        .set({ currentPhase, currentCycle, updatedAt: new Date() })
+        .where(eq(demoState.demonstrationId, demonstrationId));
+    }
+  }
+
+  async updateAutoRotation(demonstrationId: string, autoRotate: boolean, rotationInterval: number, cycleCount: number, leaderDuration: number, peopleDuration: number): Promise<void> {
+    const existing = await this.getDemoState(demonstrationId);
+    if (existing) {
+      await db.update(demoState)
+        .set({ autoRotate, rotationInterval, cycleCount, leaderDuration, peopleDuration, updatedAt: new Date() })
         .where(eq(demoState.demonstrationId, demonstrationId));
     } else {
-      await db.insert(demoState).values({ demonstrationId, currentChantId: null, autoRotate, rotationInterval });
+      await db.insert(demoState).values({ demonstrationId, currentChantId: null, autoRotate, rotationInterval, cycleCount, leaderDuration, peopleDuration });
     }
   }
 

@@ -93,6 +93,9 @@ export default function DemoEditor() {
   const [editResponseText, setEditResponseText] = useState("");
 
   const [rotationInterval, setRotationInterval] = useState(60);
+  const [cycleCount, setCycleCount] = useState(1);
+  const [leaderDuration, setLeaderDuration] = useState(4);
+  const [peopleDuration, setPeopleDuration] = useState(3);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
@@ -112,10 +115,12 @@ export default function DemoEditor() {
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
-    if (state?.rotationInterval) {
-      setRotationInterval(state.rotationInterval);
-    }
-  }, [state?.rotationInterval]);
+    if (!state) return;
+    if (state.rotationInterval) setRotationInterval(state.rotationInterval);
+    if (state.cycleCount) setCycleCount(state.cycleCount);
+    if (state.leaderDuration) setLeaderDuration(state.leaderDuration);
+    if (state.peopleDuration) setPeopleDuration(state.peopleDuration);
+  }, [state]);
 
   const addChant = useMutation({
     mutationFn: async ({ callText, responseText }: { callText: string; responseText: string }) => {
@@ -214,6 +219,9 @@ export default function DemoEditor() {
       await apiRequest("POST", `/api/demos/${id}/auto-rotate`, {
         autoRotate: enabled,
         rotationInterval,
+        cycleCount,
+        leaderDuration,
+        peopleDuration,
       });
     },
     onSuccess: () => {
@@ -230,11 +238,34 @@ export default function DemoEditor() {
       await apiRequest("POST", `/api/demos/${id}/auto-rotate`, {
         autoRotate,
         rotationInterval: interval,
+        cycleCount,
+        leaderDuration,
+        peopleDuration,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
       toast({ title: "Rotation interval updated" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+
+  const updateCycleSettings = useMutation({
+    mutationFn: async ({ cycles, leaderSec, peopleSec }: { cycles: number; leaderSec: number; peopleSec: number }) => {
+      await apiRequest("POST", `/api/demos/${id}/auto-rotate`, {
+        autoRotate,
+        rotationInterval,
+        cycleCount: cycles,
+        leaderDuration: leaderSec,
+        peopleDuration: peopleSec,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
+      toast({ title: "Cycle settings updated" });
     },
     onError: (err: Error) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -518,6 +549,51 @@ export default function DemoEditor() {
                       data-testid="input-rotation-interval"
                     />
                     <span className="text-xs text-muted-foreground">sec</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">Cycles</span>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={10}
+                      value={cycleCount}
+                      onChange={(e) => setCycleCount(Number(e.target.value))}
+                      onBlur={() => {
+                        const nextCycles = Math.max(1, Math.min(10, cycleCount));
+                        const nextLeader = Math.max(1, Math.min(30, leaderDuration));
+                        const nextPeople = Math.max(1, Math.min(30, peopleDuration));
+                        setCycleCount(nextCycles);
+                        setLeaderDuration(nextLeader);
+                        setPeopleDuration(nextPeople);
+                        if (
+                          nextCycles !== state?.cycleCount ||
+                          nextLeader !== state?.leaderDuration ||
+                          nextPeople !== state?.peopleDuration
+                        ) {
+                          updateCycleSettings.mutate({ cycles: nextCycles, leaderSec: nextLeader, peopleSec: nextPeople });
+                        }
+                      }}
+                      className="w-16 text-sm"
+                      data-testid="input-cycle-count"
+                    />
+                    <span className="text-xs text-muted-foreground">Leader sec</span>
+                    <Input type="number" min={1} max={30} value={leaderDuration} onChange={(e) => setLeaderDuration(Number(e.target.value))} onBlur={() => {
+                      const nextCycles = Math.max(1, Math.min(10, cycleCount));
+                      const nextLeader = Math.max(1, Math.min(30, leaderDuration));
+                      const nextPeople = Math.max(1, Math.min(30, peopleDuration));
+                      if (nextCycles !== state?.cycleCount || nextLeader !== state?.leaderDuration || nextPeople !== state?.peopleDuration) {
+                        updateCycleSettings.mutate({ cycles: nextCycles, leaderSec: nextLeader, peopleSec: nextPeople });
+                      }
+                    }} className="w-16 text-sm" data-testid="input-leader-duration" />
+                    <span className="text-xs text-muted-foreground">People sec</span>
+                    <Input type="number" min={1} max={30} value={peopleDuration} onChange={(e) => setPeopleDuration(Number(e.target.value))} onBlur={() => {
+                      const nextCycles = Math.max(1, Math.min(10, cycleCount));
+                      const nextLeader = Math.max(1, Math.min(30, leaderDuration));
+                      const nextPeople = Math.max(1, Math.min(30, peopleDuration));
+                      if (nextCycles !== state?.cycleCount || nextLeader !== state?.leaderDuration || nextPeople !== state?.peopleDuration) {
+                        updateCycleSettings.mutate({ cycles: nextCycles, leaderSec: nextLeader, peopleSec: nextPeople });
+                      }
+                    }} className="w-16 text-sm" data-testid="input-people-duration" />
                   </div>
                   <Button
                     variant={autoRotate ? "default" : "outline"}

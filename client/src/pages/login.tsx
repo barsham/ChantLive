@@ -96,7 +96,11 @@ export default function Login() {
             </Button>
           </form>
 
-
+          <div className="mt-3 text-right text-sm">
+            <Link href="/forgot-password" className="text-primary" data-testid="link-forgot-password">
+              Forgot password?
+            </Link>
+          </div>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
             Don't have an account?{" "}

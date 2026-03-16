@@ -74,3 +74,22 @@ export async function sendVerificationEmail(toEmail: string, name: string, verif
     `,
   });
 }
+
+
+export async function sendPasswordResetEmail(toEmail: string, name: string, resetUrl: string) {
+  const { client, fromEmail } = await getResendClient();
+
+  await client.emails.send({
+    from: fromEmail || 'ChantLive <noreply@chantlive.online>',
+    to: toEmail,
+    subject: 'Reset your ChantLive password',
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 16px;">
+        <h2 style="color: #111; margin-bottom: 8px;">Password reset request</h2>
+        <p style="color: #555; line-height: 1.5;">Hi ${name}, click the button below to reset your password.</p>
+        <a href="${resetUrl}" style="display: inline-block; background: #111; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500; margin: 16px 0;">Reset Password</a>
+        <p style="color: #888; font-size: 13px; margin-top: 24px;">If you didn't request this, you can ignore this email. This link expires in 1 hour.</p>
+      </div>
+    `,
+  });
+}
