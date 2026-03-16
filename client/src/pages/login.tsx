@@ -3,10 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Megaphone } from "lucide-react";
 import { SiGoogle } from "react-icons/si";
 import { Link, useLocation, useSearch } from "wouter";
-import logoImg from "@assets/ChatLive_Logo_1770546398510.png";
 import { AppVersion } from "@/components/app-version";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
@@ -61,7 +60,7 @@ export default function Login() {
         <CardHeader className="text-center">
           <Link href="/">
             <div className="flex items-center justify-center mb-4 cursor-pointer">
-              <img src={logoImg} alt="ChantLive" className="h-8" />
+              <span className="flex items-center gap-2 text-xl font-bold"><Megaphone className="w-6 h-6 text-orange-500" />ChantLive</span>
               <AppVersion className="ml-2" />
             </div>
           </Link>

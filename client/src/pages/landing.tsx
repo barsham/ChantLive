@@ -3,7 +3,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Zap, Users, ArrowRight, Megaphone } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useLocation, Link } from "wouter";
-import logoImg from "@assets/ChatLive_Logo_1770546398510.png";
 import { AppVersion } from "@/components/app-version";
 
 export default function Landing() {
@@ -15,7 +14,7 @@ export default function Landing() {
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-2">
-            <img src={logoImg} alt="ChantLive" className="h-8" data-testid="text-brand" />
+            <span className="flex items-center gap-2 text-xl font-bold" data-testid="text-brand"><Megaphone className="w-6 h-6 text-orange-500" />ChantLive</span>
             <AppVersion />
           </div>
           {isAuthenticated ? (

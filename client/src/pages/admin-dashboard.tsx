@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Plus, Megaphone, Radio, Archive, Eye, Users, LogOut } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import logoImg from "@assets/ChatLive_Logo_1770546398510.png";
 import { useToast } from "@/hooks/use-toast";
 import { AppVersion } from "@/components/app-version";
 import type { Demonstration } from "@shared/schema";
@@ -91,7 +90,7 @@ export default function AdminDashboard() {
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-2">
-            <img src={logoImg} alt="ChantLive" className="h-8" />
+            <span className="flex items-center gap-2 text-xl font-bold"><Megaphone className="w-6 h-6 text-orange-500" />ChantLive</span>
             <Badge variant="secondary" className="text-xs">Admin</Badge>
             <AppVersion />
           </div>
