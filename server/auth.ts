@@ -15,6 +15,11 @@ function hashToken(token: string): string {
 
 export function setupAuth(app: Express) {
   const PgSession = connectPgSimple(session);
+  const sessionSecret = process.env.SESSION_SECRET;
+
+  if (!sessionSecret) {
+    throw new Error("SESSION_SECRET must be set");
+  }
 
   app.use(
     session({
@@ -23,7 +28,7 @@ export function setupAuth(app: Express) {
         tableName: "session",
         createTableIfMissing: true,
       }),
-      secret: process.env.SESSION_SECRET || "chantlive-secret-key",
+      secret: sessionSecret,
       resave: false,
       saveUninitialized: false,
       cookie: {
