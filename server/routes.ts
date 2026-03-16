@@ -24,16 +24,29 @@ const demoViewers = new Map<string, Set<string>>();
 const autoRotateTimers = new Map<string, NodeJS.Timeout>();
 const autoRotateProgress = new Map<string, { phase: "leader" | "people"; cycle: number }>();
 
+function getSingleParam(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
 function getViewerCount(demoId: string): number {
   return demoViewers.get(demoId)?.size ?? 0;
 }
 
-async function canAccessDemo(user: User, demoId: string): Promise<boolean> {
+async function canAccessDemo(user: User, demoIdOrPublicId: string | string[] | undefined): Promise<boolean> {
   if (user.role === "super_admin") return true;
-  const demo = await storage.getDemonstration(demoId);
+  const demo = await getDemoByIdentifier(demoIdOrPublicId);
   if (!demo) return false;
   if (demo.createdBy === user.id) return true;
-  return storage.isDemoAdmin(demoId, user.id);
+  return storage.isDemoAdmin(demo.id, user.id);
+}
+
+async function getDemoByIdentifier(idOrPublicId: string | string[] | undefined) {
+  const normalizedId = getSingleParam(idOrPublicId);
+  if (!normalizedId) return undefined;
+
+  const byId = await storage.getDemonstration(normalizedId);
+  if (byId) return byId;
+  return storage.getDemonstrationByPublicId(normalizedId);
 }
 
 
@@ -100,7 +113,7 @@ export async function registerRoutes(
   app.get("/api/demos/:id", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
-      const demo = await storage.getDemonstration(req.params.id);
+      const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Not found" });
 
       if (!(await canAccessDemo(user, demo.id))) {
@@ -128,7 +141,7 @@ export async function registerRoutes(
   app.patch("/api/demos/:id", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
-      const demo = await storage.getDemonstration(req.params.id);
+      const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
@@ -147,7 +160,7 @@ export async function registerRoutes(
   app.post("/api/demos/:id/admins", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
-      const demo = await storage.getDemonstration(req.params.id);
+      const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (demo.createdBy !== user.id && user.role !== "super_admin") {
         return res.status(403).json({ message: "Only the demo creator or super admin can invite admins" });
@@ -187,17 +200,20 @@ export async function registerRoutes(
   app.delete("/api/demos/:id/admins/:userId", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
-      const demo = await storage.getDemonstration(req.params.id);
+      const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (demo.createdBy !== user.id && user.role !== "super_admin") {
         return res.status(403).json({ message: "Only the demo creator or super admin can remove admins" });
       }
 
-      if (req.params.userId === demo.createdBy) {
+      const adminUserId = getSingleParam(req.params.userId);
+      if (!adminUserId) return res.status(400).json({ message: "userId is required" });
+
+      if (adminUserId === demo.createdBy) {
         return res.status(400).json({ message: "Cannot remove the creator from the admin list" });
       }
 
-      await storage.removeDemoAdmin(demo.id, req.params.userId);
+      await storage.removeDemoAdmin(demo.id, adminUserId);
       res.json({ success: true });
     } catch (err) {
       res.status(500).json({ message: "Failed to remove admin" });
@@ -207,7 +223,7 @@ export async function registerRoutes(
   app.post("/api/demos/:id/chants", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
-      const demo = await storage.getDemonstration(req.params.id);
+      const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
@@ -238,12 +254,14 @@ export async function registerRoutes(
   app.patch("/api/demos/:id/chants/:chantId", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
-      const demo = await storage.getDemonstration(req.params.id);
+      const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
       const demoChants = await storage.getChants(demo.id);
-      const existingChant = demoChants.find((c) => c.id === req.params.chantId);
+      const chantId = getSingleParam(req.params.chantId);
+      if (!chantId) return res.status(400).json({ message: "chantId is required" });
+      const existingChant = demoChants.find((c) => c.id === chantId);
       if (!existingChant) return res.status(404).json({ message: "Chant not found in this demonstration" });
 
       const { callText, responseText } = req.body;
@@ -252,7 +270,7 @@ export async function registerRoutes(
         return res.status(400).json({ message: "At least one of call or response text is required" });
       }
 
-      const chant = await storage.updateChant(req.params.chantId, {
+      const chant = await storage.updateChant(chantId, {
         callText: (callText || "").trim(),
         responseText: (responseText || "").trim(),
       });
@@ -284,11 +302,15 @@ export async function registerRoutes(
   app.delete("/api/demos/:id/chants/:chantId", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
-      if (!(await canAccessDemo(user, req.params.id))) return res.status(403).json({ message: "Access denied" });
-      const demoChants = await storage.getChants(req.params.id);
-      const chantExists = demoChants.some((c) => c.id === req.params.chantId);
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      const demoChants = await storage.getChants(demo.id);
+      const chantId = getSingleParam(req.params.chantId);
+      if (!chantId) return res.status(400).json({ message: "chantId is required" });
+      const chantExists = demoChants.some((c) => c.id === chantId);
       if (!chantExists) return res.status(404).json({ message: "Chant not found in this demonstration" });
-      await storage.deleteChant(req.params.chantId);
+      await storage.deleteChant(chantId);
       res.json({ success: true });
     } catch (err) {
       res.status(500).json({ message: "Failed to delete chant" });
@@ -298,12 +320,16 @@ export async function registerRoutes(
   app.post("/api/demos/:id/chants/:chantId/reorder", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
-      if (!(await canAccessDemo(user, req.params.id))) return res.status(403).json({ message: "Access denied" });
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
       const { direction } = req.body;
       if (direction !== "up" && direction !== "down") {
         return res.status(400).json({ message: "Direction must be 'up' or 'down'" });
       }
-      await storage.reorderChants(req.params.id, req.params.chantId, direction);
+      const chantId = getSingleParam(req.params.chantId);
+      if (!chantId) return res.status(400).json({ message: "chantId is required" });
+      await storage.reorderChants(demo.id, chantId, direction);
       res.json({ success: true });
     } catch (err) {
       res.status(500).json({ message: "Failed to reorder" });
@@ -313,7 +339,7 @@ export async function registerRoutes(
   app.post("/api/demos/:id/current", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
-      const demo = await storage.getDemonstration(req.params.id);
+      const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
       if (demo.status !== "live") return res.status(400).json({ message: "Demo is not live" });
@@ -351,7 +377,7 @@ export async function registerRoutes(
   app.post("/api/demos/:id/live", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
-      const demo = await storage.getDemonstration(req.params.id);
+      const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
       if (demo.status === "live") return res.status(400).json({ message: "Demo is already live" });
@@ -391,7 +417,7 @@ export async function registerRoutes(
   app.post("/api/demos/:id/end", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
-      const demo = await storage.getDemonstration(req.params.id);
+      const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
@@ -490,7 +516,7 @@ export async function registerRoutes(
   app.post("/api/demos/:id/auto-rotate", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
-      const demo = await storage.getDemonstration(req.params.id);
+      const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
@@ -520,7 +546,7 @@ export async function registerRoutes(
   app.get("/api/demos/:id/qrcode", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
-      const demo = await storage.getDemonstration(req.params.id);
+      const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
@@ -555,7 +581,9 @@ export async function registerRoutes(
       if (role !== "admin" && role !== "super_admin") {
         return res.status(400).json({ message: "Invalid role" });
       }
-      await storage.updateUserRole(req.params.userId, role);
+      const userId = getSingleParam(req.params.userId);
+      if (!userId) return res.status(400).json({ message: "userId is required" });
+      await storage.updateUserRole(userId, role);
       res.json({ success: true });
     } catch (err) {
       res.status(500).json({ message: "Failed to update role" });
@@ -565,10 +593,12 @@ export async function registerRoutes(
   app.delete("/api/admin/users/:userId", requireSuperAdmin, async (req, res) => {
     try {
       const currentUser = req.user as User;
-      if (req.params.userId === currentUser.id) {
+      const userId = getSingleParam(req.params.userId);
+      if (!userId) return res.status(400).json({ message: "userId is required" });
+      if (userId === currentUser.id) {
         return res.status(400).json({ message: "Cannot remove yourself" });
       }
-      await storage.deleteUser(req.params.userId);
+      await storage.deleteUser(userId);
       res.json({ success: true });
     } catch (err) {
       res.status(500).json({ message: "Failed to remove user" });
