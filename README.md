@@ -7,7 +7,7 @@ Admins create demonstrations, manage chant lists, and push the current chant liv
 ## Features
 
 - Real-time chant updates via Socket.IO
-- Admin authentication (email/password + optional Google OAuth)
+- Admin authentication (email/password)
 - Public participant view with no login required
 - Live viewer count tracking
 - PostgreSQL + Drizzle ORM backend
@@ -48,8 +48,6 @@ Required variables:
 
 Optional variables:
 
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
 - `PORT`
 
 ### 4) Prepare database
