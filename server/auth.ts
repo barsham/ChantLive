@@ -1,5 +1,4 @@
 import passport from "passport";
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { storage } from "./storage";
 import type { Express, RequestHandler } from "express";
 import session from "express-session";
@@ -56,80 +55,6 @@ export function setupAuth(app: Express) {
     }
   });
 
-  const clientID = process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-
-  if (clientID && clientSecret) {
-    const protocol = process.env.REPLIT_DEV_DOMAIN ? "https" : "http";
-    const host = process.env.REPLIT_DEV_DOMAIN || `localhost:${process.env.PORT || 5000}`;
-    const callbackURL = `${protocol}://${host}/auth/google/callback`;
-
-    passport.use(
-      new GoogleStrategy(
-        { clientID, clientSecret, callbackURL },
-        async (_accessToken, _refreshToken, profile, done) => {
-          try {
-            let user = await storage.getUserByGoogleId(profile.id);
-
-            if (!user) {
-              const email = profile.emails?.[0]?.value;
-              if (!email) {
-                return done(new Error("Google account does not have an email address"), undefined);
-              }
-              const name = profile.displayName || email;
-              const avatarUrl = profile.photos?.[0]?.value || null;
-
-              const existingUser = await storage.getUserByEmail(email);
-              if (existingUser) {
-                await storage.updateUser(existingUser.id, {
-                  googleId: profile.id,
-                  avatarUrl,
-                  emailVerified: true,
-                });
-                user = await storage.getUser(existingUser.id);
-                return done(null, user!);
-              }
-
-              const userCount = await storage.getUserCount();
-              const role = userCount === 0 ? "super_admin" : "admin";
-
-              user = await storage.createUser({
-                email,
-                name,
-                provider: "google",
-                role,
-                googleId: profile.id,
-                avatarUrl,
-              });
-              await storage.updateUser(user.id, { emailVerified: true });
-            }
-
-            done(null, user);
-          } catch (err) {
-            done(err as Error, undefined);
-          }
-        }
-      )
-    );
-
-    app.get(
-      "/auth/google",
-      passport.authenticate("google", { scope: ["profile", "email"] })
-    );
-
-    app.get(
-      "/auth/google/callback",
-      passport.authenticate("google", { failureRedirect: "/" }),
-      (_req, res) => {
-        res.redirect("/admin");
-      }
-    );
-  } else {
-    app.get("/auth/google", (_req, res) => {
-      res.status(503).json({ message: "Google OAuth is not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET." });
-    });
-  }
-
   app.post("/api/auth/register", async (req, res) => {
     try {
       const { email, password, name } = req.body;
@@ -155,9 +80,6 @@ export function setupAuth(app: Express) {
 
       const existing = await storage.getUserByEmail(trimmedEmail);
       if (existing) {
-        if (existing.provider === "google" && !existing.passwordHash) {
-          return res.status(400).json({ message: "An account with this email already exists via Google sign-in. Please use Google to log in." });
-        }
         if (!existing.emailVerified) {
           const rawToken = crypto.randomBytes(32).toString("hex");
           const hashedToken = hashToken(rawToken);
@@ -192,7 +114,6 @@ export function setupAuth(app: Express) {
       const user = await storage.createUser({
         email: trimmedEmail,
         name: trimmedName,
-        provider: "email",
         role,
       });
 
@@ -266,9 +187,6 @@ export function setupAuth(app: Express) {
       }
 
       if (!user.passwordHash) {
-        if (user.provider === "google") {
-          return res.status(401).json({ message: "This account uses Google sign-in. Please use Google to log in." });
-        }
         return res.status(401).json({ message: "Invalid email or password." });
       }
 

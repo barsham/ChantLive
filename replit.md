@@ -5,7 +5,7 @@
 ChantLive is a real-time demonstration/protest chant management platform hosted at https://chantlive.online/ and free to use by anyone. Admins create "demonstrations," add a list of chants, then push a "current chant" live. Participants scan a QR code on their phones and see a full-screen chant page that updates automatically via WebSockets — no login or app download required.
 
 The app has two audiences:
-- **Admins** (authenticated via email/password or Google OAuth) who create demonstrations, manage chant lists, and drive the live chant selection.
+- **Admins** (authenticated via email/password) who create demonstrations, manage chant lists, and drive the live chant selection.
 - **Participants** (unauthenticated) who join via a short public URL/QR code and see the current chant in real time.
 
 ## User Preferences
@@ -27,7 +27,7 @@ Preferred communication style: Simple, everyday language.
 - **Runtime:** Node.js with Express (TypeScript via tsx)
 - **HTTP server:** Node `http.createServer` wrapping Express (needed for Socket.IO)
 - **Real-time:** Socket.IO server for pushing chant changes and viewer counts to participants
-- **Authentication:** Email/password registration with email verification via Resend, plus Passport.js with Google OAuth 2.0 strategy; sessions stored in PostgreSQL via `connect-pg-simple`
+- **Authentication:** Email/password registration with email verification via Resend; sessions stored in PostgreSQL via `connect-pg-simple`
 - **Session management:** Express-session with 30-day cookie, stored in a `session` table (auto-created)
 - **Password security:** bcryptjs with 12 rounds for hashing; verification tokens hashed with SHA-256 before storage
 - **Email service:** Resend integration for sending verification emails
@@ -46,7 +46,7 @@ Preferred communication style: Simple, everyday language.
 - **Migrations output:** `./migrations` directory
 
 ### Database Tables
-- **users** — id, email, name, provider, role, googleId, avatarUrl, passwordHash, emailVerified, verificationToken, verificationTokenExpires, createdAt
+- **users** — id, email, name, role, avatarUrl, passwordHash, emailVerified, verificationToken, verificationTokenExpires, createdAt
 - **demonstrations** — id, publicId (short unique ID for participant URLs), title, status (draft/live/ended), createdBy, createdAt
 - **chants** — id, demonstrationId, orderIndex, callText (leader's call), responseText (crowd's response)
 - **demo_admins** — composite PK (demonstrationId, userId) linking admins to demos
@@ -59,7 +59,6 @@ Preferred communication style: Simple, everyday language.
 - `/api/auth/register` — POST email/password registration
 - `/api/auth/login` — POST email/password login
 - `/api/auth/verify?token=` — GET email verification callback
-- `/auth/google` — initiate Google OAuth flow
 - `/api/demos` — CRUD for demonstrations
 - `/api/admin/users` — user management (super_admin only)
 - `/d/:publicId` — participant view (client-side route)
@@ -98,8 +97,7 @@ script/
 ## External Dependencies
 
 - **PostgreSQL** — Primary database, required via `DATABASE_URL` environment variable
-- **Google OAuth 2.0** — Admin authentication, requires `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` environment variables
-- **Socket.IO** — WebSocket-based real-time communication between server and participant clients
+- - **Socket.IO** — WebSocket-based real-time communication between server and participant clients
 - **QRCode (npm)** — Server-side QR code generation for participant join links
 - **connect-pg-simple** — PostgreSQL session store for Express sessions
 - **SESSION_SECRET** — Environment variable for signing session cookies (falls back to a default)

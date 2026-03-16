@@ -99,7 +99,7 @@ export default function AdminUsers() {
         <div className="mb-6">
           <h2 className="text-lg font-semibold mb-1" data-testid="text-users-title">Admin Users</h2>
           <p className="text-sm text-muted-foreground">
-            Users sign in with Google and can then be assigned a role. The first user who signs in becomes the super admin.
+            Users sign in with email and password and can then be assigned a role. The first user who registers becomes the super admin.
           </p>
         </div>
 

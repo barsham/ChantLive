@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CheckCircle, Megaphone } from "lucide-react";
-import { SiGoogle } from "react-icons/si";
 import { Link, useLocation, useSearch } from "wouter";
 import { AppVersion } from "@/components/app-version";
 import { useToast } from "@/hooks/use-toast";
@@ -97,21 +96,7 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-            </div>
-          </div>
 
-          <Button variant="outline" className="w-full" asChild data-testid="button-google-login">
-            <a href="/auth/google">
-              <SiGoogle className="w-4 h-4 mr-2" />
-              Google
-            </a>
-          </Button>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
             Don't have an account?{" "}

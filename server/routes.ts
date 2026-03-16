@@ -13,8 +13,6 @@ declare global {
       email: string;
       name: string;
       role: string;
-      provider: string;
-      googleId: string | null;
       avatarUrl: string | null;
       createdAt: Date;
     }

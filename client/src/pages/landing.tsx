@@ -2,12 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Zap, Users, ArrowRight, Megaphone } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { useLocation, Link } from "wouter";
+import { Link } from "wouter";
 import { AppVersion } from "@/components/app-version";
 
 export default function Landing() {
   const { isAuthenticated } = useAuth();
-  const [, navigate] = useLocation();
 
   return (
     <div className="min-h-screen bg-background">
@@ -18,17 +17,19 @@ export default function Landing() {
             <AppVersion />
           </div>
           {isAuthenticated ? (
-            <Button onClick={() => navigate("/admin")} data-testid="button-go-dashboard">
-              Dashboard
-              <ArrowRight className="w-4 h-4 ml-1" />
+            <Button asChild data-testid="button-go-dashboard">
+              <Link href="/admin">
+                Dashboard
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </Link>
             </Button>
           ) : (
             <div className="flex items-center gap-2 flex-wrap">
-              <Button variant="outline" onClick={() => navigate("/login")} data-testid="button-sign-in">
-                Sign In
+              <Button variant="outline" asChild data-testid="button-sign-in">
+                <Link href="/login">Sign In</Link>
               </Button>
-              <Button onClick={() => navigate("/register")} data-testid="button-register">
-                Register
+              <Button asChild data-testid="button-register">
+                <Link href="/register">Register</Link>
               </Button>
             </div>
           )}
@@ -47,22 +48,26 @@ export default function Landing() {
               <span className="text-primary"> live chants</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-8">
-              Create demonstrations, manage chants, and push them live to every participant's phone instantly. Hosted at https://chantlive.online/ and free to use by anyone.
+              Create demonstrations, manage chants, and push them live to every participant's phone instantly. Hosted at <a href="https://chantlive.online/" target="_blank" rel="noreferrer" className="underline underline-offset-4">chantlive.online</a> and free to use by anyone.
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
               {isAuthenticated ? (
-                <Button size="lg" onClick={() => navigate("/admin")} data-testid="button-get-started">
-                  Go to Dashboard
-                  <ArrowRight className="w-4 h-4 ml-1" />
+                <Button size="lg" asChild data-testid="button-get-started">
+                  <Link href="/admin">
+                    Go to Dashboard
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </Link>
                 </Button>
               ) : (
                 <>
-                  <Button size="lg" onClick={() => navigate("/register")} data-testid="button-get-started">
-                    Get Started
-                    <ArrowRight className="w-4 h-4 ml-1" />
+                  <Button size="lg" asChild data-testid="button-get-started">
+                    <Link href="/register">
+                      Get Started
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </Link>
                   </Button>
-                  <Button size="lg" variant="outline" onClick={() => navigate("/login")} data-testid="button-hero-sign-in">
-                    Sign In
+                  <Button size="lg" variant="outline" asChild data-testid="button-hero-sign-in">
+                    <Link href="/login">Sign In</Link>
                   </Button>
                 </>
               )}
@@ -125,9 +130,9 @@ export default function Landing() {
 
       <footer className="border-t py-6 px-4">
         <div className="max-w-6xl mx-auto text-center text-sm text-muted-foreground space-y-2">
-          <p>ChantLive - Real-time demonstration management, hosted at https://chantlive.online/ and free for anyone</p>
+          <p>ChantLive - Real-time demonstration management, hosted at <a href="https://chantlive.online/" target="_blank" rel="noreferrer" className="underline underline-offset-4">chantlive.online</a> and free for anyone</p>
           <p>
-            Open-source project for free speech worldwide. <AppVersion className="inline" />
+            Open-source project for free speech worldwide. <a href="https://github.com/barsham/ChantLive" target="_blank" rel="noreferrer" className="underline underline-offset-4">Source code on GitHub</a>. <AppVersion className="inline" />
           </p>
         </div>
       </footer>
