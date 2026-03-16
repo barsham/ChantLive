@@ -46,7 +46,7 @@ export default function Landing() {
               <span className="text-primary"> live chants</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-8">
-              Create demonstrations, manage chants, and push them live to every participant's phone instantly. No app download required.
+              Create demonstrations, manage chants, and push them live to every participant's phone instantly. Hosted at https://chantlive.online/ and free to use by anyone.
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
               {isAuthenticated ? (
@@ -117,7 +117,7 @@ export default function Landing() {
 
       <footer className="border-t py-6 px-4">
         <div className="max-w-6xl mx-auto text-center text-sm text-muted-foreground">
-          ChantLive - Real-time demonstration management
+          ChantLive - Real-time demonstration management, hosted at https://chantlive.online/ and free for anyone
         </div>
       </footer>
     </div>
