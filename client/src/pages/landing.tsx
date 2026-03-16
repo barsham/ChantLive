@@ -4,6 +4,7 @@ import { Shield, Zap, Users, ArrowRight, Megaphone } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useLocation, Link } from "wouter";
 import logoImg from "@assets/ChatLive_Logo_1770546398510.png";
+import { AppVersion } from "@/components/app-version";
 
 export default function Landing() {
   const { isAuthenticated } = useAuth();
@@ -15,6 +16,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-2">
             <img src={logoImg} alt="ChantLive" className="h-8" data-testid="text-brand" />
+            <AppVersion />
           </div>
           {isAuthenticated ? (
             <Button onClick={() => navigate("/admin")} data-testid="button-go-dashboard">
@@ -105,6 +107,13 @@ export default function Landing() {
         </section>
 
         <section className="py-16 px-4 border-t">
+          <div className="max-w-3xl mx-auto text-center mb-12">
+            <h2 className="text-xl font-semibold mb-2">Free and open-source for free speech</h2>
+            <p className="text-sm text-muted-foreground">
+              ChantLive is a free open-source project. Our mission is to help people organize peaceful demonstrations and express themselves safely,
+              openly, and without paywalls.
+            </p>
+          </div>
           <div className="max-w-3xl mx-auto text-center">
             <Shield className="w-8 h-8 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2">Secure admin access</h2>
@@ -116,8 +125,11 @@ export default function Landing() {
       </main>
 
       <footer className="border-t py-6 px-4">
-        <div className="max-w-6xl mx-auto text-center text-sm text-muted-foreground">
-          ChantLive - Real-time demonstration management, hosted at https://chantlive.online/ and free for anyone
+        <div className="max-w-6xl mx-auto text-center text-sm text-muted-foreground space-y-2">
+          <p>ChantLive - Real-time demonstration management, hosted at https://chantlive.online/ and free for anyone</p>
+          <p>
+            Open-source project for free speech worldwide. <AppVersion className="inline" />
+          </p>
         </div>
       </footer>
     </div>
