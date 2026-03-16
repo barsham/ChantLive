@@ -11,3 +11,15 @@ export const pool = new pg.Pool({
 });
 
 export const db = drizzle(pool, { schema });
+
+export async function ensureUserAuthColumns(): Promise<void> {
+  await pool.query(`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS password_hash text,
+    ADD COLUMN IF NOT EXISTS email_verified boolean NOT NULL DEFAULT false,
+    ADD COLUMN IF NOT EXISTS verification_token text,
+    ADD COLUMN IF NOT EXISTS verification_token_expires timestamp,
+    ADD COLUMN IF NOT EXISTS password_reset_token text,
+    ADD COLUMN IF NOT EXISTS password_reset_expires timestamp;
+  `);
+}
