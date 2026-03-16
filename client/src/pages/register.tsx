@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Mail, CheckCircle } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import logoImg from "@assets/ChatLive_Logo_1770546398510.png";
+import { AppVersion } from "@/components/app-version";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -73,6 +74,7 @@ export default function Register() {
           <Link href="/">
             <div className="flex items-center justify-center mb-4 cursor-pointer">
               <img src={logoImg} alt="ChantLive" className="h-8" />
+              <AppVersion className="ml-2" />
             </div>
           </Link>
           <CardTitle>Create your account</CardTitle>

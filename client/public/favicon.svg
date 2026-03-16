@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ChantLive icon">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#7c3aed"/>
+      <stop offset="1" stop-color="#4f46e5"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <path d="M16 34c9-1 15-4 22-10v16c-7-6-13-9-22-10v4z" fill="#fff"/>
+  <path d="M39 24h5c3 0 6 3 6 6v4c0 3-3 6-6 6h-5z" fill="#e9d5ff"/>
+  <path d="M47 20a2 2 0 012-2c5 0 9 4 9 9a2 2 0 11-4 0c0-3-2-5-5-5a2 2 0 01-2-2zm0 24a2 2 0 012-2c3 0 5-2 5-5a2 2 0 114 0c0 5-4 9-9 9a2 2 0 01-2-2z" fill="#fff" opacity=".95"/>
+</svg>

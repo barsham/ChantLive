@@ -24,6 +24,7 @@ import { Plus, Megaphone, Radio, Archive, Eye, Users, LogOut } from "lucide-reac
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import logoImg from "@assets/ChatLive_Logo_1770546398510.png";
 import { useToast } from "@/hooks/use-toast";
+import { AppVersion } from "@/components/app-version";
 import type { Demonstration } from "@shared/schema";
 import { useState } from "react";
 
@@ -92,6 +93,7 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-2">
             <img src={logoImg} alt="ChantLive" className="h-8" />
             <Badge variant="secondary" className="text-xs">Admin</Badge>
+            <AppVersion />
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             {isSuperAdmin && (

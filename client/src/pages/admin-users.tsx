@@ -37,6 +37,7 @@ import { ArrowLeft, Shield, Trash2, Users } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import logoImg from "@assets/ChatLive_Logo_1770546398510.png";
 import { useToast } from "@/hooks/use-toast";
+import { AppVersion } from "@/components/app-version";
 import type { User } from "@shared/schema";
 import { useState } from "react";
 
@@ -90,6 +91,7 @@ export default function AdminUsers() {
           <div className="flex items-center gap-2">
             <img src={logoImg} alt="ChantLive" className="h-8" />
             <span className="font-semibold text-lg">Manage Admins</span>
+            <AppVersion />
           </div>
         </div>
       </header>
