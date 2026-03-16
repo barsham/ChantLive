@@ -42,7 +42,7 @@ export async function sendInviteEmail(toEmail: string, inviteeName: string, invi
   const { client, fromEmail } = await getResendClient();
 
   await client.emails.send({
-    from: fromEmail || 'ChantLive <noreply@resend.dev>',
+    from: fromEmail || 'ChantLive <noreply@chantlive.online>',
     to: toEmail,
     subject: `You've been invited to manage "${demoTitle}" on ChantLive`,
     html: `
@@ -61,7 +61,7 @@ export async function sendVerificationEmail(toEmail: string, name: string, verif
   const { client, fromEmail } = await getResendClient();
 
   await client.emails.send({
-    from: fromEmail || 'ChantLive <noreply@resend.dev>',
+    from: fromEmail || 'ChantLive <noreply@chantlive.online>',
     to: toEmail,
     subject: 'Verify your ChantLive account',
     html: `
