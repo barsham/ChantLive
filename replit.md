@@ -2,7 +2,7 @@
 
 ## Overview
 
-ChantLive is a real-time demonstration/protest chant management platform. Admins create "demonstrations," add a list of chants, then push a "current chant" live. Participants scan a QR code on their phones and see a full-screen chant page that updates automatically via WebSockets — no login or app download required.
+ChantLive is a real-time demonstration/protest chant management platform hosted at https://chantlive.online/ and free to use by anyone. Admins create "demonstrations," add a list of chants, then push a "current chant" live. Participants scan a QR code on their phones and see a full-screen chant page that updates automatically via WebSockets — no login or app download required.
 
 The app has two audiences:
 - **Admins** (authenticated via email/password or Google OAuth) who create demonstrations, manage chant lists, and drive the live chant selection.

@@ -1,8 +1,8 @@
 # ChantLive
 
-ChantLive is a real-time chant management platform for demonstrations and events.
+ChantLive is a real-time chant management platform for demonstrations and events, hosted at https://chantlive.online/.
 
-Admins create demonstrations, manage chant lists, and push the current chant live. Participants join through a public URL (or QR code) and receive live updates without signing in.
+Admins create demonstrations, manage chant lists, and push the current chant live. Participants join through a public URL (or QR code) and receive live updates without signing in. ChantLive is free to use for everyone.
 
 ## Features
 
