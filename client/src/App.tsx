@@ -11,6 +11,8 @@ import AdminUsers from "@/pages/admin-users";
 import Participant from "@/pages/participant";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 import { useLocation } from "wouter";
 
@@ -40,6 +42,8 @@ function Router() {
       <Route path="/" component={Landing} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/admin">
         {() => <ProtectedRoute component={AdminDashboard} />}
       </Route>

@@ -21,6 +21,7 @@ declare global {
 
 const demoViewers = new Map<string, Set<string>>();
 const autoRotateTimers = new Map<string, NodeJS.Timeout>();
+const autoRotateProgress = new Map<string, { phase: "leader" | "people"; cycle: number }>();
 
 function getViewerCount(demoId: string): number {
   return demoViewers.get(demoId)?.size ?? 0;
@@ -34,6 +35,26 @@ async function canAccessDemo(user: User, demoId: string): Promise<boolean> {
   return storage.isDemoAdmin(demoId, user.id);
 }
 
+
+
+async function emitCurrentChant(io: SocketIOServer, demo: any) {
+  const chantsList = await storage.getChants(demo.id);
+  const state = await storage.getDemoState(demo.id);
+  const currentChant = state?.currentChantId ? chantsList.find((c) => c.id === state.currentChantId) : null;
+  const chantIndex = currentChant ? chantsList.findIndex((c) => c.id === currentChant.id) : null;
+
+  io.to(`demo:${demo.publicId}`).emit("chant_update", {
+    callText: currentChant?.callText || null,
+    responseText: currentChant?.responseText || null,
+    chantIndex,
+    totalChants: chantsList.length,
+    demoTitle: demo.title,
+    demoStatus: demo.status,
+    currentPhase: state?.currentPhase ?? "leader",
+    currentCycle: state?.currentCycle ?? 1,
+    cycleCount: state?.cycleCount ?? 1,
+  });
+}
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -246,6 +267,9 @@ export async function registerRoutes(
           totalChants: chantsList.length,
           demoTitle: demo.title,
           demoStatus: demo.status,
+          currentPhase: state.currentPhase ?? "leader",
+          currentCycle: state.currentCycle ?? 1,
+          cycleCount: state.cycleCount ?? 1,
         });
       }
 
@@ -301,6 +325,7 @@ export async function registerRoutes(
       const chant = chantsList.find((c) => c.id === chantId);
       const chantIndex = chantsList.findIndex((c) => c.id === chantId);
 
+      const currentState = await storage.getDemoState(demo.id);
       io.to(`demo:${demo.publicId}`).emit("chant_update", {
         callText: chant?.callText || null,
         responseText: chant?.responseText || null,
@@ -308,6 +333,9 @@ export async function registerRoutes(
         totalChants: chantsList.length,
         demoTitle: demo.title,
         demoStatus: demo.status,
+        currentPhase: currentState?.currentPhase ?? "leader",
+        currentCycle: currentState?.currentCycle ?? 1,
+        cycleCount: currentState?.cycleCount ?? 1,
       });
 
       io.to(`demo:${demo.publicId}`).emit("viewer_count", getViewerCount(demo.id));
@@ -334,6 +362,8 @@ export async function registerRoutes(
 
       await storage.setCurrentChant(demo.id, chantsList[0].id);
 
+      const state = await storage.getDemoState(demo.id);
+
       io.to(`demo:${demo.publicId}`).emit("chant_update", {
         callText: chantsList[0].callText,
         responseText: chantsList[0].responseText,
@@ -341,11 +371,13 @@ export async function registerRoutes(
         totalChants: chantsList.length,
         demoTitle: demo.title,
         demoStatus: "live",
+        currentPhase: state?.currentPhase ?? "leader",
+        currentCycle: state?.currentCycle ?? 1,
+        cycleCount: state?.cycleCount ?? 1,
       });
 
-      const state = await storage.getDemoState(demo.id);
       if (state?.autoRotate) {
-        await startAutoRotation(demo.id, demo.publicId, state.rotationInterval);
+        await startAutoRotation(demo.id, demo.publicId);
       }
 
       res.json({ success: true });
@@ -377,13 +409,14 @@ export async function registerRoutes(
     if (timer) {
       clearInterval(timer);
       autoRotateTimers.delete(demoId);
+      autoRotateProgress.delete(demoId);
     }
   }
 
-  async function startAutoRotation(demoId: string, publicId: string, intervalSeconds: number) {
+  async function startAutoRotation(demoId: string, publicId: string) {
     stopAutoRotation(demoId);
 
-    const timer = setInterval(async () => {
+    const tick = async () => {
       try {
         const demo = await storage.getDemonstration(demoId);
         if (!demo || demo.status !== "live") {
@@ -400,28 +433,56 @@ export async function registerRoutes(
         const chantsList = await storage.getChants(demoId);
         if (chantsList.length === 0) return;
 
-        const currentIndex = state.currentChantId
-          ? chantsList.findIndex((c) => c.id === state.currentChantId)
-          : -1;
-        const nextIndex = (currentIndex + 1) % chantsList.length;
-        const nextChant = chantsList[nextIndex];
+        const currentIndex = state.currentChantId ? chantsList.findIndex((c) => c.id === state.currentChantId) : 0;
+        const resolvedIndex = currentIndex >= 0 ? currentIndex : 0;
+        const progress = autoRotateProgress.get(demoId) ?? { phase: "leader" as const, cycle: 1 };
 
-        await storage.setCurrentChant(demoId, nextChant.id);
+        let nextPhase: "leader" | "people" = progress.phase === "leader" ? "people" : "leader";
+        let nextCycle = progress.cycle;
+        let nextIndex = resolvedIndex;
+
+        if (progress.phase === "people") {
+          if (progress.cycle >= state.cycleCount) {
+            nextCycle = 1;
+            nextIndex = (resolvedIndex + 1) % chantsList.length;
+            await storage.setCurrentChant(demoId, chantsList[nextIndex].id);
+          } else {
+            nextCycle = progress.cycle + 1;
+          }
+        }
+
+        await storage.setRotationPhase(demoId, nextPhase, nextCycle);
+        autoRotateProgress.set(demoId, { phase: nextPhase, cycle: nextCycle });
+
+        const refreshedState = await storage.getDemoState(demoId);
+        const activeChant = chantsList[nextIndex];
 
         io.to(`demo:${publicId}`).emit("chant_update", {
-          callText: nextChant.callText,
-          responseText: nextChant.responseText,
+          callText: activeChant.callText,
+          responseText: activeChant.responseText,
           chantIndex: nextIndex,
           totalChants: chantsList.length,
           demoTitle: demo.title,
           demoStatus: demo.status,
+          currentPhase: refreshedState?.currentPhase ?? nextPhase,
+          currentCycle: refreshedState?.currentCycle ?? nextCycle,
+          cycleCount: refreshedState?.cycleCount ?? state.cycleCount,
         });
+
+        const delaySeconds = nextPhase === "leader" ? state.leaderDuration : state.peopleDuration;
+        const timeout = setTimeout(tick, Math.max(1, delaySeconds) * 1000);
+        autoRotateTimers.set(demoId, timeout);
       } catch (err) {
         console.error("Auto-rotation error:", err);
       }
-    }, intervalSeconds * 1000);
+    };
 
-    autoRotateTimers.set(demoId, timer);
+    autoRotateProgress.set(demoId, { phase: "leader", cycle: 1 });
+    const initialState = await storage.getDemoState(demoId);
+    await storage.setRotationPhase(demoId, "leader", 1);
+    const initialDelay = Math.max(1, initialState?.leaderDuration ?? 4) * 1000;
+    const timeout = setTimeout(tick, initialDelay);
+    autoRotateTimers.set(demoId, timeout);
   }
 
   app.post("/api/demos/:id/auto-rotate", requireAuth, async (req, res) => {
@@ -431,23 +492,24 @@ export async function registerRoutes(
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
-      const { autoRotate, rotationInterval } = req.body;
+      const { autoRotate, rotationInterval, cycleCount, leaderDuration, peopleDuration } = req.body;
       if (typeof autoRotate !== "boolean") {
         return res.status(400).json({ message: "autoRotate must be a boolean" });
       }
-      const interval = typeof rotationInterval === "number" && rotationInterval >= 5 && rotationInterval <= 300
-        ? rotationInterval
-        : 60;
+      const interval = typeof rotationInterval === "number" && rotationInterval >= 5 && rotationInterval <= 300 ? rotationInterval : 60;
+      const normalizedCycleCount = typeof cycleCount === "number" && cycleCount >= 1 && cycleCount <= 10 ? cycleCount : 1;
+      const normalizedLeaderDuration = typeof leaderDuration === "number" && leaderDuration >= 1 && leaderDuration <= 30 ? leaderDuration : 4;
+      const normalizedPeopleDuration = typeof peopleDuration === "number" && peopleDuration >= 1 && peopleDuration <= 30 ? peopleDuration : 3;
 
-      await storage.updateAutoRotation(demo.id, autoRotate, interval);
+      await storage.updateAutoRotation(demo.id, autoRotate, interval, normalizedCycleCount, normalizedLeaderDuration, normalizedPeopleDuration);
 
       if (autoRotate && demo.status === "live") {
-        await startAutoRotation(demo.id, demo.publicId, interval);
+        await startAutoRotation(demo.id, demo.publicId);
       } else {
         stopAutoRotation(demo.id);
       }
 
-      res.json({ success: true, autoRotate, rotationInterval: interval });
+      res.json({ success: true, autoRotate, rotationInterval: interval, cycleCount: normalizedCycleCount, leaderDuration: normalizedLeaderDuration, peopleDuration: normalizedPeopleDuration });
     } catch (err) {
       res.status(500).json({ message: "Failed to update auto-rotation" });
     }
@@ -546,6 +608,9 @@ export async function registerRoutes(
           totalChants: chantsList.length,
           demoTitle: demo.title,
           demoStatus: demo.status,
+          currentPhase: state?.currentPhase ?? "leader",
+          currentCycle: state?.currentCycle ?? 1,
+          cycleCount: state?.cycleCount ?? 1,
         });
 
         const count = getViewerCount(demo.id);

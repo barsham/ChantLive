@@ -10,6 +10,9 @@ type ChantData = {
   totalChants: number;
   demoTitle: string;
   demoStatus: string;
+  currentPhase?: "leader" | "people";
+  currentCycle?: number;
+  cycleCount?: number;
 };
 
 export default function Participant() {
@@ -141,13 +144,13 @@ export default function Participant() {
         <div className={`text-center transition-opacity duration-300 ${fadeIn ? "opacity-100" : "opacity-0"}`}>
           {chantData.chantIndex !== null && (
             <p className="text-neutral-500 text-sm font-mono mb-6 tracking-wider" data-testid="text-chant-number">
-              {chantData.chantIndex + 1} / {chantData.totalChants}
+              {chantData.chantIndex + 1} / {chantData.totalChants} · Cycle {chantData.currentCycle ?? 1}/{chantData.cycleCount ?? 1}
             </p>
           )}
           {hasChantContent ? (
             <div className="space-y-6" style={{ maxWidth: "90vw" }}>
               {chantData.callText && (
-                <div data-testid="text-call">
+                <div data-testid="text-call" className={chantData.currentPhase === "leader" ? "ring-2 ring-orange-500/80 rounded-xl p-2" : "p-2"}>
                   <p className="text-neutral-400 text-xs font-mono uppercase tracking-widest mb-2">Leader</p>
                   <h1
                     className="font-bold leading-tight break-words"
@@ -162,7 +165,7 @@ export default function Participant() {
                 </div>
               )}
               {chantData.responseText && (
-                <div data-testid="text-response">
+                <div data-testid="text-response" className={chantData.currentPhase === "people" ? "ring-2 ring-sky-400/80 rounded-xl p-2" : "p-2"}>
                   <p className="text-neutral-400 text-xs font-mono uppercase tracking-widest mb-2">Everyone</p>
                   <h1
                     className="font-bold leading-tight break-words"

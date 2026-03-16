@@ -13,6 +13,8 @@ export const users = pgTable("users", {
   emailVerified: boolean("email_verified").notNull().default(false),
   verificationToken: text("verification_token"),
   verificationTokenExpires: timestamp("verification_token_expires"),
+  passwordResetToken: text("password_reset_token"),
+  passwordResetExpires: timestamp("password_reset_expires"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -45,6 +47,11 @@ export const demoState = pgTable("demo_state", {
   currentChantId: varchar("current_chant_id", { length: 255 }).references(() => chants.id),
   autoRotate: boolean("auto_rotate").notNull().default(false),
   rotationInterval: integer("rotation_interval").notNull().default(60),
+  cycleCount: integer("cycle_count").notNull().default(1),
+  leaderDuration: integer("leader_duration").notNull().default(4),
+  peopleDuration: integer("people_duration").notNull().default(3),
+  currentPhase: text("current_phase").notNull().default("leader"),
+  currentCycle: integer("current_cycle").notNull().default(1),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 

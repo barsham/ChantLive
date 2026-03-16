@@ -6,7 +6,7 @@ import connectPgSimple from "connect-pg-simple";
 import { pool } from "./db";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { sendVerificationEmail } from "./email";
+import { sendVerificationEmail, sendPasswordResetEmail } from "./email";
 
 function hashToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
@@ -171,6 +171,71 @@ export function setupAuth(app: Express) {
     }
   });
 
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      const trimmedEmail = typeof email === "string" ? email.toLowerCase().trim() : "";
+
+      if (!trimmedEmail || !trimmedEmail.includes("@")) {
+        return res.status(400).json({ message: "Please enter a valid email address." });
+      }
+
+      const user = await storage.getUserByEmail(trimmedEmail);
+      if (user && user.emailVerified) {
+        const rawToken = crypto.randomBytes(32).toString("hex");
+        const hashedToken = hashToken(rawToken);
+        const expires = new Date(Date.now() + 60 * 60 * 1000);
+
+        await storage.updateUser(user.id, {
+          passwordResetToken: hashedToken,
+          passwordResetExpires: expires,
+        });
+
+        const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+        const host = req.headers["x-forwarded-host"] || req.headers.host;
+        const resetUrl = `${protocol}://${host}/reset-password?token=${rawToken}`;
+        await sendPasswordResetEmail(trimmedEmail, user.name, resetUrl);
+      }
+
+      res.json({ message: "If that email exists, a reset link has been sent." });
+    } catch (err) {
+      console.error("Forgot password error:", err);
+      res.status(500).json({ message: "Failed to process forgot password request." });
+    }
+  });
+
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, password } = req.body;
+      if (!token || typeof token !== "string") {
+        return res.status(400).json({ message: "Invalid reset token." });
+      }
+
+      if (typeof password !== "string" || password.length < 8) {
+        return res.status(400).json({ message: "Password must be at least 8 characters." });
+      }
+
+      const hashedToken = hashToken(token);
+      const targetUser = await storage.getUserByPasswordResetToken(hashedToken);
+
+      if (!targetUser || !targetUser.passwordResetExpires || new Date() > targetUser.passwordResetExpires) {
+        return res.status(400).json({ message: "Reset link is invalid or expired." });
+      }
+
+      const passwordHash = await bcrypt.hash(password, 12);
+      await storage.updateUser(targetUser.id, {
+        passwordHash,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+      });
+
+      res.json({ message: "Password reset successfully. You can now sign in." });
+    } catch (err) {
+      console.error("Reset password error:", err);
+      res.status(500).json({ message: "Failed to reset password." });
+    }
+  });
+
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { email, password } = req.body;
@@ -203,7 +268,7 @@ export function setupAuth(app: Express) {
         if (err) {
           return res.status(500).json({ message: "Login failed. Please try again." });
         }
-        const { passwordHash, verificationToken, verificationTokenExpires, ...safeUser } = user;
+        const { passwordHash, verificationToken, verificationTokenExpires, passwordResetToken, passwordResetExpires, ...safeUser } = user;
         res.json(safeUser);
       });
     } catch (err) {
@@ -221,7 +286,7 @@ export function setupAuth(app: Express) {
   app.get("/api/auth/me", (req, res) => {
     if (req.isAuthenticated && req.isAuthenticated() && req.user) {
       const user = req.user as any;
-      const { passwordHash, verificationToken, verificationTokenExpires, ...safeUser } = user;
+      const { passwordHash, verificationToken, verificationTokenExpires, passwordResetToken, passwordResetExpires, ...safeUser } = user;
       res.json(safeUser);
     } else {
       res.status(401).json({ message: "Not authenticated" });
