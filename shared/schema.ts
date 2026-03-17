@@ -33,6 +33,9 @@ export const chants = pgTable("chants", {
   orderIndex: integer("order_index").notNull(),
   callText: text("call_text").notNull().default(""),
   responseText: text("response_text").notNull().default(""),
+  cycles: integer("cycles").notNull().default(1),
+  leaderDuration: integer("leader_duration").notNull().default(4),
+  peopleDuration: integer("people_duration").notNull().default(3),
 });
 
 export const demoAdmins = pgTable("demo_admins", {

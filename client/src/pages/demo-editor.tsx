@@ -82,6 +82,9 @@ export default function DemoEditor() {
   const { toast } = useToast();
   const [newCallText, setNewCallText] = useState("");
   const [newResponseText, setNewResponseText] = useState("");
+  const [newChantCycles, setNewChantCycles] = useState(1);
+  const [newChantLeaderDuration, setNewChantLeaderDuration] = useState(4);
+  const [newChantPeopleDuration, setNewChantPeopleDuration] = useState(3);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState("");
@@ -91,6 +94,9 @@ export default function DemoEditor() {
   const [editingChant, setEditingChant] = useState<Chant | null>(null);
   const [editCallText, setEditCallText] = useState("");
   const [editResponseText, setEditResponseText] = useState("");
+  const [editChantCycles, setEditChantCycles] = useState(1);
+  const [editChantLeaderDuration, setEditChantLeaderDuration] = useState(4);
+  const [editChantPeopleDuration, setEditChantPeopleDuration] = useState(3);
 
   const [rotationInterval, setRotationInterval] = useState(60);
   const [cycleCount, setCycleCount] = useState(1);
@@ -123,14 +129,17 @@ export default function DemoEditor() {
   }, [state]);
 
   const addChant = useMutation({
-    mutationFn: async ({ callText, responseText }: { callText: string; responseText: string }) => {
-      await apiRequest("POST", `/api/demos/${id}/chants`, { callText, responseText });
+    mutationFn: async ({ callText, responseText, cycles, leaderDuration, peopleDuration }: { callText: string; responseText: string; cycles: number; leaderDuration: number; peopleDuration: number }) => {
+      await apiRequest("POST", `/api/demos/${id}/chants`, { callText, responseText, cycles, leaderDuration, peopleDuration });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
       setAddDialogOpen(false);
       setNewCallText("");
       setNewResponseText("");
+      setNewChantCycles(1);
+      setNewChantLeaderDuration(4);
+      setNewChantPeopleDuration(3);
     },
     onError: (err: Error) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -138,8 +147,8 @@ export default function DemoEditor() {
   });
 
   const editChant = useMutation({
-    mutationFn: async ({ chantId, callText, responseText }: { chantId: string; callText: string; responseText: string }) => {
-      await apiRequest("PATCH", `/api/demos/${id}/chants/${chantId}`, { callText, responseText });
+    mutationFn: async ({ chantId, callText, responseText, cycles, leaderDuration, peopleDuration }: { chantId: string; callText: string; responseText: string; cycles: number; leaderDuration: number; peopleDuration: number }) => {
+      await apiRequest("PATCH", `/api/demos/${id}/chants/${chantId}`, { callText, responseText, cycles, leaderDuration, peopleDuration });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
@@ -332,6 +341,9 @@ export default function DemoEditor() {
     setEditingChant(chant);
     setEditCallText(chant.callText);
     setEditResponseText(chant.responseText);
+    setEditChantCycles(chant.cycles ?? 1);
+    setEditChantLeaderDuration(chant.leaderDuration ?? 4);
+    setEditChantPeopleDuration(chant.peopleDuration ?? 3);
     setEditDialogOpen(true);
   };
 
@@ -768,9 +780,47 @@ export default function DemoEditor() {
                       data-testid="input-response-text"
                     />
                   </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="new-cycles">Cycles</Label>
+                      <Input
+                        id="new-cycles"
+                        type="number"
+                        min={1}
+                        max={10}
+                        value={newChantCycles}
+                        onChange={(e) => setNewChantCycles(Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))}
+                        data-testid="input-new-cycles"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="new-leader-duration">Leader sec</Label>
+                      <Input
+                        id="new-leader-duration"
+                        type="number"
+                        min={1}
+                        max={30}
+                        value={newChantLeaderDuration}
+                        onChange={(e) => setNewChantLeaderDuration(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
+                        data-testid="input-new-leader-duration"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="new-people-duration">People sec</Label>
+                      <Input
+                        id="new-people-duration"
+                        type="number"
+                        min={1}
+                        max={30}
+                        value={newChantPeopleDuration}
+                        onChange={(e) => setNewChantPeopleDuration(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
+                        data-testid="input-new-people-duration"
+                      />
+                    </div>
+                  </div>
                   <Button
                     className="w-full"
-                    onClick={() => addChant.mutate({ callText: newCallText.trim(), responseText: newResponseText.trim() })}
+                    onClick={() => addChant.mutate({ callText: newCallText.trim(), responseText: newResponseText.trim(), cycles: newChantCycles, leaderDuration: newChantLeaderDuration, peopleDuration: newChantPeopleDuration })}
                     disabled={(!newCallText.trim() && !newResponseText.trim()) || addChant.isPending}
                     data-testid="button-confirm-add-chant"
                   >
@@ -818,6 +868,44 @@ export default function DemoEditor() {
                   data-testid="input-edit-response-text"
                 />
               </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-cycles">Cycles</Label>
+                  <Input
+                    id="edit-cycles"
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={editChantCycles}
+                    onChange={(e) => setEditChantCycles(Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))}
+                    data-testid="input-edit-cycles"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-leader-duration">Leader sec</Label>
+                  <Input
+                    id="edit-leader-duration"
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={editChantLeaderDuration}
+                    onChange={(e) => setEditChantLeaderDuration(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
+                    data-testid="input-edit-leader-duration"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-people-duration">People sec</Label>
+                  <Input
+                    id="edit-people-duration"
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={editChantPeopleDuration}
+                    onChange={(e) => setEditChantPeopleDuration(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
+                    data-testid="input-edit-people-duration"
+                  />
+                </div>
+              </div>
               <Button
                 className="w-full"
                 onClick={() => {
@@ -826,6 +914,9 @@ export default function DemoEditor() {
                       chantId: editingChant.id,
                       callText: editCallText.trim(),
                       responseText: editResponseText.trim(),
+                      cycles: editChantCycles,
+                      leaderDuration: editChantLeaderDuration,
+                      peopleDuration: editChantPeopleDuration,
                     });
                   }
                 }}

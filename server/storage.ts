@@ -30,7 +30,7 @@ export interface IStorage {
 
   getChants(demonstrationId: string): Promise<Chant[]>;
   addChant(data: InsertChant): Promise<Chant>;
-  updateChant(id: string, data: { callText: string; responseText: string }): Promise<Chant | undefined>;
+  updateChant(id: string, data: Partial<InsertChant>): Promise<Chant | undefined>;
   deleteChant(id: string): Promise<void>;
   reorderChants(demonstrationId: string, chantId: string, direction: "up" | "down"): Promise<void>;
 
@@ -148,7 +148,7 @@ export class DatabaseStorage implements IStorage {
     return chant;
   }
 
-  async updateChant(id: string, data: { callText: string; responseText: string }): Promise<Chant | undefined> {
+  async updateChant(id: string, data: Partial<InsertChant>): Promise<Chant | undefined> {
     const [chant] = await db.update(chants).set(data).where(eq(chants.id, id)).returning();
     return chant;
   }

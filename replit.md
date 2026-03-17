@@ -48,7 +48,7 @@ Preferred communication style: Simple, everyday language.
 ### Database Tables
 - **users** — id, email, name, role, avatarUrl, passwordHash, emailVerified, verificationToken, verificationTokenExpires, createdAt
 - **demonstrations** — id, publicId (short unique ID for participant URLs), title, status (draft/live/ended), createdBy, createdAt
-- **chants** — id, demonstrationId, orderIndex, callText (leader's call), responseText (crowd's response)
+- **chants** — id, demonstrationId, orderIndex, callText (leader's call), responseText (crowd's response), cycles (auto-rotation cycles per chant, default 1), leaderDuration (leader section duration in seconds, default 4), peopleDuration (people section duration in seconds, default 3)
 - **demo_admins** — composite PK (demonstrationId, userId) linking admins to demos
 - **demo_state** — demonstrationId (PK), currentChantId, updatedAt (tracks which chant is currently live)
 - **view_sessions** — id, demonstrationId, sessionId, firstSeenAt (tracks anonymous viewers)

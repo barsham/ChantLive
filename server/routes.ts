@@ -232,7 +232,7 @@ export async function registerRoutes(
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
-      const { callText, responseText } = req.body;
+      const { callText, responseText, cycles, leaderDuration, peopleDuration } = req.body;
       if ((!callText || typeof callText !== "string" || callText.trim().length === 0) &&
           (!responseText || typeof responseText !== "string" || responseText.trim().length === 0)) {
         return res.status(400).json({ message: "At least one of call or response text is required" });
@@ -243,11 +243,18 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Maximum 30 chants per demonstration" });
       }
 
+      const normalizedCycles = typeof cycles === "number" && cycles >= 1 && cycles <= 10 ? cycles : 1;
+      const normalizedLeaderDuration = typeof leaderDuration === "number" && leaderDuration >= 1 && leaderDuration <= 30 ? leaderDuration : 4;
+      const normalizedPeopleDuration = typeof peopleDuration === "number" && peopleDuration >= 1 && peopleDuration <= 30 ? peopleDuration : 3;
+
       const chant = await storage.addChant({
         demonstrationId: demo.id,
         orderIndex: existingChants.length,
         callText: (callText || "").trim(),
         responseText: (responseText || "").trim(),
+        cycles: normalizedCycles,
+        leaderDuration: normalizedLeaderDuration,
+        peopleDuration: normalizedPeopleDuration,
       });
 
       res.json(chant);
@@ -269,16 +276,21 @@ export async function registerRoutes(
       const existingChant = demoChants.find((c) => c.id === chantId);
       if (!existingChant) return res.status(404).json({ message: "Chant not found in this demonstration" });
 
-      const { callText, responseText } = req.body;
+      const { callText, responseText, cycles, leaderDuration, peopleDuration } = req.body;
       if ((!callText || typeof callText !== "string" || callText.trim().length === 0) &&
           (!responseText || typeof responseText !== "string" || responseText.trim().length === 0)) {
         return res.status(400).json({ message: "At least one of call or response text is required" });
       }
 
-      const chant = await storage.updateChant(chantId, {
+      const updateData: any = {
         callText: (callText || "").trim(),
         responseText: (responseText || "").trim(),
-      });
+      };
+      if (typeof cycles === "number" && cycles >= 1 && cycles <= 10) updateData.cycles = cycles;
+      if (typeof leaderDuration === "number" && leaderDuration >= 1 && leaderDuration <= 30) updateData.leaderDuration = leaderDuration;
+      if (typeof peopleDuration === "number" && peopleDuration >= 1 && peopleDuration <= 30) updateData.peopleDuration = peopleDuration;
+
+      const chant = await storage.updateChant(chantId, updateData);
       if (!chant) return res.status(404).json({ message: "Chant not found" });
 
       const state = await storage.getDemoState(demo.id);
@@ -487,8 +499,11 @@ export async function registerRoutes(
         let nextCycle = progress.cycle;
         let nextIndex = resolvedIndex;
 
+        const activeChant = chantsList[resolvedIndex];
+        const cycleCountForChant = activeChant?.cycles ?? 1;
+
         if (progress.phase === "people") {
-          if (progress.cycle >= state.cycleCount) {
+          if (progress.cycle >= cycleCountForChant) {
             nextCycle = 1;
             nextIndex = (resolvedIndex + 1) % chantsList.length;
             await storage.setCurrentChant(demoId, chantsList[nextIndex].id);
@@ -501,13 +516,13 @@ export async function registerRoutes(
         autoRotateProgress.set(demoId, { phase: nextPhase, cycle: nextCycle });
 
         const refreshedState = await storage.getDemoState(demoId);
-        const activeChant = chantsList[nextIndex];
         const nextSequenceIndex = chantsList.length > 0 ? (nextIndex + 1) % chantsList.length : null;
         const autoNextChant = nextSequenceIndex !== null ? chantsList[nextSequenceIndex] : null;
+        const chantForEmit = chantsList[nextIndex];
 
         io.to(`demo:${publicId}`).emit("chant_update", {
-          callText: activeChant.callText,
-          responseText: activeChant.responseText,
+          callText: chantForEmit.callText,
+          responseText: chantForEmit.responseText,
           nextCallText: autoNextChant?.callText || null,
           nextResponseText: autoNextChant?.responseText || null,
           chantIndex: nextIndex,
@@ -516,10 +531,10 @@ export async function registerRoutes(
           demoStatus: demo.status,
           currentPhase: refreshedState?.currentPhase ?? nextPhase,
           currentCycle: refreshedState?.currentCycle ?? nextCycle,
-          cycleCount: refreshedState?.cycleCount ?? state.cycleCount,
+          cycleCount: chantForEmit?.cycles ?? 1,
         });
 
-        const delaySeconds = nextPhase === "leader" ? state.leaderDuration : state.peopleDuration;
+        const delaySeconds = nextPhase === "leader" ? (chantForEmit?.leaderDuration ?? 4) : (chantForEmit?.peopleDuration ?? 3);
         const timeout = setTimeout(tick, Math.max(1, delaySeconds) * 1000);
         autoRotateTimers.set(demoId, timeout);
       } catch (err) {
@@ -529,8 +544,10 @@ export async function registerRoutes(
 
     autoRotateProgress.set(demoId, { phase: "leader", cycle: 1 });
     const initialState = await storage.getDemoState(demoId);
+    const initialChantsList = await storage.getChants(demoId);
+    const firstChant = initialChantsList.length > 0 ? initialChantsList[0] : null;
     await storage.setRotationPhase(demoId, "leader", 1);
-    const initialDelay = Math.max(1, initialState?.leaderDuration ?? 4) * 1000;
+    const initialDelay = Math.max(1, firstChant?.leaderDuration ?? 4) * 1000;
     const timeout = setTimeout(tick, initialDelay);
     autoRotateTimers.set(demoId, timeout);
   }
