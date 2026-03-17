@@ -81,24 +81,38 @@ export function setupAuth(app: Express) {
       const existing = await storage.getUserByEmail(trimmedEmail);
       if (existing) {
         if (!existing.emailVerified) {
-          const rawToken = crypto.randomBytes(32).toString("hex");
-          const hashedToken = hashToken(rawToken);
-          const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+          const isLocal = !process.env.REPLIT_CONNECTORS_HOSTNAME;
           const passwordHash = await bcrypt.hash(password, 12);
-          await storage.updateUser(existing.id, {
-            verificationToken: hashedToken,
-            verificationTokenExpires: expires,
-            passwordHash,
-            name: trimmedName,
-          });
+          
+          if (isLocal) {
+            await storage.updateUser(existing.id, {
+              emailVerified: true,
+              verificationToken: null,
+              verificationTokenExpires: null,
+              passwordHash,
+              name: trimmedName,
+            });
+            return res.json({ message: "Registration successful! (Local Dev: Email verified automatically)" });
+          } else {
+            const rawToken = crypto.randomBytes(32).toString("hex");
+            const hashedToken = hashToken(rawToken);
+            const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+            
+            await storage.updateUser(existing.id, {
+              verificationToken: hashedToken,
+              verificationTokenExpires: expires,
+              passwordHash,
+              name: trimmedName,
+            });
 
-          const protocol = req.headers["x-forwarded-proto"] || req.protocol;
-          const host = req.headers["x-forwarded-host"] || req.headers.host;
-          const verificationUrl = `${protocol}://${host}/api/auth/verify?token=${rawToken}`;
+            const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+            const host = req.headers["x-forwarded-host"] || req.headers.host;
+            const verificationUrl = `${protocol}://${host}/api/auth/verify?token=${rawToken}`;
 
-          await sendVerificationEmail(trimmedEmail, trimmedName, verificationUrl);
+            await sendVerificationEmail(trimmedEmail, trimmedName, verificationUrl);
 
-          return res.json({ message: "A new verification email has been sent. Please check your inbox." });
+            return res.json({ message: "A new verification email has been sent. Please check your inbox." });
+          }
         }
         return res.status(400).json({ message: "An account with this email already exists. Please sign in." });
       }
@@ -116,6 +130,25 @@ export function setupAuth(app: Express) {
         name: trimmedName,
         role,
       });
+
+      const isLocal = !process.env.REPLIT_CONNECTORS_HOSTNAME;
+      if (isLocal) {
+        await storage.updateUser(user.id, {
+          passwordHash,
+          emailVerified: true,
+          verificationToken: null,
+          verificationTokenExpires: null,
+        });
+        
+        // Log the user in directly for local dev convenience
+        req.login(user, (err) => {
+          if (err) {
+            return res.json({ message: "Registration successful! (Local Dev: Email verified automatically)" });
+          }
+          return res.json({ message: "Registration successful! (Local Dev: Email verified automatically)" });
+        });
+        return;
+      }
 
       await storage.updateUser(user.id, {
         passwordHash,

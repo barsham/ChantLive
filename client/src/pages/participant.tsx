@@ -6,6 +6,8 @@ import { Users, Megaphone } from "lucide-react";
 type ChantData = {
   callText: string | null;
   responseText: string | null;
+  nextCallText?: string | null;
+  nextResponseText?: string | null;
   chantIndex: number | null;
   totalChants: number;
   demoTitle: string;
@@ -141,7 +143,12 @@ export default function Participant() {
   return (
     <div className="min-h-screen bg-black flex flex-col select-none" data-testid="participant-view">
       <div className="flex-1 flex items-center justify-center p-6">
-        <div className={`text-center transition-opacity duration-300 ${fadeIn ? "opacity-100" : "opacity-0"}`}>
+        <div 
+          className={`text-center transition-all duration-500 transform ${
+            fadeIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+          }`}
+          style={{ width: "100%", maxWidth: "90vw" }}
+        >
           {chantData.chantIndex !== null && (
             <p className="text-neutral-500 text-sm font-mono mb-6 tracking-wider" data-testid="text-chant-number">
               {chantData.chantIndex + 1} / {chantData.totalChants} · Cycle {chantData.currentCycle ?? 1}/{chantData.cycleCount ?? 1}
@@ -177,6 +184,33 @@ export default function Participant() {
                   >
                     {chantData.responseText}
                   </h1>
+                </div>
+              )}
+
+              {/* Next Chant Preview */}
+              {(chantData.nextCallText || chantData.nextResponseText) && (
+                <div className="mt-12 pt-8 border-t border-neutral-800 opacity-50 relative">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black px-3 text-xs font-mono text-neutral-600 uppercase tracking-widest">
+                    Coming Up Next
+                  </span>
+                  <div className="space-y-4">
+                    {chantData.nextCallText && (
+                      <div>
+                        <p className="text-neutral-500 text-[10px] font-mono uppercase tracking-wider mb-1">Leader</p>
+                        <h2 className="font-semibold text-orange-500/70 text-base leading-snug break-words">
+                          {chantData.nextCallText}
+                        </h2>
+                      </div>
+                    )}
+                    {chantData.nextResponseText && (
+                      <div>
+                        <p className="text-neutral-500 text-[10px] font-mono uppercase tracking-wider mb-1">Everyone</p>
+                        <h2 className="font-semibold text-sky-400/70 text-base leading-snug break-words">
+                          {chantData.nextResponseText}
+                        </h2>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

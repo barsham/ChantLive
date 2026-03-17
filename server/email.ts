@@ -11,7 +11,8 @@ async function getCredentials() {
     : null;
 
   if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
+    console.warn('X_REPLIT_TOKEN not found for repl/depl. Email sending will be bypassed.');
+    return null;
   }
 
   connectionSettings = await fetch(
@@ -25,13 +26,17 @@ async function getCredentials() {
   ).then(res => res.json()).then(data => data.items?.[0]);
 
   if (!connectionSettings || !connectionSettings.settings.api_key) {
-    throw new Error('Resend not connected');
+    console.warn('Resend not connected. Email sending will be bypassed.');
+    return null;
   }
   return { apiKey: connectionSettings.settings.api_key, fromEmail: connectionSettings.settings.from_email };
 }
 
 async function getResendClient() {
-  const { apiKey, fromEmail } = await getCredentials();
+  const credentials = await getCredentials();
+  if (!credentials) return null;
+
+  const { apiKey, fromEmail } = credentials;
   return {
     client: new Resend(apiKey),
     fromEmail,
@@ -39,7 +44,12 @@ async function getResendClient() {
 }
 
 export async function sendInviteEmail(toEmail: string, inviteeName: string, inviterName: string, demoTitle: string, demoUrl: string) {
-  const { client, fromEmail } = await getResendClient();
+  const resendClient = await getResendClient();
+  if (!resendClient) {
+    console.log(`[Email Bypassed] Invite to ${toEmail}: ${demoUrl}`);
+    return;
+  }
+  const { client, fromEmail } = resendClient;
 
   await client.emails.send({
     from: fromEmail || 'ChantLive <noreply@chantlive.online>',
@@ -58,7 +68,12 @@ export async function sendInviteEmail(toEmail: string, inviteeName: string, invi
 }
 
 export async function sendVerificationEmail(toEmail: string, name: string, verificationUrl: string) {
-  const { client, fromEmail } = await getResendClient();
+  const resendClient = await getResendClient();
+  if (!resendClient) {
+    console.log(`[Email Bypassed] Verification for ${toEmail}: ${verificationUrl}`);
+    return;
+  }
+  const { client, fromEmail } = resendClient;
 
   await client.emails.send({
     from: fromEmail || 'ChantLive <noreply@chantlive.online>',
@@ -77,7 +92,12 @@ export async function sendVerificationEmail(toEmail: string, name: string, verif
 
 
 export async function sendPasswordResetEmail(toEmail: string, name: string, resetUrl: string) {
-  const { client, fromEmail } = await getResendClient();
+  const resendClient = await getResendClient();
+  if (!resendClient) {
+    console.log(`[Email Bypassed] Password reset for ${toEmail}: ${resetUrl}`);
+    return;
+  }
+  const { client, fromEmail } = resendClient;
 
   await client.emails.send({
     from: fromEmail || 'ChantLive <noreply@chantlive.online>',

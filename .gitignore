@@ -24,6 +24,7 @@ pnpm-debug.log*
 
 # Local app artifacts
 server/public/
+postgres/
 vite.config.ts.*
 *.tar.gz
 attached_assets/

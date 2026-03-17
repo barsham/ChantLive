@@ -56,10 +56,14 @@ async function emitCurrentChant(io: SocketIOServer, demo: any) {
   const state = await storage.getDemoState(demo.id);
   const currentChant = state?.currentChantId ? chantsList.find((c) => c.id === state.currentChantId) : null;
   const chantIndex = currentChant ? chantsList.findIndex((c) => c.id === currentChant.id) : null;
+  const nextChantIndex = chantIndex !== null && chantsList.length > 0 ? (chantIndex + 1) % chantsList.length : null;
+  const nextChant = nextChantIndex !== null ? chantsList[nextChantIndex] : null;
 
   io.to(`demo:${demo.publicId}`).emit("chant_update", {
     callText: currentChant?.callText || null,
     responseText: currentChant?.responseText || null,
+    nextCallText: nextChant?.callText || null,
+    nextResponseText: nextChant?.responseText || null,
     chantIndex,
     totalChants: chantsList.length,
     demoTitle: demo.title,
@@ -281,9 +285,14 @@ export async function registerRoutes(
       if (state?.currentChantId === chant.id && demo.status === "live") {
         const chantsList = await storage.getChants(demo.id);
         const chantIndex = chantsList.findIndex((c) => c.id === chant.id);
+        const nextChantIndex = chantIndex >= 0 && chantsList.length > 0 ? (chantIndex + 1) % chantsList.length : null;
+        const nextChant = nextChantIndex !== null ? chantsList[nextChantIndex] : null;
+
         io.to(`demo:${demo.publicId}`).emit("chant_update", {
           callText: chant.callText,
           responseText: chant.responseText,
+          nextCallText: nextChant?.callText || null,
+          nextResponseText: nextChant?.responseText || null,
           chantIndex: chantIndex >= 0 ? chantIndex : null,
           totalChants: chantsList.length,
           demoTitle: demo.title,
@@ -353,11 +362,15 @@ export async function registerRoutes(
       const chantsList = await storage.getChants(demo.id);
       const chant = chantsList.find((c) => c.id === chantId);
       const chantIndex = chantsList.findIndex((c) => c.id === chantId);
+      const nextChantIndex = chantIndex >= 0 && chantsList.length > 0 ? (chantIndex + 1) % chantsList.length : null;
+      const nextChant = nextChantIndex !== null ? chantsList[nextChantIndex] : null;
 
       const currentState = await storage.getDemoState(demo.id);
       io.to(`demo:${demo.publicId}`).emit("chant_update", {
         callText: chant?.callText || null,
         responseText: chant?.responseText || null,
+        nextCallText: nextChant?.callText || null,
+        nextResponseText: nextChant?.responseText || null,
         chantIndex: chantIndex >= 0 ? chantIndex : null,
         totalChants: chantsList.length,
         demoTitle: demo.title,
@@ -392,10 +405,14 @@ export async function registerRoutes(
       await storage.setCurrentChant(demo.id, chantsList[0].id);
 
       const state = await storage.getDemoState(demo.id);
+      const nextChantIndex = chantsList.length > 0 ? 1 % chantsList.length : null;
+      const nextChant = nextChantIndex !== null ? chantsList[nextChantIndex] : null;
 
       io.to(`demo:${demo.publicId}`).emit("chant_update", {
         callText: chantsList[0].callText,
         responseText: chantsList[0].responseText,
+        nextCallText: nextChant?.callText || null,
+        nextResponseText: nextChant?.responseText || null,
         chantIndex: 0,
         totalChants: chantsList.length,
         demoTitle: demo.title,
@@ -485,10 +502,14 @@ export async function registerRoutes(
 
         const refreshedState = await storage.getDemoState(demoId);
         const activeChant = chantsList[nextIndex];
+        const nextSequenceIndex = chantsList.length > 0 ? (nextIndex + 1) % chantsList.length : null;
+        const autoNextChant = nextSequenceIndex !== null ? chantsList[nextSequenceIndex] : null;
 
         io.to(`demo:${publicId}`).emit("chant_update", {
           callText: activeChant.callText,
           responseText: activeChant.responseText,
+          nextCallText: autoNextChant?.callText || null,
+          nextResponseText: autoNextChant?.responseText || null,
           chantIndex: nextIndex,
           totalChants: chantsList.length,
           demoTitle: demo.title,
@@ -633,10 +654,14 @@ export async function registerRoutes(
         const chantIndex = currentChant
           ? chantsList.findIndex((c) => c.id === currentChant.id)
           : null;
+        const nextChantIndex = chantIndex !== null && chantsList.length > 0 ? (chantIndex + 1) % chantsList.length : null;
+        const nextChant = nextChantIndex !== null ? chantsList[nextChantIndex] : null;
 
         socket.emit("chant_update", {
           callText: currentChant?.callText || null,
           responseText: currentChant?.responseText || null,
+          nextCallText: nextChant?.callText || null,
+          nextResponseText: nextChant?.responseText || null,
           chantIndex,
           totalChants: chantsList.length,
           demoTitle: demo.title,
