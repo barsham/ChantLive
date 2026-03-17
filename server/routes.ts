@@ -546,7 +546,7 @@ export async function registerRoutes(
       if (typeof autoRotate !== "boolean") {
         return res.status(400).json({ message: "autoRotate must be a boolean" });
       }
-      const interval = typeof rotationInterval === "number" && rotationInterval >= 5 && rotationInterval <= 300 ? rotationInterval : 60;
+      const interval = typeof rotationInterval === "number" && rotationInterval >= 5 && rotationInterval <= 18000 ? rotationInterval : 60;
       const normalizedCycleCount = typeof cycleCount === "number" && cycleCount >= 1 && cycleCount <= 10 ? cycleCount : 1;
       const normalizedLeaderDuration = typeof leaderDuration === "number" && leaderDuration >= 1 && leaderDuration <= 30 ? leaderDuration : 4;
       const normalizedPeopleDuration = typeof peopleDuration === "number" && peopleDuration >= 1 && peopleDuration <= 30 ? peopleDuration : 3;

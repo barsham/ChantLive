@@ -535,11 +535,11 @@ export default function DemoEditor() {
                     <Input
                       type="number"
                       min={5}
-                      max={300}
+                      max={18000}
                       value={rotationInterval}
                       onChange={(e) => setRotationInterval(Number(e.target.value))}
                       onBlur={() => {
-                        const val = Math.max(5, Math.min(300, rotationInterval));
+                        const val = Math.max(5, Math.min(18000, rotationInterval));
                         setRotationInterval(val);
                         if (val !== state?.rotationInterval) {
                           updateRotationInterval.mutate(val);
