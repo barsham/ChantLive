@@ -98,10 +98,6 @@ export default function DemoEditor() {
   const [editChantLeaderDuration, setEditChantLeaderDuration] = useState(4);
   const [editChantPeopleDuration, setEditChantPeopleDuration] = useState(3);
 
-  const [rotationInterval, setRotationInterval] = useState(60);
-  const [cycleCount, setCycleCount] = useState(1);
-  const [leaderDuration, setLeaderDuration] = useState(4);
-  const [peopleDuration, setPeopleDuration] = useState(3);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
@@ -116,17 +112,8 @@ export default function DemoEditor() {
   const chantsList = data?.chants ?? [];
   const state = data?.state;
   const viewerCount = data?.viewerCount ?? 0;
-  const autoRotate = state?.autoRotate ?? false;
   const admins = data?.admins ?? [];
   const { user: currentUser } = useAuth();
-
-  useEffect(() => {
-    if (!state) return;
-    if (state.rotationInterval) setRotationInterval(state.rotationInterval);
-    if (state.cycleCount) setCycleCount(state.cycleCount);
-    if (state.leaderDuration) setLeaderDuration(state.leaderDuration);
-    if (state.peopleDuration) setPeopleDuration(state.peopleDuration);
-  }, [state]);
 
   const addChant = useMutation({
     mutationFn: async ({ callText, responseText, cycles, leaderDuration, peopleDuration }: { callText: string; responseText: string; cycles: number; leaderDuration: number; peopleDuration: number }) => {
@@ -223,63 +210,6 @@ export default function DemoEditor() {
     },
   });
 
-  const toggleAutoRotate = useMutation({
-    mutationFn: async (enabled: boolean) => {
-      await apiRequest("POST", `/api/demos/${id}/auto-rotate`, {
-        autoRotate: enabled,
-        rotationInterval,
-        cycleCount,
-        leaderDuration,
-        peopleDuration,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
-      toast({ title: autoRotate ? "Auto-rotation paused" : "Auto-rotation started" });
-    },
-    onError: (err: Error) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    },
-  });
-
-  const updateRotationInterval = useMutation({
-    mutationFn: async (interval: number) => {
-      await apiRequest("POST", `/api/demos/${id}/auto-rotate`, {
-        autoRotate,
-        rotationInterval: interval,
-        cycleCount,
-        leaderDuration,
-        peopleDuration,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
-      toast({ title: "Rotation interval updated" });
-    },
-    onError: (err: Error) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    },
-  });
-
-
-  const updateCycleSettings = useMutation({
-    mutationFn: async ({ cycles, leaderSec, peopleSec }: { cycles: number; leaderSec: number; peopleSec: number }) => {
-      await apiRequest("POST", `/api/demos/${id}/auto-rotate`, {
-        autoRotate,
-        rotationInterval,
-        cycleCount: cycles,
-        leaderDuration: leaderSec,
-        peopleDuration: peopleSec,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
-      toast({ title: "Cycle settings updated" });
-    },
-    onError: (err: Error) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    },
-  });
 
   const updateTitle = useMutation({
     mutationFn: async (title: string) => {
@@ -528,109 +458,6 @@ export default function DemoEditor() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
-        {(isLive || isDraft || isEnded) && (
-          <Card className="mb-6">
-            <CardContent className="py-4">
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div className="flex items-center gap-3">
-                  <RotateCw className="w-4 h-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Auto-rotation</p>
-                    <p className="text-xs text-muted-foreground">
-                      {autoRotate ? "Cycling through chants automatically" : "Manually control which chant is shown"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <Timer className="w-3.5 h-3.5 text-muted-foreground" />
-                    <Input
-                      type="number"
-                      min={5}
-                      max={18000}
-                      value={rotationInterval}
-                      onChange={(e) => setRotationInterval(Number(e.target.value))}
-                      onBlur={() => {
-                        const val = Math.max(5, Math.min(18000, rotationInterval));
-                        setRotationInterval(val);
-                        if (val !== state?.rotationInterval) {
-                          updateRotationInterval.mutate(val);
-                        }
-                      }}
-                      className="w-20 text-sm"
-                      data-testid="input-rotation-interval"
-                    />
-                    <span className="text-xs text-muted-foreground">sec</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">Cycles</span>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={10}
-                      value={cycleCount}
-                      onChange={(e) => setCycleCount(Number(e.target.value))}
-                      onBlur={() => {
-                        const nextCycles = Math.max(1, Math.min(10, cycleCount));
-                        const nextLeader = Math.max(1, Math.min(30, leaderDuration));
-                        const nextPeople = Math.max(1, Math.min(30, peopleDuration));
-                        setCycleCount(nextCycles);
-                        setLeaderDuration(nextLeader);
-                        setPeopleDuration(nextPeople);
-                        if (
-                          nextCycles !== state?.cycleCount ||
-                          nextLeader !== state?.leaderDuration ||
-                          nextPeople !== state?.peopleDuration
-                        ) {
-                          updateCycleSettings.mutate({ cycles: nextCycles, leaderSec: nextLeader, peopleSec: nextPeople });
-                        }
-                      }}
-                      className="w-16 text-sm"
-                      data-testid="input-cycle-count"
-                    />
-                    <span className="text-xs text-muted-foreground">Leader sec</span>
-                    <Input type="number" min={1} max={30} value={leaderDuration} onChange={(e) => setLeaderDuration(Number(e.target.value))} onBlur={() => {
-                      const nextCycles = Math.max(1, Math.min(10, cycleCount));
-                      const nextLeader = Math.max(1, Math.min(30, leaderDuration));
-                      const nextPeople = Math.max(1, Math.min(30, peopleDuration));
-                      if (nextCycles !== state?.cycleCount || nextLeader !== state?.leaderDuration || nextPeople !== state?.peopleDuration) {
-                        updateCycleSettings.mutate({ cycles: nextCycles, leaderSec: nextLeader, peopleSec: nextPeople });
-                      }
-                    }} className="w-16 text-sm" data-testid="input-leader-duration" />
-                    <span className="text-xs text-muted-foreground">People sec</span>
-                    <Input type="number" min={1} max={30} value={peopleDuration} onChange={(e) => setPeopleDuration(Number(e.target.value))} onBlur={() => {
-                      const nextCycles = Math.max(1, Math.min(10, cycleCount));
-                      const nextLeader = Math.max(1, Math.min(30, leaderDuration));
-                      const nextPeople = Math.max(1, Math.min(30, peopleDuration));
-                      if (nextCycles !== state?.cycleCount || nextLeader !== state?.leaderDuration || nextPeople !== state?.peopleDuration) {
-                        updateCycleSettings.mutate({ cycles: nextCycles, leaderSec: nextLeader, peopleSec: nextPeople });
-                      }
-                    }} className="w-16 text-sm" data-testid="input-people-duration" />
-                  </div>
-                  <Button
-                    variant={autoRotate ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => toggleAutoRotate.mutate(!autoRotate)}
-                    disabled={toggleAutoRotate.isPending}
-                    data-testid="button-toggle-auto-rotate"
-                  >
-                    {autoRotate ? (
-                      <>
-                        <Pause className="w-3.5 h-3.5 mr-1" />
-                        Pause
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-3.5 h-3.5 mr-1" />
-                        Start
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         <Card className="mb-6">
           <CardContent className="py-4">
@@ -780,7 +607,7 @@ export default function DemoEditor() {
                       data-testid="input-response-text"
                     />
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-3 md:grid md:grid-cols-3 md:gap-3">
                     <div className="space-y-2">
                       <Label htmlFor="new-cycles">Cycles</Label>
                       <Input
@@ -790,6 +617,7 @@ export default function DemoEditor() {
                         max={10}
                         value={newChantCycles}
                         onChange={(e) => setNewChantCycles(Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))}
+                        className="w-full"
                         data-testid="input-new-cycles"
                       />
                     </div>
@@ -802,6 +630,7 @@ export default function DemoEditor() {
                         max={30}
                         value={newChantLeaderDuration}
                         onChange={(e) => setNewChantLeaderDuration(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
+                        className="w-full"
                         data-testid="input-new-leader-duration"
                       />
                     </div>
@@ -814,6 +643,7 @@ export default function DemoEditor() {
                         max={30}
                         value={newChantPeopleDuration}
                         onChange={(e) => setNewChantPeopleDuration(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
+                        className="w-full"
                         data-testid="input-new-people-duration"
                       />
                     </div>
@@ -868,7 +698,7 @@ export default function DemoEditor() {
                   data-testid="input-edit-response-text"
                 />
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-3 md:grid md:grid-cols-3 md:gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="edit-cycles">Cycles</Label>
                   <Input
@@ -878,6 +708,7 @@ export default function DemoEditor() {
                     max={10}
                     value={editChantCycles}
                     onChange={(e) => setEditChantCycles(Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))}
+                    className="w-full"
                     data-testid="input-edit-cycles"
                   />
                 </div>
@@ -890,6 +721,7 @@ export default function DemoEditor() {
                     max={30}
                     value={editChantLeaderDuration}
                     onChange={(e) => setEditChantLeaderDuration(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
+                    className="w-full"
                     data-testid="input-edit-leader-duration"
                   />
                 </div>
@@ -902,6 +734,7 @@ export default function DemoEditor() {
                     max={30}
                     value={editChantPeopleDuration}
                     onChange={(e) => setEditChantPeopleDuration(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
+                    className="w-full"
                     data-testid="input-edit-people-duration"
                   />
                 </div>
