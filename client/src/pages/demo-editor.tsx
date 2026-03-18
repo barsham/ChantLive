@@ -98,6 +98,7 @@ export default function DemoEditor() {
   const [editChantLeaderDuration, setEditChantLeaderDuration] = useState(4);
   const [editChantPeopleDuration, setEditChantPeopleDuration] = useState(3);
 
+  const [rotationInterval, setRotationInterval] = useState(60);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
@@ -112,8 +113,14 @@ export default function DemoEditor() {
   const chantsList = data?.chants ?? [];
   const state = data?.state;
   const viewerCount = data?.viewerCount ?? 0;
+  const autoRotate = state?.autoRotate ?? false;
   const admins = data?.admins ?? [];
   const { user: currentUser } = useAuth();
+
+  useEffect(() => {
+    if (!state) return;
+    if (state.rotationInterval) setRotationInterval(state.rotationInterval);
+  }, [state]);
 
   const addChant = useMutation({
     mutationFn: async ({ callText, responseText, cycles, leaderDuration, peopleDuration }: { callText: string; responseText: string; cycles: number; leaderDuration: number; peopleDuration: number }) => {
@@ -210,6 +217,37 @@ export default function DemoEditor() {
     },
   });
 
+  const toggleAutoRotate = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      await apiRequest("POST", `/api/demos/${id}/auto-rotate`, {
+        autoRotate: enabled,
+        rotationInterval,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
+      toast({ title: autoRotate ? "Auto-rotation paused" : "Auto-rotation started" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const updateRotationInterval = useMutation({
+    mutationFn: async (interval: number) => {
+      await apiRequest("POST", `/api/demos/${id}/auto-rotate`, {
+        autoRotate,
+        rotationInterval: interval,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
+      toast({ title: "Rotation interval updated" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
 
   const updateTitle = useMutation({
     mutationFn: async (title: string) => {
@@ -458,6 +496,53 @@ export default function DemoEditor() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
+        {(isLive || isDraft || isEnded) && (
+          <Card className="mb-6">
+            <CardContent className="py-4">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <Timer className="w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="number"
+                    min={5}
+                    max={18000}
+                    value={rotationInterval}
+                    onChange={(e) => setRotationInterval(Number(e.target.value))}
+                    onBlur={() => {
+                      const val = Math.max(5, Math.min(18000, rotationInterval));
+                      setRotationInterval(val);
+                      if (val !== state?.rotationInterval) {
+                        updateRotationInterval.mutate(val);
+                      }
+                    }}
+                    className="w-24 text-sm"
+                    data-testid="input-rotation-interval"
+                  />
+                  <span className="text-xs text-muted-foreground">sec</span>
+                </div>
+                <Button
+                  variant={autoRotate ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => toggleAutoRotate.mutate(!autoRotate)}
+                  disabled={toggleAutoRotate.isPending}
+                  data-testid="button-toggle-auto-rotate"
+                >
+                  {autoRotate ? (
+                    <>
+                      <Pause className="w-3.5 h-3.5 mr-1" />
+                      Pause
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-3.5 h-3.5 mr-1" />
+                      Start
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="mb-6">
           <CardContent className="py-4">
