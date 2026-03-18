@@ -542,8 +542,8 @@ export default function DemoEditor() {
           <Card className="mb-6">
             <CardContent className="py-4">
               <div className="space-y-4">
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                  <div className="flex-1 min-w-0">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="flex-1">
                     <div className="flex items-center gap-3">
                       <Timer className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                       <Input
@@ -560,15 +560,15 @@ export default function DemoEditor() {
                           }
                         }}
                         disabled={isLive}
-                        className="w-20 text-sm"
+                        className="w-24 text-sm"
                         data-testid="input-event-duration"
                       />
                       <span className="text-xs text-muted-foreground whitespace-nowrap">min</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">Event duration (up to 5 hours)</p>
+                    <p className="text-xs text-muted-foreground mt-2">Event duration (up to 5 hours)</p>
                   </div>
                   {isLive && remainingTime !== null && (
-                    <div className="text-right">
+                    <div className="md:text-right">
                       <p className="text-sm font-medium">
                         {Math.floor(remainingTime / 60)}:{String(remainingTime % 60).padStart(2, "0")}
                       </p>
@@ -577,9 +577,9 @@ export default function DemoEditor() {
                   )}
                 </div>
 
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <RotateCw className="w-4 h-4 text-muted-foreground" />
+                    <RotateCw className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                     <span className="text-sm font-medium">Auto-rotation</span>
                   </div>
                   <Button
@@ -587,6 +587,7 @@ export default function DemoEditor() {
                     size="sm"
                     onClick={() => toggleAutoRotate.mutate(!autoRotate)}
                     disabled={toggleAutoRotate.isPending}
+                    className="w-full md:w-auto"
                     data-testid="button-toggle-auto-rotate"
                   >
                     {autoRotate ? (
