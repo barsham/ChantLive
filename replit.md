@@ -50,7 +50,7 @@ Preferred communication style: Simple, everyday language.
 - **demonstrations** — id, publicId (short unique ID for participant URLs), title, status (draft/live/ended), createdBy, createdAt
 - **chants** — id, demonstrationId, orderIndex, callText (leader's call), responseText (crowd's response), cycles (auto-rotation cycles per chant, default 1), leaderDuration (leader section duration in seconds, default 4), peopleDuration (people section duration in seconds, default 3)
 - **demo_admins** — composite PK (demonstrationId, userId) linking admins to demos
-- **demo_state** — demonstrationId (PK), currentChantId, updatedAt (tracks which chant is currently live)
+- **demo_state** — demonstrationId (PK), currentChantId, autoRotate, rotationInterval, cycleCount, leaderDuration, peopleDuration, currentPhase, currentCycle, eventDurationMinutes (event timer in minutes, 1-300 max 5 hours), liveStartedAt (timestamp when demo went live for countdown timer), updatedAt
 - **view_sessions** — id, demonstrationId, sessionId, firstSeenAt (tracks anonymous viewers)
 - **session** — auto-created by connect-pg-simple for Express sessions
 
@@ -60,6 +60,10 @@ Preferred communication style: Simple, everyday language.
 - `/api/auth/login` — POST email/password login
 - `/api/auth/verify?token=` — GET email verification callback
 - `/api/demos` — CRUD for demonstrations
+- `/api/demos/:id/live` — POST to go live (sets liveStartedAt timestamp for countdown)
+- `/api/demos/:id/end` — POST to end demo (resets countdown timer)
+- `/api/demos/:id/auto-rotate` — POST to control auto-rotation settings
+- `/api/demos/:id/event-duration` — POST to set event duration in minutes (1-300)
 - `/api/admin/users` — user management (super_admin only)
 - `/d/:publicId` — participant view (client-side route)
 - `/login` — login page (client-side route)
@@ -94,10 +98,18 @@ script/
   build.ts           # Production build script
 ```
 
+## Event Duration & Countdown
+
+- **Feature:** Admins set an event duration (1-300 minutes, max 5 hours) before the demo goes live
+- **Duration input:** Disabled once demo is live (prevents changes mid-event)
+- **Countdown timer:** Displays remaining time (MM:SS format) to the admin after demo goes live
+- **Reset behavior:** Timer resets when reactivating an ended demo (goes back to full duration)
+- **Timing calculation:** Based on `liveStartedAt` timestamp stored in `demo_state` and `eventDurationMinutes`
+
 ## External Dependencies
 
 - **PostgreSQL** — Primary database, required via `DATABASE_URL` environment variable
-- - **Socket.IO** — WebSocket-based real-time communication between server and participant clients
+- **Socket.IO** — WebSocket-based real-time communication between server and participant clients
 - **QRCode (npm)** — Server-side QR code generation for participant join links
 - **connect-pg-simple** — PostgreSQL session store for Express sessions
 - **SESSION_SECRET** — Environment variable for signing session cookies (falls back to a default)

@@ -99,6 +99,8 @@ export default function DemoEditor() {
   const [editChantPeopleDuration, setEditChantPeopleDuration] = useState(3);
 
   const [rotationInterval, setRotationInterval] = useState(60);
+  const [eventDuration, setEventDuration] = useState(60);
+  const [remainingTime, setRemainingTime] = useState<number | null>(null);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
@@ -117,10 +119,39 @@ export default function DemoEditor() {
   const admins = data?.admins ?? [];
   const { user: currentUser } = useAuth();
 
+  const isLive = demo?.status === "live";
+  const isDraft = demo?.status === "draft";
+  const isEnded = demo?.status === "ended";
+
   useEffect(() => {
     if (!state) return;
     if (state.rotationInterval) setRotationInterval(state.rotationInterval);
+    if (state.eventDurationMinutes) setEventDuration(state.eventDurationMinutes);
   }, [state]);
+
+  useEffect(() => {
+    if (!state?.liveStartedAt || !isLive) {
+      setRemainingTime(null);
+      return;
+    }
+
+    const updateRemaining = () => {
+      const startTime = new Date(state.liveStartedAt).getTime();
+      const now = Date.now();
+      const elapsedSeconds = Math.floor((now - startTime) / 1000);
+      const totalSeconds = (state.eventDurationMinutes ?? 60) * 60;
+      const remaining = Math.max(0, totalSeconds - elapsedSeconds);
+      setRemainingTime(remaining);
+
+      if (remaining === 0) {
+        clearInterval(timerInterval);
+      }
+    };
+
+    updateRemaining();
+    const timerInterval = setInterval(updateRemaining, 1000);
+    return () => clearInterval(timerInterval);
+  }, [state?.liveStartedAt, state?.eventDurationMinutes, isLive]);
 
   const addChant = useMutation({
     mutationFn: async ({ callText, responseText, cycles, leaderDuration, peopleDuration }: { callText: string; responseText: string; cycles: number; leaderDuration: number; peopleDuration: number }) => {
@@ -249,6 +280,21 @@ export default function DemoEditor() {
     },
   });
 
+  const updateEventDuration = useMutation({
+    mutationFn: async (duration: number) => {
+      await apiRequest("POST", `/api/demos/${id}/event-duration`, {
+        eventDurationMinutes: duration,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
+      toast({ title: "Event duration updated" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
   const updateTitle = useMutation({
     mutationFn: async (title: string) => {
       await apiRequest("PATCH", `/api/demos/${id}`, { title });
@@ -352,10 +398,6 @@ export default function DemoEditor() {
       </div>
     );
   }
-
-  const isLive = demo.status === "live";
-  const isDraft = demo.status === "draft";
-  const isEnded = demo.status === "ended";
 
   return (
     <div className="min-h-screen bg-background">
@@ -499,46 +541,67 @@ export default function DemoEditor() {
         {(isLive || isDraft || isEnded) && (
           <Card className="mb-6">
             <CardContent className="py-4">
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div className="flex items-center gap-3">
-                  <Timer className="w-4 h-4 text-muted-foreground" />
-                  <Input
-                    type="number"
-                    min={5}
-                    max={18000}
-                    value={rotationInterval}
-                    onChange={(e) => setRotationInterval(Number(e.target.value))}
-                    onBlur={() => {
-                      const val = Math.max(5, Math.min(18000, rotationInterval));
-                      setRotationInterval(val);
-                      if (val !== state?.rotationInterval) {
-                        updateRotationInterval.mutate(val);
-                      }
-                    }}
-                    className="w-24 text-sm"
-                    data-testid="input-rotation-interval"
-                  />
-                  <span className="text-xs text-muted-foreground">sec</span>
-                </div>
-                <Button
-                  variant={autoRotate ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => toggleAutoRotate.mutate(!autoRotate)}
-                  disabled={toggleAutoRotate.isPending}
-                  data-testid="button-toggle-auto-rotate"
-                >
-                  {autoRotate ? (
-                    <>
-                      <Pause className="w-3.5 h-3.5 mr-1" />
-                      Pause
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-3.5 h-3.5 mr-1" />
-                      Start
-                    </>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3">
+                      <Timer className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <Input
+                        type="number"
+                        min={1}
+                        max={300}
+                        value={eventDuration}
+                        onChange={(e) => setEventDuration(Number(e.target.value))}
+                        onBlur={() => {
+                          const val = Math.max(1, Math.min(300, eventDuration));
+                          setEventDuration(val);
+                          if (val !== state?.eventDurationMinutes && !isLive) {
+                            updateEventDuration.mutate(val);
+                          }
+                        }}
+                        disabled={isLive}
+                        className="w-20 text-sm"
+                        data-testid="input-event-duration"
+                      />
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">min</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">Event duration (up to 5 hours)</p>
+                  </div>
+                  {isLive && remainingTime !== null && (
+                    <div className="text-right">
+                      <p className="text-sm font-medium">
+                        {Math.floor(remainingTime / 60)}:{String(remainingTime % 60).padStart(2, "0")}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Remaining</p>
+                    </div>
                   )}
-                </Button>
+                </div>
+
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <RotateCw className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Auto-rotation</span>
+                  </div>
+                  <Button
+                    variant={autoRotate ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => toggleAutoRotate.mutate(!autoRotate)}
+                    disabled={toggleAutoRotate.isPending}
+                    data-testid="button-toggle-auto-rotate"
+                  >
+                    {autoRotate ? (
+                      <>
+                        <Pause className="w-3.5 h-3.5 mr-1" />
+                        Pause
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-3.5 h-3.5 mr-1" />
+                        Start
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

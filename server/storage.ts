@@ -39,6 +39,9 @@ export interface IStorage {
   initDemoState(demonstrationId: string): Promise<void>;
   setRotationPhase(demonstrationId: string, currentPhase: "leader" | "people", currentCycle: number): Promise<void>;
   updateAutoRotation(demonstrationId: string, autoRotate: boolean, rotationInterval: number, cycleCount: number, leaderDuration: number, peopleDuration: number): Promise<void>;
+  updateEventDuration(demonstrationId: string, eventDurationMinutes: number): Promise<void>;
+  setLiveStartedAt(demonstrationId: string, startTime: Date): Promise<void>;
+  resetLiveStartedAt(demonstrationId: string): Promise<void>;
 
   addDemoAdmin(demonstrationId: string, userId: string): Promise<void>;
   removeDemoAdmin(demonstrationId: string, userId: string): Promise<void>;
@@ -213,6 +216,37 @@ export class DatabaseStorage implements IStorage {
         .where(eq(demoState.demonstrationId, demonstrationId));
     } else {
       await db.insert(demoState).values({ demonstrationId, currentChantId: null, autoRotate, rotationInterval, cycleCount, leaderDuration, peopleDuration });
+    }
+  }
+
+  async updateEventDuration(demonstrationId: string, eventDurationMinutes: number): Promise<void> {
+    const existing = await this.getDemoState(demonstrationId);
+    if (existing) {
+      await db.update(demoState)
+        .set({ eventDurationMinutes, updatedAt: new Date() })
+        .where(eq(demoState.demonstrationId, demonstrationId));
+    } else {
+      await db.insert(demoState).values({ demonstrationId, eventDurationMinutes });
+    }
+  }
+
+  async setLiveStartedAt(demonstrationId: string, startTime: Date): Promise<void> {
+    const existing = await this.getDemoState(demonstrationId);
+    if (existing) {
+      await db.update(demoState)
+        .set({ liveStartedAt: startTime, updatedAt: new Date() })
+        .where(eq(demoState.demonstrationId, demonstrationId));
+    } else {
+      await db.insert(demoState).values({ demonstrationId, liveStartedAt: startTime });
+    }
+  }
+
+  async resetLiveStartedAt(demonstrationId: string): Promise<void> {
+    const existing = await this.getDemoState(demonstrationId);
+    if (existing) {
+      await db.update(demoState)
+        .set({ liveStartedAt: null, updatedAt: new Date() })
+        .where(eq(demoState.demonstrationId, demonstrationId));
     }
   }
 

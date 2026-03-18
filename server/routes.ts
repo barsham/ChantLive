@@ -413,6 +413,7 @@ export async function registerRoutes(
 
       await storage.updateDemoStatus(demo.id, "live");
       await storage.initDemoState(demo.id);
+      await storage.setLiveStartedAt(demo.id, new Date());
 
       await storage.setCurrentChant(demo.id, chantsList[0].id);
 
@@ -452,6 +453,7 @@ export async function registerRoutes(
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
       await storage.updateDemoStatus(demo.id, "ended");
+      await storage.resetLiveStartedAt(demo.id);
       stopAutoRotation(demo.id);
 
       io.to(`demo:${demo.publicId}`).emit("demo_ended");
@@ -579,6 +581,24 @@ export async function registerRoutes(
       res.json({ success: true, autoRotate, rotationInterval: interval, cycleCount: normalizedCycleCount, leaderDuration: normalizedLeaderDuration, peopleDuration: normalizedPeopleDuration });
     } catch (err) {
       res.status(500).json({ message: "Failed to update auto-rotation" });
+    }
+  });
+
+  app.post("/api/demos/:id/event-duration", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      const { eventDurationMinutes } = req.body;
+      const duration = typeof eventDurationMinutes === "number" && eventDurationMinutes >= 1 && eventDurationMinutes <= 300 ? eventDurationMinutes : 60;
+
+      await storage.updateEventDuration(demo.id, duration);
+
+      res.json({ success: true, eventDurationMinutes: duration });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to update event duration" });
     }
   });
 
