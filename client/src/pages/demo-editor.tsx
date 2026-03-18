@@ -759,42 +759,114 @@ export default function DemoEditor() {
                   <div className="space-y-3 md:grid md:grid-cols-3 md:gap-3">
                     <div className="space-y-2">
                       <Label htmlFor="new-cycles">Cycles</Label>
-                      <Input
-                        id="new-cycles"
-                        type="number"
-                        min={1}
-                        max={10}
-                        value={newChantCycles}
-                        onChange={(e) => setNewChantCycles(Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))}
-                        className="w-full"
-                        data-testid="input-new-cycles"
-                      />
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-10 w-10 p-0"
+                          onClick={() => setNewChantCycles(Math.max(1, newChantCycles - 1))}
+                          disabled={newChantCycles <= 1}
+                          data-testid="button-cycles-minus"
+                        >
+                          −
+                        </Button>
+                        <Input
+                          id="new-cycles"
+                          type="number"
+                          min={1}
+                          max={10}
+                          value={newChantCycles}
+                          onChange={(e) => setNewChantCycles(Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))}
+                          className="w-full text-center"
+                          data-testid="input-new-cycles"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-10 w-10 p-0"
+                          onClick={() => setNewChantCycles(Math.min(10, newChantCycles + 1))}
+                          disabled={newChantCycles >= 10}
+                          data-testid="button-cycles-plus"
+                        >
+                          +
+                        </Button>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="new-leader-duration">Leader sec</Label>
-                      <Input
-                        id="new-leader-duration"
-                        type="number"
-                        min={1}
-                        max={30}
-                        value={newChantLeaderDuration}
-                        onChange={(e) => setNewChantLeaderDuration(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
-                        className="w-full"
-                        data-testid="input-new-leader-duration"
-                      />
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-10 w-10 p-0"
+                          onClick={() => setNewChantLeaderDuration(Math.max(1, newChantLeaderDuration - 1))}
+                          disabled={newChantLeaderDuration <= 1}
+                          data-testid="button-leader-duration-minus"
+                        >
+                          −
+                        </Button>
+                        <Input
+                          id="new-leader-duration"
+                          type="number"
+                          min={1}
+                          max={30}
+                          value={newChantLeaderDuration}
+                          onChange={(e) => setNewChantLeaderDuration(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
+                          className="w-full text-center"
+                          data-testid="input-new-leader-duration"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-10 w-10 p-0"
+                          onClick={() => setNewChantLeaderDuration(Math.min(30, newChantLeaderDuration + 1))}
+                          disabled={newChantLeaderDuration >= 30}
+                          data-testid="button-leader-duration-plus"
+                        >
+                          +
+                        </Button>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="new-people-duration">People sec</Label>
-                      <Input
-                        id="new-people-duration"
-                        type="number"
-                        min={1}
-                        max={30}
-                        value={newChantPeopleDuration}
-                        onChange={(e) => setNewChantPeopleDuration(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
-                        className="w-full"
-                        data-testid="input-new-people-duration"
-                      />
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-10 w-10 p-0"
+                          onClick={() => setNewChantPeopleDuration(Math.max(1, newChantPeopleDuration - 1))}
+                          disabled={newChantPeopleDuration <= 1}
+                          data-testid="button-people-duration-minus"
+                        >
+                          −
+                        </Button>
+                        <Input
+                          id="new-people-duration"
+                          type="number"
+                          min={1}
+                          max={30}
+                          value={newChantPeopleDuration}
+                          onChange={(e) => setNewChantPeopleDuration(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
+                          className="w-full text-center"
+                          data-testid="input-new-people-duration"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-10 w-10 p-0"
+                          onClick={() => setNewChantPeopleDuration(Math.min(30, newChantPeopleDuration + 1))}
+                          disabled={newChantPeopleDuration >= 30}
+                          data-testid="button-people-duration-plus"
+                        >
+                          +
+                        </Button>
+                      </div>
                     </div>
                   </div>
                   <Button
@@ -850,42 +922,114 @@ export default function DemoEditor() {
               <div className="space-y-3 md:grid md:grid-cols-3 md:gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="edit-cycles">Cycles</Label>
-                  <Input
-                    id="edit-cycles"
-                    type="number"
-                    min={1}
-                    max={10}
-                    value={editChantCycles}
-                    onChange={(e) => setEditChantCycles(Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))}
-                    className="w-full"
-                    data-testid="input-edit-cycles"
-                  />
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-10 w-10 p-0"
+                      onClick={() => setEditChantCycles(Math.max(1, editChantCycles - 1))}
+                      disabled={editChantCycles <= 1}
+                      data-testid="button-edit-cycles-minus"
+                    >
+                      −
+                    </Button>
+                    <Input
+                      id="edit-cycles"
+                      type="number"
+                      min={1}
+                      max={10}
+                      value={editChantCycles}
+                      onChange={(e) => setEditChantCycles(Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))}
+                      className="w-full text-center"
+                      data-testid="input-edit-cycles"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-10 w-10 p-0"
+                      onClick={() => setEditChantCycles(Math.min(10, editChantCycles + 1))}
+                      disabled={editChantCycles >= 10}
+                      data-testid="button-edit-cycles-plus"
+                    >
+                      +
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-leader-duration">Leader sec</Label>
-                  <Input
-                    id="edit-leader-duration"
-                    type="number"
-                    min={1}
-                    max={30}
-                    value={editChantLeaderDuration}
-                    onChange={(e) => setEditChantLeaderDuration(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
-                    className="w-full"
-                    data-testid="input-edit-leader-duration"
-                  />
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-10 w-10 p-0"
+                      onClick={() => setEditChantLeaderDuration(Math.max(1, editChantLeaderDuration - 1))}
+                      disabled={editChantLeaderDuration <= 1}
+                      data-testid="button-edit-leader-duration-minus"
+                    >
+                      −
+                    </Button>
+                    <Input
+                      id="edit-leader-duration"
+                      type="number"
+                      min={1}
+                      max={30}
+                      value={editChantLeaderDuration}
+                      onChange={(e) => setEditChantLeaderDuration(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
+                      className="w-full text-center"
+                      data-testid="input-edit-leader-duration"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-10 w-10 p-0"
+                      onClick={() => setEditChantLeaderDuration(Math.min(30, editChantLeaderDuration + 1))}
+                      disabled={editChantLeaderDuration >= 30}
+                      data-testid="button-edit-leader-duration-plus"
+                    >
+                      +
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-people-duration">People sec</Label>
-                  <Input
-                    id="edit-people-duration"
-                    type="number"
-                    min={1}
-                    max={30}
-                    value={editChantPeopleDuration}
-                    onChange={(e) => setEditChantPeopleDuration(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
-                    className="w-full"
-                    data-testid="input-edit-people-duration"
-                  />
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-10 w-10 p-0"
+                      onClick={() => setEditChantPeopleDuration(Math.max(1, editChantPeopleDuration - 1))}
+                      disabled={editChantPeopleDuration <= 1}
+                      data-testid="button-edit-people-duration-minus"
+                    >
+                      −
+                    </Button>
+                    <Input
+                      id="edit-people-duration"
+                      type="number"
+                      min={1}
+                      max={30}
+                      value={editChantPeopleDuration}
+                      onChange={(e) => setEditChantPeopleDuration(Math.min(30, Math.max(1, parseInt(e.target.value) || 1)))}
+                      className="w-full text-center"
+                      data-testid="input-edit-people-duration"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-10 w-10 p-0"
+                      onClick={() => setEditChantPeopleDuration(Math.min(30, editChantPeopleDuration + 1))}
+                      disabled={editChantPeopleDuration >= 30}
+                      data-testid="button-edit-people-duration-plus"
+                    >
+                      +
+                    </Button>
+                  </div>
                 </div>
               </div>
               <Button
