@@ -137,22 +137,35 @@ export default function DemoEditor() {
       return;
     }
 
+    const startTime = new Date(state.liveStartedAt).getTime();
+    if (Number.isNaN(startTime)) {
+      setRemainingTime(null);
+      return;
+    }
+
+    let timerInterval: ReturnType<typeof setInterval> | null = null;
+
     const updateRemaining = () => {
-      const startTime = new Date(state.liveStartedAt).getTime();
       const now = Date.now();
       const elapsedSeconds = Math.floor((now - startTime) / 1000);
       const totalSeconds = (state.eventDurationMinutes ?? 300) * 60;
       const remaining = Math.max(0, totalSeconds - elapsedSeconds);
       setRemainingTime(remaining);
 
-      if (remaining === 0) {
+      if (remaining === 0 && timerInterval) {
         clearInterval(timerInterval);
+        timerInterval = null;
       }
     };
 
     updateRemaining();
-    const timerInterval = setInterval(updateRemaining, 1000);
-    return () => clearInterval(timerInterval);
+    timerInterval = setInterval(updateRemaining, 1000);
+
+    return () => {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+      }
+    };
   }, [state?.liveStartedAt, state?.eventDurationMinutes, isLive]);
 
   const addChant = useMutation({
