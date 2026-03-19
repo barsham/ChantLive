@@ -809,7 +809,6 @@ export default function DemoEditor() {
                       <Label htmlFor="new-cycles">Cycles</Label>
                       <div className="flex items-center gap-2">
                         <Button
-                          type="button"
                           variant="outline"
                           size="sm"
                           className="h-10 w-10 p-0"
@@ -830,7 +829,6 @@ export default function DemoEditor() {
                           data-testid="input-new-cycles"
                         />
                         <Button
-                          type="button"
                           variant="outline"
                           size="sm"
                           className="h-10 w-10 p-0"
@@ -846,7 +844,6 @@ export default function DemoEditor() {
                       <Label htmlFor="new-leader-duration">Leader sec</Label>
                       <div className="flex items-center gap-2">
                         <Button
-                          type="button"
                           variant="outline"
                           size="sm"
                           className="h-10 w-10 p-0"
@@ -867,7 +864,6 @@ export default function DemoEditor() {
                           data-testid="input-new-leader-duration"
                         />
                         <Button
-                          type="button"
                           variant="outline"
                           size="sm"
                           className="h-10 w-10 p-0"
@@ -883,7 +879,6 @@ export default function DemoEditor() {
                       <Label htmlFor="new-people-duration">People sec</Label>
                       <div className="flex items-center gap-2">
                         <Button
-                          type="button"
                           variant="outline"
                           size="sm"
                           className="h-10 w-10 p-0"
@@ -904,7 +899,6 @@ export default function DemoEditor() {
                           data-testid="input-new-people-duration"
                         />
                         <Button
-                          type="button"
                           variant="outline"
                           size="sm"
                           className="h-10 w-10 p-0"
@@ -972,7 +966,6 @@ export default function DemoEditor() {
                   <Label htmlFor="edit-cycles">Cycles</Label>
                   <div className="flex items-center gap-2">
                     <Button
-                      type="button"
                       variant="outline"
                       size="sm"
                       className="h-10 w-10 p-0"
@@ -993,7 +986,6 @@ export default function DemoEditor() {
                       data-testid="input-edit-cycles"
                     />
                     <Button
-                      type="button"
                       variant="outline"
                       size="sm"
                       className="h-10 w-10 p-0"
@@ -1009,7 +1001,6 @@ export default function DemoEditor() {
                   <Label htmlFor="edit-leader-duration">Leader sec</Label>
                   <div className="flex items-center gap-2">
                     <Button
-                      type="button"
                       variant="outline"
                       size="sm"
                       className="h-10 w-10 p-0"
@@ -1030,7 +1021,6 @@ export default function DemoEditor() {
                       data-testid="input-edit-leader-duration"
                     />
                     <Button
-                      type="button"
                       variant="outline"
                       size="sm"
                       className="h-10 w-10 p-0"
@@ -1046,7 +1036,6 @@ export default function DemoEditor() {
                   <Label htmlFor="edit-people-duration">People sec</Label>
                   <div className="flex items-center gap-2">
                     <Button
-                      type="button"
                       variant="outline"
                       size="sm"
                       className="h-10 w-10 p-0"
@@ -1067,7 +1056,6 @@ export default function DemoEditor() {
                       data-testid="input-edit-people-duration"
                     />
                     <Button
-                      type="button"
                       variant="outline"
                       size="sm"
                       className="h-10 w-10 p-0"
