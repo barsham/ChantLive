@@ -38,11 +38,12 @@ export interface IStorage {
   setCurrentChant(demonstrationId: string, chantId: string): Promise<void>;
   initDemoState(demonstrationId: string): Promise<void>;
   setRotationPhase(demonstrationId: string, currentPhase: "leader" | "people", currentCycle: number): Promise<void>;
-  updateAutoRotation(demonstrationId: string, autoRotate: boolean, rotationInterval: number, cycleCount: number, leaderDuration: number, peopleDuration: number): Promise<void>;
+  updateAutoRotation(demonstrationId: string, autoRotate: boolean, rotationInterval: number, cycleCount: number, leaderDuration: number, peopleDuration: number, cycleDelay: number): Promise<void>;
   updateEventDuration(demonstrationId: string, eventDurationMinutes: number): Promise<void>;
   setLiveStartedAt(demonstrationId: string, startTime: Date): Promise<void>;
   resetLiveStartedAt(demonstrationId: string): Promise<void>;
-
+  
+  deleteDemonstration(id: string): Promise<void>;
   addDemoAdmin(demonstrationId: string, userId: string): Promise<void>;
   removeDemoAdmin(demonstrationId: string, userId: string): Promise<void>;
   getDemoAdmins(demonstrationId: string): Promise<DemoAdmin[]>;
@@ -140,6 +141,16 @@ export class DatabaseStorage implements IStorage {
     await db.update(demonstrations).set({ status }).where(eq(demonstrations.id, id));
   }
 
+  async deleteDemonstration(id: string): Promise<void> {
+    await db.transaction(async (tx) => {
+      await tx.delete(demoState).where(eq(demoState.demonstrationId, id));
+      await tx.delete(chants).where(eq(chants.demonstrationId, id));
+      await tx.delete(demoAdmins).where(eq(demoAdmins.demonstrationId, id));
+      await tx.delete(viewSessions).where(eq(viewSessions.demonstrationId, id));
+      await tx.delete(demonstrations).where(eq(demonstrations.id, id));
+    });
+  }
+
   async getChants(demonstrationId: string): Promise<Chant[]> {
     return db.select().from(chants)
       .where(eq(chants.demonstrationId, demonstrationId))
@@ -208,14 +219,14 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async updateAutoRotation(demonstrationId: string, autoRotate: boolean, rotationInterval: number, cycleCount: number, leaderDuration: number, peopleDuration: number): Promise<void> {
+  async updateAutoRotation(demonstrationId: string, autoRotate: boolean, rotationInterval: number, cycleCount: number, leaderDuration: number, peopleDuration: number, cycleDelay: number): Promise<void> {
     const existing = await this.getDemoState(demonstrationId);
     if (existing) {
       await db.update(demoState)
-        .set({ autoRotate, rotationInterval, cycleCount, leaderDuration, peopleDuration, updatedAt: new Date() })
+        .set({ autoRotate, rotationInterval, cycleCount, leaderDuration, peopleDuration, cycleDelay, updatedAt: new Date() })
         .where(eq(demoState.demonstrationId, demonstrationId));
     } else {
-      await db.insert(demoState).values({ demonstrationId, currentChantId: null, autoRotate, rotationInterval, cycleCount, leaderDuration, peopleDuration });
+      await db.insert(demoState).values({ demonstrationId, currentChantId: null, autoRotate, rotationInterval, cycleCount, leaderDuration, peopleDuration, cycleDelay });
     }
   }
 

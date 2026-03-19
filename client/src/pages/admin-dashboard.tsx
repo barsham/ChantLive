@@ -20,7 +20,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, Megaphone, Radio, Archive, Eye, Users, LogOut } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppVersion } from "@/components/app-version";
@@ -59,6 +69,7 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const [newTitle, setNewTitle] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Demonstration | null>(null);
 
   const { data: demos, isLoading } = useQuery<Demonstration[]>({
     queryKey: ["/api/demos"],
@@ -77,6 +88,20 @@ export default function AdminDashboard() {
     },
     onError: (err: Error) => {
       toast({ title: "Error creating demonstration", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const deleteDemo = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/demos/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos"] });
+      setDeleteTarget(null);
+      toast({ title: "Demonstration deleted" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error deleting demonstration", description: err.message, variant: "destructive" });
     },
   });
 
@@ -187,6 +212,10 @@ export default function AdminDashboard() {
                       <Eye className="w-3.5 h-3.5 mr-1" />
                       {demo.status === "live" ? "Control" : "Edit"}
                     </Button>
+                    <Button variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700" onClick={(e) => { e.stopPropagation(); setDeleteTarget(demo); }} data-testid={`button-delete-demo-${demo.id}`}>
+                      <Trash2 className="w-3.5 h-3.5 mr-1" />
+                      Delete
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -206,6 +235,27 @@ export default function AdminDashboard() {
           </Card>
         )}
       </main>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Demonstration</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>"{deleteTarget?.title}"</strong>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => deleteTarget && deleteDemo.mutate(deleteTarget.id)}
+              disabled={deleteDemo.isPending}
+            >
+              {deleteDemo.isPending ? "Deleting..." : "Yes"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
