@@ -761,7 +761,7 @@ export default function DemoEditor() {
 
         <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
           <h2 className="text-lg font-semibold">Chants ({chantsList.length})</h2>
-          {!isEnded && (
+          {!isLive && (
             <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" disabled={chantsList.length >= 30} data-testid="button-add-chant">
@@ -1188,7 +1188,7 @@ export default function DemoEditor() {
                           Push Live
                         </Button>
                       )}
-                      {!isEnded && (
+                      {!isLive && (
                         <>
                           <Button
                             variant="ghost"
@@ -1198,15 +1198,32 @@ export default function DemoEditor() {
                           >
                             <Pencil className="w-4 h-4 text-muted-foreground" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => deleteChant.mutate(chant.id)}
-                            disabled={deleteChant.isPending}
-                            data-testid={`button-delete-chant-${chant.id}`}
-                          >
-                            <Trash2 className="w-4 h-4 text-muted-foreground" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                disabled={deleteChant.isPending}
+                                data-testid={`button-delete-chant-${chant.id}`}
+                              >
+                                <Trash2 className="w-4 h-4 text-muted-foreground" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Chant</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this chant? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => deleteChant.mutate(chant.id)}>
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </>
                       )}
                     </div>
