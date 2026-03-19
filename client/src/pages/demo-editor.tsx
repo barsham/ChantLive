@@ -99,7 +99,8 @@ export default function DemoEditor() {
   const [editChantPeopleDuration, setEditChantPeopleDuration] = useState(3);
 
   const [rotationInterval, setRotationInterval] = useState(60);
-  const [eventDuration, setEventDuration] = useState(60);
+  const [cycleDelay, setCycleDelay] = useState(500);
+  const [eventDuration, setEventDuration] = useState(300);
   const [remainingTime, setRemainingTime] = useState<number | null>(null);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState("");
@@ -126,6 +127,7 @@ export default function DemoEditor() {
   useEffect(() => {
     if (!state) return;
     if (state.rotationInterval) setRotationInterval(state.rotationInterval);
+    if (state.cycleDelay != null) setCycleDelay(state.cycleDelay);
     if (state.eventDurationMinutes) setEventDuration(state.eventDurationMinutes);
   }, [state]);
 
@@ -139,7 +141,7 @@ export default function DemoEditor() {
       const startTime = new Date(state.liveStartedAt).getTime();
       const now = Date.now();
       const elapsedSeconds = Math.floor((now - startTime) / 1000);
-      const totalSeconds = (state.eventDurationMinutes ?? 60) * 60;
+      const totalSeconds = (state.eventDurationMinutes ?? 300) * 60;
       const remaining = Math.max(0, totalSeconds - elapsedSeconds);
       setRemainingTime(remaining);
 
@@ -253,6 +255,7 @@ export default function DemoEditor() {
       await apiRequest("POST", `/api/demos/${id}/auto-rotate`, {
         autoRotate: enabled,
         rotationInterval,
+        cycleDelay,
       });
     },
     onSuccess: () => {
@@ -269,11 +272,29 @@ export default function DemoEditor() {
       await apiRequest("POST", `/api/demos/${id}/auto-rotate`, {
         autoRotate,
         rotationInterval: interval,
+        cycleDelay,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
       toast({ title: "Rotation interval updated" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const updateCycleDelay = useMutation({
+    mutationFn: async (delay: number) => {
+      await apiRequest("POST", `/api/demos/${id}/auto-rotate`, {
+        autoRotate,
+        rotationInterval,
+        cycleDelay: delay,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
+      toast({ title: "Cycle delay updated" });
     },
     onError: (err: Error) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -578,6 +599,33 @@ export default function DemoEditor() {
                 </div>
 
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <Timer className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <Input
+                        type="number"
+                        min={0}
+                        max={5000}
+                        step={100}
+                        value={cycleDelay}
+                        onChange={(e) => setCycleDelay(Number(e.target.value))}
+                        onBlur={() => {
+                          const val = Math.max(0, Math.min(5000, cycleDelay));
+                          setCycleDelay(val);
+                          if (val !== state?.cycleDelay) {
+                            updateCycleDelay.mutate(val);
+                          }
+                        }}
+                        className="w-24 text-sm"
+                        data-testid="input-cycle-delay"
+                      />
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">ms</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">Delay between cycles and chants (0–5000 ms)</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <RotateCw className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                     <span className="text-sm font-medium">Auto-rotation</span>
@@ -713,7 +761,7 @@ export default function DemoEditor() {
 
         <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
           <h2 className="text-lg font-semibold">Chants ({chantsList.length})</h2>
-          {!isEnded && (
+          {!isLive && (
             <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" disabled={chantsList.length >= 30} data-testid="button-add-chant">
@@ -1140,7 +1188,7 @@ export default function DemoEditor() {
                           Push Live
                         </Button>
                       )}
-                      {!isEnded && (
+                      {!isLive && (
                         <>
                           <Button
                             variant="ghost"
@@ -1150,15 +1198,32 @@ export default function DemoEditor() {
                           >
                             <Pencil className="w-4 h-4 text-muted-foreground" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => deleteChant.mutate(chant.id)}
-                            disabled={deleteChant.isPending}
-                            data-testid={`button-delete-chant-${chant.id}`}
-                          >
-                            <Trash2 className="w-4 h-4 text-muted-foreground" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                disabled={deleteChant.isPending}
+                                data-testid={`button-delete-chant-${chant.id}`}
+                              >
+                                <Trash2 className="w-4 h-4 text-muted-foreground" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Chant</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this chant? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => deleteChant.mutate(chant.id)}>
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </>
                       )}
                     </div>

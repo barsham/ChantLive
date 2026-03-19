@@ -55,7 +55,8 @@ export const demoState = pgTable("demo_state", {
   peopleDuration: integer("people_duration").notNull().default(3),
   currentPhase: text("current_phase").notNull().default("leader"),
   currentCycle: integer("current_cycle").notNull().default(1),
-  eventDurationMinutes: integer("event_duration_minutes").notNull().default(60),
+  cycleDelay: integer("cycle_delay").notNull().default(500),
+  eventDurationMinutes: integer("event_duration_minutes").notNull().default(300),
   liveStartedAt: timestamp("live_started_at"),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

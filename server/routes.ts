@@ -225,6 +225,21 @@ export async function registerRoutes(
     }
   });
 
+  app.delete("/api/demos/:id", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Not found" });
+      if (demo.createdBy !== user.id && user.role !== "super_admin") {
+        return res.status(403).json({ message: "Only the demo creator or super admin can delete a demonstration" });
+      }
+      await storage.deleteDemonstration(demo.id);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to delete demonstration" });
+    }
+  });
+
   app.post("/api/demos/:id/chants", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
@@ -504,7 +519,9 @@ export async function registerRoutes(
         const activeChant = chantsList[resolvedIndex];
         const cycleCountForChant = activeChant?.cycles ?? 1;
 
+        let addCycleDelay = false;
         if (progress.phase === "people") {
+          addCycleDelay = true;
           if (progress.cycle >= cycleCountForChant) {
             nextCycle = 1;
             nextIndex = (resolvedIndex + 1) % chantsList.length;
@@ -512,6 +529,11 @@ export async function registerRoutes(
           } else {
             nextCycle = progress.cycle + 1;
           }
+        }
+
+        const cycleDelayMs = state.cycleDelay ?? 500;
+        if (addCycleDelay && cycleDelayMs > 0) {
+          await new Promise((resolve) => setTimeout(resolve, cycleDelayMs));
         }
 
         await storage.setRotationPhase(demoId, nextPhase, nextCycle);
@@ -561,16 +583,18 @@ export async function registerRoutes(
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
-      const { autoRotate, rotationInterval, cycleCount, leaderDuration, peopleDuration } = req.body;
+      const { autoRotate, rotationInterval, cycleCount, leaderDuration, peopleDuration, cycleDelay } = req.body;
       if (typeof autoRotate !== "boolean") {
         return res.status(400).json({ message: "autoRotate must be a boolean" });
       }
+      
       const interval = typeof rotationInterval === "number" && rotationInterval >= 5 && rotationInterval <= 18000 ? rotationInterval : 60;
       const normalizedCycleCount = typeof cycleCount === "number" && cycleCount >= 1 && cycleCount <= 10 ? cycleCount : 1;
       const normalizedLeaderDuration = typeof leaderDuration === "number" && leaderDuration >= 1 && leaderDuration <= 30 ? leaderDuration : 4;
       const normalizedPeopleDuration = typeof peopleDuration === "number" && peopleDuration >= 1 && peopleDuration <= 30 ? peopleDuration : 3;
+      const normalizedCycleDelay = typeof cycleDelay === "number" && cycleDelay >= 0 && cycleDelay <= 5000 ? cycleDelay : 500;
 
-      await storage.updateAutoRotation(demo.id, autoRotate, interval, normalizedCycleCount, normalizedLeaderDuration, normalizedPeopleDuration);
+      await storage.updateAutoRotation(demo.id, autoRotate, interval, normalizedCycleCount, normalizedLeaderDuration, normalizedPeopleDuration, normalizedCycleDelay);
 
       if (autoRotate && demo.status === "live") {
         await startAutoRotation(demo.id, demo.publicId);
@@ -578,7 +602,7 @@ export async function registerRoutes(
         stopAutoRotation(demo.id);
       }
 
-      res.json({ success: true, autoRotate, rotationInterval: interval, cycleCount: normalizedCycleCount, leaderDuration: normalizedLeaderDuration, peopleDuration: normalizedPeopleDuration });
+      res.json({ success: true, autoRotate, rotationInterval: interval, cycleCount: normalizedCycleCount, leaderDuration: normalizedLeaderDuration, peopleDuration: normalizedPeopleDuration, cycleDelay: normalizedCycleDelay });
     } catch (err) {
       res.status(500).json({ message: "Failed to update auto-rotation" });
     }
