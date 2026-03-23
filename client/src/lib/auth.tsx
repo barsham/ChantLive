@@ -1,4 +1,5 @@
 import { createContext, useContext, ReactNode } from "react";
+import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "./queryClient";
 import type { User } from "@shared/schema";
@@ -18,9 +19,13 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const [location] = useLocation();
+  const shouldCheckAuth = location.startsWith("/admin") || location === "/login" || location === "/register" || location === "/forgot-password" || location === "/reset-password";
+
   const { data: user, isLoading } = useQuery<User | null>({
     queryKey: ["/api/auth/me"],
     queryFn: getQueryFn({ on401: "returnNull" }),
+    enabled: shouldCheckAuth,
   });
 
   return (
