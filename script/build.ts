@@ -7,7 +7,6 @@ import { rm, readFile } from "fs/promises";
 const allowlist = [
   "@google/generative-ai",
   "axios",
-  "connect-pg-simple",
   "cors",
   "date-fns",
   "drizzle-orm",
@@ -31,6 +30,10 @@ const allowlist = [
   "zod",
   "zod-validation-error",
 ];
+
+// Keep packages that load runtime assets from their own directories external.
+// `connect-pg-simple` reads `table.sql` via `__dirname`, which breaks when bundled
+// into `dist/index.cjs` on platforms like Render.
 
 async function buildAll() {
   await rm("dist", { recursive: true, force: true });
