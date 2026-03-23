@@ -54,6 +54,7 @@ import {
   Timer,
   Users,
   UserPlus,
+  Download,
   X,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -372,6 +373,42 @@ export default function DemoEditor() {
     },
   });
 
+  const exportDemo = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/demos/${id}/export`, {
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const text = (await res.text()) || "Failed to export demonstration";
+        throw new Error(text);
+      }
+
+      return {
+        blob: await res.blob(),
+        disposition: res.headers.get("content-disposition"),
+      };
+    },
+    onSuccess: ({ blob, disposition }) => {
+      const filenameMatch = disposition?.match(/filename="([^"]+)"/i);
+      const filename = filenameMatch?.[1] || `${demo?.title || "demonstration"}.chantlive.json`;
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast({ title: "Demonstration exported" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
   const loadQr = useCallback(async () => {
     if (!demo) return;
     try {
@@ -504,6 +541,16 @@ export default function DemoEditor() {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => exportDemo.mutate()}
+              disabled={exportDemo.isPending}
+              data-testid="button-export-demo"
+            >
+              <Download className="w-4 h-4 mr-1" />
+              {exportDemo.isPending ? "Exporting..." : "Export"}
+            </Button>
             <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" data-testid="button-qr">

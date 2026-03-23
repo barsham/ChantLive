@@ -30,12 +30,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut } from "lucide-react";
+import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppVersion } from "@/components/app-version";
 import type { Demonstration } from "@shared/schema";
-import { useState } from "react";
+import type { ChangeEvent } from "react";
+import { useRef, useState } from "react";
 
 function statusVariant(status: string) {
   switch (status) {
@@ -70,6 +71,7 @@ export default function AdminDashboard() {
   const [newTitle, setNewTitle] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Demonstration | null>(null);
+  const importInputRef = useRef<HTMLInputElement | null>(null);
 
   const { data: demos, isLoading } = useQuery<Demonstration[]>({
     queryKey: ["/api/demos"],
@@ -105,9 +107,59 @@ export default function AdminDashboard() {
     },
   });
 
+  const importDemo = useMutation({
+    mutationFn: async (payload: unknown) => {
+      const res = await apiRequest("POST", "/api/demos/import", payload);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos"] });
+
+      const skippedAdmins = Array.isArray(data.skippedAdminEmails) ? data.skippedAdminEmails.length : 0;
+      const importedAdmins = Array.isArray(data.importedAdminEmails) ? data.importedAdminEmails.length : 0;
+      const importedChants = typeof data.importedChants === "number" ? data.importedChants : 0;
+
+      toast({
+        title: "Demonstration imported",
+        description: skippedAdmins > 0
+          ? `${importedChants} chants restored. ${importedAdmins} admins matched in this portal, ${skippedAdmins} could not be added.`
+          : `${importedChants} chants restored${importedAdmins > 0 ? ` and ${importedAdmins} admins matched in this portal.` : "."}`,
+      });
+
+      if (data.demo?.id) {
+        navigate(`/admin/demos/${data.demo.id}`);
+      }
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error importing demonstration", description: err.message, variant: "destructive" });
+    },
+  });
+
   const handleCreate = () => {
     if (!newTitle.trim()) return;
     createDemo.mutate(newTitle.trim());
+  };
+
+  const handleImportClick = () => {
+    importInputRef.current?.click();
+  };
+
+  const handleImportFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) return;
+
+    try {
+      const contents = await file.text();
+      importDemo.mutate(JSON.parse(contents));
+    } catch {
+      toast({
+        title: "Invalid import file",
+        description: "Please choose a valid ChantLive demonstration export JSON file.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -142,40 +194,58 @@ export default function AdminDashboard() {
             <h1 className="text-2xl font-bold" data-testid="text-dashboard-title">Demonstrations</h1>
             <p className="text-sm text-muted-foreground mt-1">Create and manage your live chant demonstrations</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button data-testid="button-create-demo">
-                <Plus className="w-4 h-4 mr-1" />
-                New Demonstration
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create Demonstration</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-2">
-                <div className="space-y-2">
-                  <Label htmlFor="demo-title">Title</Label>
-                  <Input
-                    id="demo-title"
-                    placeholder="e.g., Climate March 2026"
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-                    data-testid="input-demo-title"
-                  />
-                </div>
-                <Button
-                  className="w-full"
-                  onClick={handleCreate}
-                  disabled={!newTitle.trim() || createDemo.isPending}
-                  data-testid="button-confirm-create"
-                >
-                  {createDemo.isPending ? "Creating..." : "Create Demonstration"}
+          <div className="flex items-center gap-2 flex-wrap">
+            <input
+              ref={importInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={handleImportFile}
+            />
+            <Button
+              variant="outline"
+              onClick={handleImportClick}
+              disabled={importDemo.isPending}
+              data-testid="button-import-demo"
+            >
+              <Upload className="w-4 h-4 mr-1" />
+              {importDemo.isPending ? "Importing..." : "Import Demonstration"}
+            </Button>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button data-testid="button-create-demo">
+                  <Plus className="w-4 h-4 mr-1" />
+                  New Demonstration
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create Demonstration</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="demo-title">Title</Label>
+                    <Input
+                      id="demo-title"
+                      placeholder="e.g., Climate March 2026"
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+                      data-testid="input-demo-title"
+                    />
+                  </div>
+                  <Button
+                    className="w-full"
+                    onClick={handleCreate}
+                    disabled={!newTitle.trim() || createDemo.isPending}
+                    data-testid="button-confirm-create"
+                  >
+                    {createDemo.isPending ? "Creating..." : "Create Demonstration"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {isLoading ? (

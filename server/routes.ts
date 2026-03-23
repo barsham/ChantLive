@@ -6,6 +6,7 @@ import { ensureDemoColumnsAndTables, ensureUserAuthColumns } from "./db";
 import { setupAuth, requireAuth, requireSuperAdmin } from "./auth";
 import QRCode from "qrcode";
 import type { User } from "@shared/schema";
+import { demoTransferPackageSchema } from "@shared/demo-transfer";
 
 declare global {
   namespace Express {
@@ -47,6 +48,16 @@ async function getDemoByIdentifier(idOrPublicId: string | string[] | undefined) 
   const byId = await storage.getDemonstration(normalizedId);
   if (byId) return byId;
   return storage.getDemonstrationByPublicId(normalizedId);
+}
+
+function buildExportFilename(title: string): string {
+  const slug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60) || "demonstration";
+
+  return `${slug}.chantlive.json`;
 }
 
 
@@ -115,6 +126,97 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/demos/import", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const parsed = demoTransferPackageSchema.safeParse(req.body);
+
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid demonstration import file." });
+      }
+
+      const transferPackage = parsed.data;
+      const importedDemo = await storage.createDemonstration({
+        title: transferPackage.demonstration.title.trim(),
+        status: "draft",
+        createdBy: user.id,
+      });
+
+      await storage.addDemoAdmin(importedDemo.id, user.id);
+
+      const chantIdByOrderIndex = new Map<number, string>();
+      const chantsToImport = [...transferPackage.chants].sort((a, b) => a.orderIndex - b.orderIndex);
+
+      for (const chant of chantsToImport) {
+        const createdChant = await storage.addChant({
+          demonstrationId: importedDemo.id,
+          orderIndex: chant.orderIndex,
+          callText: chant.callText,
+          responseText: chant.responseText,
+          cycles: chant.cycles,
+          leaderDuration: chant.leaderDuration,
+          peopleDuration: chant.peopleDuration,
+        });
+
+        chantIdByOrderIndex.set(chant.orderIndex, createdChant.id);
+      }
+
+      if (transferPackage.state) {
+        await storage.updateAutoRotation(
+          importedDemo.id,
+          transferPackage.state.autoRotate,
+          transferPackage.state.rotationInterval,
+          transferPackage.state.cycleCount,
+          transferPackage.state.leaderDuration,
+          transferPackage.state.peopleDuration,
+          transferPackage.state.cycleDelay,
+        );
+        await storage.updateEventDuration(importedDemo.id, transferPackage.state.eventDurationMinutes);
+
+        if (transferPackage.state.currentChantOrderIndex !== null) {
+          const currentChantId = chantIdByOrderIndex.get(transferPackage.state.currentChantOrderIndex);
+          if (currentChantId) {
+            await storage.setCurrentChant(importedDemo.id, currentChantId);
+            await storage.setRotationPhase(
+              importedDemo.id,
+              transferPackage.state.currentPhase,
+              transferPackage.state.currentCycle,
+            );
+          }
+        }
+      }
+
+      const importedAdminEmails: string[] = [];
+      const skippedAdminEmails: string[] = [];
+
+      for (const admin of transferPackage.admins) {
+        const normalizedEmail = admin.email.trim().toLowerCase();
+        if (!normalizedEmail || normalizedEmail === user.email.toLowerCase()) {
+          continue;
+        }
+
+        const existingUser = await storage.getUserByEmail(normalizedEmail);
+        if (!existingUser) {
+          skippedAdminEmails.push(normalizedEmail);
+          continue;
+        }
+
+        await storage.addDemoAdmin(importedDemo.id, existingUser.id);
+        importedAdminEmails.push(normalizedEmail);
+      }
+
+      res.json({
+        demo: importedDemo,
+        importedAdminEmails,
+        skippedAdminEmails,
+        importedChants: chantsToImport.length,
+      });
+    } catch (err) {
+      console.error("Demonstration import error:", err);
+      res.status(500).json({ message: "Failed to import demonstration" });
+    }
+  });
+
   app.get("/api/demos/:id", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
@@ -140,6 +242,73 @@ export async function registerRoutes(
       res.json({ demo, chants: chantsList, state, viewerCount, admins: admins.filter(Boolean) });
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch demonstration" });
+    }
+  });
+
+  app.get("/api/demos/:id/export", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      const chantsList = await storage.getChants(demo.id);
+      const state = await storage.getDemoState(demo.id);
+      const adminLinks = await storage.getDemoAdmins(demo.id);
+      const admins = await Promise.all(
+        adminLinks.map(async (adminLink) => {
+          const adminUser = await storage.getUser(adminLink.userId);
+          if (!adminUser) return null;
+
+          return {
+            email: adminUser.email,
+            name: adminUser.name,
+            role: adminUser.id === demo.createdBy ? "creator" as const : "admin" as const,
+          };
+        }),
+      );
+
+      const currentChantOrderIndex = state?.currentChantId
+        ? chantsList.find((chant) => chant.id === state.currentChantId)?.orderIndex ?? null
+        : null;
+
+      const payload = {
+        version: 1 as const,
+        exportedAt: new Date().toISOString(),
+        demonstration: {
+          title: demo.title,
+          originalStatus: demo.status as "draft" | "live" | "ended",
+          createdAt: demo.createdAt.toISOString(),
+        },
+        chants: chantsList.map((chant) => ({
+          orderIndex: chant.orderIndex,
+          callText: chant.callText,
+          responseText: chant.responseText,
+          cycles: chant.cycles ?? 1,
+          leaderDuration: chant.leaderDuration ?? 4,
+          peopleDuration: chant.peopleDuration ?? 3,
+        })),
+        state: state ? {
+          autoRotate: state.autoRotate ?? false,
+          rotationInterval: state.rotationInterval ?? 60,
+          cycleCount: state.cycleCount ?? 1,
+          leaderDuration: state.leaderDuration ?? 4,
+          peopleDuration: state.peopleDuration ?? 3,
+          cycleDelay: state.cycleDelay ?? 500,
+          eventDurationMinutes: state.eventDurationMinutes ?? 300,
+          currentPhase: state.currentPhase ?? "leader",
+          currentCycle: state.currentCycle ?? 1,
+          currentChantOrderIndex,
+        } : null,
+        admins: admins.filter(Boolean),
+      };
+
+      res.setHeader("Content-Type", "application/json");
+      res.setHeader("Content-Disposition", `attachment; filename="${buildExportFilename(demo.title)}"`);
+      res.json(payload);
+    } catch (err) {
+      console.error("Demonstration export error:", err);
+      res.status(500).json({ message: "Failed to export demonstration" });
     }
   });
 
