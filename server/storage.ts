@@ -25,6 +25,7 @@ export interface IStorage {
   getDemonstration(id: string): Promise<Demonstration | undefined>;
   getDemonstrationByPublicId(publicId: string): Promise<Demonstration | undefined>;
   getDemonstrations(userId: string, role: string): Promise<Demonstration[]>;
+  getLiveDemonstrations(): Promise<Demonstration[]>;
   updateDemoStatus(id: string, status: string): Promise<void>;
   updateDemoTitle(id: string, title: string): Promise<Demonstration | undefined>;
 
@@ -130,6 +131,10 @@ export class DatabaseStorage implements IStorage {
       )
       .orderBy(desc(demonstrations.createdAt));
     return allDemos;
+  }
+
+  async getLiveDemonstrations(): Promise<Demonstration[]> {
+    return db.select().from(demonstrations).where(eq(demonstrations.status, "live"));
   }
 
   async updateDemoTitle(id: string, title: string): Promise<Demonstration | undefined> {

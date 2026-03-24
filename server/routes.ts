@@ -651,13 +651,13 @@ export async function registerRoutes(
   function stopAutoRotation(demoId: string) {
     const timer = autoRotateTimers.get(demoId);
     if (timer) {
-      clearInterval(timer);
+      clearTimeout(timer);
       autoRotateTimers.delete(demoId);
       autoRotateProgress.delete(demoId);
     }
   }
 
-  async function startAutoRotation(demoId: string, publicId: string) {
+  async function startAutoRotation(demoId: string, publicId: string, options?: { resume?: boolean }) {
     stopAutoRotation(demoId);
 
     const tick = async () => {
@@ -732,17 +732,58 @@ export async function registerRoutes(
         autoRotateTimers.set(demoId, timeout);
       } catch (err) {
         console.error("Auto-rotation error:", err);
+        const retryTimeout = setTimeout(tick, 1000);
+        autoRotateTimers.set(demoId, retryTimeout);
       }
     };
 
-    autoRotateProgress.set(demoId, { phase: "leader", cycle: 1 });
     const initialState = await storage.getDemoState(demoId);
     const initialChantsList = await storage.getChants(demoId);
-    const firstChant = initialChantsList.length > 0 ? initialChantsList[0] : null;
-    await storage.setRotationPhase(demoId, "leader", 1);
-    const initialDelay = Math.max(1, firstChant?.leaderDuration ?? 4) * 1000;
+    if (initialChantsList.length === 0) {
+      return;
+    }
+
+    const savedIndex = initialState?.currentChantId
+      ? initialChantsList.findIndex((chant) => chant.id === initialState.currentChantId)
+      : -1;
+    const resolvedIndex = savedIndex >= 0 ? savedIndex : 0;
+    const activeChant = initialChantsList[resolvedIndex];
+
+    if (options?.resume) {
+      if (!initialState?.currentChantId || savedIndex < 0) {
+        await storage.setCurrentChant(demoId, activeChant.id);
+      }
+
+      const resumedPhase = initialState?.currentPhase === "people" ? "people" : "leader";
+      const resumedCycle = initialState?.currentCycle && initialState.currentCycle > 0 ? initialState.currentCycle : 1;
+      const resumedDelaySeconds = resumedPhase === "leader"
+        ? (activeChant?.leaderDuration ?? 4)
+        : (activeChant?.peopleDuration ?? 3);
+
+      autoRotateProgress.set(demoId, { phase: resumedPhase, cycle: resumedCycle });
+
+      const timeout = setTimeout(tick, Math.max(1, resumedDelaySeconds) * 1000);
+      autoRotateTimers.set(demoId, timeout);
+      return;
+    }
+
+    await storage.setCurrentChant(demoId, activeChant.id);
+    autoRotateProgress.set(demoId, { phase: "leader", cycle: 1 });
+    const initialDelay = Math.max(1, activeChant?.leaderDuration ?? 4) * 1000;
     const timeout = setTimeout(tick, initialDelay);
     autoRotateTimers.set(demoId, timeout);
+  }
+
+  async function resumeLiveAutoRotations() {
+    const liveDemos = await storage.getLiveDemonstrations();
+    for (const liveDemo of liveDemos) {
+      const state = await storage.getDemoState(liveDemo.id);
+      if (!state?.autoRotate) {
+        continue;
+      }
+
+      await startAutoRotation(liveDemo.id, liveDemo.publicId, { resume: true });
+    }
   }
 
   app.post("/api/demos/:id/auto-rotate", requireAuth, async (req, res) => {
@@ -926,6 +967,8 @@ export async function registerRoutes(
       }
     });
   });
+
+  await resumeLiveAutoRotations();
 
   return httpServer;
 }
