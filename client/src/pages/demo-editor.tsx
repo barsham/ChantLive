@@ -77,6 +77,16 @@ type DemoDetail = {
   admins: AdminInfo[];
 };
 
+const clampProgress = (value: number) => Math.min(100, Math.max(0, value));
+
+const getPhaseDurationMs = (chant: Chant | undefined, phase: "leader" | "people") => {
+  const durationSeconds = phase === "leader"
+    ? (chant?.leaderDuration ?? 4)
+    : (chant?.peopleDuration ?? 3);
+
+  return Math.max(1, durationSeconds) * 1000;
+};
+
 export default function DemoEditor() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
@@ -107,6 +117,7 @@ export default function DemoEditor() {
   const [titleValue, setTitleValue] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [adminDialogOpen, setAdminDialogOpen] = useState(false);
+  const [phaseProgress, setPhaseProgress] = useState(0);
 
   const { data, isLoading, refetch } = useQuery<DemoDetail>({
     queryKey: ["/api/demos", id],
@@ -124,6 +135,10 @@ export default function DemoEditor() {
   const isLive = demo?.status === "live";
   const isDraft = demo?.status === "draft";
   const isEnded = demo?.status === "ended";
+  const currentPhase = state?.currentPhase === "people" ? "people" : "leader";
+  const currentChant = state?.currentChantId
+    ? chantsList.find((chant) => chant.id === state.currentChantId)
+    : undefined;
 
   useEffect(() => {
     if (!state) return;
@@ -168,6 +183,40 @@ export default function DemoEditor() {
       }
     };
   }, [state?.liveStartedAt, state?.eventDurationMinutes, isLive]);
+
+  useEffect(() => {
+    if (!isLive || !state?.updatedAt || !currentChant) {
+      setPhaseProgress(0);
+      return;
+    }
+
+    const phaseStartedAt = new Date(state.updatedAt).getTime();
+    const phaseDurationMs = getPhaseDurationMs(currentChant, currentPhase);
+
+    if (Number.isNaN(phaseStartedAt) || phaseDurationMs <= 0) {
+      setPhaseProgress(0);
+      return;
+    }
+
+    let animationFrame = 0;
+    const updateProgress = () => {
+      const elapsedMs = Date.now() - phaseStartedAt;
+      setPhaseProgress(clampProgress((elapsedMs / phaseDurationMs) * 100));
+      animationFrame = requestAnimationFrame(updateProgress);
+    };
+
+    updateProgress();
+
+    return () => {
+      cancelAnimationFrame(animationFrame);
+    };
+  }, [
+    currentChant?.id,
+    currentPhase,
+    isLive,
+    state?.currentCycle,
+    state?.updatedAt,
+  ]);
 
   const addChant = useMutation({
     mutationFn: async ({ callText, responseText, cycles, leaderDuration, peopleDuration }: { callText: string; responseText: string; cycles: number; leaderDuration: number; peopleDuration: number }) => {
@@ -1222,6 +1271,36 @@ export default function DemoEditor() {
                           </p>
                         )}
                       </div>
+                      {isCurrent && isLive && (
+                        <div className="mt-3" data-testid={`progress-current-chant-${chant.id}`}>
+                          <div className="mb-1.5 flex items-center justify-between gap-3">
+                            <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+                              {currentPhase === "leader" ? "Leader" : "Everyone"} timing
+                            </span>
+                            <span className="text-[10px] font-mono text-muted-foreground">
+                              {Math.round(phaseProgress)}%
+                            </span>
+                          </div>
+                          <div
+                            className="h-2.5 w-full overflow-hidden rounded-full bg-muted"
+                            role="progressbar"
+                            aria-label="Current chant timing progress"
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-valuenow={Math.round(phaseProgress)}
+                          >
+                            <div
+                              className={`h-full rounded-full ${
+                                currentPhase === "leader" ? "bg-emerald-500" : "bg-fuchsia-500"
+                              }`}
+                              style={{
+                                transform: `scaleX(${phaseProgress / 100})`,
+                                transformOrigin: "left center",
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-1 shrink-0">

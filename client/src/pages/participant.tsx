@@ -15,7 +15,13 @@ type ChantData = {
   currentPhase?: "leader" | "people";
   currentCycle?: number;
   cycleCount?: number;
+  phaseStartedAt?: string;
+  phaseDurationMs?: number;
+  serverNow?: string;
 };
+
+const clampProgress = (value: number) => Math.min(100, Math.max(0, value));
+const getFallbackPhaseDuration = (phase: "leader" | "people") => phase === "leader" ? 4000 : 3000;
 
 export default function Participant() {
   const { publicId } = useParams<{ publicId: string }>();
@@ -25,6 +31,8 @@ export default function Participant() {
   const [error, setError] = useState<string | null>(null);
   const socketRef = useRef(getSocket());
   const [fadeIn, setFadeIn] = useState(false);
+  const [phaseProgress, setPhaseProgress] = useState(0);
+  const localPhaseStartRef = useRef(Date.now());
 
   useEffect(() => {
     const socket = socketRef.current;
@@ -46,6 +54,7 @@ export default function Participant() {
     socket.on("chant_update", (data: ChantData) => {
       setFadeIn(false);
       setTimeout(() => {
+        localPhaseStartRef.current = Date.now();
         setChantData(data);
         setFadeIn(true);
       }, 50);
@@ -88,6 +97,87 @@ export default function Participant() {
   }, [publicId]);
 
   const hasChantContent = chantData?.callText || chantData?.responseText;
+  const activePhase = chantData?.currentPhase ?? "leader";
+
+  useEffect(() => {
+    if (!chantData) {
+      setPhaseProgress(0);
+      return;
+    }
+
+    const hasServerTiming = Boolean(
+      chantData.phaseStartedAt &&
+      chantData.phaseDurationMs &&
+      chantData.serverNow,
+    );
+    const phaseStartedAt = chantData.phaseStartedAt
+      ? Date.parse(chantData.phaseStartedAt)
+      : localPhaseStartRef.current;
+    const serverNowAtUpdate = chantData.serverNow
+      ? Date.parse(chantData.serverNow)
+      : Date.now();
+    const phaseDurationMs = chantData.phaseDurationMs ?? getFallbackPhaseDuration(activePhase);
+    const receivedAt = Date.now();
+
+    if (
+      Number.isNaN(phaseStartedAt) ||
+      Number.isNaN(serverNowAtUpdate) ||
+      phaseDurationMs <= 0
+    ) {
+      setPhaseProgress(0);
+      return;
+    }
+
+    let animationFrame = 0;
+    const updateProgress = () => {
+      const elapsedMs = hasServerTiming
+        ? serverNowAtUpdate + (Date.now() - receivedAt) - phaseStartedAt
+        : Date.now() - phaseStartedAt;
+      setPhaseProgress(clampProgress((elapsedMs / phaseDurationMs) * 100));
+      animationFrame = requestAnimationFrame(updateProgress);
+    };
+
+    updateProgress();
+
+    return () => {
+      cancelAnimationFrame(animationFrame);
+    };
+  }, [
+    activePhase,
+    chantData?.chantIndex,
+    chantData?.currentCycle,
+    chantData?.phaseStartedAt,
+    chantData?.phaseDurationMs,
+    chantData?.serverNow,
+  ]);
+
+  const renderPhaseProgress = (phase: "leader" | "people") => {
+    if (activePhase !== phase || !chantData) {
+      return null;
+    }
+
+    const barColor = phase === "leader" ? "bg-emerald-400" : "bg-fuchsia-400";
+
+    return (
+      <div
+        className="mt-5 h-3 w-full overflow-hidden rounded-full bg-white/15 shadow-[0_0_18px_rgba(255,255,255,0.12)]"
+        role="progressbar"
+        aria-label={`${phase === "leader" ? "Leader" : "Everyone"} chant progress`}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(phaseProgress)}
+        data-testid={`progress-${phase}`}
+      >
+        <div
+          className={`h-full rounded-full ${barColor} shadow-[0_0_20px_currentColor]`}
+          style={{
+            transform: `scaleX(${phaseProgress / 100})`,
+            transformOrigin: "left center",
+          }}
+        />
+      </div>
+    );
+  };
 
   if (error) {
     return (
@@ -169,6 +259,7 @@ export default function Participant() {
                   >
                     {chantData.callText}
                   </h1>
+                  {renderPhaseProgress("leader")}
                 </div>
               )}
               {chantData.responseText && (
@@ -184,6 +275,7 @@ export default function Participant() {
                   >
                     {chantData.responseText}
                   </h1>
+                  {renderPhaseProgress("people")}
                 </div>
               )}
 

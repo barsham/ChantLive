@@ -24,6 +24,7 @@ declare global {
 const demoViewers = new Map<string, Set<string>>();
 const autoRotateTimers = new Map<string, NodeJS.Timeout>();
 const autoRotateProgress = new Map<string, { phase: "leader" | "people"; cycle: number }>();
+type ChantPhase = "leader" | "people";
 
 function getSingleParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -60,6 +61,22 @@ function buildExportFilename(title: string): string {
   return `${slug}.chantlive.json`;
 }
 
+function getPhaseDurationMs(
+  chant: { leaderDuration?: number | null; peopleDuration?: number | null } | null | undefined,
+  phase: ChantPhase,
+): number {
+  const durationSeconds = phase === "leader"
+    ? (chant?.leaderDuration ?? 4)
+    : (chant?.peopleDuration ?? 3);
+
+  return Math.max(1, durationSeconds) * 1000;
+}
+
+function getPhaseStartedAt(state: { updatedAt?: Date | string | null } | null | undefined): string {
+  const updatedAt = state?.updatedAt ? new Date(state.updatedAt) : new Date();
+  return Number.isNaN(updatedAt.getTime()) ? new Date().toISOString() : updatedAt.toISOString();
+}
+
 
 
 async function emitCurrentChant(io: SocketIOServer, demo: any) {
@@ -69,6 +86,7 @@ async function emitCurrentChant(io: SocketIOServer, demo: any) {
   const chantIndex = currentChant ? chantsList.findIndex((c) => c.id === currentChant.id) : null;
   const nextChantIndex = chantIndex !== null && chantsList.length > 0 ? (chantIndex + 1) % chantsList.length : null;
   const nextChant = nextChantIndex !== null ? chantsList[nextChantIndex] : null;
+  const currentPhase = state?.currentPhase === "people" ? "people" : "leader";
 
   io.to(`demo:${demo.publicId}`).emit("chant_update", {
     callText: currentChant?.callText || null,
@@ -79,9 +97,12 @@ async function emitCurrentChant(io: SocketIOServer, demo: any) {
     totalChants: chantsList.length,
     demoTitle: demo.title,
     demoStatus: demo.status,
-    currentPhase: state?.currentPhase ?? "leader",
+    currentPhase,
     currentCycle: state?.currentCycle ?? 1,
-    cycleCount: state?.cycleCount ?? 1,
+    cycleCount: currentChant?.cycles ?? state?.cycleCount ?? 1,
+    phaseStartedAt: getPhaseStartedAt(state),
+    phaseDurationMs: getPhaseDurationMs(currentChant, currentPhase),
+    serverNow: new Date().toISOString(),
   });
 }
 export async function registerRoutes(
@@ -483,6 +504,7 @@ export async function registerRoutes(
         const chantIndex = chantsList.findIndex((c) => c.id === chant.id);
         const nextChantIndex = chantIndex >= 0 && chantsList.length > 0 ? (chantIndex + 1) % chantsList.length : null;
         const nextChant = nextChantIndex !== null ? chantsList[nextChantIndex] : null;
+        const currentPhase = state.currentPhase === "people" ? "people" : "leader";
 
         io.to(`demo:${demo.publicId}`).emit("chant_update", {
           callText: chant.callText,
@@ -493,9 +515,12 @@ export async function registerRoutes(
           totalChants: chantsList.length,
           demoTitle: demo.title,
           demoStatus: demo.status,
-          currentPhase: state.currentPhase ?? "leader",
+          currentPhase,
           currentCycle: state.currentCycle ?? 1,
-          cycleCount: state.cycleCount ?? 1,
+          cycleCount: chant.cycles ?? state.cycleCount ?? 1,
+          phaseStartedAt: getPhaseStartedAt(state),
+          phaseDurationMs: getPhaseDurationMs(chant, currentPhase),
+          serverNow: new Date().toISOString(),
         });
       }
 
@@ -562,6 +587,7 @@ export async function registerRoutes(
       const nextChant = nextChantIndex !== null ? chantsList[nextChantIndex] : null;
 
       const currentState = await storage.getDemoState(demo.id);
+      const currentPhase = currentState?.currentPhase === "people" ? "people" : "leader";
       io.to(`demo:${demo.publicId}`).emit("chant_update", {
         callText: chant?.callText || null,
         responseText: chant?.responseText || null,
@@ -571,9 +597,12 @@ export async function registerRoutes(
         totalChants: chantsList.length,
         demoTitle: demo.title,
         demoStatus: demo.status,
-        currentPhase: currentState?.currentPhase ?? "leader",
+        currentPhase,
         currentCycle: currentState?.currentCycle ?? 1,
-        cycleCount: currentState?.cycleCount ?? 1,
+        cycleCount: chant?.cycles ?? currentState?.cycleCount ?? 1,
+        phaseStartedAt: getPhaseStartedAt(currentState),
+        phaseDurationMs: getPhaseDurationMs(chant, currentPhase),
+        serverNow: new Date().toISOString(),
       });
 
       io.to(`demo:${demo.publicId}`).emit("viewer_count", getViewerCount(demo.id));
@@ -604,6 +633,7 @@ export async function registerRoutes(
       const state = await storage.getDemoState(demo.id);
       const nextChantIndex = chantsList.length > 0 ? 1 % chantsList.length : null;
       const nextChant = nextChantIndex !== null ? chantsList[nextChantIndex] : null;
+      const currentPhase = state?.currentPhase === "people" ? "people" : "leader";
 
       io.to(`demo:${demo.publicId}`).emit("chant_update", {
         callText: chantsList[0].callText,
@@ -614,9 +644,12 @@ export async function registerRoutes(
         totalChants: chantsList.length,
         demoTitle: demo.title,
         demoStatus: "live",
-        currentPhase: state?.currentPhase ?? "leader",
+        currentPhase,
         currentCycle: state?.currentCycle ?? 1,
-        cycleCount: state?.cycleCount ?? 1,
+        cycleCount: chantsList[0].cycles ?? state?.cycleCount ?? 1,
+        phaseStartedAt: getPhaseStartedAt(state),
+        phaseDurationMs: getPhaseDurationMs(chantsList[0], currentPhase),
+        serverNow: new Date().toISOString(),
       });
 
       if (state?.autoRotate) {
@@ -712,6 +745,7 @@ export async function registerRoutes(
         const nextSequenceIndex = chantsList.length > 0 ? (nextIndex + 1) % chantsList.length : null;
         const autoNextChant = nextSequenceIndex !== null ? chantsList[nextSequenceIndex] : null;
         const chantForEmit = chantsList[nextIndex];
+        const emittedPhase = refreshedState?.currentPhase === "people" ? "people" : nextPhase;
 
         io.to(`demo:${publicId}`).emit("chant_update", {
           callText: chantForEmit.callText,
@@ -722,9 +756,12 @@ export async function registerRoutes(
           totalChants: chantsList.length,
           demoTitle: demo.title,
           demoStatus: demo.status,
-          currentPhase: refreshedState?.currentPhase ?? nextPhase,
+          currentPhase: emittedPhase,
           currentCycle: refreshedState?.currentCycle ?? nextCycle,
           cycleCount: chantForEmit?.cycles ?? 1,
+          phaseStartedAt: getPhaseStartedAt(refreshedState),
+          phaseDurationMs: getPhaseDurationMs(chantForEmit, emittedPhase),
+          serverNow: new Date().toISOString(),
         });
 
         const delaySeconds = nextPhase === "leader" ? (chantForEmit?.leaderDuration ?? 4) : (chantForEmit?.peopleDuration ?? 3);
@@ -927,6 +964,7 @@ export async function registerRoutes(
           : null;
         const nextChantIndex = chantIndex !== null && chantsList.length > 0 ? (chantIndex + 1) % chantsList.length : null;
         const nextChant = nextChantIndex !== null ? chantsList[nextChantIndex] : null;
+        const currentPhase = state?.currentPhase === "people" ? "people" : "leader";
 
         socket.emit("chant_update", {
           callText: currentChant?.callText || null,
@@ -937,9 +975,12 @@ export async function registerRoutes(
           totalChants: chantsList.length,
           demoTitle: demo.title,
           demoStatus: demo.status,
-          currentPhase: state?.currentPhase ?? "leader",
+          currentPhase,
           currentCycle: state?.currentCycle ?? 1,
-          cycleCount: state?.cycleCount ?? 1,
+          cycleCount: currentChant?.cycles ?? state?.cycleCount ?? 1,
+          phaseStartedAt: getPhaseStartedAt(state),
+          phaseDurationMs: getPhaseDurationMs(currentChant, currentPhase),
+          serverNow: new Date().toISOString(),
         });
 
         const count = getViewerCount(demo.id);
