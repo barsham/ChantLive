@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /d/
+
+Sitemap: https://chantlive.online/sitemap.xml
