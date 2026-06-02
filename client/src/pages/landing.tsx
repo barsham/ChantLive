@@ -48,7 +48,7 @@ export default function Landing() {
               <span className="text-primary"> live chants</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-8">
-              Create demonstrations, manage chants, and push them live to every participant's phone instantly. Hosted at <a href="https://chantlive.online/" target="_blank" rel="noreferrer" className="underline underline-offset-4">chantlive.online</a> and free to use by anyone.
+              Create demonstrations, manage chants, share QR codes, and push live call-and-response updates to every participant&apos;s phone instantly. Hosted at <a href="https://chantlive.online/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">chantlive.online</a> and free to use by anyone.
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
               {isAuthenticated ? (
@@ -112,10 +112,10 @@ export default function Landing() {
 
         <section className="py-16 px-4 border-t">
           <div className="max-w-3xl mx-auto text-center mb-12">
-            <h2 className="text-xl font-semibold mb-2">Free and open-source for free speech</h2>
+            <h2 className="text-xl font-semibold mb-2">Why organizers use ChantLive</h2>
             <p className="text-sm text-muted-foreground">
-              ChantLive is a free open-source project. Our mission is to help people organize peaceful demonstrations and express themselves safely,
-              openly, and without paywalls.
+              ChantLive helps organizers run coordinated demonstrations without printing leaflets, shouting over a crowd, or asking participants to install an app.
+              The platform is built for fast updates, anonymous participant access, and clear chant visibility on mobile devices.
             </p>
           </div>
           <div className="max-w-3xl mx-auto text-center">
@@ -126,13 +126,53 @@ export default function Landing() {
             </p>
           </div>
         </section>
+
+        <section className="py-16 px-4 border-t">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-semibold text-center mb-10">Frequently asked questions</h2>
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="font-semibold mb-2">Do participants need to install anything?</h3>
+                  <p className="text-sm text-muted-foreground">
+                    No. Participants scan a QR code or open a link and immediately see the current chant in their mobile browser.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="font-semibold mb-2">Can multiple admins manage one demonstration?</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Yes. Event admins can collaborate on setup and manage live chant changes together during a demonstration.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="font-semibold mb-2">Is ChantLive free to use?</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Yes. ChantLive is a free open-source project built to support peaceful public expression without paywalls.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="font-semibold mb-2">What kinds of events is it for?</h3>
+                  <p className="text-sm text-muted-foreground">
+                    It works well for rallies, marches, demonstrations, campus actions, and any event where a group needs synchronized live chant prompts.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="border-t py-6 px-4">
         <div className="max-w-6xl mx-auto text-center text-sm text-muted-foreground space-y-2">
-          <p>ChantLive - Real-time demonstration management, hosted at <a href="https://chantlive.online/" target="_blank" rel="noreferrer" className="underline underline-offset-4">chantlive.online</a> and free for anyone</p>
+          <p>ChantLive - Real-time demonstration management, hosted at <a href="https://chantlive.online/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">chantlive.online</a> and free for anyone</p>
           <p>
-            Open-source project for free speech worldwide. <a href="https://github.com/barsham/ChantLive" target="_blank" rel="noreferrer" className="underline underline-offset-4">Source code on GitHub</a>. <AppVersion className="inline" />
+            Open-source project for free speech worldwide. <a href="https://github.com/barsham/ChantLive" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">Source code on GitHub</a>. <AppVersion className="inline" />
           </p>
         </div>
       </footer>

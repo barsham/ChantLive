@@ -1,6 +1,85 @@
 import express, { type Express } from "express";
 import fs from "fs";
 import path from "path";
+import { getSeoForPath } from "@shared/seo";
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function getRequestOrigin(req: express.Request): string {
+  const forwardedProto = req.headers["x-forwarded-proto"];
+  const proto = Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto;
+  const protocol = proto ?? req.protocol;
+  const forwardedHost = req.headers["x-forwarded-host"];
+  const host = Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost ?? req.headers.host;
+
+  return `${protocol}://${host}`;
+}
+
+function renderSeoHtml(template: string, req: express.Request): string {
+  const origin = getRequestOrigin(req);
+  const seo = getSeoForPath(req.path, origin);
+  const canonicalUrl = new URL(seo.canonicalPath, origin).toString();
+  const imageUrl = new URL("/social-card.svg", origin).toString();
+  const jsonLd = seo.jsonLd ? JSON.stringify(seo.jsonLd) : "";
+
+  return template
+    .replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(seo.title)}</title>`)
+    .replace(
+      /<meta\s+name="description"\s+content="[^"]*"\s*\/?>/i,
+      `<meta name="description" content="${escapeHtml(seo.description)}" />`,
+    )
+    .replace(
+      /<meta\s+name="robots"\s+content="[^"]*"\s*\/?>/i,
+      `<meta name="robots" content="${escapeHtml(seo.robots)}" />`,
+    )
+    .replace(
+      /<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/i,
+      `<link rel="canonical" href="${escapeHtml(canonicalUrl)}" />`,
+    )
+    .replace(
+      /<meta\s+property="og:title"\s+content="[^"]*"\s*\/?>/i,
+      `<meta property="og:title" content="${escapeHtml(seo.title)}" />`,
+    )
+    .replace(
+      /<meta\s+property="og:description"\s+content="[^"]*"\s*\/?>/i,
+      `<meta property="og:description" content="${escapeHtml(seo.description)}" />`,
+    )
+    .replace(
+      /<meta\s+property="og:url"\s+content="[^"]*"\s*\/?>/i,
+      `<meta property="og:url" content="${escapeHtml(canonicalUrl)}" />`,
+    )
+    .replace(
+      /<meta\s+property="og:image"\s+content="[^"]*"\s*\/?>/i,
+      `<meta property="og:image" content="${escapeHtml(imageUrl)}" />`,
+    )
+    .replace(
+      /<meta\s+property="og:type"\s+content="[^"]*"\s*\/?>/i,
+      `<meta property="og:type" content="${escapeHtml(seo.ogType)}" />`,
+    )
+    .replace(
+      /<meta\s+name="twitter:title"\s+content="[^"]*"\s*\/?>/i,
+      `<meta name="twitter:title" content="${escapeHtml(seo.title)}" />`,
+    )
+    .replace(
+      /<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/?>/i,
+      `<meta name="twitter:description" content="${escapeHtml(seo.description)}" />`,
+    )
+    .replace(
+      /<meta\s+name="twitter:image"\s+content="[^"]*"\s*\/?>/i,
+      `<meta name="twitter:image" content="${escapeHtml(imageUrl)}" />`,
+    )
+    .replace(
+      /<script id="seo-json-ld" type="application\/ld\+json">[\s\S]*?<\/script>/i,
+      `<script id="seo-json-ld" type="application/ld+json">${jsonLd}</script>`,
+    );
+}
 
 export function serveStatic(app: Express) {
   const distPath = path.resolve(__dirname, "public");
@@ -10,10 +89,18 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  const indexPath = path.resolve(distPath, "index.html");
+  const indexTemplate = fs.readFileSync(indexPath, "utf8");
+
+  app.use(express.static(distPath, { index: false }));
 
   // fall through to index.html if the file doesn't exist
-  app.use("/{*path}", (_req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
+  app.use("/{*path}", (req, res) => {
+    if (path.extname(req.path)) {
+      res.status(404).end();
+      return;
+    }
+
+    res.type("html").send(renderSeoHtml(indexTemplate, req));
   });
 }
