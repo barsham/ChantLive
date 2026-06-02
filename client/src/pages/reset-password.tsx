@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSearch, useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Megaphone } from "lucide-react";
@@ -38,7 +38,10 @@ export default function ResetPassword() {
           <div className="flex items-center justify-center mb-4 text-xl font-bold">
             <Megaphone className="w-6 h-6 text-orange-500 mr-2" />ChantLive
           </div>
-          <CardTitle>Reset password</CardTitle>
+          <h1 className="text-2xl font-semibold tracking-tight">Choose a new ChantLive password</h1>
+          <p className="text-sm text-muted-foreground">
+            Set a new password for your admin account so you can get back to managing demonstrations and live chant updates.
+          </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

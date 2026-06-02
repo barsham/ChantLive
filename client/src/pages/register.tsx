@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, CheckCircle, Megaphone } from "lucide-react";
+import { Mail, Megaphone } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { AppVersion } from "@/components/app-version";
 import { useToast } from "@/hooks/use-toast";
@@ -76,7 +76,10 @@ export default function Register() {
               <AppVersion className="ml-2" />
             </div>
           </Link>
-          <CardTitle>Create your account</CardTitle>
+          <h1 className="text-2xl font-semibold tracking-tight">Create your ChantLive admin account</h1>
+          <p className="text-sm text-muted-foreground">
+            Register to organize demonstrations, build chant sequences, and control live participant screens from one place.
+          </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

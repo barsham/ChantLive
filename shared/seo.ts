@@ -92,8 +92,9 @@ export function getSeoForPath(pathname: string, origin: string): SeoConfig {
 
   if (normalizedPath === "/login") {
     return {
-      title: "Sign In | ChantLive",
-      description: "Sign in to manage demonstrations and control live chants in ChantLive.",
+      title: "Sign In to ChantLive Admin Dashboard for Live Demonstration Control",
+      description:
+        "Sign in to your ChantLive admin account to manage demonstrations, update chants in real time, share QR codes, and control participant screens during live events.",
       canonicalPath: "/login",
       robots: "noindex,nofollow",
       ogType: "website",
@@ -103,8 +104,9 @@ export function getSeoForPath(pathname: string, origin: string): SeoConfig {
 
   if (normalizedPath === "/register") {
     return {
-      title: "Register | ChantLive",
-      description: "Create a ChantLive admin account to organize demonstrations and manage live chants.",
+      title: "Create a ChantLive Admin Account for Live Chant Management",
+      description:
+        "Create a ChantLive admin account to organize demonstrations, build chant lists, share participant QR codes, and manage live call-and-response screens from one dashboard.",
       canonicalPath: "/register",
       robots: "noindex,nofollow",
       ogType: "website",
@@ -114,8 +116,9 @@ export function getSeoForPath(pathname: string, origin: string): SeoConfig {
 
   if (normalizedPath === "/forgot-password") {
     return {
-      title: "Forgot Password | ChantLive",
-      description: "Reset your ChantLive password.",
+      title: "Reset Your ChantLive Password and Restore Admin Access",
+      description:
+        "Request a secure ChantLive password reset link to restore admin access and get back to managing demonstrations, chants, and live participant updates.",
       canonicalPath: "/forgot-password",
       robots: "noindex,nofollow",
       ogType: "website",
@@ -125,8 +128,9 @@ export function getSeoForPath(pathname: string, origin: string): SeoConfig {
 
   if (normalizedPath.startsWith("/reset-password")) {
     return {
-      title: "Reset Password | ChantLive",
-      description: "Choose a new password for your ChantLive account.",
+      title: "Choose a New ChantLive Password for Your Admin Account",
+      description:
+        "Choose a new password for your ChantLive admin account so you can securely return to your dashboard and continue managing live demonstrations.",
       canonicalPath: "/reset-password",
       robots: "noindex,nofollow",
       ogType: "website",
