@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCircle, Megaphone } from "lucide-react";
+import { Megaphone } from "lucide-react";
 import { Link, useLocation, useSearch } from "wouter";
 import { AppVersion } from "@/components/app-version";
 import { useToast } from "@/hooks/use-toast";
@@ -63,7 +63,10 @@ export default function Login() {
               <AppVersion className="ml-2" />
             </div>
           </Link>
-          <CardTitle>Sign in to your account</CardTitle>
+          <h1 className="text-2xl font-semibold tracking-tight">Sign in to your ChantLive account</h1>
+          <p className="text-sm text-muted-foreground">
+            Access your admin dashboard to manage demonstrations, update chants live, and share participant QR codes.
+          </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
