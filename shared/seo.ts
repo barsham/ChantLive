@@ -92,9 +92,9 @@ export function getSeoForPath(pathname: string, origin: string): SeoConfig {
 
   if (normalizedPath === "/login") {
     return {
-      title: "Sign In to ChantLive Admin Dashboard for Live Demonstration Control",
+      title: "Sign In to ChantLive Admin for Live Demo Control",
       description:
-        "Sign in to your ChantLive admin account to manage demonstrations, update chants in real time, share QR codes, and control participant screens during live events.",
+        "Sign in to your ChantLive admin account to manage demonstrations, update chants in real time, share QR codes, and control live participant screens.",
       canonicalPath: "/login",
       robots: "noindex,nofollow",
       ogType: "website",
@@ -106,7 +106,7 @@ export function getSeoForPath(pathname: string, origin: string): SeoConfig {
     return {
       title: "Create a ChantLive Admin Account for Live Chant Management",
       description:
-        "Create a ChantLive admin account to organize demonstrations, build chant lists, share participant QR codes, and manage live call-and-response screens from one dashboard.",
+        "Create a ChantLive admin account to organize demonstrations, build chant lists, share QR codes, and manage live call-and-response screens.",
       canonicalPath: "/register",
       robots: "noindex,nofollow",
       ogType: "website",
