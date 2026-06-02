@@ -98,10 +98,14 @@ script/   # Build scripts
 
 Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a pull request.
 
+## Changelog
+
+Community-facing changes and deployment notes are tracked in [CHANGELOG.md](./CHANGELOG.md).
+
 ## Code of Conduct
 
 This project follows the [Contributor Covenant](./CODE_OF_CONDUCT.md).
 
 ## License
 
-MIT — see [LICENSE](./LICENSE).
+MIT - see [LICENSE](./LICENSE).

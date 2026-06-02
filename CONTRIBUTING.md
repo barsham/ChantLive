@@ -27,6 +27,7 @@ Thanks for your interest in contributing!
 
 - Keep PRs focused and reasonably small.
 - Include a clear description of what changed and why.
+- Update `CHANGELOG.md` for user-facing changes, deployment notes, or community-facing documentation updates.
 - Run checks before opening a PR:
   ```bash
   npm run check
