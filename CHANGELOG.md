@@ -8,6 +8,7 @@ Use this file to summarize user-facing changes, fixes, documentation updates, an
 
 ### Added
 
+- Added a release checklist for deployment verification and common Replit Git recovery steps.
 - Added a changelog so community members can quickly review project changes before deploying or contributing.
 
 ### Notes

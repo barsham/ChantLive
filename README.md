@@ -71,6 +71,8 @@ npm run build
 npm start
 ```
 
+Before deploying, review [docs/release-checklist.md](./docs/release-checklist.md).
+
 ## Security and Sensitive Data
 
 Before publishing, verify that:
