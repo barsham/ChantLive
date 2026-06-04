@@ -23,6 +23,25 @@ type ChantData = {
 const clampProgress = (value: number) => Math.min(100, Math.max(0, value));
 const getFallbackPhaseDuration = (phase: "leader" | "people") => phase === "leader" ? 4000 : 3000;
 
+const getChantAnnouncement = (chantData: ChantData | null) => {
+  if (!chantData || chantData.demoStatus !== "live") {
+    return "";
+  }
+
+  const phaseLabel = chantData.currentPhase === "people" ? "Everyone" : "Leader";
+  const activeText = chantData.currentPhase === "people"
+    ? chantData.responseText
+    : chantData.callText;
+  const chantNumber = chantData.chantIndex !== null ? chantData.chantIndex + 1 : null;
+  const cycle = chantData.currentCycle ?? 1;
+  const totalCycles = chantData.cycleCount ?? 1;
+  const chantPosition = chantNumber
+    ? `Chant ${chantNumber} of ${chantData.totalChants}. `
+    : "";
+
+  return `${chantPosition}${phaseLabel}, cycle ${cycle} of ${totalCycles}. ${activeText ?? "Waiting for chant text."}`;
+};
+
 export default function Participant() {
   const { publicId } = useParams<{ publicId: string }>();
   const [chantData, setChantData] = useState<ChantData | null>(null);
@@ -98,6 +117,7 @@ export default function Participant() {
 
   const hasChantContent = chantData?.callText || chantData?.responseText;
   const activePhase = chantData?.currentPhase ?? "leader";
+  const chantAnnouncement = getChantAnnouncement(chantData);
 
   useEffect(() => {
     if (!chantData) {
@@ -232,6 +252,9 @@ export default function Participant() {
 
   return (
     <div className="min-h-screen bg-black flex flex-col select-none" data-testid="participant-view">
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {chantAnnouncement}
+      </div>
       <div className="flex-1 flex items-center justify-center p-6">
         <div 
           className={`text-center transition-all duration-500 transform ${
