@@ -8,6 +8,7 @@ Use this file to summarize user-facing changes, fixes, documentation updates, an
 
 ### Added
 
+- Added baseline HTTP security headers for API and page responses.
 - Added reduced-motion support for users who prefer less animation.
 - Added screen reader announcements for live participant chant updates.
 - Added a release checklist for deployment verification and common Replit Git recovery steps.
