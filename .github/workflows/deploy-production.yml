@@ -45,16 +45,23 @@ jobs:
 
     steps:
       - name: Prepare SSH key
+        env:
+          HETZNER_HOST: ${{ secrets.HETZNER_HOST || '178.105.99.151' }}
+          HETZNER_SSH_PRIVATE_KEY: ${{ secrets.HETZNER_SSH_PRIVATE_KEY }}
         run: |
+          if [ -z "$HETZNER_SSH_PRIVATE_KEY" ]; then
+            echo "Missing required repository secret: HETZNER_SSH_PRIVATE_KEY" >&2
+            exit 1
+          fi
           install -m 700 -d ~/.ssh
-          printf '%s\n' "${{ secrets.HETZNER_SSH_PRIVATE_KEY }}" > ~/.ssh/hetzner_deploy
+          printf '%s\n' "$HETZNER_SSH_PRIVATE_KEY" > ~/.ssh/hetzner_deploy
           chmod 600 ~/.ssh/hetzner_deploy
-          ssh-keyscan -H "${{ secrets.HETZNER_HOST }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -H "$HETZNER_HOST" >> ~/.ssh/known_hosts
 
       - name: Deploy current main branch
         env:
-          HETZNER_HOST: ${{ secrets.HETZNER_HOST }}
-          HETZNER_USER: ${{ secrets.HETZNER_USER }}
+          HETZNER_HOST: ${{ secrets.HETZNER_HOST || '178.105.99.151' }}
+          HETZNER_USER: ${{ secrets.HETZNER_USER || 'root' }}
           APP_DIR: ${{ vars.HETZNER_APP_DIR || '/opt/chantlive' }}
           SERVICE_NAME: ${{ vars.HETZNER_SERVICE_NAME || 'chantlive' }}
           GITHUB_SHA: ${{ github.sha }}
