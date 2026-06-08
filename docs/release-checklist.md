@@ -11,6 +11,23 @@ Use this checklist before publishing ChantLive to the live system.
 - Run `npm run check`.
 - Run `npm run build`.
 
+## Automated Production Deploys
+
+Pushes to `main` deploy automatically through GitHub Actions.
+
+Required repository secrets:
+
+- `HETZNER_HOST`: production server host or IP address.
+- `HETZNER_USER`: SSH user for deployment.
+- `HETZNER_SSH_PRIVATE_KEY`: private key matching the public key installed on the server.
+
+Optional repository variables:
+
+- `HETZNER_APP_DIR`: defaults to `/opt/chantlive`.
+- `HETZNER_SERVICE_NAME`: defaults to `chantlive`.
+
+The deploy job runs checks/builds first, then updates the server checkout, creates a database backup, applies Drizzle schema changes with `npm run db:push`, prunes dev dependencies, restarts systemd, and verifies the local HTTP response.
+
 ## After Deploying
 
 - Open the live homepage at https://chantlive.online/.
