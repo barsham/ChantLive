@@ -1,0 +1,49 @@
+name: Feature or release item
+description: Track a planned feature and decide whether it belongs in public release notes.
+title: "[Feature]: "
+labels:
+  - "type:feature"
+  - "release:next"
+body:
+  - type: textarea
+    id: user-impact
+    attributes:
+      label: User impact
+      description: What will users be able to do, understand, or trust because of this change?
+      placeholder: Organizers can...
+    validations:
+      required: true
+  - type: dropdown
+    id: changelog-type
+    attributes:
+      label: Changelog type
+      options:
+        - feature
+        - improvement
+        - fix
+        - docs
+        - breaking
+        - internal
+    validations:
+      required: true
+  - type: dropdown
+    id: visibility
+    attributes:
+      label: Release note visibility
+      options:
+        - public-changelog
+        - internal-only
+    validations:
+      required: true
+  - type: input
+    id: target-release
+    attributes:
+      label: Target release
+      description: Use `release:next` if the version is not known yet.
+      placeholder: 1.2.0
+  - type: textarea
+    id: release-note
+    attributes:
+      label: Proposed public wording
+      description: One concise sentence for the website changelog and GitHub Release.
+      placeholder: Added...

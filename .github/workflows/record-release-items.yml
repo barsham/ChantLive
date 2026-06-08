@@ -1,0 +1,49 @@
+name: Record release items
+
+on:
+  repository_dispatch:
+    types:
+      - release-items-created
+  workflow_dispatch:
+    inputs:
+      items_json:
+        description: JSON array of changelog items to append.
+        required: true
+      release:
+        description: Target release version, or Unreleased.
+        required: false
+        default: Unreleased
+
+permissions:
+  contents: write
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    env:
+      CHANGELOG_ITEMS_JSON: ${{ github.event_name == 'repository_dispatch' && toJson(github.event.client_payload.items) || inputs.items_json }}
+      CHANGELOG_RELEASE: ${{ github.event.client_payload.release || inputs.release || 'Unreleased' }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Import release items
+        run: npm run changelog:import -- --release "$CHANGELOG_RELEASE"
+
+      - name: Generate release notes
+        run: npm run changelog:generate -- --version "$CHANGELOG_RELEASE"
+
+      - name: Commit changelog updates
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Record automated release items
+          file_pattern: CHANGELOG.md shared/changelog.json docs/release-notes/*.md

@@ -75,6 +75,22 @@ function buildNoIndexJsonLd(origin: string) {
   };
 }
 
+function buildChangelogJsonLd(origin: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "ChantLive Changelog",
+    url: new URL("/changelog", origin).toString(),
+    description:
+      "Public ChantLive release notes covering new features, improvements, fixes, and documentation updates.",
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: origin,
+    },
+  };
+}
+
 export function getSeoForPath(pathname: string, origin: string): SeoConfig {
   const normalizedPath = pathname === "" ? "/" : pathname;
 
@@ -99,6 +115,18 @@ export function getSeoForPath(pathname: string, origin: string): SeoConfig {
       robots: "noindex,nofollow",
       ogType: "website",
       jsonLd: buildNoIndexJsonLd(origin),
+    };
+  }
+
+  if (normalizedPath === "/changelog") {
+    return {
+      title: "Changelog | ChantLive",
+      description:
+        "Review public ChantLive release notes, including new features, improvements, fixes, and documentation updates.",
+      canonicalPath: "/changelog",
+      robots: "index,follow",
+      ogType: "article",
+      jsonLd: buildChangelogJsonLd(origin),
     };
   }
 

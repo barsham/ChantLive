@@ -7,7 +7,8 @@ Use this checklist before publishing ChantLive to the live system.
 - Confirm `main` is up to date with `origin/main`.
 - Confirm the working tree is clean.
 - Confirm `package.json` and `package-lock.json` have the intended version.
-- Review `CHANGELOG.md` for community-facing notes.
+- Review `shared/changelog.json` for approved public release notes.
+- Run `npm run changelog:generate -- --version <version>` and review `CHANGELOG.md`.
 - Run `npm run check`.
 - Run `npm run build`.
 

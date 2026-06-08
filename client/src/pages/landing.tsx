@@ -17,14 +17,22 @@ export default function Landing() {
             <AppVersion />
           </div>
           {isAuthenticated ? (
-            <Button asChild data-testid="button-go-dashboard">
-              <Link href="/admin">
-                Dashboard
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </Link>
-            </Button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button variant="ghost" asChild data-testid="link-changelog">
+                <Link href="/changelog">Changelog</Link>
+              </Button>
+              <Button asChild data-testid="button-go-dashboard">
+                <Link href="/admin">
+                  Dashboard
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </Link>
+              </Button>
+            </div>
           ) : (
             <div className="flex items-center gap-2 flex-wrap">
+              <Button variant="ghost" asChild data-testid="link-changelog">
+                <Link href="/changelog">Changelog</Link>
+              </Button>
               <Button variant="outline" asChild data-testid="button-sign-in">
                 <Link href="/login">Sign In</Link>
               </Button>
@@ -173,6 +181,9 @@ export default function Landing() {
           <p>ChantLive - Real-time demonstration management, hosted at <a href="https://chantlive.online/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">chantlive.online</a> and free for anyone</p>
           <p>
             Open-source project for free speech worldwide. <a href="https://github.com/barsham/ChantLive" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">Source code on GitHub</a>. <AppVersion className="inline" />
+          </p>
+          <p>
+            See what changed in the <Link href="/changelog" className="underline underline-offset-4">public changelog</Link>.
           </p>
         </div>
       </footer>

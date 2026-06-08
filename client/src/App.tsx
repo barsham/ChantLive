@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { SeoManager } from "@/components/seo-manager";
 import Landing from "@/pages/landing";
+import Changelog from "@/pages/changelog";
 import AdminDashboard from "@/pages/admin-dashboard";
 import DemoEditor from "@/pages/demo-editor";
 import AdminUsers from "@/pages/admin-users";
@@ -41,6 +42,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Landing} />
+      <Route path="/changelog" component={Changelog} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/forgot-password" component={ForgotPassword} />

@@ -1,0 +1,114 @@
+{
+  "releases": [
+    {
+      "version": "1.1.10",
+      "releasedAt": "2026-06-08",
+      "summary": "Public release notes workflow and changelog visibility improvements.",
+      "items": [
+        {
+          "id": "cl-2026-06-08-public-changelog-page",
+          "title": "Public changelog page",
+          "description": "Community members can review recent ChantLive releases directly on the website.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-08",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-08-structured-release-notes",
+          "title": "Structured release notes data",
+          "description": "Release notes now have a structured source of truth for website, markdown, and automation output.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-08",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-08-release-note-scripts",
+          "title": "Release note scripts",
+          "description": "Maintainers can add, import, and generate changelog entries from npm scripts.",
+          "type": "docs",
+          "visibility": "public",
+          "dateAdded": "2026-06-08",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-08-release-item-template",
+          "title": "Release item issue template",
+          "description": "Feature requests can capture user impact and proposed public changelog wording.",
+          "type": "docs",
+          "visibility": "public",
+          "dateAdded": "2026-06-08",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-08-release-item-workflow",
+          "title": "Release item workflow",
+          "description": "Repository automation can record approved release-note items into the structured changelog.",
+          "type": "internal",
+          "visibility": "public",
+          "dateAdded": "2026-06-08",
+          "links": []
+        }
+      ]
+    },
+    {
+      "version": "1.1.9",
+      "releasedAt": "2026-06-08",
+      "summary": "Security, accessibility, deployment, and release communication improvements.",
+      "items": [
+        {
+          "id": "cl-2026-06-08-security-headers",
+          "title": "Baseline HTTP security headers",
+          "description": "API and page responses now include baseline security headers.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-08",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-08-reduced-motion",
+          "title": "Reduced motion support",
+          "description": "Animations now respect users who prefer reduced motion.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-08",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-08-live-announcements",
+          "title": "Screen reader live chant announcements",
+          "description": "Participant chant updates are announced to assistive technologies.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-08",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-08-release-checklist",
+          "title": "Release checklist",
+          "description": "Deployment verification steps and common Replit Git recovery notes are documented.",
+          "type": "docs",
+          "visibility": "public",
+          "dateAdded": "2026-06-08",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-08-changelog",
+          "title": "Project changelog",
+          "description": "Community members can now review project changes before deploying or contributing.",
+          "type": "docs",
+          "visibility": "public",
+          "dateAdded": "2026-06-08",
+          "links": []
+        }
+      ]
+    },
+    {
+      "version": "Unreleased",
+      "releasedAt": null,
+      "summary": "Approved public changes waiting for the next release.",
+      "items": []
+    }
+  ]
+}
