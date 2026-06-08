@@ -72,6 +72,9 @@ npm start
 ```
 
 Before deploying, review [docs/release-checklist.md](./docs/release-checklist.md).
+For participant link sharing, review [docs/qr-accessibility.md](./docs/qr-accessibility.md).
+
+The app exposes a lightweight health endpoint at `/healthz` for uptime checks.
 
 ## Security and Sensitive Data
 

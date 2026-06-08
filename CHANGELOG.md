@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.11 - 8 June 2026
+
+Deployment monitoring, QR accessibility, and issue-reporting improvements.
+
+### Improved
+
+- Health check endpoint: Deployments and uptime monitors can check /healthz for status, version, uptime, and timestamp.
+
+### Documentation
+
+- Bug report issue template: Contributors can report reproducible bugs with clear steps, expected behavior, environment, and safety checks.
+- QR accessibility checklist: Organizers have practical guidance for sharing participant QR codes with URL fallbacks and scan testing.
+- Release health checks: The release checklist now includes health endpoint and QR sharing verification steps.
+- Health endpoint documentation: README now documents the /healthz endpoint for uptime and deployment monitoring.
+
 ## 1.1.10 - 8 June 2026
 
 Public release notes workflow and changelog visibility improvements.

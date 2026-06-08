@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.11",
+      "releasedAt": "2026-06-08",
+      "summary": "Deployment monitoring, QR accessibility, and issue-reporting improvements.",
+      "items": [
+        {
+          "id": "cl-2026-06-08-health-endpoint",
+          "title": "Health check endpoint",
+          "description": "Deployments and uptime monitors can check /healthz for status, version, uptime, and timestamp.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-08",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-08-bug-report-template",
+          "title": "Bug report issue template",
+          "description": "Contributors can report reproducible bugs with clear steps, expected behavior, environment, and safety checks.",
+          "type": "docs",
+          "visibility": "public",
+          "dateAdded": "2026-06-08",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-08-qr-accessibility-checklist",
+          "title": "QR accessibility checklist",
+          "description": "Organizers have practical guidance for sharing participant QR codes with URL fallbacks and scan testing.",
+          "type": "docs",
+          "visibility": "public",
+          "dateAdded": "2026-06-08",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-08-release-health-checks",
+          "title": "Release health checks",
+          "description": "The release checklist now includes health endpoint and QR sharing verification steps.",
+          "type": "docs",
+          "visibility": "public",
+          "dateAdded": "2026-06-08",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-08-health-docs",
+          "title": "Health endpoint documentation",
+          "description": "README now documents the /healthz endpoint for uptime and deployment monitoring.",
+          "type": "docs",
+          "visibility": "public",
+          "dateAdded": "2026-06-08",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.10",
       "releasedAt": "2026-06-08",
       "summary": "Public release notes workflow and changelog visibility improvements.",

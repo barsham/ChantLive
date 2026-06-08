@@ -11,6 +11,8 @@ Use this checklist before publishing ChantLive to the live system.
 - Run `npm run changelog:generate -- --version <version>` and review `CHANGELOG.md`.
 - Run `npm run check`.
 - Run `npm run build`.
+- Confirm `/healthz` returns `status: "ok"` in the target environment.
+- Review [qr-accessibility.md](./qr-accessibility.md) before printing or sharing participant QR codes.
 
 ## Automated Production Deploys
 
@@ -32,6 +34,7 @@ The deploy job runs checks/builds first, then updates the server checkout, creat
 ## After Deploying
 
 - Open the live homepage at https://chantlive.online/.
+- Open https://chantlive.online/healthz and confirm the version matches the release.
 - Confirm the visible app version matches the release version.
 - Create or open a test demonstration.
 - Confirm QR code access opens the participant view.
