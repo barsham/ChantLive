@@ -1,0 +1,60 @@
+name: Community feedback
+description: Share organizer, participant, accessibility, safety, or event workflow feedback.
+title: "[Feedback]: "
+labels:
+  - feedback
+  - community
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve ChantLive. Practical feedback from real events is especially useful.
+  - type: dropdown
+    id: perspective
+    attributes:
+      label: Perspective
+      description: Which perspective best matches your feedback?
+      options:
+        - Organizer or event marshal
+        - Participant
+        - Accessibility reviewer
+        - Developer or maintainer
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: situation
+    attributes:
+      label: Event context
+      description: What kind of event or situation are you thinking about?
+      placeholder: Rally, march, vigil, student event, union action, public meeting, etc.
+    validations:
+      required: false
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Feedback
+      description: What worked, what felt unclear, or what would stop you from using ChantLive?
+    validations:
+      required: true
+  - type: textarea
+    id: trust
+    attributes:
+      label: Trust, safety, and privacy concerns
+      description: Are there concerns ChantLive should address before broader use?
+    validations:
+      required: false
+  - type: textarea
+    id: accessibility
+    attributes:
+      label: Accessibility notes
+      description: Share QR, screen reader, reduced motion, readability, language, or fallback concerns.
+    validations:
+      required: false
+  - type: textarea
+    id: improvements
+    attributes:
+      label: Suggested improvements
+      description: What should be added, changed, documented, or removed?
+    validations:
+      required: false

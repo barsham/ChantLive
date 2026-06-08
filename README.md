@@ -103,6 +103,10 @@ script/   # Build scripts
 
 Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a pull request.
 
+## Community Feedback
+
+ChantLive is free and open source. Feedback from organizers, participants, accessibility reviewers, and civic-tech contributors is welcome through [GitHub Issues](https://github.com/barsham/ChantLive/issues). Outreach copy and community feedback prompts are available in [docs/community-outreach.md](./docs/community-outreach.md).
+
 ## Changelog
 
 Community-facing changes and deployment notes are tracked in [CHANGELOG.md](./CHANGELOG.md).
