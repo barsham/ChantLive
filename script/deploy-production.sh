@@ -55,6 +55,19 @@ systemctl restart "$SERVICE_NAME"
 systemctl is-active --quiet "$SERVICE_NAME"
 
 echo "Verifying local HTTP response"
-curl -fsS -I "http://127.0.0.1:$PORT/" >/dev/null
+for attempt in {1..30}; do
+  if curl -fsS -I "http://127.0.0.1:$PORT/" >/dev/null; then
+    echo "HTTP check passed"
+    break
+  fi
+
+  if [[ "$attempt" -eq 30 ]]; then
+    echo "HTTP check failed after $attempt attempts" >&2
+    journalctl -u "$SERVICE_NAME" --no-pager -n 40 >&2 || true
+    exit 1
+  fi
+
+  sleep 1
+done
 
 echo "Deployment complete"
