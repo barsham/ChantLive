@@ -24,7 +24,7 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
 fi
 
 echo "Installing dependencies"
-npm ci
+npm ci --include=dev
 
 echo "Checking TypeScript"
 npm run check
@@ -45,7 +45,7 @@ else
 fi
 
 echo "Applying database schema changes"
-npm run db:push
+npm run db:push -- --force
 
 echo "Pruning development dependencies"
 npm prune --omit=dev
