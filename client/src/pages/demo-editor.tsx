@@ -623,6 +623,10 @@ export default function DemoEditor() {
                       {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                     </Button>
                   </div>
+                  <p className="text-xs text-muted-foreground text-center max-w-sm">
+                    If the QR code is hard to scan in the crowd, copy this participant link and share it by message,
+                    projector, or printed fallback.
+                  </p>
                   <Button variant="outline" size="sm" asChild>
                     <a href={publicUrl} target="_blank" rel="noopener noreferrer" data-testid="link-open-public">
                       <ExternalLink className="w-4 h-4 mr-1" />

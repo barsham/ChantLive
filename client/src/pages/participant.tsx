@@ -337,14 +337,26 @@ export default function Participant() {
         </div>
       </div>
 
-      <footer className="px-4 py-3 flex items-center justify-center gap-2 border-t border-neutral-800">
-        <Users className="w-4 h-4 text-neutral-500" />
-        <span className="text-neutral-400 text-sm font-mono" data-testid="text-viewer-count">
-          Viewing now: {viewerCount}
+      <footer className="px-4 py-3 flex flex-wrap items-center justify-center gap-3 border-t border-neutral-800">
+        <span className="inline-flex items-center gap-2">
+          <Users className="w-4 h-4 text-neutral-500" />
+          <span className="text-neutral-400 text-sm font-mono" data-testid="text-viewer-count">
+            Viewing now: {viewerCount}
+          </span>
         </span>
-        {!connected && (
-          <span className="ml-2 text-red-400 text-xs">Reconnecting...</span>
-        )}
+        <span
+          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
+            connected
+              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+              : "border-red-500/30 bg-red-500/10 text-red-300"
+          }`}
+          role="status"
+          aria-live="polite"
+          data-testid="text-connection-status"
+        >
+          <span className={`h-2 w-2 rounded-full ${connected ? "bg-emerald-300" : "bg-red-300"}`} aria-hidden="true" />
+          {connected ? "Connected to live updates" : "Reconnecting - updates resume automatically"}
+        </span>
       </footer>
     </div>
   );

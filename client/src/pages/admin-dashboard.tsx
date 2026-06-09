@@ -38,6 +38,13 @@ import type { Demonstration } from "@shared/schema";
 import type { ChangeEvent } from "react";
 import { useRef, useState } from "react";
 
+const titleTemplates = [
+  "Community Gathering",
+  "Prayer Circle",
+  "Campus Action",
+  "March Support",
+];
+
 function statusVariant(status: string) {
   switch (status) {
     case "live":
@@ -140,6 +147,13 @@ export default function AdminDashboard() {
     createDemo.mutate(newTitle.trim());
   };
 
+  const demoStats = {
+    total: demos?.length ?? 0,
+    live: demos?.filter((demo) => demo.status === "live").length ?? 0,
+    draft: demos?.filter((demo) => demo.status === "draft").length ?? 0,
+    ended: demos?.filter((demo) => demo.status === "ended").length ?? 0,
+  };
+
   const handleImportClick = () => {
     importInputRef.current?.click();
   };
@@ -234,6 +248,23 @@ export default function AdminDashboard() {
                       data-testid="input-demo-title"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">Quick title starters</p>
+                    <div className="flex flex-wrap gap-2" aria-label="Quick demonstration title starters">
+                      {titleTemplates.map((template) => (
+                        <Button
+                          key={template}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setNewTitle(template)}
+                          data-testid={`button-title-template-${template.toLowerCase().replace(/\s+/g, "-")}`}
+                        >
+                          {template}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                   <Button
                     className="w-full"
                     onClick={handleCreate}
@@ -247,6 +278,35 @@ export default function AdminDashboard() {
             </Dialog>
           </div>
         </div>
+
+        {!isLoading && demos && demos.length > 0 && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6" aria-label="Demonstration status summary">
+            <Card>
+              <CardContent className="py-4">
+                <p className="text-xs text-muted-foreground">Total events</p>
+                <p className="text-2xl font-semibold" data-testid="stat-total-demos">{demoStats.total}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="py-4">
+                <p className="text-xs text-muted-foreground">Live now</p>
+                <p className="text-2xl font-semibold text-primary" data-testid="stat-live-demos">{demoStats.live}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="py-4">
+                <p className="text-xs text-muted-foreground">Drafts</p>
+                <p className="text-2xl font-semibold" data-testid="stat-draft-demos">{demoStats.draft}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="py-4">
+                <p className="text-xs text-muted-foreground">Ended</p>
+                <p className="text-2xl font-semibold" data-testid="stat-ended-demos">{demoStats.ended}</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">

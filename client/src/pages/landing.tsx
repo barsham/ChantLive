@@ -80,6 +80,13 @@ export default function Landing() {
                 </>
               )}
             </div>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+              {["Marches", "Prayer circles", "Campus actions", "Community gatherings"].map((useCase) => (
+                <span key={useCase} className="rounded-full border bg-card px-3 py-1" data-testid={`text-use-case-${useCase.toLowerCase().replace(/\s+/g, "-")}`}>
+                  {useCase}
+                </span>
+              ))}
+            </div>
           </div>
         </section>
 

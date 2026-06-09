@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.12 - 9 June 2026
+
+Customer-facing onboarding, organiser workflow, participant reliability, and QR sharing improvements.
+
+### Improved
+
+- Clearer event use cases: First-time visitors can quickly see that ChantLive supports marches, prayer circles, campus actions, and community gatherings.
+- Dashboard status summary: Organizers can scan total, live, draft, and ended demonstrations before opening an event.
+- Participant connection status: Participants can see and hear whether live updates are connected or reconnecting.
+- QR fallback guidance: Admins get clear fallback guidance for sharing the participant link when QR scanning is difficult.
+
+### Added
+
+- Quick title starters: Organizers can start new demonstrations faster with common title prompts in the create dialog.
+
 ## 1.1.11 - 8 June 2026
 
 Deployment monitoring, QR accessibility, and issue-reporting improvements.

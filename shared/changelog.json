@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.12",
+      "releasedAt": "2026-06-09",
+      "summary": "Customer-facing onboarding, organiser workflow, participant reliability, and QR sharing improvements.",
+      "items": [
+        {
+          "id": "cl-2026-06-09-landing-use-cases",
+          "title": "Clearer event use cases",
+          "description": "First-time visitors can quickly see that ChantLive supports marches, prayer circles, campus actions, and community gatherings.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-09",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-09-dashboard-status-summary",
+          "title": "Dashboard status summary",
+          "description": "Organizers can scan total, live, draft, and ended demonstrations before opening an event.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-09",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-09-title-starters",
+          "title": "Quick title starters",
+          "description": "Organizers can start new demonstrations faster with common title prompts in the create dialog.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-09",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-09-participant-connection-status",
+          "title": "Participant connection status",
+          "description": "Participants can see and hear whether live updates are connected or reconnecting.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-09",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-09-qr-fallback-guidance",
+          "title": "QR fallback guidance",
+          "description": "Admins get clear fallback guidance for sharing the participant link when QR scanning is difficult.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-09",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.11",
       "releasedAt": "2026-06-08",
       "summary": "Deployment monitoring, QR accessibility, and issue-reporting improvements.",
