@@ -180,6 +180,9 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto text-center text-sm text-muted-foreground space-y-2">
           <p>ChantLive - Real-time demonstration management, hosted at <a href="https://chantlive.online/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">chantlive.online</a> and free for anyone</p>
           <p>
+            Proudly sponsored by <a href="https://www.devectus.com.au/" target="_blank" rel="noopener noreferrer" className="font-medium text-foreground underline underline-offset-4">DEVECTUS</a>.
+          </p>
+          <p>
             Open-source project for free speech worldwide. <a href="https://github.com/barsham/ChantLive" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">Source code on GitHub</a>. <AppVersion className="inline" />
           </p>
           <p>
