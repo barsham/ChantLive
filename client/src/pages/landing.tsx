@@ -139,6 +139,20 @@ export default function Landing() {
             <p className="text-sm text-muted-foreground max-w-md mx-auto">
               Only authorized admins can create and control demonstrations. Participants join anonymously with no sign-up required.
             </p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-3 text-left">
+              <div className="rounded-lg border bg-card p-4">
+                <p className="text-sm font-medium mb-1">No participant accounts</p>
+                <p className="text-xs text-muted-foreground">People can join from a link or QR code without creating a profile.</p>
+              </div>
+              <div className="rounded-lg border bg-card p-4">
+                <p className="text-sm font-medium mb-1">Mobile-first viewing</p>
+                <p className="text-xs text-muted-foreground">Large chant text is built for phones in crowds, halls, and outdoor gatherings.</p>
+              </div>
+              <div className="rounded-lg border bg-card p-4">
+                <p className="text-sm font-medium mb-1">Open-source trust</p>
+                <p className="text-xs text-muted-foreground">The community can inspect the code, report issues, and suggest improvements.</p>
+              </div>
+            </div>
           </div>
         </section>
 

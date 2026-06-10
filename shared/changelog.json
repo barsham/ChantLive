@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.13",
+      "releasedAt": "2026-06-10",
+      "summary": "Live-event readiness, QR joining, participant waiting, and trust improvements.",
+      "items": [
+        {
+          "id": "cl-2026-06-10-chant-starter-examples",
+          "title": "Chant starter examples",
+          "description": "Organizers can fill the add-chant form from common call-and-response examples instead of starting from a blank dialog.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-10",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-10-live-readiness-card",
+          "title": "Live readiness reminder",
+          "description": "Admins see a pre-live reminder to add chants, test the participant link, and invite backup admins before an event starts.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-10",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-10-qr-join-instructions",
+          "title": "QR join instructions",
+          "description": "The QR dialog now gives participants clearer scanning and page-open instructions for crowded live settings.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-10",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-10-participant-waiting-guidance",
+          "title": "Participant waiting guidance",
+          "description": "Participants waiting for a draft demonstration now know to keep the page open because chants will appear automatically.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-10",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-10-landing-trust-cards",
+          "title": "Landing page trust cards",
+          "description": "First-time visitors now see clearer privacy, mobile-use, and open-source trust signals before signing up.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-10",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.12",
       "releasedAt": "2026-06-09",
       "summary": "Customer-facing onboarding, organiser workflow, participant reliability, and QR sharing improvements.",

@@ -87,6 +87,12 @@ const getPhaseDurationMs = (chant: Chant | undefined, phase: "leader" | "people"
   return Math.max(1, durationSeconds) * 1000;
 };
 
+const chantStarters = [
+  { label: "Call for unity", call: "What do we want?", response: "Justice and dignity!" },
+  { label: "Prayer response", call: "Guide us together", response: "With peace and courage" },
+  { label: "March cadence", call: "Whose streets?", response: "Our streets!" },
+];
+
 export default function DemoEditor() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
@@ -481,6 +487,11 @@ export default function DemoEditor() {
     setEditDialogOpen(true);
   };
 
+  const applyChantStarter = (starter: (typeof chantStarters)[number]) => {
+    setNewCallText(starter.call);
+    setNewResponseText(starter.response);
+  };
+
   const publicUrl = demo ? `${window.location.origin}/d/${demo.publicId}` : "";
 
   const copyUrl = () => {
@@ -613,10 +624,14 @@ export default function DemoEditor() {
                 </DialogHeader>
                 <div className="flex flex-col items-center gap-4 py-4">
                   {qrDataUrl ? (
-                    <img src={qrDataUrl} alt="QR Code" className="w-64 h-64" data-testid="img-qr" />
+                    <img src={qrDataUrl} alt={`QR code for joining ${demo.title}`} className="w-64 h-64" data-testid="img-qr" />
                   ) : (
                     <Skeleton className="w-64 h-64" />
                   )}
+                  <div className="w-full rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
+                    <p className="font-medium text-foreground mb-1">Participant instructions</p>
+                    <p>Open your camera, scan the QR code, then keep the chant page open during the event.</p>
+                  </div>
                   <div className="flex items-center gap-2 w-full">
                     <Input value={publicUrl} readOnly className="text-xs" data-testid="input-public-url" />
                     <Button variant="outline" size="icon" onClick={copyUrl} data-testid="button-copy-url">
@@ -672,6 +687,24 @@ export default function DemoEditor() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
+        {!isLive && (
+          <Card className="mb-6 border-primary/20 bg-primary/5">
+            <CardContent className="py-4">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium">Before you go live</p>
+                  <p className="text-xs text-muted-foreground">
+                    Add at least one chant, test the participant QR/link on a phone, and invite backup admins before the event starts.
+                  </p>
+                </div>
+                <Badge variant={chantsList.length > 0 ? "secondary" : "outline"} data-testid="badge-live-readiness">
+                  {chantsList.length > 0 ? "Chants ready" : "Add a chant first"}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {(isLive || isDraft || isEnded) && (
           <Card className="mb-6">
             <CardContent className="py-4">
@@ -887,6 +920,23 @@ export default function DemoEditor() {
                   <DialogTitle>Add Chant</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 pt-2">
+                  <div className="rounded-lg border bg-muted/30 p-3">
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Starter examples</p>
+                    <div className="flex flex-wrap gap-2">
+                      {chantStarters.map((starter) => (
+                        <Button
+                          key={starter.label}
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => applyChantStarter(starter)}
+                          data-testid={`button-chant-starter-${starter.label.toLowerCase().replace(/\s+/g, "-")}`}
+                        >
+                          {starter.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="call-text" className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full" style={{ backgroundColor: "#f97316" }} />

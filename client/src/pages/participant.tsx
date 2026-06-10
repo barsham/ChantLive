@@ -244,7 +244,9 @@ export default function Participant() {
             Waiting to begin...
           </p>
           <p className="text-neutral-500">{chantData.demoTitle}</p>
-          <p className="text-neutral-600 text-sm mt-4">The demonstration will start shortly.</p>
+          <p className="text-neutral-500 text-sm mt-4 max-w-xs mx-auto">
+            Keep this page open. Chants will appear automatically when an organiser starts the demonstration.
+          </p>
         </div>
       </div>
     );
