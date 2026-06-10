@@ -15,6 +15,7 @@ export const users = pgTable("users", {
   verificationTokenExpires: timestamp("verification_token_expires"),
   passwordResetToken: text("password_reset_token"),
   passwordResetExpires: timestamp("password_reset_expires"),
+  lastActivityAt: timestamp("last_activity_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -69,7 +70,7 @@ export const viewSessions = pgTable("view_sessions", {
   lastSeenAt: timestamp("last_seen_at").defaultNow().notNull(),
 });
 
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, lastActivityAt: true });
 export const insertDemonstrationSchema = createInsertSchema(demonstrations).omit({ id: true, createdAt: true, publicId: true });
 export const insertChantSchema = createInsertSchema(chants).omit({ id: true });
 export const insertDemoAdminSchema = createInsertSchema(demoAdmins);

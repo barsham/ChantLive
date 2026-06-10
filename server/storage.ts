@@ -9,14 +9,32 @@ import { db } from "./db";
 import { eq, and, asc, desc, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
+type UserUpdate = Partial<InsertUser & {
+  emailVerified: boolean;
+  verificationToken: string | null;
+  verificationTokenExpires: Date | null;
+  passwordHash: string | null;
+  passwordResetToken: string | null;
+  passwordResetExpires: Date | null;
+  lastActivityAt: Date;
+}>;
+
+export type UserDemoStats = {
+  userId: string;
+  demonstrationCount: number;
+  lastDemonstrationAt: Date | null;
+};
+
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByVerificationToken(token: string): Promise<User | undefined>;
   getUserByPasswordResetToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  updateUser(userId: string, data: Partial<InsertUser & { emailVerified: boolean; verificationToken: string | null; verificationTokenExpires: Date | null; passwordHash: string | null; passwordResetToken: string | null; passwordResetExpires: Date | null }>): Promise<User | undefined>;
+  updateUser(userId: string, data: UserUpdate): Promise<User | undefined>;
+  touchUserActivity(userId: string): Promise<void>;
   getAllUsers(): Promise<User[]>;
+  getUserDemoStats(): Promise<UserDemoStats[]>;
   updateUserRole(userId: string, role: string): Promise<void>;
   deleteUser(userId: string): Promise<void>;
   getUserCount(): Promise<number>;
@@ -78,13 +96,39 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async updateUser(userId: string, data: Partial<InsertUser & { emailVerified: boolean; verificationToken: string | null; verificationTokenExpires: Date | null; passwordHash: string | null; passwordResetToken: string | null; passwordResetExpires: Date | null }>): Promise<User | undefined> {
+  async updateUser(userId: string, data: UserUpdate): Promise<User | undefined> {
     const [user] = await db.update(users).set(data).where(eq(users.id, userId)).returning();
     return user;
   }
 
+  async touchUserActivity(userId: string): Promise<void> {
+    await db.update(users).set({ lastActivityAt: new Date() }).where(eq(users.id, userId));
+  }
+
   async getAllUsers(): Promise<User[]> {
     return db.select().from(users).orderBy(asc(users.createdAt));
+  }
+
+  async getUserDemoStats(): Promise<UserDemoStats[]> {
+    const rows = await db
+      .select({
+        userId: users.id,
+        demonstrationCount: sql<number>`count(distinct ${demonstrations.id})`,
+        lastDemonstrationAt: sql<Date | null>`max(${demonstrations.createdAt})`,
+      })
+      .from(users)
+      .leftJoin(demoAdmins, eq(demoAdmins.userId, users.id))
+      .leftJoin(
+        demonstrations,
+        sql`${demonstrations.createdBy} = ${users.id} OR ${demonstrations.id} = ${demoAdmins.demonstrationId}`,
+      )
+      .groupBy(users.id);
+
+    return rows.map((row) => ({
+      userId: row.userId,
+      demonstrationCount: Number(row.demonstrationCount),
+      lastDemonstrationAt: row.lastDemonstrationAt,
+    }));
   }
 
   async updateUserRole(userId: string, role: string): Promise<void> {

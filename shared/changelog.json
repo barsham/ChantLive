@@ -1,6 +1,40 @@
 {
   "releases": [
     {
+      "version": "1.1.14",
+      "releasedAt": "2026-06-10",
+      "summary": "Admin user activity and demonstration visibility improvements.",
+      "items": [
+        {
+          "id": "cl-2026-06-10-admin-user-metrics",
+          "title": "Admin user metrics",
+          "description": "Super admins can see when each user joined, when they were last active, and how many demonstrations they can manage.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-10",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-10-user-activity-tracking",
+          "title": "User activity tracking",
+          "description": "Authenticated admin activity is now recorded so super admins can identify recently active users.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-10",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-10-safe-admin-user-api",
+          "title": "Safer admin user API",
+          "description": "The admin user list now returns display-safe user summaries instead of raw account rows.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-10",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.13",
       "releasedAt": "2026-06-10",
       "summary": "Live-event readiness, QR joining, participant waiting, and trust improvements.",

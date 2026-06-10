@@ -301,6 +301,9 @@ export function setupAuth(app: Express) {
         if (err) {
           return res.status(500).json({ message: "Login failed. Please try again." });
         }
+        void storage.touchUserActivity(user.id).catch((activityErr) => {
+          console.error("Failed to update user activity:", activityErr);
+        });
         const { passwordHash, verificationToken, verificationTokenExpires, passwordResetToken, passwordResetExpires, ...safeUser } = user;
         res.json(safeUser);
       });
@@ -319,6 +322,9 @@ export function setupAuth(app: Express) {
   app.get("/api/auth/me", (req, res) => {
     if (req.isAuthenticated && req.isAuthenticated() && req.user) {
       const user = req.user as any;
+      void storage.touchUserActivity(user.id).catch((err) => {
+        console.error("Failed to update user activity:", err);
+      });
       const { passwordHash, verificationToken, verificationTokenExpires, passwordResetToken, passwordResetExpires, ...safeUser } = user;
       res.json(safeUser);
     } else {
@@ -329,6 +335,10 @@ export function setupAuth(app: Express) {
 
 export const requireAuth: RequestHandler = (req, res, next) => {
   if (req.isAuthenticated && req.isAuthenticated() && req.user) {
+    const user = req.user as any;
+    void storage.touchUserActivity(user.id).catch((err) => {
+      console.error("Failed to update user activity:", err);
+    });
     next();
   } else {
     res.status(401).json({ message: "Authentication required" });
@@ -339,6 +349,9 @@ export const requireSuperAdmin: RequestHandler = (req, res, next) => {
   if (req.isAuthenticated && req.isAuthenticated() && req.user) {
     const user = req.user as any;
     if (user.role === "super_admin") {
+      void storage.touchUserActivity(user.id).catch((err) => {
+        console.error("Failed to update user activity:", err);
+      });
       next();
     } else {
       res.status(403).json({ message: "Super admin access required" });

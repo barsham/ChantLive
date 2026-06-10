@@ -17,6 +17,7 @@ declare global {
       role: string;
       avatarUrl: string | null;
       createdAt: Date;
+      lastActivityAt: Date | null;
     }
   }
 }
@@ -899,7 +900,24 @@ export async function registerRoutes(
   app.get("/api/admin/users", requireSuperAdmin, async (_req, res) => {
     try {
       const allUsers = await storage.getAllUsers();
-      res.json(allUsers);
+      const demoStats = await storage.getUserDemoStats();
+      const statsByUserId = new Map(demoStats.map((stats) => [stats.userId, stats]));
+
+      res.json(allUsers.map((user) => {
+        const stats = statsByUserId.get(user.id);
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          avatarUrl: user.avatarUrl,
+          createdAt: user.createdAt,
+          lastActivityAt: user.lastActivityAt,
+          demonstrationCount: stats?.demonstrationCount ?? 0,
+          lastDemonstrationAt: stats?.lastDemonstrationAt ?? null,
+        };
+      }));
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch users" });
     }

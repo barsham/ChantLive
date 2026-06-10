@@ -4,6 +4,19 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.14 - 10 June 2026
+
+Admin user activity and demonstration visibility improvements.
+
+### Added
+
+- Admin user metrics: Super admins can see when each user joined, when they were last active, and how many demonstrations they can manage.
+
+### Improved
+
+- User activity tracking: Authenticated admin activity is now recorded so super admins can identify recently active users.
+- Safer admin user API: The admin user list now returns display-safe user summaries instead of raw account rows.
+
 ## 1.1.13 - 10 June 2026
 
 Live-event readiness, QR joining, participant waiting, and trust improvements.

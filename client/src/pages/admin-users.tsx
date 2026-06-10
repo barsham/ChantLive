@@ -33,19 +33,46 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Megaphone, Shield, Trash2, Users } from "lucide-react";
+import { Activity, ArrowLeft, CalendarDays, Megaphone, Presentation, Shield, Trash2, Users } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppVersion } from "@/components/app-version";
-import type { User } from "@shared/schema";
 import { useState } from "react";
+
+type AdminUser = {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  avatarUrl: string | null;
+  createdAt: string;
+  lastActivityAt: string | null;
+  demonstrationCount: number;
+  lastDemonstrationAt: string | null;
+};
+
+function formatDateTime(value: string | null) {
+  if (!value) return "No activity yet";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Unknown";
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
+function formatDemonstrationCount(count: number) {
+  return `${count} demonstration${count === 1 ? "" : "s"}`;
+}
 
 export default function AdminUsers() {
   const { user: currentUser, isSuperAdmin } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
-  const { data: users, isLoading } = useQuery<User[]>({
+  const { data: users, isLoading } = useQuery<AdminUser[]>({
     queryKey: ["/api/admin/users"],
   });
 
@@ -129,6 +156,25 @@ export default function AdminUsers() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm" data-testid={`text-user-name-${u.id}`}>{u.name}</p>
                     <p className="text-xs text-muted-foreground">{u.email}</p>
+                    <div className="mt-3 grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
+                      <span className="inline-flex items-center gap-1.5" data-testid={`text-user-created-${u.id}`}>
+                        <CalendarDays className="h-3.5 w-3.5" />
+                        Joined {formatDateTime(u.createdAt)}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5" data-testid={`text-user-activity-${u.id}`}>
+                        <Activity className="h-3.5 w-3.5" />
+                        {u.lastActivityAt ? `Last active ${formatDateTime(u.lastActivityAt)}` : "No tracked activity yet"}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5" data-testid={`text-user-demo-count-${u.id}`}>
+                        <Presentation className="h-3.5 w-3.5" />
+                        {formatDemonstrationCount(u.demonstrationCount)}
+                      </span>
+                    </div>
+                    {u.lastDemonstrationAt && (
+                      <p className="mt-2 text-xs text-muted-foreground" data-testid={`text-user-last-demo-${u.id}`}>
+                        Latest demonstration activity: {formatDateTime(u.lastDemonstrationAt)}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2">

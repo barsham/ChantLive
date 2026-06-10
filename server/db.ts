@@ -23,7 +23,8 @@ export async function ensureUserAuthColumns(): Promise<void> {
     ADD COLUMN IF NOT EXISTS verification_token text,
     ADD COLUMN IF NOT EXISTS verification_token_expires timestamp,
     ADD COLUMN IF NOT EXISTS password_reset_token text,
-    ADD COLUMN IF NOT EXISTS password_reset_expires timestamp;
+    ADD COLUMN IF NOT EXISTS password_reset_expires timestamp,
+    ADD COLUMN IF NOT EXISTS last_activity_at timestamp;
   `);
 }
 
