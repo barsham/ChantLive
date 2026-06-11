@@ -30,7 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload } from "lucide-react";
+import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload, Search, X } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppVersion } from "@/components/app-version";
@@ -44,6 +44,9 @@ const titleTemplates = [
   "Campus Action",
   "March Support",
 ];
+
+const statusFilters = ["all", "live", "draft", "ended"] as const;
+type StatusFilter = (typeof statusFilters)[number];
 
 function statusVariant(status: string) {
   switch (status) {
@@ -78,6 +81,8 @@ export default function AdminDashboard() {
   const [newTitle, setNewTitle] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Demonstration | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const importInputRef = useRef<HTMLInputElement | null>(null);
 
   const { data: demos, isLoading } = useQuery<Demonstration[]>({
@@ -152,6 +157,18 @@ export default function AdminDashboard() {
     live: demos?.filter((demo) => demo.status === "live").length ?? 0,
     draft: demos?.filter((demo) => demo.status === "draft").length ?? 0,
     ended: demos?.filter((demo) => demo.status === "ended").length ?? 0,
+  };
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredDemos = (demos ?? []).filter((demo) => {
+    const matchesStatus = statusFilter === "all" || demo.status === statusFilter;
+    const matchesSearch = !normalizedSearch || demo.title.toLowerCase().includes(normalizedSearch);
+    return matchesStatus && matchesSearch;
+  });
+  const hasActiveFilters = normalizedSearch.length > 0 || statusFilter !== "all";
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
   };
 
   const handleImportClick = () => {
@@ -308,6 +325,54 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {!isLoading && demos && demos.length > 0 && (
+          <Card className="mb-6">
+            <CardContent className="py-4 space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search demonstrations by title..."
+                  className="pl-9 pr-9"
+                  aria-label="Search demonstrations by title"
+                  data-testid="input-search-demos"
+                />
+                {searchTerm && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2"
+                    onClick={() => setSearchTerm("")}
+                    aria-label="Clear search"
+                    data-testid="button-clear-search"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2" aria-label="Filter demonstrations by status">
+                {statusFilters.map((status) => (
+                  <Button
+                    key={status}
+                    variant={statusFilter === status ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setStatusFilter(status)}
+                    data-testid={`button-filter-${status}`}
+                  >
+                    {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
+                  </Button>
+                ))}
+                {hasActiveFilters && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters} data-testid="button-clear-filters">
+                    Clear filters
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {isLoading ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
@@ -323,8 +388,9 @@ export default function AdminDashboard() {
             ))}
           </div>
         ) : demos && demos.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {demos.map((demo) => (
+          filteredDemos.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredDemos.map((demo) => (
               <Card key={demo.id} className="hover-elevate cursor-pointer" onClick={() => navigate(`/admin/demos/${demo.id}`)} data-testid={`card-demo-${demo.id}`}>
                 <CardHeader className="pb-3 flex flex-row items-start justify-between gap-2">
                   <CardTitle className="text-base font-semibold leading-snug">{demo.title}</CardTitle>
@@ -349,8 +415,20 @@ export default function AdminDashboard() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Search className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-1">No demonstrations match your filters</h3>
+                <p className="text-sm text-muted-foreground mb-4">Try a different title search or status filter.</p>
+                <Button variant="outline" onClick={clearFilters} data-testid="button-empty-clear-filters">
+                  Clear filters
+                </Button>
+              </CardContent>
+            </Card>
+          )
         ) : (
           <Card>
             <CardContent className="py-12 text-center">

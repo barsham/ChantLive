@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.15 - 11 June 2026
+
+Dashboard filtering, QR copy feedback, and participant retry improvements.
+
+### Added
+
+- Dashboard search: Organizers can search demonstrations by title to find the right event faster.
+- Dashboard status filters: Organizers can filter demonstrations by all, live, draft, or ended status before opening an event.
+
+### Improved
+
+- Filtered empty state: When dashboard filters return no results, organizers see a clear message and one-click reset action.
+- QR link copy feedback: Admins now get visible and screen-reader-friendly confirmation after copying a participant link.
+- Participant retry controls: Participants can retry loading or failed join attempts without being stuck on a dead-end screen.
+
 ## 1.1.14 - 10 June 2026
 
 Admin user activity and demonstration visibility improvements.

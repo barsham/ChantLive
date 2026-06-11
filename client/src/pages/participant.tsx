@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "wouter";
 import { getSocket } from "@/lib/socket";
-import { Users, Megaphone } from "lucide-react";
+import { Users, Megaphone, RefreshCw } from "lucide-react";
 
 type ChantData = {
   callText: string | null;
@@ -118,6 +118,10 @@ export default function Participant() {
   const hasChantContent = chantData?.callText || chantData?.responseText;
   const activePhase = chantData?.currentPhase ?? "leader";
   const chantAnnouncement = getChantAnnouncement(chantData);
+  const retryConnection = () => {
+    setError(null);
+    window.location.reload();
+  };
 
   useEffect(() => {
     if (!chantData) {
@@ -204,7 +208,17 @@ export default function Participant() {
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
         <div className="text-center">
           <Megaphone className="w-16 h-16 text-neutral-500 mx-auto mb-4" />
-          <p className="text-white text-xl" data-testid="text-error">{error}</p>
+          <p className="text-white text-xl mb-2" data-testid="text-error">{error}</p>
+          <p className="text-neutral-500 text-sm mb-5">Check the participant link or try reconnecting.</p>
+          <button
+            type="button"
+            onClick={retryConnection}
+            className="inline-flex items-center gap-2 rounded-md border border-neutral-700 px-4 py-2 text-sm font-medium text-neutral-200 hover:bg-neutral-900"
+            data-testid="button-retry-participant"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Try again
+          </button>
         </div>
       </div>
     );
@@ -215,7 +229,19 @@ export default function Participant() {
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-neutral-400 text-sm">Connecting...</p>
+          <p className="text-neutral-400 text-sm mb-2">Connecting...</p>
+          <p className="text-neutral-600 text-xs mb-5 max-w-xs">
+            If this takes too long, retry the connection or ask an organiser to confirm the QR/link.
+          </p>
+          <button
+            type="button"
+            onClick={retryConnection}
+            className="inline-flex items-center gap-2 rounded-md border border-neutral-800 px-4 py-2 text-xs font-medium text-neutral-300 hover:bg-neutral-900"
+            data-testid="button-retry-loading"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Retry connection
+          </button>
         </div>
       </div>
     );

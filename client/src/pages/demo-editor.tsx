@@ -634,10 +634,19 @@ export default function DemoEditor() {
                   </div>
                   <div className="flex items-center gap-2 w-full">
                     <Input value={publicUrl} readOnly className="text-xs" data-testid="input-public-url" />
-                    <Button variant="outline" size="icon" onClick={copyUrl} data-testid="button-copy-url">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={copyUrl}
+                      aria-label={copied ? "Participant link copied" : "Copy participant link"}
+                      data-testid="button-copy-url"
+                    >
                       {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                     </Button>
                   </div>
+                  <p className="text-xs text-muted-foreground" role="status" aria-live="polite" data-testid="text-copy-status">
+                    {copied ? "Participant link copied." : "Copy the participant link if people cannot scan the QR code."}
+                  </p>
                   <p className="text-xs text-muted-foreground text-center max-w-sm">
                     If the QR code is hard to scan in the crowd, copy this participant link and share it by message,
                     projector, or printed fallback.

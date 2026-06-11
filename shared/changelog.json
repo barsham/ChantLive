@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.15",
+      "releasedAt": "2026-06-11",
+      "summary": "Dashboard filtering, QR copy feedback, and participant retry improvements.",
+      "items": [
+        {
+          "id": "cl-2026-06-11-dashboard-search",
+          "title": "Dashboard search",
+          "description": "Organizers can search demonstrations by title to find the right event faster.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-11",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-11-dashboard-status-filters",
+          "title": "Dashboard status filters",
+          "description": "Organizers can filter demonstrations by all, live, draft, or ended status before opening an event.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-11",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-11-filtered-empty-state",
+          "title": "Filtered empty state",
+          "description": "When dashboard filters return no results, organizers see a clear message and one-click reset action.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-11",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-11-qr-copy-feedback",
+          "title": "QR link copy feedback",
+          "description": "Admins now get visible and screen-reader-friendly confirmation after copying a participant link.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-11",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-11-participant-retry",
+          "title": "Participant retry controls",
+          "description": "Participants can retry loading or failed join attempts without being stuck on a dead-end screen.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-11",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.14",
       "releasedAt": "2026-06-10",
       "summary": "Admin user activity and demonstration visibility improvements.",
