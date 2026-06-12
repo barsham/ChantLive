@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.17 - 12 June 2026
+
+Admin dashboard creator visibility improvement.
+
+### Improved
+
+- Dashboard creator user ID: Admin demonstration cards now show the creator user ID and dashboard search can match creator IDs.
+
 ## 1.1.16 - 12 June 2026
 
 SEO landing pages, crawlability, social metadata, and structured data improvements.

@@ -161,7 +161,9 @@ export default function AdminDashboard() {
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const filteredDemos = (demos ?? []).filter((demo) => {
     const matchesStatus = statusFilter === "all" || demo.status === statusFilter;
-    const matchesSearch = !normalizedSearch || demo.title.toLowerCase().includes(normalizedSearch);
+    const matchesSearch = !normalizedSearch ||
+      demo.title.toLowerCase().includes(normalizedSearch) ||
+      demo.createdBy.toLowerCase().includes(normalizedSearch);
     return matchesStatus && matchesSearch;
   });
   const hasActiveFilters = normalizedSearch.length > 0 || statusFilter !== "all";
@@ -402,6 +404,9 @@ export default function AdminDashboard() {
                 <CardContent>
                   <p className="text-xs text-muted-foreground">
                     Created {new Date(demo.createdAt).toLocaleDateString()}
+                  </p>
+                  <p className="mt-1 break-all text-xs text-muted-foreground" data-testid={`text-demo-created-by-${demo.id}`}>
+                    Creator user ID: <span className="font-mono">{demo.createdBy}</span>
                   </p>
                   <div className="flex items-center gap-2 mt-3">
                     <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/demos/${demo.id}`); }} data-testid={`button-edit-demo-${demo.id}`}>
