@@ -1,6 +1,31 @@
 {
   "releases": [
     {
+      "version": "1.1.18",
+      "releasedAt": "2026-06-13",
+      "summary": "Readable demonstration creator labels in the admin dashboard.",
+      "items": [
+        {
+          "id": "cl-2026-06-13-readable-demo-creators",
+          "title": "Readable demonstration creators",
+          "description": "Admin demonstration cards now show the creator name and email instead of only a raw user ID.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-13",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-13-creator-search",
+          "title": "Creator search",
+          "description": "Dashboard search can now match demonstration creator names, emails, and user IDs.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-13",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.17",
       "releasedAt": "2026-06-12",
       "summary": "Admin dashboard creator visibility improvement.",

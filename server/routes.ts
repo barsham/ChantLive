@@ -123,7 +123,14 @@ export async function registerRoutes(
     try {
       const user = req.user as User;
       const demos = await storage.getDemonstrations(user.id, user.role);
-      res.json(demos);
+      const creatorIds = Array.from(new Set(demos.map((demo) => demo.createdBy)));
+      const creators = await storage.getUsersByIds(creatorIds);
+      const creatorsById = new Map(creators.map((creator) => [creator.id, creator]));
+
+      res.json(demos.map((demo) => ({
+        ...demo,
+        creator: creatorsById.get(demo.createdBy) ?? null,
+      })));
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch demonstrations" });
     }

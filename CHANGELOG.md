@@ -4,6 +4,15 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.18 - 13 June 2026
+
+Readable demonstration creator labels in the admin dashboard.
+
+### Improved
+
+- Readable demonstration creators: Admin demonstration cards now show the creator name and email instead of only a raw user ID.
+- Creator search: Dashboard search can now match demonstration creator names, emails, and user IDs.
+
 ## 1.1.17 - 12 June 2026
 
 Admin dashboard creator visibility improvement.

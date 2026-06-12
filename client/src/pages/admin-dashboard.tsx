@@ -47,6 +47,13 @@ const titleTemplates = [
 
 const statusFilters = ["all", "live", "draft", "ended"] as const;
 type StatusFilter = (typeof statusFilters)[number];
+type DashboardDemonstration = Demonstration & {
+  creator?: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+};
 
 function statusVariant(status: string) {
   switch (status) {
@@ -85,7 +92,7 @@ export default function AdminDashboard() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const importInputRef = useRef<HTMLInputElement | null>(null);
 
-  const { data: demos, isLoading } = useQuery<Demonstration[]>({
+  const { data: demos, isLoading } = useQuery<DashboardDemonstration[]>({
     queryKey: ["/api/demos"],
   });
 
@@ -161,9 +168,13 @@ export default function AdminDashboard() {
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const filteredDemos = (demos ?? []).filter((demo) => {
     const matchesStatus = statusFilter === "all" || demo.status === statusFilter;
+    const creatorName = demo.creator?.name.toLowerCase() ?? "";
+    const creatorEmail = demo.creator?.email.toLowerCase() ?? "";
     const matchesSearch = !normalizedSearch ||
       demo.title.toLowerCase().includes(normalizedSearch) ||
-      demo.createdBy.toLowerCase().includes(normalizedSearch);
+      demo.createdBy.toLowerCase().includes(normalizedSearch) ||
+      creatorName.includes(normalizedSearch) ||
+      creatorEmail.includes(normalizedSearch);
     return matchesStatus && matchesSearch;
   });
   const hasActiveFilters = normalizedSearch.length > 0 || statusFilter !== "all";
@@ -405,8 +416,9 @@ export default function AdminDashboard() {
                   <p className="text-xs text-muted-foreground">
                     Created {new Date(demo.createdAt).toLocaleDateString()}
                   </p>
-                  <p className="mt-1 break-all text-xs text-muted-foreground" data-testid={`text-demo-created-by-${demo.id}`}>
-                    Creator user ID: <span className="font-mono">{demo.createdBy}</span>
+                  <p className="mt-1 text-xs text-muted-foreground" data-testid={`text-demo-created-by-${demo.id}`}>
+                    Created by: <span className="font-medium text-foreground">{demo.creator?.name ?? "Unknown user"}</span>
+                    {demo.creator?.email ? <span> ({demo.creator.email})</span> : null}
                   </p>
                   <div className="flex items-center gap-2 mt-3">
                     <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/demos/${demo.id}`); }} data-testid={`button-edit-demo-${demo.id}`}>

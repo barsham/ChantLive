@@ -6,7 +6,7 @@ import {
   users, demonstrations, chants, demoAdmins, demoState, viewSessions,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, asc, desc, sql } from "drizzle-orm";
+import { eq, and, asc, desc, inArray, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 type UserUpdate = Partial<InsertUser & {
@@ -25,6 +25,8 @@ export type UserDemoStats = {
   lastDemonstrationAt: Date | null;
 };
 
+export type UserSummary = Pick<User, "id" | "email" | "name">;
+
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
@@ -34,6 +36,7 @@ export interface IStorage {
   updateUser(userId: string, data: UserUpdate): Promise<User | undefined>;
   touchUserActivity(userId: string): Promise<void>;
   getAllUsers(): Promise<User[]>;
+  getUsersByIds(userIds: string[]): Promise<UserSummary[]>;
   getUserDemoStats(): Promise<UserDemoStats[]>;
   updateUserRole(userId: string, role: string): Promise<void>;
   deleteUser(userId: string): Promise<void>;
@@ -107,6 +110,19 @@ export class DatabaseStorage implements IStorage {
 
   async getAllUsers(): Promise<User[]> {
     return db.select().from(users).orderBy(asc(users.createdAt));
+  }
+
+  async getUsersByIds(userIds: string[]): Promise<UserSummary[]> {
+    if (userIds.length === 0) return [];
+
+    return db
+      .select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+      })
+      .from(users)
+      .where(inArray(users.id, userIds));
   }
 
   async getUserDemoStats(): Promise<UserDemoStats[]> {
