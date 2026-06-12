@@ -10,6 +10,7 @@ ChantLive uses `shared/changelog.json` as the canonical source for public releas
 - Add only approved user-facing wording to `shared/changelog.json`.
 - Automation can append approved items with `npm run changelog:add -- --title "..." --description "..." --type feature --issue https://github.com/barsham/ChantLive/issues/123`.
 - External daily automation can call the `release-items-created` repository dispatch event with an `items` array to store multiple new features at once.
+- External scheduled runs should follow [daily-automation-guardrails.md](./daily-automation-guardrails.md) before reporting a deploy-ready commit.
 
 Example repository dispatch payload:
 
