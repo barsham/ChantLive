@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.16",
+      "releasedAt": "2026-06-12",
+      "summary": "SEO landing pages, crawlability, social metadata, and structured data improvements.",
+      "items": [
+        {
+          "id": "cl-2026-06-12-for-organizers-page",
+          "title": "For organizers SEO page",
+          "description": "ChantLive now has a public organizer-focused page that explains the QR code live chant workflow for events.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-12",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-12-about-page",
+          "title": "About ChantLive page",
+          "description": "A new public about page gives civic-tech, accessibility, and community sites a clearer page to link to.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-12",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-12-public-internal-links",
+          "title": "Public internal links",
+          "description": "The homepage now links to the organizer and about pages so visitors and crawlers can discover them.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-12",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-12-sitemap-seo-schema",
+          "title": "Sitemap and structured data updates",
+          "description": "The sitemap and route-specific JSON-LD now include the new public SEO pages.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-12",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-12-social-preview-metadata",
+          "title": "Social preview metadata",
+          "description": "Open Graph and Twitter preview metadata now include image dimensions, alt text, and a corrected social card caption.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-12",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.15",
       "releasedAt": "2026-06-11",
       "summary": "Dashboard filtering, QR copy feedback, and participant retry improvements.",

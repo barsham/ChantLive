@@ -30,11 +30,15 @@ export function SeoManager() {
     upsertMeta('meta[property="og:description"]', "content", seo.description);
     upsertMeta('meta[property="og:url"]', "content", canonicalUrl);
     upsertMeta('meta[property="og:image"]', "content", imageUrl);
+    upsertMeta('meta[property="og:image:width"]', "content", "1200");
+    upsertMeta('meta[property="og:image:height"]', "content", "630");
+    upsertMeta('meta[property="og:image:alt"]', "content", `${seo.title} preview`);
     upsertMeta('meta[property="og:type"]', "content", seo.ogType);
     upsertMeta('meta[property="og:site_name"]', "content", "ChantLive");
     upsertMeta('meta[name="twitter:title"]', "content", seo.title);
     upsertMeta('meta[name="twitter:description"]', "content", seo.description);
     upsertMeta('meta[name="twitter:image"]', "content", imageUrl);
+    upsertMeta('meta[name="twitter:image:alt"]', "content", `${seo.title} preview`);
     upsertMeta('link[rel="canonical"]', "href", canonicalUrl);
 
     const jsonLdScript = document.getElementById("seo-json-ld");

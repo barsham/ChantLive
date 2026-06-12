@@ -91,6 +91,46 @@ function buildChangelogJsonLd(origin: string) {
   };
 }
 
+function buildAboutJsonLd(origin: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    name: "About ChantLive",
+    url: new URL("/about", origin).toString(),
+    description:
+      "ChantLive is a free open-source live chant coordination tool for demonstrations, prayer circles, vigils, marches, and community gatherings.",
+    mainEntity: {
+      "@type": "SoftwareApplication",
+      name: SITE_NAME,
+      applicationCategory: "CommunicationApplication",
+      operatingSystem: "Web",
+      url: origin,
+      isAccessibleForFree: true,
+      codeRepository: "https://github.com/barsham/ChantLive",
+      description: DEFAULT_DESCRIPTION,
+    },
+  };
+}
+
+function buildOrganizerJsonLd(origin: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "ChantLive for Organizers",
+    url: new URL("/for-organizers", origin).toString(),
+    description:
+      "A practical guide to using ChantLive for live chant coordination, QR code sharing, and mobile participant prompts at public and community events.",
+    about: {
+      "@type": "SoftwareApplication",
+      name: SITE_NAME,
+      applicationCategory: "CommunicationApplication",
+      operatingSystem: "Web",
+      url: origin,
+      isAccessibleForFree: true,
+    },
+  };
+}
+
 export function getSeoForPath(pathname: string, origin: string): SeoConfig {
   const normalizedPath = pathname === "" ? "/" : pathname;
 
@@ -103,6 +143,30 @@ export function getSeoForPath(pathname: string, origin: string): SeoConfig {
       robots: "index,follow",
       ogType: "website",
       jsonLd: buildHomeJsonLd(origin),
+    };
+  }
+
+  if (normalizedPath === "/about") {
+    return {
+      title: "About ChantLive | Open-Source Live Chant Coordination",
+      description:
+        "Learn about ChantLive, a free open-source live chant coordination app for demonstrations, prayer circles, vigils, marches, and community gatherings.",
+      canonicalPath: "/about",
+      robots: "index,follow",
+      ogType: "website",
+      jsonLd: buildAboutJsonLd(origin),
+    };
+  }
+
+  if (normalizedPath === "/for-organizers") {
+    return {
+      title: "For Organizers | QR Code Live Chant App for Events",
+      description:
+        "Use ChantLive to prepare chants, share a QR code, invite admins, and push live call-and-response prompts to participant phones during events.",
+      canonicalPath: "/for-organizers",
+      robots: "index,follow",
+      ogType: "website",
+      jsonLd: buildOrganizerJsonLd(origin),
     };
   }
 

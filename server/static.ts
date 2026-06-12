@@ -60,6 +60,18 @@ function renderSeoHtml(template: string, req: express.Request): string {
       `<meta property="og:image" content="${escapeHtml(imageUrl)}" />`,
     )
     .replace(
+      /<meta\s+property="og:image:width"\s+content="[^"]*"\s*\/?>/i,
+      `<meta property="og:image:width" content="1200" />`,
+    )
+    .replace(
+      /<meta\s+property="og:image:height"\s+content="[^"]*"\s*\/?>/i,
+      `<meta property="og:image:height" content="630" />`,
+    )
+    .replace(
+      /<meta\s+property="og:image:alt"\s+content="[^"]*"\s*\/?>/i,
+      `<meta property="og:image:alt" content="${escapeHtml(`${seo.title} preview`)}" />`,
+    )
+    .replace(
       /<meta\s+property="og:type"\s+content="[^"]*"\s*\/?>/i,
       `<meta property="og:type" content="${escapeHtml(seo.ogType)}" />`,
     )
@@ -74,6 +86,10 @@ function renderSeoHtml(template: string, req: express.Request): string {
     .replace(
       /<meta\s+name="twitter:image"\s+content="[^"]*"\s*\/?>/i,
       `<meta name="twitter:image" content="${escapeHtml(imageUrl)}" />`,
+    )
+    .replace(
+      /<meta\s+name="twitter:image:alt"\s+content="[^"]*"\s*\/?>/i,
+      `<meta name="twitter:image:alt" content="${escapeHtml(`${seo.title} preview`)}" />`,
     )
     .replace(
       /<script id="seo-json-ld" type="application\/ld\+json">[\s\S]*?<\/script>/i,

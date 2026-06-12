@@ -18,6 +18,12 @@ export default function Landing() {
           </div>
           {isAuthenticated ? (
             <div className="flex items-center gap-2 flex-wrap">
+              <Button variant="ghost" asChild data-testid="link-for-organizers">
+                <Link href="/for-organizers">For Organizers</Link>
+              </Button>
+              <Button variant="ghost" asChild data-testid="link-about">
+                <Link href="/about">About</Link>
+              </Button>
               <Button variant="ghost" asChild data-testid="link-changelog">
                 <Link href="/changelog">Changelog</Link>
               </Button>
@@ -30,6 +36,12 @@ export default function Landing() {
             </div>
           ) : (
             <div className="flex items-center gap-2 flex-wrap">
+              <Button variant="ghost" asChild data-testid="link-for-organizers">
+                <Link href="/for-organizers">For Organizers</Link>
+              </Button>
+              <Button variant="ghost" asChild data-testid="link-about">
+                <Link href="/about">About</Link>
+              </Button>
               <Button variant="ghost" asChild data-testid="link-changelog">
                 <Link href="/changelog">Changelog</Link>
               </Button>
@@ -76,6 +88,9 @@ export default function Landing() {
                   </Button>
                   <Button size="lg" variant="outline" asChild data-testid="button-hero-sign-in">
                     <Link href="/login">Sign In</Link>
+                  </Button>
+                  <Button size="lg" variant="ghost" asChild data-testid="button-for-organizers">
+                    <Link href="/for-organizers">For organizers</Link>
                   </Button>
                 </>
               )}
@@ -207,7 +222,7 @@ export default function Landing() {
             Open-source project for free speech worldwide. <a href="https://github.com/barsham/ChantLive" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">Source code on GitHub</a>. <AppVersion className="inline" />
           </p>
           <p>
-            See what changed in the <Link href="/changelog" className="underline underline-offset-4">public changelog</Link>.
+            Learn more <Link href="/for-organizers" className="underline underline-offset-4">for organizers</Link>, read <Link href="/about" className="underline underline-offset-4">about ChantLive</Link>, or see what changed in the <Link href="/changelog" className="underline underline-offset-4">public changelog</Link>.
           </p>
         </div>
       </footer>
