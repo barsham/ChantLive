@@ -33,7 +33,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Activity, ArrowLeft, CalendarDays, Megaphone, Presentation, Shield, Trash2, Users } from "lucide-react";
+import { Activity, ArrowLeft, CalendarDays, Megaphone, Presentation, Search, Shield, Trash2, Users, X } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppVersion } from "@/components/app-version";
@@ -71,9 +71,21 @@ export default function AdminUsers() {
   const { user: currentUser, isSuperAdmin } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data: users, isLoading } = useQuery<AdminUser[]>({
     queryKey: ["/api/admin/users"],
+  });
+
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredUsers = (users ?? []).filter((u) => {
+    if (!normalizedSearch) return true;
+
+    return (
+      u.name.toLowerCase().includes(normalizedSearch) ||
+      u.email.toLowerCase().includes(normalizedSearch) ||
+      u.role.toLowerCase().replace("_", " ").includes(normalizedSearch)
+    );
   });
 
   const updateRole = useMutation({
@@ -130,6 +142,39 @@ export default function AdminUsers() {
           </p>
         </div>
 
+        {!isLoading && users && users.length > 0 && (
+          <Card className="mb-5">
+            <CardContent className="py-4 space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search admins by name, email, or role..."
+                  className="pl-9 pr-9"
+                  aria-label="Search admin users by name, email, or role"
+                  data-testid="input-search-admin-users"
+                />
+                {searchTerm && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2"
+                    onClick={() => setSearchTerm("")}
+                    aria-label="Clear admin user search"
+                    data-testid="button-clear-admin-user-search"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground" role="status" aria-live="polite" data-testid="text-admin-user-result-count">
+                Showing {filteredUsers.length} of {users.length} admin users
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -145,8 +190,9 @@ export default function AdminUsers() {
             ))}
           </div>
         ) : users && users.length > 0 ? (
+          filteredUsers.length > 0 ? (
           <div className="space-y-2">
-            {users.map((u) => (
+            {filteredUsers.map((u) => (
               <Card key={u.id} data-testid={`card-user-${u.id}`}>
                 <CardContent className="py-4 flex items-center gap-3 flex-wrap">
                   <Avatar className="h-10 w-10">
@@ -226,6 +272,18 @@ export default function AdminUsers() {
               </Card>
             ))}
           </div>
+          ) : (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Search className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <p className="font-medium">No admin users match your search.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Try a different name, email, or role.</p>
+                <Button variant="outline" className="mt-4" onClick={() => setSearchTerm("")} data-testid="button-empty-clear-admin-user-search">
+                  Clear search
+                </Button>
+              </CardContent>
+            </Card>
+          )
         ) : (
           <Card>
             <CardContent className="py-12 text-center">

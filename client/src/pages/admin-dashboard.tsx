@@ -47,6 +47,8 @@ const titleTemplates = [
 
 const statusFilters = ["all", "live", "draft", "ended"] as const;
 type StatusFilter = (typeof statusFilters)[number];
+const sortOptions = ["newest", "oldest", "title"] as const;
+type SortOption = (typeof sortOptions)[number];
 type DashboardDemonstration = Demonstration & {
   creator?: {
     id: string;
@@ -90,6 +92,7 @@ export default function AdminDashboard() {
   const [deleteTarget, setDeleteTarget] = useState<Demonstration | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sortOption, setSortOption] = useState<SortOption>("newest");
   const importInputRef = useRef<HTMLInputElement | null>(null);
 
   const { data: demos, isLoading } = useQuery<DashboardDemonstration[]>({
@@ -166,18 +169,33 @@ export default function AdminDashboard() {
     ended: demos?.filter((demo) => demo.status === "ended").length ?? 0,
   };
   const normalizedSearch = searchTerm.trim().toLowerCase();
-  const filteredDemos = (demos ?? []).filter((demo) => {
-    const matchesStatus = statusFilter === "all" || demo.status === statusFilter;
-    const creatorName = demo.creator?.name.toLowerCase() ?? "";
-    const creatorEmail = demo.creator?.email.toLowerCase() ?? "";
-    const matchesSearch = !normalizedSearch ||
-      demo.title.toLowerCase().includes(normalizedSearch) ||
-      demo.createdBy.toLowerCase().includes(normalizedSearch) ||
-      creatorName.includes(normalizedSearch) ||
-      creatorEmail.includes(normalizedSearch);
-    return matchesStatus && matchesSearch;
-  });
+  const filteredDemos = (demos ?? [])
+    .filter((demo) => {
+      const matchesStatus = statusFilter === "all" || demo.status === statusFilter;
+      const creatorName = demo.creator?.name.toLowerCase() ?? "";
+      const creatorEmail = demo.creator?.email.toLowerCase() ?? "";
+      const matchesSearch = !normalizedSearch ||
+        demo.title.toLowerCase().includes(normalizedSearch) ||
+        demo.createdBy.toLowerCase().includes(normalizedSearch) ||
+        creatorName.includes(normalizedSearch) ||
+        creatorEmail.includes(normalizedSearch);
+      return matchesStatus && matchesSearch;
+    })
+    .sort((a, b) => {
+      if (sortOption === "title") {
+        return a.title.localeCompare(b.title);
+      }
+
+      const aCreatedAt = new Date(a.createdAt).getTime();
+      const bCreatedAt = new Date(b.createdAt).getTime();
+      return sortOption === "oldest" ? aCreatedAt - bCreatedAt : bCreatedAt - aCreatedAt;
+    });
   const hasActiveFilters = normalizedSearch.length > 0 || statusFilter !== "all";
+  const sortLabel = sortOption === "newest"
+    ? "Newest first"
+    : sortOption === "oldest"
+      ? "Oldest first"
+      : "Title A-Z";
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -346,9 +364,9 @@ export default function AdminDashboard() {
                 <Input
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search demonstrations by title..."
+                  placeholder="Search demonstrations by title, creator, or email..."
                   className="pl-9 pr-9"
-                  aria-label="Search demonstrations by title"
+                  aria-label="Search demonstrations by title, creator, or email"
                   data-testid="input-search-demos"
                 />
                 {searchTerm && (
@@ -364,24 +382,41 @@ export default function AdminDashboard() {
                   </Button>
                 )}
               </div>
-              <div className="flex flex-wrap items-center gap-2" aria-label="Filter demonstrations by status">
-                {statusFilters.map((status) => (
-                  <Button
-                    key={status}
-                    variant={statusFilter === status ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setStatusFilter(status)}
-                    data-testid={`button-filter-${status}`}
-                  >
-                    {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
-                  </Button>
-                ))}
-                {hasActiveFilters && (
-                  <Button variant="ghost" size="sm" onClick={clearFilters} data-testid="button-clear-filters">
-                    Clear filters
-                  </Button>
-                )}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2" aria-label="Filter demonstrations by status">
+                  {statusFilters.map((status) => (
+                    <Button
+                      key={status}
+                      variant={statusFilter === status ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setStatusFilter(status)}
+                      data-testid={`button-filter-${status}`}
+                    >
+                      {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
+                    </Button>
+                  ))}
+                  {hasActiveFilters && (
+                    <Button variant="ghost" size="sm" onClick={clearFilters} data-testid="button-clear-filters">
+                      Clear filters
+                    </Button>
+                  )}
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" data-testid="button-sort-demos">
+                      Sort: {sortLabel}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setSortOption("newest")}>Newest first</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortOption("oldest")}>Oldest first</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortOption("title")}>Title A-Z</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
+              <p className="text-xs text-muted-foreground" role="status" aria-live="polite" data-testid="text-demo-result-count">
+                Showing {filteredDemos.length} of {demoStats.total} demonstrations
+              </p>
             </CardContent>
           </Card>
         )}

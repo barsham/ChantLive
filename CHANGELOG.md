@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.19 - 13 June 2026
+
+Admin list controls and participant live-status clarity improvements.
+
+### Added
+
+- Dashboard sorting: Organizers can sort demonstrations by newest, oldest, or title so busy event lists are easier to scan.
+- Admin user search: Super admins can filter admin users by name, email, or role before reviewing activity and demonstration counts.
+
+### Improved
+
+- Dashboard result count: The dashboard now shows how many demonstrations match the current search and status filters.
+- Participant phase guidance: Participant screens now show whether the leader is speaking or everyone should respond during a live chant.
+- Participant offline status: Participant screens now show an offline warning when the browser loses network connectivity.
+
 ## 1.1.18 - 13 June 2026
 
 Readable demonstration creator labels in the admin dashboard.

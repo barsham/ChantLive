@@ -51,7 +51,23 @@ export default function Participant() {
   const socketRef = useRef(getSocket());
   const [fadeIn, setFadeIn] = useState(false);
   const [phaseProgress, setPhaseProgress] = useState(0);
+  const [isOffline, setIsOffline] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
   const localPhaseStartRef = useRef(Date.now());
+
+  useEffect(() => {
+    const updateOnlineStatus = () => {
+      setIsOffline(!navigator.onLine);
+    };
+
+    window.addEventListener("online", updateOnlineStatus);
+    window.addEventListener("offline", updateOnlineStatus);
+    updateOnlineStatus();
+
+    return () => {
+      window.removeEventListener("online", updateOnlineStatus);
+      window.removeEventListener("offline", updateOnlineStatus);
+    };
+  }, []);
 
   useEffect(() => {
     const socket = socketRef.current;
@@ -117,6 +133,17 @@ export default function Participant() {
 
   const hasChantContent = chantData?.callText || chantData?.responseText;
   const activePhase = chantData?.currentPhase ?? "leader";
+  const phaseGuidance = activePhase === "people"
+    ? {
+      label: "Everyone respond now",
+      detail: "Read the blue response together.",
+      className: "border-sky-400/40 bg-sky-400/10 text-sky-200",
+    }
+    : {
+      label: "Leader is speaking now",
+      detail: "Listen for the orange call.",
+      className: "border-orange-500/40 bg-orange-500/10 text-orange-200",
+    };
   const chantAnnouncement = getChantAnnouncement(chantData);
   const retryConnection = () => {
     setError(null);
@@ -229,9 +256,11 @@ export default function Participant() {
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-neutral-400 text-sm mb-2">Connecting...</p>
+          <p className="text-neutral-400 text-sm mb-2">{isOffline ? "Waiting for network..." : "Connecting..."}</p>
           <p className="text-neutral-600 text-xs mb-5 max-w-xs">
-            If this takes too long, retry the connection or ask an organiser to confirm the QR/link.
+            {isOffline
+              ? "You appear to be offline. Reconnect to receive live chants."
+              : "If this takes too long, retry the connection or ask an organiser to confirm the QR/link."}
           </p>
           <button
             type="button"
@@ -292,11 +321,20 @@ export default function Participant() {
         >
           {chantData.chantIndex !== null && (
             <p className="text-neutral-500 text-sm font-mono mb-6 tracking-wider" data-testid="text-chant-number">
-              {chantData.chantIndex + 1} / {chantData.totalChants} · Cycle {chantData.currentCycle ?? 1}/{chantData.cycleCount ?? 1}
+              {chantData.chantIndex + 1} / {chantData.totalChants} - Cycle {chantData.currentCycle ?? 1}/{chantData.cycleCount ?? 1}
             </p>
           )}
           {hasChantContent ? (
             <div className="space-y-6" style={{ maxWidth: "90vw" }}>
+              <div
+                className={`mx-auto max-w-xl rounded-full border px-4 py-2 text-sm font-semibold ${phaseGuidance.className}`}
+                role="status"
+                aria-live="polite"
+                data-testid="text-phase-guidance"
+              >
+                <span>{phaseGuidance.label}</span>
+                <span className="ml-2 font-normal opacity-80">{phaseGuidance.detail}</span>
+              </div>
               {chantData.callText && (
                 <div data-testid="text-call" className={chantData.currentPhase === "leader" ? "ring-2 ring-orange-500/80 rounded-xl p-2" : "p-2"}>
                   <p className="text-neutral-400 text-xs font-mono uppercase tracking-widest mb-2">Leader</p>
@@ -374,7 +412,7 @@ export default function Participant() {
         </span>
         <span
           className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
-            connected
+            connected && !isOffline
               ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
               : "border-red-500/30 bg-red-500/10 text-red-300"
           }`}
@@ -382,8 +420,12 @@ export default function Participant() {
           aria-live="polite"
           data-testid="text-connection-status"
         >
-          <span className={`h-2 w-2 rounded-full ${connected ? "bg-emerald-300" : "bg-red-300"}`} aria-hidden="true" />
-          {connected ? "Connected to live updates" : "Reconnecting - updates resume automatically"}
+          <span className={`h-2 w-2 rounded-full ${connected && !isOffline ? "bg-emerald-300" : "bg-red-300"}`} aria-hidden="true" />
+          {isOffline
+            ? "Offline - reconnect to receive updates"
+            : connected
+              ? "Connected to live updates"
+              : "Reconnecting - updates resume automatically"}
         </span>
       </footer>
     </div>

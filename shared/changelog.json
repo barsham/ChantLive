@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.19",
+      "releasedAt": "2026-06-13",
+      "summary": "Admin list controls and participant live-status clarity improvements.",
+      "items": [
+        {
+          "id": "cl-2026-06-13-dashboard-sort",
+          "title": "Dashboard sorting",
+          "description": "Organizers can sort demonstrations by newest, oldest, or title so busy event lists are easier to scan.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-13",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-13-dashboard-result-count",
+          "title": "Dashboard result count",
+          "description": "The dashboard now shows how many demonstrations match the current search and status filters.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-13",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-13-admin-user-search",
+          "title": "Admin user search",
+          "description": "Super admins can filter admin users by name, email, or role before reviewing activity and demonstration counts.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-13",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-13-live-phase-guidance",
+          "title": "Participant phase guidance",
+          "description": "Participant screens now show whether the leader is speaking or everyone should respond during a live chant.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-13",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-13-offline-status",
+          "title": "Participant offline status",
+          "description": "Participant screens now show an offline warning when the browser loses network connectivity.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-13",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.18",
       "releasedAt": "2026-06-13",
       "summary": "Readable demonstration creator labels in the admin dashboard.",
