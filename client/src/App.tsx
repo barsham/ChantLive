@@ -7,6 +7,8 @@ import { AuthProvider, useAuth } from "@/lib/auth";
 import { SeoManager } from "@/components/seo-manager";
 import Landing from "@/pages/landing";
 import About from "@/pages/about";
+import Blog from "@/pages/blog";
+import BlogPost from "@/pages/blog-post";
 import Changelog from "@/pages/changelog";
 import ForOrganizers from "@/pages/for-organizers";
 import AdminDashboard from "@/pages/admin-dashboard";
@@ -46,6 +48,8 @@ function Router() {
       <Route path="/" component={Landing} />
       <Route path="/about" component={About} />
       <Route path="/for-organizers" component={ForOrganizers} />
+      <Route path="/blog" component={Blog} />
+      <Route path="/blog/:slug" component={BlogPost} />
       <Route path="/changelog" component={Changelog} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />

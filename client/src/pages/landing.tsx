@@ -24,6 +24,9 @@ export default function Landing() {
               <Button variant="ghost" asChild data-testid="link-about">
                 <Link href="/about">About</Link>
               </Button>
+              <Button variant="ghost" asChild data-testid="link-blog">
+                <Link href="/blog">Blog</Link>
+              </Button>
               <Button variant="ghost" asChild data-testid="link-changelog">
                 <Link href="/changelog">Changelog</Link>
               </Button>
@@ -41,6 +44,9 @@ export default function Landing() {
               </Button>
               <Button variant="ghost" asChild data-testid="link-about">
                 <Link href="/about">About</Link>
+              </Button>
+              <Button variant="ghost" asChild data-testid="link-blog">
+                <Link href="/blog">Blog</Link>
               </Button>
               <Button variant="ghost" asChild data-testid="link-changelog">
                 <Link href="/changelog">Changelog</Link>
@@ -263,7 +269,7 @@ export default function Landing() {
             Open-source project for free speech worldwide. <a href="https://github.com/barsham/ChantLive" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">Source code on GitHub</a>. <AppVersion className="inline" />
           </p>
           <p>
-            Learn more <Link href="/for-organizers" className="underline underline-offset-4">for organizers</Link>, read <Link href="/about" className="underline underline-offset-4">about ChantLive</Link>, or see what changed in the <Link href="/changelog" className="underline underline-offset-4">public changelog</Link>.
+            Learn more <Link href="/for-organizers" className="underline underline-offset-4">for organizers</Link>, read <Link href="/about" className="underline underline-offset-4">about ChantLive</Link>, explore the <Link href="/blog" className="underline underline-offset-4">community blog</Link>, or see what changed in the <Link href="/changelog" className="underline underline-offset-4">public changelog</Link>.
           </p>
         </div>
       </footer>

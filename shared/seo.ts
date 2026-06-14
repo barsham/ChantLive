@@ -1,3 +1,5 @@
+import { blogPosts, getBlogPost } from "./blog";
+
 export type SeoConfig = {
   title: string;
   description: string;
@@ -131,6 +133,58 @@ function buildOrganizerJsonLd(origin: string) {
   };
 }
 
+function buildBlogJsonLd(origin: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    name: "ChantLive Blog",
+    url: new URL("/blog", origin).toString(),
+    description:
+      "Weekly practical guides for peaceful demonstrations, live community events, accessibility, safety, permits, and participant communication.",
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: origin,
+    },
+    blogPost: blogPosts.map((post) => ({
+      "@type": "BlogPosting",
+      headline: post.title,
+      description: post.description,
+      datePublished: post.publishedAt,
+      dateModified: post.updatedAt ?? post.publishedAt,
+      url: new URL(`/blog/${post.slug}`, origin).toString(),
+    })),
+  };
+}
+
+function buildBlogPostJsonLd(origin: string, slug: string) {
+  const post = getBlogPost(slug);
+
+  if (!post) return buildNoIndexJsonLd(origin);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.description,
+    datePublished: post.publishedAt,
+    dateModified: post.updatedAt ?? post.publishedAt,
+    url: new URL(`/blog/${post.slug}`, origin).toString(),
+    author: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: origin,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: origin,
+    },
+    isAccessibleForFree: true,
+    keywords: post.tags.join(", "),
+  };
+}
+
 export function getSeoForPath(pathname: string, origin: string): SeoConfig {
   const normalizedPath = pathname === "" ? "/" : pathname;
 
@@ -191,6 +245,43 @@ export function getSeoForPath(pathname: string, origin: string): SeoConfig {
       robots: "index,follow",
       ogType: "article",
       jsonLd: buildChangelogJsonLd(origin),
+    };
+  }
+
+  if (normalizedPath === "/blog") {
+    return {
+      title: "Blog | Peaceful Demonstration Guides | ChantLive",
+      description:
+        "Read weekly ChantLive guides about peaceful demonstrations, participation, permits, safety, accessibility, and live event communication.",
+      canonicalPath: "/blog",
+      robots: "index,follow",
+      ogType: "website",
+      jsonLd: buildBlogJsonLd(origin),
+    };
+  }
+
+  if (normalizedPath.startsWith("/blog/")) {
+    const slug = normalizedPath.replace("/blog/", "");
+    const post = getBlogPost(slug);
+
+    if (post) {
+      return {
+        title: `${post.title} | ChantLive Blog`,
+        description: post.description,
+        canonicalPath: `/blog/${post.slug}`,
+        robots: "index,follow",
+        ogType: "article",
+        jsonLd: buildBlogPostJsonLd(origin, post.slug),
+      };
+    }
+
+    return {
+      title: "Blog Post Not Found | ChantLive",
+      description: DEFAULT_DESCRIPTION,
+      canonicalPath: normalizedPath,
+      robots: "noindex,nofollow",
+      ogType: "website",
+      jsonLd: buildNoIndexJsonLd(origin),
     };
   }
 

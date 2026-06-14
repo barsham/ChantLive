@@ -16,6 +16,17 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://chantlive.online/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://chantlive.online/blog/first-time-demonstration-organizer-checklist</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://chantlive.online/changelog</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>

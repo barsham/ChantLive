@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.21 - 14 June 2026
+
+Public blog section with the first organizer guide and weekly content workflow.
+
+### Added
+
+- Public blog section: ChantLive now has a public blog index and article pages for community organizing, safety, accessibility, and live-event guidance.
+- First organizer guide: The first blog post gives first-time peaceful demonstration organizers a practical checklist for participation, permits, safety roles, accessibility, and weak-signal planning.
+
+### Improved
+
+- Blog SEO metadata: Blog index and post routes now have dedicated metadata, structured data, and sitemap entries.
+- Blog navigation: The homepage navigation and footer now link to the community blog.
+- Weekly blog workflow: A weekly blog automation brief now documents the cadence, content standards, and topic backlog for future posts.
+
 ## 1.1.20 - 14 June 2026
 
 Live-event readiness, accessibility fallback, and participant reliability improvements.

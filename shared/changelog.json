@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.21",
+      "releasedAt": "2026-06-14",
+      "summary": "Public blog section with the first organizer guide and weekly content workflow.",
+      "items": [
+        {
+          "id": "cl-2026-06-14-blog-section",
+          "title": "Public blog section",
+          "description": "ChantLive now has a public blog index and article pages for community organizing, safety, accessibility, and live-event guidance.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-14",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-14-first-organizer-guide",
+          "title": "First organizer guide",
+          "description": "The first blog post gives first-time peaceful demonstration organizers a practical checklist for participation, permits, safety roles, accessibility, and weak-signal planning.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-14",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-14-blog-seo",
+          "title": "Blog SEO metadata",
+          "description": "Blog index and post routes now have dedicated metadata, structured data, and sitemap entries.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-14",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-14-blog-navigation",
+          "title": "Blog navigation",
+          "description": "The homepage navigation and footer now link to the community blog.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-14",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-14-weekly-blog-workflow",
+          "title": "Weekly blog workflow",
+          "description": "A weekly blog automation brief now documents the cadence, content standards, and topic backlog for future posts.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-14",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.20",
       "releasedAt": "2026-06-14",
       "summary": "Live-event readiness, accessibility fallback, and participant reliability improvements.",
