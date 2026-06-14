@@ -302,6 +302,11 @@ export default function Participant() {
           <p className="text-neutral-500 text-sm mt-4 max-w-xs mx-auto">
             Keep this page open. Chants will appear automatically when an organiser starts the demonstration.
           </p>
+          {isOffline && (
+            <p className="text-red-300 text-sm mt-4 max-w-xs mx-auto" role="status" data-testid="text-waiting-offline">
+              You are offline. Reconnect before the demonstration starts so live chants can appear.
+            </p>
+          )}
         </div>
       </div>
     );

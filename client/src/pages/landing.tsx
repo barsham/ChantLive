@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Shield, Zap, Users, ArrowRight, Megaphone } from "lucide-react";
+import { Accessibility, QrCode, Shield, Zap, Users, ArrowRight, Megaphone, Wifi } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Link } from "wouter";
 import { AppVersion } from "@/components/app-version";
@@ -167,6 +167,47 @@ export default function Landing() {
                 <p className="text-sm font-medium mb-1">Open-source trust</p>
                 <p className="text-xs text-muted-foreground">The community can inspect the code, report issues, and suggest improvements.</p>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-16 px-4 border-t bg-muted/20">
+          <div className="max-w-4xl mx-auto">
+            <div className="max-w-2xl mx-auto text-center mb-10">
+              <h2 className="text-2xl font-semibold mb-2">Built for real crowds, not perfect rooms</h2>
+              <p className="text-sm text-muted-foreground">
+                Live gatherings happen with noise, weak signal, mixed devices, and people who cannot scan a QR code.
+                ChantLive keeps the participant path simple and gives organizers practical fallbacks.
+              </p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card>
+                <CardContent className="pt-6">
+                  <QrCode className="w-7 h-7 text-primary mb-3" />
+                  <h3 className="font-semibold mb-2">QR plus link fallback</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Share the QR code for speed, then copy the same participant link for messages, projection, or printed backup.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <Accessibility className="w-7 h-7 text-primary mb-3" />
+                  <h3 className="font-semibold mb-2">Accessible live prompts</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Large call-and-response text, clear phase labels, and screen-reader status updates help more people follow along.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <Wifi className="w-7 h-7 text-primary mb-3" />
+                  <h3 className="font-semibold mb-2">Connection awareness</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Participants see reconnecting and offline messages instead of guessing whether the chant feed is still active.
+                  </p>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>

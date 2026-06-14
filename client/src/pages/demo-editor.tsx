@@ -56,6 +56,9 @@ import {
   UserPlus,
   Download,
   X,
+  CheckCircle2,
+  ClipboardCheck,
+  Smartphone,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -145,6 +148,29 @@ export default function DemoEditor() {
   const currentChant = state?.currentChantId
     ? chantsList.find((chant) => chant.id === state.currentChantId)
     : undefined;
+  const readinessItems = [
+    {
+      label: "Add at least one chant",
+      ready: chantsList.length > 0,
+      help: "Participants need a call or response before the event can go live.",
+    },
+    {
+      label: "Open the participant page on a phone",
+      ready: Boolean(demo),
+      help: "Use the QR/link button to test the exact page participants will see.",
+    },
+    {
+      label: "Add a backup admin",
+      ready: admins.length > 1,
+      help: "A second admin can keep the session running if one device drops out.",
+    },
+    {
+      label: "Set event duration and chant timing",
+      ready: eventDuration > 0 && cycleDelay >= 0,
+      help: "Confirm the event timer and delay feel right before the crowd joins.",
+    },
+  ];
+  const readyCount = readinessItems.filter((item) => item.ready).length;
 
   useEffect(() => {
     if (!state) return;
@@ -632,6 +658,13 @@ export default function DemoEditor() {
                     <p className="font-medium text-foreground mb-1">Participant instructions</p>
                     <p>Open your camera, scan the QR code, then keep the chant page open during the event.</p>
                   </div>
+                  <div className="w-full rounded-lg border border-orange-200 bg-orange-50 p-3 text-xs text-orange-900">
+                    <p className="font-medium mb-1">Accessible joining fallback</p>
+                    <p>
+                      Announce the participant link out loud and share it by message or print. This helps people who
+                      cannot scan the QR code, have older cameras, or need a screen-reader-friendly path.
+                    </p>
+                  </div>
                   <div className="flex items-center gap-2 w-full">
                     <Input value={publicUrl} readOnly className="text-xs" data-testid="input-public-url" />
                     <Button
@@ -699,15 +732,30 @@ export default function DemoEditor() {
         {!isLive && (
           <Card className="mb-6 border-primary/20 bg-primary/5">
             <CardContent className="py-4">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium">Before you go live</p>
                   <p className="text-xs text-muted-foreground">
-                    Add at least one chant, test the participant QR/link on a phone, and invite backup admins before the event starts.
+                    Complete the essentials that make a live event easier to run under pressure.
                   </p>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    {readinessItems.map((item) => (
+                      <div
+                        key={item.label}
+                        className="rounded-md border bg-background/80 p-3"
+                        data-testid={`text-readiness-${item.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+                      >
+                        <p className="flex items-center gap-2 text-xs font-medium">
+                          <CheckCircle2 className={`h-3.5 w-3.5 ${item.ready ? "text-emerald-600" : "text-muted-foreground"}`} />
+                          {item.label}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">{item.help}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <Badge variant={chantsList.length > 0 ? "secondary" : "outline"} data-testid="badge-live-readiness">
-                  {chantsList.length > 0 ? "Chants ready" : "Add a chant first"}
+                <Badge variant={readyCount >= 3 ? "secondary" : "outline"} data-testid="badge-live-readiness">
+                  {readyCount}/{readinessItems.length} ready
                 </Badge>
               </div>
             </CardContent>
@@ -718,6 +766,33 @@ export default function DemoEditor() {
           <Card className="mb-6">
             <CardContent className="py-4">
               <div className="space-y-4">
+                {isLive && (
+                  <div className="rounded-lg border bg-muted/30 p-3" data-testid="text-live-control-summary">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <p className="flex items-center gap-2 text-sm font-medium">
+                          <ClipboardCheck className="h-4 w-4 text-primary" />
+                          Live control status
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {currentChant
+                            ? `${currentPhase === "leader" ? "Leader call" : "Everyone response"} is active on chant ${chantsList.findIndex((chant) => chant.id === currentChant.id) + 1} of ${chantsList.length}.`
+                            : "No chant is currently pushed live."}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1 rounded-full border bg-background px-2.5 py-1">
+                          <Users className="h-3.5 w-3.5" />
+                          {viewerCount} viewing
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full border bg-background px-2.5 py-1">
+                          <Smartphone className="h-3.5 w-3.5" />
+                          Keep QR/link visible
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3">

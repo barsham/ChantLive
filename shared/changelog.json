@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.20",
+      "releasedAt": "2026-06-14",
+      "summary": "Live-event readiness, accessibility fallback, and participant reliability improvements.",
+      "items": [
+        {
+          "id": "cl-2026-06-14-pre-live-readiness-checklist",
+          "title": "Pre-live readiness checklist",
+          "description": "Event editors now show a checklist for chants, participant-page testing, backup admins, and timing before going live.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-14",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-14-live-control-summary",
+          "title": "Live control summary",
+          "description": "Live event controls now summarize the active chant phase, viewer count, and reminder to keep the QR/link visible.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-14",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-14-accessible-qr-fallback",
+          "title": "Accessible QR fallback guidance",
+          "description": "The QR dialog now tells organizers to announce and share the participant link for people who cannot scan a QR code.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-14",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-14-waiting-offline-warning",
+          "title": "Waiting-screen offline warning",
+          "description": "Participants waiting for a draft event now see a clear warning if their browser is offline.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-14",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-14-real-crowd-landing-section",
+          "title": "Real-crowd landing guidance",
+          "description": "The homepage now explains QR fallback, accessible live prompts, and connection awareness for first-time organizers.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-14",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.19",
       "releasedAt": "2026-06-13",
       "summary": "Admin list controls and participant live-status clarity improvements.",
