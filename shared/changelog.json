@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.22",
+      "releasedAt": "2026-06-15",
+      "summary": "Faster participant sharing, clearer readiness actions, starter chants, waiting status, and blog discovery.",
+      "items": [
+        {
+          "id": "cl-2026-06-15-direct-participant-link-copy",
+          "title": "Direct participant link copy",
+          "description": "Event editors now have a header action to copy the participant link without opening the QR dialog.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-15",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-15-readiness-test-actions",
+          "title": "Readiness test actions",
+          "description": "The pre-live readiness card now links directly to the participant page and QR instructions.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-15",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-15-empty-chant-starters",
+          "title": "Empty event chant starters",
+          "description": "Empty events now show starter chant buttons so organizers can create a first chant faster.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-15",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-15-participant-waiting-status",
+          "title": "Participant waiting connection status",
+          "description": "Participants waiting for an event to begin now see whether they are connected or offline.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-15",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-15-homepage-latest-guide",
+          "title": "Homepage latest guide",
+          "description": "The homepage now promotes the latest community guide so new visitors can discover organizer education content.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-15",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.21",
       "releasedAt": "2026-06-14",
       "summary": "Public blog section with the first organizer guide and weekly content workflow.",

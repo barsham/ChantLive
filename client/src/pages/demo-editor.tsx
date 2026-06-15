@@ -637,6 +637,16 @@ export default function DemoEditor() {
               <Download className="w-4 h-4 mr-1" />
               {exportDemo.isPending ? "Exporting..." : "Export"}
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={copyUrl}
+              disabled={!publicUrl}
+              data-testid="button-copy-participant-link"
+            >
+              {copied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
+              {copied ? "Copied" : "Copy Link"}
+            </Button>
             <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" data-testid="button-qr">
@@ -753,6 +763,20 @@ export default function DemoEditor() {
                       </div>
                     ))}
                   </div>
+                  {publicUrl && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={publicUrl} target="_blank" rel="noopener noreferrer" data-testid="link-test-participant-page">
+                          <ExternalLink className="w-3.5 h-3.5 mr-1" />
+                          Test participant page
+                        </a>
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setQrDialogOpen(true)} data-testid="button-readiness-open-qr">
+                        <QrCode className="w-3.5 h-3.5 mr-1" />
+                        Show QR instructions
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 <Badge variant={readyCount >= 3 ? "secondary" : "outline"} data-testid="badge-live-readiness">
                   {readyCount}/{readinessItems.length} ready
@@ -1343,6 +1367,24 @@ export default function DemoEditor() {
             <CardContent className="py-12 text-center">
               <Megaphone className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
               <p className="text-muted-foreground mb-4">No chants added yet. Add your first chant to get started.</p>
+              {!isEnded && (
+                <div className="mb-4 flex flex-wrap justify-center gap-2">
+                  {chantStarters.map((starter) => (
+                    <Button
+                      key={starter.label}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        applyChantStarter(starter);
+                        setAddDialogOpen(true);
+                      }}
+                      data-testid={`button-empty-chant-starter-${starter.label.toLowerCase().replace(/\s+/g, "-")}`}
+                    >
+                      Use {starter.label.toLowerCase()}
+                    </Button>
+                  ))}
+                </div>
+              )}
               {!isEnded && (
                 <Button variant="outline" onClick={() => setAddDialogOpen(true)} data-testid="button-empty-add-chant">
                   <Plus className="w-4 h-4 mr-1" />

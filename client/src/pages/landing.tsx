@@ -4,9 +4,11 @@ import { Accessibility, QrCode, Shield, Zap, Users, ArrowRight, Megaphone, Wifi 
 import { useAuth } from "@/lib/auth";
 import { Link } from "wouter";
 import { AppVersion } from "@/components/app-version";
+import { blogPosts } from "@shared/blog";
 
 export default function Landing() {
   const { isAuthenticated } = useAuth();
+  const latestPost = blogPosts[0];
 
   return (
     <div className="min-h-screen bg-background">
@@ -108,6 +110,21 @@ export default function Landing() {
                 </span>
               ))}
             </div>
+            {latestPost && (
+              <Card className="mt-8 text-left">
+                <CardContent className="p-5">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">Latest community guide</p>
+                  <h2 className="text-lg font-semibold mb-2">{latestPost.title}</h2>
+                  <p className="text-sm text-muted-foreground mb-4">{latestPost.description}</p>
+                  <Button variant="outline" asChild data-testid="link-latest-blog-post">
+                    <Link href={`/blog/${latestPost.slug}`}>
+                      Read the guide
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </section>
 

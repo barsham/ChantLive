@@ -4,6 +4,18 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.22 - 15 June 2026
+
+Faster participant sharing, clearer readiness actions, starter chants, waiting status, and blog discovery.
+
+### Improved
+
+- Direct participant link copy: Event editors now have a header action to copy the participant link without opening the QR dialog.
+- Readiness test actions: The pre-live readiness card now links directly to the participant page and QR instructions.
+- Empty event chant starters: Empty events now show starter chant buttons so organizers can create a first chant faster.
+- Participant waiting connection status: Participants waiting for an event to begin now see whether they are connected or offline.
+- Homepage latest guide: The homepage now promotes the latest community guide so new visitors can discover organizer education content.
+
 ## 1.1.21 - 14 June 2026
 
 Public blog section with the first organizer guide and weekly content workflow.
