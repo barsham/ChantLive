@@ -12,6 +12,13 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+const upcomingTopics = [
+  "Getting people to participate without confusion",
+  "Permit questions to ask before choosing a route",
+  "QR-code accessibility and link fallback planning",
+  "Safety roles for peaceful live events",
+];
+
 export default function Blog() {
   return (
     <div className="min-h-screen bg-background">
@@ -46,6 +53,24 @@ export default function Blog() {
             Weekly articles about participation, safety, permits, accessibility, communication, and using ChantLive
             during real gatherings.
           </p>
+        </section>
+
+        <section className="mb-8 rounded-xl border bg-muted/30 p-5" aria-labelledby="upcoming-blog-topics">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div>
+              <h2 id="upcoming-blog-topics" className="text-lg font-semibold mb-2">Upcoming weekly topics</h2>
+              <p className="text-sm text-muted-foreground">
+                The blog backlog focuses on practical organizer questions, not generic product updates.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 md:max-w-xl">
+              {upcomingTopics.map((topic) => (
+                <span key={topic} className="rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground">
+                  {topic}
+                </span>
+              ))}
+            </div>
+          </div>
         </section>
 
         <div className="grid gap-4">

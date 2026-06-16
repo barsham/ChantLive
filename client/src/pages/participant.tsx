@@ -319,6 +319,15 @@ export default function Participant() {
               You are offline. Reconnect before the demonstration starts so live chants can appear.
             </p>
           )}
+          <button
+            type="button"
+            onClick={retryConnection}
+            className="mt-5 inline-flex items-center gap-2 rounded-md border border-neutral-800 px-4 py-2 text-xs font-medium text-neutral-300 hover:bg-neutral-900"
+            data-testid="button-retry-waiting"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Refresh connection
+          </button>
         </div>
       </div>
     );

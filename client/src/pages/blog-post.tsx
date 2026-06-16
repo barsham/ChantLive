@@ -13,6 +13,10 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+function sectionId(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
   const post = getBlogPost(slug);
@@ -68,9 +72,26 @@ export default function BlogPost() {
             </Card>
           )}
 
+          <Card className="mb-8">
+            <CardContent className="p-4">
+              <h2 className="text-sm font-semibold mb-3">On this page</h2>
+              <div className="flex flex-wrap gap-2">
+                {post.sections.map((section) => (
+                  <a
+                    key={section.heading}
+                    href={`#${sectionId(section.heading)}`}
+                    className="rounded-full border bg-muted px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    {section.heading}
+                  </a>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="space-y-8">
             {post.sections.map((section) => (
-              <section key={section.heading}>
+              <section key={section.heading} id={sectionId(section.heading)} className="scroll-mt-24">
                 <h2 className="text-2xl font-semibold tracking-tight mb-3">{section.heading}</h2>
                 <div className="space-y-3 text-muted-foreground">
                   {section.paragraphs.map((paragraph) => (

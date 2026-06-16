@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.23",
+      "releasedAt": "2026-06-16",
+      "summary": "QR handout printing, chant creation preview, waiting retry, and blog navigation improvements.",
+      "items": [
+        {
+          "id": "cl-2026-06-16-print-qr-handout",
+          "title": "Print QR handout",
+          "description": "The participant QR dialog now includes a print action so organizers can produce a quick fallback handout.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-16",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-16-new-chant-preview",
+          "title": "New chant participant preview",
+          "description": "The add-chant dialog now previews how leader and response text will appear before organizers save it.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-16",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-16-waiting-refresh-action",
+          "title": "Participant waiting refresh action",
+          "description": "Participants waiting for an event to begin can now refresh their connection from the waiting screen.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-16",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-16-blog-topic-roadmap",
+          "title": "Blog topic roadmap",
+          "description": "The blog index now shows upcoming weekly guide topics so visitors understand what community content is coming next.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-16",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-16-blog-section-navigation",
+          "title": "Blog section navigation",
+          "description": "Blog posts now include an on-page section navigation card to help readers scan longer guides faster.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-16",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.22",
       "releasedAt": "2026-06-15",
       "summary": "Faster participant sharing, clearer readiness actions, starter chants, waiting status, and blog discovery.",

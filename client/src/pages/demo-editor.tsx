@@ -59,6 +59,7 @@ import {
   CheckCircle2,
   ClipboardCheck,
   Smartphone,
+  Printer,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -700,6 +701,15 @@ export default function DemoEditor() {
                       Open participant page
                     </a>
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.print()}
+                    data-testid="button-print-participant-handout"
+                  >
+                    <Printer className="w-4 h-4 mr-1" />
+                    Print QR handout
+                  </Button>
                 </div>
               </DialogContent>
             </Dialog>
@@ -1074,6 +1084,20 @@ export default function DemoEditor() {
                       rows={2}
                       data-testid="input-response-text"
                     />
+                  </div>
+                  <div className="rounded-lg border bg-muted/30 p-3" data-testid="text-new-chant-preview">
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Participant preview</p>
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold text-orange-600">
+                        Leader: {newCallText.trim() || "Your call text appears here"}
+                      </p>
+                      <p className="text-sm font-semibold text-sky-600">
+                        Everyone: {newResponseText.trim() || "Your response text appears here"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {newChantCycles} cycle{newChantCycles === 1 ? "" : "s"} - leader {newChantLeaderDuration}s, people {newChantPeopleDuration}s
+                      </p>
+                    </div>
                   </div>
                   <div className="space-y-3 md:grid md:grid-cols-3 md:gap-3">
                     <div className="space-y-2">
