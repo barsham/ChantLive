@@ -314,6 +314,14 @@ export default function Participant() {
           >
             {isOffline ? "Offline - reconnect to receive chants" : "Connected and waiting for the organizer"}
           </p>
+          <div className="mt-5 rounded-lg border border-neutral-800 bg-neutral-950/70 p-4 text-left text-sm text-neutral-400" data-testid="text-waiting-tips">
+            <p className="font-medium text-neutral-300 mb-2">While you wait</p>
+            <ul className="space-y-1">
+              <li>Keep this page open.</li>
+              <li>Stay near the organizer or speaker if you need audio cues.</li>
+              <li>If the page stops updating, use refresh connection.</li>
+            </ul>
+          </div>
           {isOffline && (
             <p className="text-red-300 text-sm mt-4 max-w-xs mx-auto" role="status" data-testid="text-waiting-offline">
               You are offline. Reconnect before the demonstration starts so live chants can appear.

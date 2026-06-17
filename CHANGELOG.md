@@ -4,17 +4,17 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
-## 1.1.23 - 16 June 2026
+## 1.1.24 - 17 June 2026
 
-QR handout printing, chant creation preview, waiting retry, and blog navigation improvements.
+Participant sharing, QR handout guidance, live next-up context, waiting tips, and blog topic suggestions.
 
 ### Improved
 
-- Print QR handout: The participant QR dialog now includes a print action so organizers can produce a quick fallback handout.
-- New chant participant preview: The add-chant dialog now previews how leader and response text will appear before organizers save it.
-- Participant waiting refresh action: Participants waiting for an event to begin can now refresh their connection from the waiting screen.
-- Blog topic roadmap: The blog index now shows upcoming weekly guide topics so visitors understand what community content is coming next.
-- Blog section navigation: Blog posts now include an on-page section navigation card to help readers scan longer guides faster.
+- Share participant link: Event editors now include a Share Link action that uses native device sharing when available and falls back to copying.
+- QR handout checklist: The QR dialog now includes a short handout checklist so organizers know what to include when printing fallback materials.
+- Live next-up context: The live control summary now shows what comes next for the active chant phase.
+- Participant waiting tips: Participants waiting for an event to begin now see simple guidance for staying ready and recovering if updates stop.
+- Blog topic suggestions: The blog index now links to a GitHub issue form so community members can suggest future guide topics.
 
 ## 1.1.22 - 15 June 2026
 

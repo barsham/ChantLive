@@ -60,6 +60,7 @@ import {
   ClipboardCheck,
   Smartphone,
   Printer,
+  Share2,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -527,6 +528,25 @@ export default function DemoEditor() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const shareParticipantLink = async () => {
+    if (!publicUrl) return;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: demo?.title ?? "ChantLive demonstration",
+          text: "Join the live ChantLive participant page.",
+          url: publicUrl,
+        });
+        return;
+      } catch {
+        // Fall back to copying if sharing is canceled or unavailable.
+      }
+    }
+
+    copyUrl();
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -648,6 +668,16 @@ export default function DemoEditor() {
               {copied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
               {copied ? "Copied" : "Copy Link"}
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={shareParticipantLink}
+              disabled={!publicUrl}
+              data-testid="button-share-participant-link"
+            >
+              <Share2 className="w-4 h-4 mr-1" />
+              Share Link
+            </Button>
             <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" data-testid="button-qr">
@@ -695,6 +725,10 @@ export default function DemoEditor() {
                     If the QR code is hard to scan in the crowd, copy this participant link and share it by message,
                     projector, or printed fallback.
                   </p>
+                  <div className="w-full rounded-lg border bg-card p-3 text-xs text-muted-foreground" data-testid="text-qr-handout-preview">
+                    <p className="font-medium text-foreground mb-1">Handout checklist</p>
+                    <p>Print the QR code with the event name, participant link, and one sentence: scan or open the link, then keep the page open.</p>
+                  </div>
                   <Button variant="outline" size="sm" asChild>
                     <a href={publicUrl} target="_blank" rel="noopener noreferrer" data-testid="link-open-public">
                       <ExternalLink className="w-4 h-4 mr-1" />
@@ -813,6 +847,11 @@ export default function DemoEditor() {
                             ? `${currentPhase === "leader" ? "Leader call" : "Everyone response"} is active on chant ${chantsList.findIndex((chant) => chant.id === currentChant.id) + 1} of ${chantsList.length}.`
                             : "No chant is currently pushed live."}
                         </p>
+                        {currentChant && (
+                          <p className="mt-1 text-xs text-muted-foreground" data-testid="text-live-next-up">
+                            Next up: {currentPhase === "leader" ? currentChant.responseText || "everyone response" : "next leader call"}
+                          </p>
+                        )}
                       </div>
                       <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                         <span className="inline-flex items-center gap-1 rounded-full border bg-background px-2.5 py-1">

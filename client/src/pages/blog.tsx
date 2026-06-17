@@ -62,6 +62,15 @@ export default function Blog() {
               <p className="text-sm text-muted-foreground">
                 The blog backlog focuses on practical organizer questions, not generic product updates.
               </p>
+              <Button variant="outline" size="sm" className="mt-4" asChild data-testid="link-suggest-blog-topic">
+                <a
+                  href="https://github.com/barsham/ChantLive/issues/new?title=Blog%20topic%20suggestion%3A%20&labels=blog"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Suggest a topic
+                </a>
+              </Button>
             </div>
             <div className="flex flex-wrap gap-2 md:max-w-xl">
               {upcomingTopics.map((topic) => (

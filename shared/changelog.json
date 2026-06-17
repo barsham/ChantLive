@@ -1,53 +1,53 @@
 {
   "releases": [
     {
-      "version": "1.1.23",
-      "releasedAt": "2026-06-16",
-      "summary": "QR handout printing, chant creation preview, waiting retry, and blog navigation improvements.",
+      "version": "1.1.24",
+      "releasedAt": "2026-06-17",
+      "summary": "Participant sharing, QR handout guidance, live next-up context, waiting tips, and blog topic suggestions.",
       "items": [
         {
-          "id": "cl-2026-06-16-print-qr-handout",
-          "title": "Print QR handout",
-          "description": "The participant QR dialog now includes a print action so organizers can produce a quick fallback handout.",
+          "id": "cl-2026-06-17-share-participant-link",
+          "title": "Share participant link",
+          "description": "Event editors now include a Share Link action that uses native device sharing when available and falls back to copying.",
           "type": "improvement",
           "visibility": "public",
-          "dateAdded": "2026-06-16",
+          "dateAdded": "2026-06-17",
           "links": []
         },
         {
-          "id": "cl-2026-06-16-new-chant-preview",
-          "title": "New chant participant preview",
-          "description": "The add-chant dialog now previews how leader and response text will appear before organizers save it.",
+          "id": "cl-2026-06-17-qr-handout-checklist",
+          "title": "QR handout checklist",
+          "description": "The QR dialog now includes a short handout checklist so organizers know what to include when printing fallback materials.",
           "type": "improvement",
           "visibility": "public",
-          "dateAdded": "2026-06-16",
+          "dateAdded": "2026-06-17",
           "links": []
         },
         {
-          "id": "cl-2026-06-16-waiting-refresh-action",
-          "title": "Participant waiting refresh action",
-          "description": "Participants waiting for an event to begin can now refresh their connection from the waiting screen.",
+          "id": "cl-2026-06-17-live-next-up-context",
+          "title": "Live next-up context",
+          "description": "The live control summary now shows what comes next for the active chant phase.",
           "type": "improvement",
           "visibility": "public",
-          "dateAdded": "2026-06-16",
+          "dateAdded": "2026-06-17",
           "links": []
         },
         {
-          "id": "cl-2026-06-16-blog-topic-roadmap",
-          "title": "Blog topic roadmap",
-          "description": "The blog index now shows upcoming weekly guide topics so visitors understand what community content is coming next.",
+          "id": "cl-2026-06-17-participant-waiting-tips",
+          "title": "Participant waiting tips",
+          "description": "Participants waiting for an event to begin now see simple guidance for staying ready and recovering if updates stop.",
           "type": "improvement",
           "visibility": "public",
-          "dateAdded": "2026-06-16",
+          "dateAdded": "2026-06-17",
           "links": []
         },
         {
-          "id": "cl-2026-06-16-blog-section-navigation",
-          "title": "Blog section navigation",
-          "description": "Blog posts now include an on-page section navigation card to help readers scan longer guides faster.",
+          "id": "cl-2026-06-17-blog-topic-suggestions",
+          "title": "Blog topic suggestions",
+          "description": "The blog index now links to a GitHub issue form so community members can suggest future guide topics.",
           "type": "improvement",
           "visibility": "public",
-          "dateAdded": "2026-06-16",
+          "dateAdded": "2026-06-17",
           "links": []
         }
       ]
