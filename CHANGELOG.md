@@ -4,6 +4,18 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.25 - 19 June 2026
+
+Dashboard onboarding, richer event templates, printable QR handouts, and participant end-state guidance.
+
+### Improved
+
+- Dashboard quick start: The admin dashboard now shows a quick-start card that explains the live-event setup flow and opens the create dialog.
+- More event title starters: The create-demonstration dialog now includes more common gathering types such as vigils, prayers, walkouts, and rallies.
+- Printable QR handout: The QR dialog now contains a handout-style block with event title, QR code, participant link, and keep-open instructions.
+- QR handout print styles: Printing from the QR dialog now focuses the printout on the QR handout instead of the surrounding admin interface.
+- Participant ended next step: Participants now see a short next-step message when a demonstration ends.
+
 ## 1.1.24 - 17 June 2026
 
 Participant sharing, QR handout guidance, live next-up context, waiting tips, and blog topic suggestions.

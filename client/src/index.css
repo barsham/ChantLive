@@ -297,3 +297,26 @@
     inset: -1px;
   }
 }
+
+@media print {
+  body.printing-qr-handout * {
+    visibility: hidden;
+  }
+
+  body.printing-qr-handout .qr-print-handout,
+  body.printing-qr-handout .qr-print-handout * {
+    visibility: visible;
+  }
+
+  body.printing-qr-handout .qr-print-handout {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    width: 100%;
+    max-width: 720px;
+    height: fit-content;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 48px !important;
+  }
+}

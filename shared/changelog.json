@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.25",
+      "releasedAt": "2026-06-19",
+      "summary": "Dashboard onboarding, richer event templates, printable QR handouts, and participant end-state guidance.",
+      "items": [
+        {
+          "id": "cl-2026-06-19-dashboard-quick-start",
+          "title": "Dashboard quick start",
+          "description": "The admin dashboard now shows a quick-start card that explains the live-event setup flow and opens the create dialog.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-19",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-19-event-title-starters",
+          "title": "More event title starters",
+          "description": "The create-demonstration dialog now includes more common gathering types such as vigils, prayers, walkouts, and rallies.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-19",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-19-printable-qr-handout",
+          "title": "Printable QR handout",
+          "description": "The QR dialog now contains a handout-style block with event title, QR code, participant link, and keep-open instructions.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-19",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-19-qr-print-styles",
+          "title": "QR handout print styles",
+          "description": "Printing from the QR dialog now focuses the printout on the QR handout instead of the surrounding admin interface.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-19",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-19-participant-ended-next-step",
+          "title": "Participant ended next step",
+          "description": "Participants now see a short next-step message when a demonstration ends.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-19",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.24",
       "releasedAt": "2026-06-17",
       "summary": "Participant sharing, QR handout guidance, live next-up context, waiting tips, and blog topic suggestions.",

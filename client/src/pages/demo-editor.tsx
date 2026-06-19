@@ -547,6 +547,12 @@ export default function DemoEditor() {
     copyUrl();
   };
 
+  const printQrHandout = () => {
+    document.body.classList.add("printing-qr-handout");
+    window.print();
+    setTimeout(() => document.body.classList.remove("printing-qr-handout"), 500);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -690,11 +696,17 @@ export default function DemoEditor() {
                   <DialogTitle>Participant QR Code</DialogTitle>
                 </DialogHeader>
                 <div className="flex flex-col items-center gap-4 py-4">
-                  {qrDataUrl ? (
-                    <img src={qrDataUrl} alt={`QR code for joining ${demo.title}`} className="w-64 h-64" data-testid="img-qr" />
-                  ) : (
-                    <Skeleton className="w-64 h-64" />
-                  )}
+                  <div className="qr-print-handout flex w-full flex-col items-center gap-3 rounded-xl border bg-background p-4 text-center">
+                    <p className="text-lg font-semibold text-foreground">{demo.title}</p>
+                    <p className="text-sm text-muted-foreground">Scan or open the link to follow the live chants.</p>
+                    {qrDataUrl ? (
+                      <img src={qrDataUrl} alt={`QR code for joining ${demo.title}`} className="w-64 h-64" data-testid="img-qr" />
+                    ) : (
+                      <Skeleton className="w-64 h-64" />
+                    )}
+                    <p className="break-all text-xs text-muted-foreground">{publicUrl}</p>
+                    <p className="text-xs text-muted-foreground">Keep this page open during the event.</p>
+                  </div>
                   <div className="w-full rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
                     <p className="font-medium text-foreground mb-1">Participant instructions</p>
                     <p>Open your camera, scan the QR code, then keep the chant page open during the event.</p>
@@ -738,7 +750,7 @@ export default function DemoEditor() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => window.print()}
+                    onClick={printQrHandout}
                     data-testid="button-print-participant-handout"
                   >
                     <Printer className="w-4 h-4 mr-1" />

@@ -285,6 +285,9 @@ export default function Participant() {
             This demonstration has ended
           </p>
           <p className="text-neutral-500 text-sm">{chantData.demoTitle}</p>
+          <p className="text-neutral-500 text-sm mt-4 max-w-xs mx-auto" data-testid="text-ended-next-step">
+            Thanks for joining. You can close this page or ask an organizer for the next participant link.
+          </p>
         </div>
       </div>
     );

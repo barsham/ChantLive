@@ -43,6 +43,10 @@ const titleTemplates = [
   "Prayer Circle",
   "Campus Action",
   "March Support",
+  "Candlelight Vigil",
+  "Community Prayer",
+  "Student Walkout",
+  "Solidarity Rally",
 ];
 
 const statusFilters = ["all", "live", "draft", "ended"] as const;
@@ -326,6 +330,23 @@ export default function AdminDashboard() {
             </Dialog>
           </div>
         </div>
+
+        <Card className="mb-6 border-primary/20 bg-primary/5" data-testid="card-dashboard-quick-start">
+          <CardContent className="py-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-sm font-medium">Quick start for a live event</p>
+                <p className="text-xs text-muted-foreground">
+                  Create a demonstration, add chants, test the participant page on a phone, then share the QR code before going live.
+                </p>
+              </div>
+              <Button size="sm" onClick={() => setDialogOpen(true)} data-testid="button-quick-start-create">
+                <Plus className="w-3.5 h-3.5 mr-1" />
+                Start a demonstration
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {!isLoading && demos && demos.length > 0 && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6" aria-label="Demonstration status summary">
