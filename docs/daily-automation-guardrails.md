@@ -24,6 +24,7 @@ Only report "ready to deploy" when all of these are true:
 - `shared/changelog.json` contains a release entry for `$RUN_DATE`.
 - The run includes 5 customer-facing improvements, not just maintenance.
 - At least 2 of those 5 improvements are substantial product features that could materially change how organizers or participants use ChantLive.
+- The combined release impact is scored at least 8.0 out of 10 before implementation and again after verification.
 - At least 1 substantial feature improves the organizer/admin workflow.
 - At least 1 substantial feature improves participant experience, reliability, accessibility, or onboarding.
 - The remaining improvements may be smaller polish, but they must support the larger customer value of the run.
@@ -62,6 +63,20 @@ Examples that do not count as substantial features by themselves:
 - Refactoring code without visible customer value.
 
 If 2 substantial features cannot be implemented safely in one run, do not pad the run with small changes. Instead, report that the run was intentionally not pushed and list the larger feature candidates that need more design or implementation time.
+
+## Impact Score Gate
+
+Every run must score the planned release from 1 to 10 before coding. If the planned release is below 8.0, choose a more meaningful feature set or stop without pushing. Re-score the completed release after checks pass and before committing. If the completed release is below 8.0, do not push it to `main`.
+
+Use this rubric:
+
+- `10`: Breakthrough product capability that could anchor a launch announcement or materially reposition ChantLive.
+- `9`: Major workflow innovation that changes how organizers or participants run a real event.
+- `8`: Strong release with at least 2 complete, visible, high-value features and clear real-world event-day value.
+- `6-7`: Useful workflow improvements, but not enough for a scheduled daily push under the current standard.
+- `1-5`: Polish, maintenance, copy, refactoring, documentation, or narrow helper features.
+
+An 8+ release should usually include at least one feature that creates a new end-to-end workflow, such as event planning, live-event recovery, multilingual participation, safety coordination, role handoff, template-driven setup, participant feedback, or post-event reporting. If the run cannot safely reach 8+, report the best candidate ideas and ask Barsham to prioritize rather than shipping filler.
 
 ## No-Commit Reporting
 
