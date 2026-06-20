@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.26 - 20 June 2026
+
+Participant handout page, sharing tools, editor handout shortcuts, and participant accessibility display controls.
+
+### Added
+
+- Participant handout page: Admins can open a dedicated printable participant handout with the event title, QR code, fallback link, and joining instructions.
+- Participant large text mode: Participants can enable a persistent large-text display mode from the live screen.
+- Participant high contrast mode: Participants can enable a persistent high-contrast display mode for live chant text and progress bars.
+
+### Improved
+
+- Handout sharing tools: The handout page includes copy, native share, print, and open-participant-page actions for faster event-day distribution.
+- Editor handout links: The event editor now links to the full handout page from readiness actions and the QR dialog.
+
 ## 1.1.25 - 19 June 2026
 
 Dashboard onboarding, richer event templates, printable QR handouts, and participant end-state guidance.

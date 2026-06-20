@@ -756,6 +756,10 @@ export default function DemoEditor() {
                     <Printer className="w-4 h-4 mr-1" />
                     Print QR handout
                   </Button>
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/handout`)} data-testid="button-open-full-handout">
+                    <ExternalLink className="w-4 h-4 mr-1" />
+                    Full handout page
+                  </Button>
                 </div>
               </DialogContent>
             </Dialog>
@@ -826,6 +830,10 @@ export default function DemoEditor() {
                           <ExternalLink className="w-3.5 h-3.5 mr-1" />
                           Test participant page
                         </a>
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/handout`)} data-testid="button-open-handout-page">
+                        <Printer className="w-3.5 h-3.5 mr-1" />
+                        Open handout page
                       </Button>
                       <Button variant="outline" size="sm" onClick={() => setQrDialogOpen(true)} data-testid="button-readiness-open-qr">
                         <QrCode className="w-3.5 h-3.5 mr-1" />

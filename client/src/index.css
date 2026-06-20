@@ -299,6 +299,16 @@
 }
 
 @media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-handout-page {
+    border: 0 !important;
+    box-shadow: none !important;
+    max-width: 100% !important;
+  }
+
   body.printing-qr-handout * {
     visibility: hidden;
   }

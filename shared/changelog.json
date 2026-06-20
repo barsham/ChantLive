@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.26",
+      "releasedAt": "2026-06-20",
+      "summary": "Participant handout page, sharing tools, editor handout shortcuts, and participant accessibility display controls.",
+      "items": [
+        {
+          "id": "cl-2026-06-20-participant-handout-page",
+          "title": "Participant handout page",
+          "description": "Admins can open a dedicated printable participant handout with the event title, QR code, fallback link, and joining instructions.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-20",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-20-handout-share-tools",
+          "title": "Handout sharing tools",
+          "description": "The handout page includes copy, native share, print, and open-participant-page actions for faster event-day distribution.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-20",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-20-editor-handout-links",
+          "title": "Editor handout links",
+          "description": "The event editor now links to the full handout page from readiness actions and the QR dialog.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-20",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-20-participant-large-text",
+          "title": "Participant large text mode",
+          "description": "Participants can enable a persistent large-text display mode from the live screen.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-20",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-20-participant-high-contrast",
+          "title": "Participant high contrast mode",
+          "description": "Participants can enable a persistent high-contrast display mode for live chant text and progress bars.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-20",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.25",
       "releasedAt": "2026-06-19",
       "summary": "Dashboard onboarding, richer event templates, printable QR handouts, and participant end-state guidance.",

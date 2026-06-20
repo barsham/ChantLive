@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "wouter";
 import { getSocket } from "@/lib/socket";
-import { Users, Megaphone, RefreshCw } from "lucide-react";
+import { Eye, Type, Users, Megaphone, RefreshCw } from "lucide-react";
 
 type ChantData = {
   callText: string | null;
@@ -52,6 +52,8 @@ export default function Participant() {
   const [fadeIn, setFadeIn] = useState(false);
   const [phaseProgress, setPhaseProgress] = useState(0);
   const [isOffline, setIsOffline] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
+  const [largeText, setLargeText] = useState(() => localStorage.getItem("chant_large_text") === "true");
+  const [highContrast, setHighContrast] = useState(() => localStorage.getItem("chant_high_contrast") === "true");
   const localPhaseStartRef = useRef(Date.now());
 
   useEffect(() => {
@@ -145,10 +147,23 @@ export default function Participant() {
       className: "border-orange-500/40 bg-orange-500/10 text-orange-200",
     };
   const chantAnnouncement = getChantAnnouncement(chantData);
+  const callColor = highContrast ? "#fde047" : "#f97316";
+  const responseColor = highContrast ? "#ffffff" : "#38bdf8";
+  const chantFontSize = largeText
+    ? "clamp(2.35rem, 10vw, 6.5rem)"
+    : "clamp(1.75rem, 7vw, 4.5rem)";
   const retryConnection = () => {
     setError(null);
     window.location.reload();
   };
+
+  useEffect(() => {
+    localStorage.setItem("chant_large_text", String(largeText));
+  }, [largeText]);
+
+  useEffect(() => {
+    localStorage.setItem("chant_high_contrast", String(highContrast));
+  }, [highContrast]);
 
   useEffect(() => {
     if (!chantData) {
@@ -207,7 +222,11 @@ export default function Participant() {
       return null;
     }
 
-    const barColor = phase === "leader" ? "bg-emerald-400" : "bg-fuchsia-400";
+    const barColor = highContrast
+      ? "bg-white"
+      : phase === "leader"
+        ? "bg-emerald-400"
+        : "bg-fuchsia-400";
 
     return (
       <div
@@ -378,9 +397,9 @@ export default function Participant() {
                   <h1
                     className="font-bold leading-tight break-words"
                     style={{
-                      fontSize: "clamp(1.75rem, 7vw, 4.5rem)",
+                      fontSize: chantFontSize,
                       lineHeight: 1.15,
-                      color: "#f97316",
+                      color: callColor,
                     }}
                   >
                     {chantData.callText}
@@ -394,9 +413,9 @@ export default function Participant() {
                   <h1
                     className="font-bold leading-tight break-words"
                     style={{
-                      fontSize: "clamp(1.75rem, 7vw, 4.5rem)",
+                      fontSize: chantFontSize,
                       lineHeight: 1.15,
-                      color: "#38bdf8",
+                      color: responseColor,
                     }}
                   >
                     {chantData.responseText}
@@ -441,6 +460,30 @@ export default function Participant() {
       </div>
 
       <footer className="px-4 py-3 flex flex-wrap items-center justify-center gap-3 border-t border-neutral-800">
+        <button
+          type="button"
+          onClick={() => setLargeText((value) => !value)}
+          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
+            largeText ? "border-white/60 bg-white/15 text-white" : "border-neutral-700 text-neutral-300"
+          }`}
+          aria-pressed={largeText}
+          data-testid="button-toggle-large-text"
+        >
+          <Type className="h-3.5 w-3.5" />
+          {largeText ? "Large text on" : "Large text"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setHighContrast((value) => !value)}
+          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
+            highContrast ? "border-yellow-300/80 bg-yellow-300/15 text-yellow-100" : "border-neutral-700 text-neutral-300"
+          }`}
+          aria-pressed={highContrast}
+          data-testid="button-toggle-high-contrast"
+        >
+          <Eye className="h-3.5 w-3.5" />
+          {highContrast ? "High contrast on" : "High contrast"}
+        </button>
         <span className="inline-flex items-center gap-2">
           <Users className="w-4 h-4 text-neutral-500" />
           <span className="text-neutral-400 text-sm font-mono" data-testid="text-viewer-count">

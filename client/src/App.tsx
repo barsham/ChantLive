@@ -13,6 +13,7 @@ import Changelog from "@/pages/changelog";
 import ForOrganizers from "@/pages/for-organizers";
 import AdminDashboard from "@/pages/admin-dashboard";
 import DemoEditor from "@/pages/demo-editor";
+import ParticipantHandout from "@/pages/participant-handout";
 import AdminUsers from "@/pages/admin-users";
 import Participant from "@/pages/participant";
 import Login from "@/pages/login";
@@ -57,6 +58,9 @@ function Router() {
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/admin">
         {() => <ProtectedRoute component={AdminDashboard} />}
+      </Route>
+      <Route path="/admin/demos/:id/handout">
+        {() => <ProtectedRoute component={ParticipantHandout} />}
       </Route>
       <Route path="/admin/demos/:id">
         {() => <ProtectedRoute component={DemoEditor} />}
