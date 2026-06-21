@@ -15,11 +15,26 @@ git status --short
 
 If `git status --short` is not clean after syncing `main`, stop and report the dirty tree instead of editing.
 
+## GitHub Triage Gate
+
+Before choosing product improvements, check GitHub for repository health issues in `barsham/ChantLive`.
+
+Required daily triage:
+
+- Review open GitHub Issues, prioritizing labels or titles that indicate `bug`, `regression`, `security`, `accessibility`, `deploy`, `build`, or `production`.
+- Review recent GitHub Actions workflow runs for failures. If a run failed, inspect the failing job logs before selecting feature work.
+- Treat production bugs, failing CI, deployment blockers, security issues, and data-loss risks as higher priority than new product features.
+- If a bug or failed workflow can be fixed safely in the daily run, fix it first, run verification, update release notes if user-facing, and push only if checks pass.
+- If a bug or failed workflow is unclear or risky, do not guess. Report the issue number or workflow run, the observed failure, and the recommended next step.
+
+Use the GitHub connector for issue and repository metadata when available. Use local `gh` commands only for gaps the connector does not cover well, especially GitHub Actions run discovery and detailed log inspection.
+
 ## Success Requirements
 
 Only report "ready to deploy" when all of these are true:
 
 - `git rev-parse HEAD` differs from `$START_HEAD`.
+- GitHub open issues and recent workflow failures were reviewed before feature selection.
 - `package.json` version is greater than `$START_VERSION`.
 - `shared/changelog.json` contains a release entry for `$RUN_DATE`.
 - The run includes 5 customer-facing improvements, not just maintenance.
