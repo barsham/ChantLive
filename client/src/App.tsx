@@ -14,6 +14,7 @@ import ForOrganizers from "@/pages/for-organizers";
 import AdminDashboard from "@/pages/admin-dashboard";
 import DemoEditor from "@/pages/demo-editor";
 import ParticipantHandout from "@/pages/participant-handout";
+import EventPlan from "@/pages/event-plan";
 import AdminUsers from "@/pages/admin-users";
 import Participant from "@/pages/participant";
 import Login from "@/pages/login";
@@ -61,6 +62,9 @@ function Router() {
       </Route>
       <Route path="/admin/demos/:id/handout">
         {() => <ProtectedRoute component={ParticipantHandout} />}
+      </Route>
+      <Route path="/admin/demos/:id/plan">
+        {() => <ProtectedRoute component={EventPlan} />}
       </Route>
       <Route path="/admin/demos/:id">
         {() => <ProtectedRoute component={DemoEditor} />}

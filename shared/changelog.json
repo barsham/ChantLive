@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.27",
+      "releasedAt": "2026-06-21",
+      "summary": "Event-day runbooks, organiser planning shortcuts, chant runtime estimates, dashboard plan access, and participant help guidance.",
+      "items": [
+        {
+          "id": "cl-2026-06-21-event-day-runbook",
+          "title": "Event-day runbook",
+          "description": "Admins can open a generated event plan covering permits, accessibility, safety, participant joining, admin roles, and live controls.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-21",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-21-runbook-share-print",
+          "title": "Runbook copy and print tools",
+          "description": "The event plan can be copied as a plain-text command sheet or printed for event-day volunteers.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-21",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-21-editor-plan-shortcuts",
+          "title": "Editor planning shortcuts",
+          "description": "The event editor now surfaces the event-day plan with chant runtime estimates and readiness actions.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-21",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-21-dashboard-plan-access",
+          "title": "Dashboard plan access",
+          "description": "Organizers can open an event plan directly from each demonstration card on the admin dashboard.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-21",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-21-participant-help-panel",
+          "title": "Participant help panel",
+          "description": "Participants can open in-session guidance for reconnecting, improving visibility, and following local safety instructions.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-21",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.26",
       "releasedAt": "2026-06-20",
       "summary": "Participant handout page, sharing tools, editor handout shortcuts, and participant accessibility display controls.",

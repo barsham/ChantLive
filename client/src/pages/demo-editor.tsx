@@ -58,6 +58,7 @@ import {
   X,
   CheckCircle2,
   ClipboardCheck,
+  ClipboardList,
   Smartphone,
   Printer,
   Share2,
@@ -173,6 +174,17 @@ export default function DemoEditor() {
     },
   ];
   const readyCount = readinessItems.filter((item) => item.ready).length;
+  const totalChantSeconds = chantsList.reduce((total, chant, index) => {
+    const cycles = Math.max(1, chant.cycles ?? 1);
+    const chantSeconds = cycles * ((chant.leaderDuration ?? 4) + (chant.peopleDuration ?? 3));
+    const delaySeconds = index > 0 ? cycleDelay / 1000 : 0;
+    return total + chantSeconds + delaySeconds;
+  }, 0);
+  const chantRuntimeMinutes = Math.floor(totalChantSeconds / 60);
+  const chantRuntimeSeconds = Math.round(totalChantSeconds % 60);
+  const formattedChantRuntime = chantRuntimeMinutes > 0
+    ? `${chantRuntimeMinutes}m${chantRuntimeSeconds > 0 ? ` ${chantRuntimeSeconds}s` : ""}`
+    : `${chantRuntimeSeconds}s`;
 
   useEffect(() => {
     if (!state) return;
@@ -835,6 +847,10 @@ export default function DemoEditor() {
                         <Printer className="w-3.5 h-3.5 mr-1" />
                         Open handout page
                       </Button>
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/plan`)} data-testid="button-open-event-plan">
+                        <ClipboardList className="w-3.5 h-3.5 mr-1" />
+                        Event-day plan
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => setQrDialogOpen(true)} data-testid="button-readiness-open-qr">
                         <QrCode className="w-3.5 h-3.5 mr-1" />
                         Show QR instructions
@@ -854,6 +870,26 @@ export default function DemoEditor() {
           <Card className="mb-6">
             <CardContent className="py-4">
               <div className="space-y-4">
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3" data-testid="card-event-day-plan-summary">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="flex items-center gap-2 text-sm font-medium">
+                        <ClipboardList className="h-4 w-4 text-primary" />
+                        Event-day plan
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Generated runbook for permits, accessibility, safety, participant joining, admins, and live controls.
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground" data-testid="text-chant-runtime-summary">
+                        Current chant runtime estimate: {chantsList.length > 0 ? formattedChantRuntime : "add chants to calculate runtime"}.
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/plan`)} data-testid="button-open-plan-summary">
+                      <ClipboardList className="w-3.5 h-3.5 mr-1" />
+                      Open runbook
+                    </Button>
+                  </div>
+                </div>
                 {isLive && (
                   <div className="rounded-lg border bg-muted/30 p-3" data-testid="text-live-control-summary">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

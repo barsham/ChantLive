@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "wouter";
 import { getSocket } from "@/lib/socket";
-import { Eye, Type, Users, Megaphone, RefreshCw } from "lucide-react";
+import { Eye, HelpCircle, ShieldCheck, Type, Users, Megaphone, RefreshCw } from "lucide-react";
 
 type ChantData = {
   callText: string | null;
@@ -54,6 +54,7 @@ export default function Participant() {
   const [isOffline, setIsOffline] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
   const [largeText, setLargeText] = useState(() => localStorage.getItem("chant_large_text") === "true");
   const [highContrast, setHighContrast] = useState(() => localStorage.getItem("chant_high_contrast") === "true");
+  const [showHelp, setShowHelp] = useState(false);
   const localPhaseStartRef = useRef(Date.now());
 
   useEffect(() => {
@@ -459,7 +460,60 @@ export default function Participant() {
         </div>
       </div>
 
+      {showHelp && (
+        <section
+          className="mx-4 mb-3 rounded-2xl border border-neutral-700 bg-neutral-950 p-4 text-sm text-neutral-300 shadow-2xl"
+          aria-label="Participant help and safety panel"
+          data-testid="panel-participant-help"
+        >
+          <div className="mx-auto grid max-w-5xl gap-4 md:grid-cols-3">
+            <div>
+              <p className="mb-1 flex items-center gap-2 font-semibold text-white">
+                <HelpCircle className="h-4 w-4" />
+                If the page stops updating
+              </p>
+              <p className="text-neutral-400">Stay on this page. If the status says reconnecting for more than a few seconds, use refresh connection.</p>
+              <button
+                type="button"
+                onClick={retryConnection}
+                className="mt-3 inline-flex items-center gap-2 rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-900"
+                data-testid="button-help-refresh-connection"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Refresh connection
+              </button>
+            </div>
+            <div>
+              <p className="mb-1 flex items-center gap-2 font-semibold text-white">
+                <Eye className="h-4 w-4" />
+                If visibility is difficult
+              </p>
+              <p className="text-neutral-400">Turn on large text or high contrast below. Move closer to the organiser if you need audio cues.</p>
+            </div>
+            <div>
+              <p className="mb-1 flex items-center gap-2 font-semibold text-white">
+                <ShieldCheck className="h-4 w-4" />
+                If plans change
+              </p>
+              <p className="text-neutral-400">Follow organiser instructions first. ChantLive shows chant timing, but local safety directions take priority.</p>
+            </div>
+          </div>
+        </section>
+      )}
+
       <footer className="px-4 py-3 flex flex-wrap items-center justify-center gap-3 border-t border-neutral-800">
+        <button
+          type="button"
+          onClick={() => setShowHelp((value) => !value)}
+          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
+            showHelp ? "border-emerald-300/80 bg-emerald-300/15 text-emerald-100" : "border-neutral-700 text-neutral-300"
+          }`}
+          aria-expanded={showHelp}
+          data-testid="button-toggle-participant-help"
+        >
+          <HelpCircle className="h-3.5 w-3.5" />
+          {showHelp ? "Help open" : "Help"}
+        </button>
         <button
           type="button"
           onClick={() => setLargeText((value) => !value)}

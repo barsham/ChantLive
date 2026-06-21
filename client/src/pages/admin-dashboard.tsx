@@ -30,7 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload, Search, X } from "lucide-react";
+import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload, Search, X, ClipboardList } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppVersion } from "@/components/app-version";
@@ -480,6 +480,10 @@ export default function AdminDashboard() {
                     <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/demos/${demo.id}`); }} data-testid={`button-edit-demo-${demo.id}`}>
                       <Eye className="w-3.5 h-3.5 mr-1" />
                       {demo.status === "live" ? "Control" : "Edit"}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/demos/${demo.id}/plan`); }} data-testid={`button-plan-demo-${demo.id}`}>
+                      <ClipboardList className="w-3.5 h-3.5 mr-1" />
+                      Plan
                     </Button>
                     <Button variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700" onClick={(e) => { e.stopPropagation(); setDeleteTarget(demo); }} data-testid={`button-delete-demo-${demo.id}`}>
                       <Trash2 className="w-3.5 h-3.5 mr-1" />
