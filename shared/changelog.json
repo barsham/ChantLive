@@ -1,6 +1,22 @@
 {
   "releases": [
     {
+      "version": "1.1.28",
+      "releasedAt": "2026-06-21",
+      "summary": "Accessible QR-code joining guidance for peaceful events and community participation.",
+      "items": [
+        {
+          "id": "cl-2026-06-21-accessible-qr-joining-guide",
+          "title": "Accessible QR joining guide",
+          "description": "The public blog now includes a practical guide for making participant QR-code joining more accessible and reliable at peaceful events.",
+          "type": "docs",
+          "visibility": "public",
+          "dateAdded": "2026-06-21",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.27",
       "releasedAt": "2026-06-21",
       "summary": "Event-day runbooks, organiser planning shortcuts, chant runtime estimates, dashboard plan access, and participant help guidance.",

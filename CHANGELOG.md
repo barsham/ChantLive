@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.28 - 21 June 2026
+
+Accessible QR-code joining guidance for peaceful events and community participation.
+
+### Documentation
+
+- Accessible QR joining guide: The public blog now includes a practical guide for making participant QR-code joining more accessible and reliable at peaceful events.
+
 ## 1.1.27 - 21 June 2026
 
 Event-day runbooks, organiser planning shortcuts, chant runtime estimates, dashboard plan access, and participant help guidance.
