@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.29",
+      "releasedAt": "2026-06-22",
+      "summary": "QR popup viewport fix, compact QR layout, responsive QR sizing, cleaner QR actions, and safer dialog scrolling.",
+      "items": [
+        {
+          "id": "cl-2026-06-22-qr-popup-scroll-fix",
+          "title": "QR popup viewport fix",
+          "description": "The QR code dialog now stays within the browser viewport and scrolls internally when content is taller than the screen.",
+          "type": "fix",
+          "visibility": "public",
+          "dateAdded": "2026-06-22",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-22-compact-qr-layout",
+          "title": "Compact QR dialog layout",
+          "description": "The QR dialog uses tighter spacing and a smaller card layout so organizers can reach the top, bottom, and close control more reliably.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-22",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-22-responsive-qr-size",
+          "title": "Responsive QR sizing",
+          "description": "The QR image now scales down on smaller viewports while remaining large enough for participant scanning.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-22",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-22-qr-action-grid",
+          "title": "QR action grid",
+          "description": "QR actions are grouped into a compact Open, Print, and Handout grid to reduce vertical overflow.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-22",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-22-safe-dialog-scrolling",
+          "title": "Safer dialog scrolling",
+          "description": "Shared dialog content now has viewport-aware sizing, improving access to long admin popups beyond the QR flow.",
+          "type": "fix",
+          "visibility": "public",
+          "dateAdded": "2026-06-22",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.28",
       "releasedAt": "2026-06-21",
       "summary": "Accessible QR-code joining guidance for peaceful events and community participation.",

@@ -703,27 +703,27 @@ export default function DemoEditor() {
                   QR Code
                 </Button>
               </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
+              <DialogContent className="gap-3 p-4 sm:max-w-md sm:p-5" data-testid="dialog-qr-code">
+                <DialogHeader className="pr-6">
                   <DialogTitle>Participant QR Code</DialogTitle>
                 </DialogHeader>
-                <div className="flex flex-col items-center gap-4 py-4">
-                  <div className="qr-print-handout flex w-full flex-col items-center gap-3 rounded-xl border bg-background p-4 text-center">
-                    <p className="text-lg font-semibold text-foreground">{demo.title}</p>
-                    <p className="text-sm text-muted-foreground">Scan or open the link to follow the live chants.</p>
+                <div className="flex flex-col items-center gap-3 py-1">
+                  <div className="qr-print-handout flex w-full flex-col items-center gap-2 rounded-xl border bg-background p-3 text-center">
+                    <p className="text-base font-semibold text-foreground">{demo.title}</p>
+                    <p className="text-xs text-muted-foreground">Scan or open the link to follow the live chants.</p>
                     {qrDataUrl ? (
-                      <img src={qrDataUrl} alt={`QR code for joining ${demo.title}`} className="w-64 h-64" data-testid="img-qr" />
+                      <img src={qrDataUrl} alt={`QR code for joining ${demo.title}`} className="h-48 w-48 sm:h-56 sm:w-56" data-testid="img-qr" />
                     ) : (
-                      <Skeleton className="w-64 h-64" />
+                      <Skeleton className="h-48 w-48 sm:h-56 sm:w-56" />
                     )}
                     <p className="break-all text-xs text-muted-foreground">{publicUrl}</p>
                     <p className="text-xs text-muted-foreground">Keep this page open during the event.</p>
                   </div>
-                  <div className="w-full rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
+                  <div className="w-full rounded-lg border bg-muted/40 p-2.5 text-xs text-muted-foreground">
                     <p className="font-medium text-foreground mb-1">Participant instructions</p>
                     <p>Open your camera, scan the QR code, then keep the chant page open during the event.</p>
                   </div>
-                  <div className="w-full rounded-lg border border-orange-200 bg-orange-50 p-3 text-xs text-orange-900">
+                  <div className="w-full rounded-lg border border-orange-200 bg-orange-50 p-2.5 text-xs text-orange-900">
                     <p className="font-medium mb-1">Accessible joining fallback</p>
                     <p>
                       Announce the participant link out loud and share it by message or print. This helps people who
@@ -749,29 +749,31 @@ export default function DemoEditor() {
                     If the QR code is hard to scan in the crowd, copy this participant link and share it by message,
                     projector, or printed fallback.
                   </p>
-                  <div className="w-full rounded-lg border bg-card p-3 text-xs text-muted-foreground" data-testid="text-qr-handout-preview">
+                  <div className="w-full rounded-lg border bg-card p-2.5 text-xs text-muted-foreground" data-testid="text-qr-handout-preview">
                     <p className="font-medium text-foreground mb-1">Handout checklist</p>
                     <p>Print the QR code with the event name, participant link, and one sentence: scan or open the link, then keep the page open.</p>
                   </div>
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={publicUrl} target="_blank" rel="noopener noreferrer" data-testid="link-open-public">
+                  <div className="grid w-full gap-2 sm:grid-cols-3">
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={publicUrl} target="_blank" rel="noopener noreferrer" data-testid="link-open-public">
+                        <ExternalLink className="w-4 h-4 mr-1" />
+                        Open
+                      </a>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={printQrHandout}
+                      data-testid="button-print-participant-handout"
+                    >
+                      <Printer className="w-4 h-4 mr-1" />
+                      Print
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/handout`)} data-testid="button-open-full-handout">
                       <ExternalLink className="w-4 h-4 mr-1" />
-                      Open participant page
-                    </a>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={printQrHandout}
-                    data-testid="button-print-participant-handout"
-                  >
-                    <Printer className="w-4 h-4 mr-1" />
-                    Print QR handout
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/handout`)} data-testid="button-open-full-handout">
-                    <ExternalLink className="w-4 h-4 mr-1" />
-                    Full handout page
-                  </Button>
+                      Handout
+                    </Button>
+                  </div>
                 </div>
               </DialogContent>
             </Dialog>

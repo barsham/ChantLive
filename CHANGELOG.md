@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.29 - 22 June 2026
+
+QR popup viewport fix, compact QR layout, responsive QR sizing, cleaner QR actions, and safer dialog scrolling.
+
+### Fixed
+
+- QR popup viewport fix: The QR code dialog now stays within the browser viewport and scrolls internally when content is taller than the screen.
+- Safer dialog scrolling: Shared dialog content now has viewport-aware sizing, improving access to long admin popups beyond the QR flow.
+
+### Improved
+
+- Compact QR dialog layout: The QR dialog uses tighter spacing and a smaller card layout so organizers can reach the top, bottom, and close control more reliably.
+- Responsive QR sizing: The QR image now scales down on smaller viewports while remaining large enough for participant scanning.
+- QR action grid: QR actions are grouped into a compact Open, Print, and Handout grid to reduce vertical overflow.
+
 ## 1.1.28 - 21 June 2026
 
 Accessible QR-code joining guidance for peaceful events and community participation.
