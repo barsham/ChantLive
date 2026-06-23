@@ -59,6 +59,7 @@ import {
   CheckCircle2,
   ClipboardCheck,
   ClipboardList,
+  MessageSquare,
   Smartphone,
   Printer,
   Share2,
@@ -853,6 +854,10 @@ export default function DemoEditor() {
                         <ClipboardList className="w-3.5 h-3.5 mr-1" />
                         Event-day plan
                       </Button>
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/share-kit`)} data-testid="button-open-share-kit-readiness">
+                        <MessageSquare className="w-3.5 h-3.5 mr-1" />
+                        Share kit
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => setQrDialogOpen(true)} data-testid="button-readiness-open-qr">
                         <QrCode className="w-3.5 h-3.5 mr-1" />
                         Show QR instructions
@@ -889,6 +894,23 @@ export default function DemoEditor() {
                     <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/plan`)} data-testid="button-open-plan-summary">
                       <ClipboardList className="w-3.5 h-3.5 mr-1" />
                       Open runbook
+                    </Button>
+                  </div>
+                </div>
+                <div className="rounded-lg border bg-muted/30 p-3" data-testid="card-share-kit-summary">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="flex items-center gap-2 text-sm font-medium">
+                        <MessageSquare className="h-4 w-4 text-primary" />
+                        Share kit
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Copy-ready participant invites, backup-admin handoffs, accessibility fallback text, and day-of announcement scripts.
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/share-kit`)} data-testid="button-open-share-kit-summary">
+                      <Share2 className="w-3.5 h-3.5 mr-1" />
+                      Open share kit
                     </Button>
                   </div>
                 </div>

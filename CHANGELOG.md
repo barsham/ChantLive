@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.30 - 23 June 2026
+
+Organizer share kits, copy-ready event messages, dashboard and editor share shortcuts, participant low-bandwidth mode, and simplified low-signal live display.
+
+### Added
+
+- Organizer share kit: Admins can open a dedicated share-kit page with plain-language messages for participants, backup admins, accessibility fallback, day-of announcements, and public posts.
+- Participant low-bandwidth mode: Participants can enable a persistent low-bandwidth mode that reduces animation and hides next-up previews during live chants.
+
+### Improved
+
+- Copy-ready event messages: Each share-kit message can be copied individually, or copied together as a complete event communication pack.
+- Share-kit shortcuts: Organizers can open the share kit from the dashboard, readiness actions, and event editor summary.
+- Low-signal display guidance: The participant live screen now announces the active display mode and explains when the reduced-motion, low-bandwidth view is active.
+
 ## 1.1.29 - 22 June 2026
 
 QR popup viewport fix, compact QR layout, responsive QR sizing, cleaner QR actions, and safer dialog scrolling.

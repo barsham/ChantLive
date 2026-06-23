@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.30",
+      "releasedAt": "2026-06-23",
+      "summary": "Organizer share kits, copy-ready event messages, dashboard and editor share shortcuts, participant low-bandwidth mode, and simplified low-signal live display.",
+      "items": [
+        {
+          "id": "cl-2026-06-23-organizer-share-kit",
+          "title": "Organizer share kit",
+          "description": "Admins can open a dedicated share-kit page with plain-language messages for participants, backup admins, accessibility fallback, day-of announcements, and public posts.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-23",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-23-copy-ready-event-messages",
+          "title": "Copy-ready event messages",
+          "description": "Each share-kit message can be copied individually, or copied together as a complete event communication pack.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-23",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-23-share-kit-shortcuts",
+          "title": "Share-kit shortcuts",
+          "description": "Organizers can open the share kit from the dashboard, readiness actions, and event editor summary.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-23",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-23-participant-low-bandwidth-mode",
+          "title": "Participant low-bandwidth mode",
+          "description": "Participants can enable a persistent low-bandwidth mode that reduces animation and hides next-up previews during live chants.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-23",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-23-low-signal-display-guidance",
+          "title": "Low-signal display guidance",
+          "description": "The participant live screen now announces the active display mode and explains when the reduced-motion, low-bandwidth view is active.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-23",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.29",
       "releasedAt": "2026-06-22",
       "summary": "QR popup viewport fix, compact QR layout, responsive QR sizing, cleaner QR actions, and safer dialog scrolling.",

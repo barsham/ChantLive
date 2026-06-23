@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "wouter";
 import { getSocket } from "@/lib/socket";
-import { Eye, HelpCircle, ShieldCheck, Type, Users, Megaphone, RefreshCw } from "lucide-react";
+import { Eye, HelpCircle, ShieldCheck, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
 
 type ChantData = {
   callText: string | null;
@@ -54,8 +54,10 @@ export default function Participant() {
   const [isOffline, setIsOffline] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
   const [largeText, setLargeText] = useState(() => localStorage.getItem("chant_large_text") === "true");
   const [highContrast, setHighContrast] = useState(() => localStorage.getItem("chant_high_contrast") === "true");
+  const [lowBandwidth, setLowBandwidth] = useState(() => localStorage.getItem("chant_low_bandwidth") === "true");
   const [showHelp, setShowHelp] = useState(false);
   const localPhaseStartRef = useRef(Date.now());
+  const lowBandwidthRef = useRef(lowBandwidth);
 
   useEffect(() => {
     const updateOnlineStatus = () => {
@@ -90,6 +92,13 @@ export default function Participant() {
     });
 
     socket.on("chant_update", (data: ChantData) => {
+      if (lowBandwidthRef.current) {
+        localPhaseStartRef.current = Date.now();
+        setChantData(data);
+        setFadeIn(true);
+        return;
+      }
+
       setFadeIn(false);
       setTimeout(() => {
         localPhaseStartRef.current = Date.now();
@@ -153,6 +162,9 @@ export default function Participant() {
   const chantFontSize = largeText
     ? "clamp(2.35rem, 10vw, 6.5rem)"
     : "clamp(1.75rem, 7vw, 4.5rem)";
+  const participantDisplayMode = lowBandwidth
+    ? "Low-bandwidth mode reduces animation and hides next-up previews."
+    : "Full display mode shows motion, timing, and next-up previews.";
   const retryConnection = () => {
     setError(null);
     window.location.reload();
@@ -167,6 +179,20 @@ export default function Participant() {
   }, [highContrast]);
 
   useEffect(() => {
+    lowBandwidthRef.current = lowBandwidth;
+    localStorage.setItem("chant_low_bandwidth", String(lowBandwidth));
+    if (lowBandwidth) {
+      setPhaseProgress(0);
+      setFadeIn(true);
+    }
+  }, [lowBandwidth]);
+
+  useEffect(() => {
+    if (lowBandwidth) {
+      setPhaseProgress(0);
+      return;
+    }
+
     if (!chantData) {
       setPhaseProgress(0);
       return;
@@ -211,6 +237,7 @@ export default function Participant() {
     };
   }, [
     activePhase,
+    lowBandwidth,
     chantData?.chantIndex,
     chantData?.currentCycle,
     chantData?.phaseStartedAt,
@@ -219,7 +246,7 @@ export default function Participant() {
   ]);
 
   const renderPhaseProgress = (phase: "leader" | "people") => {
-    if (activePhase !== phase || !chantData) {
+    if (activePhase !== phase || !chantData || lowBandwidth) {
       return null;
     }
 
@@ -371,8 +398,10 @@ export default function Participant() {
       </div>
       <div className="flex-1 flex items-center justify-center p-6">
         <div 
-          className={`text-center transition-all duration-500 transform ${
-            fadeIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+          className={`text-center ${
+            lowBandwidth
+              ? ""
+              : `transition-all duration-500 transform ${fadeIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`
           }`}
           style={{ width: "100%", maxWidth: "90vw" }}
         >
@@ -426,7 +455,7 @@ export default function Participant() {
               )}
 
               {/* Next Chant Preview */}
-              {(chantData.nextCallText || chantData.nextResponseText) && (
+              {!lowBandwidth && (chantData.nextCallText || chantData.nextResponseText) && (
                 <div className="mt-12 pt-8 border-t border-neutral-800 opacity-50 relative">
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black px-3 text-xs font-mono text-neutral-600 uppercase tracking-widest">
                     Coming Up Next
@@ -502,6 +531,7 @@ export default function Participant() {
       )}
 
       <footer className="px-4 py-3 flex flex-wrap items-center justify-center gap-3 border-t border-neutral-800">
+        <span className="sr-only" role="status" aria-live="polite">{participantDisplayMode}</span>
         <button
           type="button"
           onClick={() => setShowHelp((value) => !value)}
@@ -513,6 +543,19 @@ export default function Participant() {
         >
           <HelpCircle className="h-3.5 w-3.5" />
           {showHelp ? "Help open" : "Help"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setLowBandwidth((value) => !value)}
+          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
+            lowBandwidth ? "border-sky-300/80 bg-sky-300/15 text-sky-100" : "border-neutral-700 text-neutral-300"
+          }`}
+          aria-pressed={lowBandwidth}
+          title={participantDisplayMode}
+          data-testid="button-toggle-low-bandwidth"
+        >
+          <WifiOff className="h-3.5 w-3.5" />
+          {lowBandwidth ? "Low bandwidth on" : "Low bandwidth"}
         </button>
         <button
           type="button"
