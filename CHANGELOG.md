@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.31 - 23 June 2026
+
+Dashboard card action buttons now stay inside each demonstration card.
+
+### Fixed
+
+- Dashboard action button layout fix: Demonstration card actions now use a contained two-column grid so Edit, Plan, Share, and Delete do not overlap card borders.
+
 ## 1.1.30 - 23 June 2026
 
 Organizer share kits, copy-ready event messages, dashboard and editor share shortcuts, participant low-bandwidth mode, and simplified low-signal live display.

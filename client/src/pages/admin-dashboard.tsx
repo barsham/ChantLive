@@ -476,20 +476,20 @@ export default function AdminDashboard() {
                     Created by: <span className="font-medium text-foreground">{demo.creator?.name ?? "Unknown user"}</span>
                     {demo.creator?.email ? <span> ({demo.creator.email})</span> : null}
                   </p>
-                  <div className="flex items-center gap-2 mt-3">
-                    <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/demos/${demo.id}`); }} data-testid={`button-edit-demo-${demo.id}`}>
+                  <div className="grid grid-cols-2 gap-2 mt-3">
+                    <Button className="w-full justify-center" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/demos/${demo.id}`); }} data-testid={`button-edit-demo-${demo.id}`}>
                       <Eye className="w-3.5 h-3.5 mr-1" />
                       {demo.status === "live" ? "Control" : "Edit"}
                     </Button>
-                    <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/demos/${demo.id}/plan`); }} data-testid={`button-plan-demo-${demo.id}`}>
+                    <Button className="w-full justify-center" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/demos/${demo.id}/plan`); }} data-testid={`button-plan-demo-${demo.id}`}>
                       <ClipboardList className="w-3.5 h-3.5 mr-1" />
                       Plan
                     </Button>
-                    <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/demos/${demo.id}/share-kit`); }} data-testid={`button-share-kit-demo-${demo.id}`}>
+                    <Button className="w-full justify-center" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/demos/${demo.id}/share-kit`); }} data-testid={`button-share-kit-demo-${demo.id}`}>
                       <Share2 className="w-3.5 h-3.5 mr-1" />
                       Share
                     </Button>
-                    <Button variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700" onClick={(e) => { e.stopPropagation(); setDeleteTarget(demo); }} data-testid={`button-delete-demo-${demo.id}`}>
+                    <Button variant="outline" size="sm" className="w-full justify-center text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700" onClick={(e) => { e.stopPropagation(); setDeleteTarget(demo); }} data-testid={`button-delete-demo-${demo.id}`}>
                       <Trash2 className="w-3.5 h-3.5 mr-1" />
                       Delete
                     </Button>
