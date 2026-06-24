@@ -15,6 +15,8 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import DemoEditor from "@/pages/demo-editor";
 import ParticipantHandout from "@/pages/participant-handout";
 import EventPlan from "@/pages/event-plan";
+import RecoveryConsole from "@/pages/recovery-console";
+import EventReport from "@/pages/event-report";
 import ShareKit from "@/pages/share-kit";
 import AdminUsers from "@/pages/admin-users";
 import Participant from "@/pages/participant";
@@ -66,6 +68,12 @@ function Router() {
       </Route>
       <Route path="/admin/demos/:id/plan">
         {() => <ProtectedRoute component={EventPlan} />}
+      </Route>
+      <Route path="/admin/demos/:id/recovery">
+        {() => <ProtectedRoute component={RecoveryConsole} />}
+      </Route>
+      <Route path="/admin/demos/:id/report">
+        {() => <ProtectedRoute component={EventReport} />}
       </Route>
       <Route path="/admin/demos/:id/share-kit">
         {() => <ProtectedRoute component={ShareKit} />}

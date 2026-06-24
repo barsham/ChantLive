@@ -59,6 +59,8 @@ import {
   CheckCircle2,
   ClipboardCheck,
   ClipboardList,
+  FileText,
+  LifeBuoy,
   MessageSquare,
   Smartphone,
   Printer,
@@ -858,6 +860,10 @@ export default function DemoEditor() {
                         <MessageSquare className="w-3.5 h-3.5 mr-1" />
                         Share kit
                       </Button>
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/recovery`)} data-testid="button-open-recovery-readiness">
+                        <LifeBuoy className="w-3.5 h-3.5 mr-1" />
+                        Recovery
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => setQrDialogOpen(true)} data-testid="button-readiness-open-qr">
                         <QrCode className="w-3.5 h-3.5 mr-1" />
                         Show QR instructions
@@ -911,6 +917,32 @@ export default function DemoEditor() {
                     <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/share-kit`)} data-testid="button-open-share-kit-summary">
                       <Share2 className="w-3.5 h-3.5 mr-1" />
                       Open share kit
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="rounded-lg border bg-background p-3" data-testid="card-recovery-console-summary">
+                    <p className="flex items-center gap-2 text-sm font-medium">
+                      <LifeBuoy className="h-4 w-4 text-primary" />
+                      Recovery console
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Live fallback scripts, participant reconnect instructions, backup-admin handoff, and current status.
+                    </p>
+                    <Button className="mt-3" variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/recovery`)} data-testid="button-open-recovery-summary">
+                      Open recovery
+                    </Button>
+                  </div>
+                  <div className="rounded-lg border bg-background p-3" data-testid="card-event-report-summary">
+                    <p className="flex items-center gap-2 text-sm font-medium">
+                      <FileText className="h-4 w-4 text-primary" />
+                      Post-event report
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Copyable debrief summary with chant review, runtime estimate, admin follow-up, and reuse checklist.
+                    </p>
+                    <Button className="mt-3" variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/report`)} data-testid="button-open-report-summary">
+                      Open report
                     </Button>
                   </div>
                 </div>

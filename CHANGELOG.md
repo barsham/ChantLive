@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.32 - 24 June 2026
+
+Live recovery console, post-event reports, recovery/report editor shortcuts, and expanded share-kit recovery follow-ups.
+
+### Added
+
+- Live recovery console: Admins can open a recovery console with live status, participant fallback links, backup-admin handoff, and copy-ready recovery scripts.
+- Post-event report: Admins can open a printable and copyable event report with chant review, runtime estimate, admin follow-up, viewer snapshot, and debrief checklist.
+
+### Improved
+
+- Recovery and report shortcuts: The event editor now surfaces recovery and post-event report entry points alongside planning and sharing workflows.
+- Recovery share-kit messages: Share kits now include copy-ready connection recovery instructions for participants and organisers.
+- Post-event follow-up message: Share kits now include an organiser follow-up message that points teams to the post-event report and reuse checklist.
+
 ## 1.1.31 - 23 June 2026
 
 Dashboard card action buttons now stay inside each demonstration card.

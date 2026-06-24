@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.32",
+      "releasedAt": "2026-06-24",
+      "summary": "Live recovery console, post-event reports, recovery/report editor shortcuts, and expanded share-kit recovery follow-ups.",
+      "items": [
+        {
+          "id": "cl-2026-06-24-live-recovery-console",
+          "title": "Live recovery console",
+          "description": "Admins can open a recovery console with live status, participant fallback links, backup-admin handoff, and copy-ready recovery scripts.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-24",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-24-post-event-report",
+          "title": "Post-event report",
+          "description": "Admins can open a printable and copyable event report with chant review, runtime estimate, admin follow-up, viewer snapshot, and debrief checklist.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-24",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-24-recovery-editor-shortcuts",
+          "title": "Recovery and report shortcuts",
+          "description": "The event editor now surfaces recovery and post-event report entry points alongside planning and sharing workflows.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-24",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-24-recovery-share-kit-messages",
+          "title": "Recovery share-kit messages",
+          "description": "Share kits now include copy-ready connection recovery instructions for participants and organisers.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-24",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-24-post-event-follow-up-message",
+          "title": "Post-event follow-up message",
+          "description": "Share kits now include an organiser follow-up message that points teams to the post-event report and reuse checklist.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-24",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.31",
       "releasedAt": "2026-06-23",
       "summary": "Dashboard card action buttons now stay inside each demonstration card.",

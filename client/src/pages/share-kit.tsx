@@ -30,7 +30,7 @@ type MessageTemplate = {
   body: string;
 };
 
-function buildTemplates(data: DemoDetail, publicUrl: string, handoutUrl: string, planUrl: string): MessageTemplate[] {
+function buildTemplates(data: DemoDetail, publicUrl: string, handoutUrl: string, planUrl: string, recoveryUrl: string, reportUrl: string): MessageTemplate[] {
   const title = data.demo.title;
   const chantCount = data.chants.length;
   const duration = data.state?.eventDurationMinutes ?? 300;
@@ -96,6 +96,26 @@ function buildTemplates(data: DemoDetail, publicUrl: string, handoutUrl: string,
         `Join link: ${publicUrl}`,
       ].join("\n"),
     },
+    {
+      id: "recovery-script",
+      title: "Recovery script",
+      audience: "Use if the crowd has connection trouble",
+      body: [
+        `If ChantLive stops updating for ${title}, keep the page open and press Help, then Refresh connection.`,
+        `If that does not work, reopen the participant link: ${publicUrl}`,
+        `Organisers can use the recovery console here: ${recoveryUrl}`,
+      ].join("\n"),
+    },
+    {
+      id: "post-event-follow-up",
+      title: "Post-event follow-up",
+      audience: "Send to organisers after the event",
+      body: [
+        `Thanks for helping run ${title}.`,
+        `Please review the post-event report here: ${reportUrl}`,
+        "Capture what worked, what confused participants, and which chants should be reused next time.",
+      ].join("\n"),
+    },
   ];
 }
 
@@ -112,7 +132,9 @@ export default function ShareKit() {
   const publicUrl = data?.demo ? `${origin}/d/${data.demo.publicId}` : "";
   const handoutUrl = id ? `${origin}/admin/demos/${id}/handout` : "";
   const planUrl = id ? `${origin}/admin/demos/${id}/plan` : "";
-  const templates = data ? buildTemplates(data, publicUrl, handoutUrl, planUrl) : [];
+  const recoveryUrl = id ? `${origin}/admin/demos/${id}/recovery` : "";
+  const reportUrl = id ? `${origin}/admin/demos/${id}/report` : "";
+  const templates = data ? buildTemplates(data, publicUrl, handoutUrl, planUrl, recoveryUrl, reportUrl) : [];
 
   const copyMessage = async (template: MessageTemplate) => {
     await navigator.clipboard.writeText(template.body);
@@ -192,6 +214,8 @@ export default function ShareKit() {
               <p className="mt-2 break-all">Participant: {publicUrl}</p>
               <p className="mt-1 break-all">Handout: {handoutUrl}</p>
               <p className="mt-1 break-all">Plan: {planUrl}</p>
+              <p className="mt-1 break-all">Recovery: {recoveryUrl}</p>
+              <p className="mt-1 break-all">Report: {reportUrl}</p>
             </div>
           </div>
 
