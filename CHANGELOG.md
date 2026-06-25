@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.33 - 25 June 2026
+
+Organizer command center, volunteer briefing role cards, dashboard command access, editor command/briefing shortcuts, and expanded share-kit handoffs.
+
+### Added
+
+- Organizer command center: Admins can open a command center that consolidates readiness, live context, participant link, and operational tools for an event.
+- Volunteer briefing role cards: Admins can print or copy role cards for speakers, marshals, accessibility helpers, and backup admins.
+
+### Improved
+
+- Dashboard command access: The dashboard now opens the event command center from each demonstration card while keeping card actions contained.
+- Editor command and briefing shortcuts: The event editor now surfaces command-center and volunteer-briefing entry points alongside planning, sharing, recovery, and reporting workflows.
+- Share-kit command handoffs: Share kits now include copy-ready organiser command-center and volunteer-briefing handoff messages.
+
 ## 1.1.32 - 24 June 2026
 
 Live recovery console, post-event reports, recovery/report editor shortcuts, and expanded share-kit recovery follow-ups.

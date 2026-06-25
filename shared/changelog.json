@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.33",
+      "releasedAt": "2026-06-25",
+      "summary": "Organizer command center, volunteer briefing role cards, dashboard command access, editor command/briefing shortcuts, and expanded share-kit handoffs.",
+      "items": [
+        {
+          "id": "cl-2026-06-25-organizer-command-center",
+          "title": "Organizer command center",
+          "description": "Admins can open a command center that consolidates readiness, live context, participant link, and operational tools for an event.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-25",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-25-volunteer-briefing",
+          "title": "Volunteer briefing role cards",
+          "description": "Admins can print or copy role cards for speakers, marshals, accessibility helpers, and backup admins.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-25",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-25-dashboard-command-access",
+          "title": "Dashboard command access",
+          "description": "The dashboard now opens the event command center from each demonstration card while keeping card actions contained.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-25",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-25-editor-command-briefing-shortcuts",
+          "title": "Editor command and briefing shortcuts",
+          "description": "The event editor now surfaces command-center and volunteer-briefing entry points alongside planning, sharing, recovery, and reporting workflows.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-25",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-25-share-kit-handoffs",
+          "title": "Share-kit command handoffs",
+          "description": "Share kits now include copy-ready organiser command-center and volunteer-briefing handoff messages.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-25",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.32",
       "releasedAt": "2026-06-24",
       "summary": "Live recovery console, post-event reports, recovery/report editor shortcuts, and expanded share-kit recovery follow-ups.",

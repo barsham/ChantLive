@@ -30,7 +30,16 @@ type MessageTemplate = {
   body: string;
 };
 
-function buildTemplates(data: DemoDetail, publicUrl: string, handoutUrl: string, planUrl: string, recoveryUrl: string, reportUrl: string): MessageTemplate[] {
+function buildTemplates(
+  data: DemoDetail,
+  publicUrl: string,
+  handoutUrl: string,
+  planUrl: string,
+  recoveryUrl: string,
+  reportUrl: string,
+  commandUrl: string,
+  briefingUrl: string,
+): MessageTemplate[] {
   const title = data.demo.title;
   const chantCount = data.chants.length;
   const duration = data.state?.eventDurationMinutes ?? 300;
@@ -68,11 +77,34 @@ function buildTemplates(data: DemoDetail, publicUrl: string, handoutUrl: string,
       audience: "Send to co-organisers",
       body: [
         `You are a backup admin for ${title}.`,
+        `Command center: ${commandUrl}`,
         `Event plan: ${planUrl}`,
         `Participant handout: ${handoutUrl}`,
         "",
         backupAdminLine,
         "Please open the event before we go live and be ready to take over if the primary device drops.",
+      ].join("\n"),
+    },
+    {
+      id: "organizer-command-handoff",
+      title: "Organizer command handoff",
+      audience: "Send to organisers before the event",
+      body: [
+        `Use this command center while running ${title}:`,
+        commandUrl,
+        "",
+        "It keeps the participant link, readiness checks, recovery console, volunteer briefing, share kit, and post-event report in one place.",
+      ].join("\n"),
+    },
+    {
+      id: "volunteer-briefing",
+      title: "Volunteer briefing",
+      audience: "Send to volunteers",
+      body: [
+        `Please review your ChantLive role card before ${title}:`,
+        briefingUrl,
+        "",
+        "The briefing covers speaker, marshal, accessibility helper, and backup-admin responsibilities.",
       ].join("\n"),
     },
     {
@@ -134,7 +166,9 @@ export default function ShareKit() {
   const planUrl = id ? `${origin}/admin/demos/${id}/plan` : "";
   const recoveryUrl = id ? `${origin}/admin/demos/${id}/recovery` : "";
   const reportUrl = id ? `${origin}/admin/demos/${id}/report` : "";
-  const templates = data ? buildTemplates(data, publicUrl, handoutUrl, planUrl, recoveryUrl, reportUrl) : [];
+  const commandUrl = id ? `${origin}/admin/demos/${id}/command` : "";
+  const briefingUrl = id ? `${origin}/admin/demos/${id}/briefing` : "";
+  const templates = data ? buildTemplates(data, publicUrl, handoutUrl, planUrl, recoveryUrl, reportUrl, commandUrl, briefingUrl) : [];
 
   const copyMessage = async (template: MessageTemplate) => {
     await navigator.clipboard.writeText(template.body);
@@ -214,6 +248,8 @@ export default function ShareKit() {
               <p className="mt-2 break-all">Participant: {publicUrl}</p>
               <p className="mt-1 break-all">Handout: {handoutUrl}</p>
               <p className="mt-1 break-all">Plan: {planUrl}</p>
+              <p className="mt-1 break-all">Command: {commandUrl}</p>
+              <p className="mt-1 break-all">Briefing: {briefingUrl}</p>
               <p className="mt-1 break-all">Recovery: {recoveryUrl}</p>
               <p className="mt-1 break-all">Report: {reportUrl}</p>
             </div>

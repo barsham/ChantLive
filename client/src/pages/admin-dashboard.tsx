@@ -477,9 +477,9 @@ export default function AdminDashboard() {
                     {demo.creator?.email ? <span> ({demo.creator.email})</span> : null}
                   </p>
                   <div className="grid grid-cols-2 gap-2 mt-3">
-                    <Button className="w-full justify-center" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/demos/${demo.id}`); }} data-testid={`button-edit-demo-${demo.id}`}>
+                    <Button className="w-full justify-center" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/demos/${demo.id}/command`); }} data-testid={`button-command-demo-${demo.id}`}>
                       <Eye className="w-3.5 h-3.5 mr-1" />
-                      {demo.status === "live" ? "Control" : "Edit"}
+                      Command
                     </Button>
                     <Button className="w-full justify-center" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/demos/${demo.id}/plan`); }} data-testid={`button-plan-demo-${demo.id}`}>
                       <ClipboardList className="w-3.5 h-3.5 mr-1" />

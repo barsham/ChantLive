@@ -842,6 +842,10 @@ export default function DemoEditor() {
                   </div>
                   {publicUrl && (
                     <div className="mt-4 flex flex-wrap gap-2">
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/command`)} data-testid="button-open-command-readiness">
+                        <Megaphone className="w-3.5 h-3.5 mr-1" />
+                        Command center
+                      </Button>
                       <Button variant="outline" size="sm" asChild>
                         <a href={publicUrl} target="_blank" rel="noopener noreferrer" data-testid="link-test-participant-page">
                           <ExternalLink className="w-3.5 h-3.5 mr-1" />
@@ -864,6 +868,10 @@ export default function DemoEditor() {
                         <LifeBuoy className="w-3.5 h-3.5 mr-1" />
                         Recovery
                       </Button>
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/briefing`)} data-testid="button-open-briefing-readiness">
+                        <Users className="w-3.5 h-3.5 mr-1" />
+                        Brief volunteers
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => setQrDialogOpen(true)} data-testid="button-readiness-open-qr">
                         <QrCode className="w-3.5 h-3.5 mr-1" />
                         Show QR instructions
@@ -883,6 +891,22 @@ export default function DemoEditor() {
           <Card className="mb-6">
             <CardContent className="py-4">
               <div className="space-y-4">
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3" data-testid="card-command-center-summary">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="flex items-center gap-2 text-sm font-medium">
+                        <Megaphone className="h-4 w-4 text-primary" />
+                        Command center
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        One page for live status, readiness, participant links, recovery, sharing, briefing, reporting, and event controls.
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/command`)} data-testid="button-open-command-summary">
+                      Open command center
+                    </Button>
+                  </div>
+                </div>
                 <div className="rounded-lg border border-primary/20 bg-primary/5 p-3" data-testid="card-event-day-plan-summary">
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
@@ -943,6 +967,22 @@ export default function DemoEditor() {
                     </p>
                     <Button className="mt-3" variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/report`)} data-testid="button-open-report-summary">
                       Open report
+                    </Button>
+                  </div>
+                </div>
+                <div className="rounded-lg border bg-background p-3" data-testid="card-volunteer-briefing-summary">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="flex items-center gap-2 text-sm font-medium">
+                        <Users className="h-4 w-4 text-primary" />
+                        Volunteer briefing
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Print or copy role cards for speakers, marshals, accessibility helpers, and backup admins.
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/briefing`)} data-testid="button-open-briefing-summary">
+                      Open briefing
                     </Button>
                   </div>
                 </div>

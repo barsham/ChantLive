@@ -17,6 +17,8 @@ import ParticipantHandout from "@/pages/participant-handout";
 import EventPlan from "@/pages/event-plan";
 import RecoveryConsole from "@/pages/recovery-console";
 import EventReport from "@/pages/event-report";
+import CommandCenter from "@/pages/command-center";
+import VolunteerBriefing from "@/pages/volunteer-briefing";
 import ShareKit from "@/pages/share-kit";
 import AdminUsers from "@/pages/admin-users";
 import Participant from "@/pages/participant";
@@ -65,6 +67,12 @@ function Router() {
       </Route>
       <Route path="/admin/demos/:id/handout">
         {() => <ProtectedRoute component={ParticipantHandout} />}
+      </Route>
+      <Route path="/admin/demos/:id/command">
+        {() => <ProtectedRoute component={CommandCenter} />}
+      </Route>
+      <Route path="/admin/demos/:id/briefing">
+        {() => <ProtectedRoute component={VolunteerBriefing} />}
       </Route>
       <Route path="/admin/demos/:id/plan">
         {() => <ProtectedRoute component={EventPlan} />}
