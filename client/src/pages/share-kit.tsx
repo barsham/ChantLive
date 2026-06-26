@@ -39,6 +39,8 @@ function buildTemplates(
   reportUrl: string,
   commandUrl: string,
   briefingUrl: string,
+  runOfShowUrl: string,
+  safetyUrl: string,
 ): MessageTemplate[] {
   const title = data.demo.title;
   const chantCount = data.chants.length;
@@ -108,6 +110,28 @@ function buildTemplates(
       ].join("\n"),
     },
     {
+      id: "run-of-show-handoff",
+      title: "Run-of-show handoff",
+      audience: "Send to speakers and co-organisers",
+      body: [
+        `Use this run of show for ${title}:`,
+        runOfShowUrl,
+        "",
+        "It gives the team a timed sequence for arrival, safety, chant coordination, recovery, and debrief.",
+      ].join("\n"),
+    },
+    {
+      id: "safety-board-handoff",
+      title: "Safety board handoff",
+      audience: "Send to marshals and accessibility helpers",
+      body: [
+        `Please review the safety board for ${title}:`,
+        safetyUrl,
+        "",
+        "Chant timing is guidance only. Local safety, accessibility, marshal, venue, and emergency instructions always come first.",
+      ].join("\n"),
+    },
+    {
       id: "day-of-announcement",
       title: "Day-of announcement",
       audience: "Speaker or marshal script",
@@ -168,7 +192,9 @@ export default function ShareKit() {
   const reportUrl = id ? `${origin}/admin/demos/${id}/report` : "";
   const commandUrl = id ? `${origin}/admin/demos/${id}/command` : "";
   const briefingUrl = id ? `${origin}/admin/demos/${id}/briefing` : "";
-  const templates = data ? buildTemplates(data, publicUrl, handoutUrl, planUrl, recoveryUrl, reportUrl, commandUrl, briefingUrl) : [];
+  const runOfShowUrl = id ? `${origin}/admin/demos/${id}/run-of-show` : "";
+  const safetyUrl = id ? `${origin}/admin/demos/${id}/safety` : "";
+  const templates = data ? buildTemplates(data, publicUrl, handoutUrl, planUrl, recoveryUrl, reportUrl, commandUrl, briefingUrl, runOfShowUrl, safetyUrl) : [];
 
   const copyMessage = async (template: MessageTemplate) => {
     await navigator.clipboard.writeText(template.body);
@@ -250,6 +276,8 @@ export default function ShareKit() {
               <p className="mt-1 break-all">Plan: {planUrl}</p>
               <p className="mt-1 break-all">Command: {commandUrl}</p>
               <p className="mt-1 break-all">Briefing: {briefingUrl}</p>
+              <p className="mt-1 break-all">Run of show: {runOfShowUrl}</p>
+              <p className="mt-1 break-all">Safety: {safetyUrl}</p>
               <p className="mt-1 break-all">Recovery: {recoveryUrl}</p>
               <p className="mt-1 break-all">Report: {reportUrl}</p>
             </div>

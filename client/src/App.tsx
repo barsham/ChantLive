@@ -19,6 +19,8 @@ import RecoveryConsole from "@/pages/recovery-console";
 import EventReport from "@/pages/event-report";
 import CommandCenter from "@/pages/command-center";
 import VolunteerBriefing from "@/pages/volunteer-briefing";
+import RunOfShow from "@/pages/run-of-show";
+import SafetyBoard from "@/pages/safety-board";
 import ShareKit from "@/pages/share-kit";
 import AdminUsers from "@/pages/admin-users";
 import Participant from "@/pages/participant";
@@ -73,6 +75,12 @@ function Router() {
       </Route>
       <Route path="/admin/demos/:id/briefing">
         {() => <ProtectedRoute component={VolunteerBriefing} />}
+      </Route>
+      <Route path="/admin/demos/:id/run-of-show">
+        {() => <ProtectedRoute component={RunOfShow} />}
+      </Route>
+      <Route path="/admin/demos/:id/safety">
+        {() => <ProtectedRoute component={SafetyBoard} />}
       </Route>
       <Route path="/admin/demos/:id/plan">
         {() => <ProtectedRoute component={EventPlan} />}

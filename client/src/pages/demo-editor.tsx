@@ -64,7 +64,9 @@ import {
   MessageSquare,
   Smartphone,
   Printer,
+  Route,
   Share2,
+  ShieldCheck,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -872,6 +874,14 @@ export default function DemoEditor() {
                         <Users className="w-3.5 h-3.5 mr-1" />
                         Brief volunteers
                       </Button>
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/run-of-show`)} data-testid="button-open-run-of-show-readiness">
+                        <Route className="w-3.5 h-3.5 mr-1" />
+                        Run of show
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/safety`)} data-testid="button-open-safety-readiness">
+                        <ShieldCheck className="w-3.5 h-3.5 mr-1" />
+                        Safety board
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => setQrDialogOpen(true)} data-testid="button-readiness-open-qr">
                         <QrCode className="w-3.5 h-3.5 mr-1" />
                         Show QR instructions
@@ -983,6 +993,32 @@ export default function DemoEditor() {
                     </div>
                     <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}/briefing`)} data-testid="button-open-briefing-summary">
                       Open briefing
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="rounded-lg border bg-background p-3" data-testid="card-run-of-show-summary">
+                    <p className="flex items-center gap-2 text-sm font-medium">
+                      <Route className="h-4 w-4 text-primary" />
+                      Run of show
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Generate a timed event-day sequence for arrival, safety, chanting, recovery, and debrief.
+                    </p>
+                    <Button variant="outline" size="sm" className="mt-3" onClick={() => navigate(`/admin/demos/${id}/run-of-show`)} data-testid="button-open-run-of-show-summary">
+                      Open run of show
+                    </Button>
+                  </div>
+                  <div className="rounded-lg border bg-background p-3" data-testid="card-safety-board-summary">
+                    <p className="flex items-center gap-2 text-sm font-medium">
+                      <ShieldCheck className="h-4 w-4 text-primary" />
+                      Safety board
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Print or copy organiser safety guidance for marshals, accessibility helpers, and participants.
+                    </p>
+                    <Button variant="outline" size="sm" className="mt-3" onClick={() => navigate(`/admin/demos/${id}/safety`)} data-testid="button-open-safety-summary">
+                      Open safety board
                     </Button>
                   </div>
                 </div>

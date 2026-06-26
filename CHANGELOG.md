@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.34 - 26 June 2026
+
+Run-of-show generator, safety coordination board, command/editor workflow links, share-kit handoffs, and participant support guidance.
+
+### Added
+
+- Run-of-show generator: Admins can open a printable and copyable run of show with arrival, safety, live chant, recovery, and debrief steps based on the event setup.
+- Safety coordination board: Admins can print or copy a safety board for marshal briefing, accessibility support, organiser fallback, and participant guidance.
+
+### Improved
+
+- Event-day workflow links: The command center and event editor now surface run-of-show and safety-board actions alongside existing planning, recovery, sharing, and briefing tools.
+- Share-kit event-day handoffs: Share kits now include copy-ready run-of-show and safety-board messages for speakers, co-organisers, marshals, and accessibility helpers.
+- Participant support guidance: The participant Help panel now tells people how to ask marshals or accessibility helpers for the plain link, quiet space, repeated instructions, or help reading chants.
+
 ## 1.1.33 - 25 June 2026
 
 Organizer command center, volunteer briefing role cards, dashboard command access, editor command/briefing shortcuts, and expanded share-kit handoffs.

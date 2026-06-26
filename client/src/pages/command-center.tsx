@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowLeft, ClipboardList, FileText, LifeBuoy, Megaphone, QrCode, Share2, Users } from "lucide-react";
+import { ArrowLeft, ClipboardList, FileText, LifeBuoy, Megaphone, QrCode, Route, Share2, ShieldCheck, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,6 +77,8 @@ export default function CommandCenter() {
 
   const tools = [
     { label: "Control event", description: "Edit chants, push live, manage timing, and invite admins.", icon: Megaphone, path: `/admin/demos/${id}` },
+    { label: "Run of show", description: "Print a timed event-day sequence for arrival, safety, chanting, recovery, and debrief.", icon: Route, path: `/admin/demos/${id}/run-of-show` },
+    { label: "Safety board", description: "Brief marshals, accessibility helpers, backup admins, and participants on event-day safety.", icon: ShieldCheck, path: `/admin/demos/${id}/safety` },
     { label: "Event plan", description: "Open the operational runbook for permits, access, safety, and admin roles.", icon: ClipboardList, path: `/admin/demos/${id}/plan` },
     { label: "Share kit", description: "Copy participant, backup-admin, recovery, and follow-up messages.", icon: Share2, path: `/admin/demos/${id}/share-kit` },
     { label: "Participant handout", description: "Print or project the participant QR code and fallback link.", icon: QrCode, path: `/admin/demos/${id}/handout` },

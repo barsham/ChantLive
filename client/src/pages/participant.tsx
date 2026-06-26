@@ -495,7 +495,7 @@ export default function Participant() {
           aria-label="Participant help and safety panel"
           data-testid="panel-participant-help"
         >
-          <div className="mx-auto grid max-w-5xl gap-4 md:grid-cols-3">
+          <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-4">
             <div>
               <p className="mb-1 flex items-center gap-2 font-semibold text-white">
                 <HelpCircle className="h-4 w-4" />
@@ -525,6 +525,13 @@ export default function Participant() {
                 If plans change
               </p>
               <p className="text-neutral-400">Follow organiser instructions first. ChantLive shows chant timing, but local safety directions take priority.</p>
+            </div>
+            <div>
+              <p className="mb-1 flex items-center gap-2 font-semibold text-white">
+                <Users className="h-4 w-4" />
+                If you need support
+              </p>
+              <p className="text-neutral-400">Ask a marshal or accessibility helper for the plain link, a quieter place, repeated instructions, or help reading the chant.</p>
             </div>
           </div>
         </section>
