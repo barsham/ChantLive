@@ -26,6 +26,19 @@ const demoViewers = new Map<string, Set<string>>();
 const autoRotateTimers = new Map<string, NodeJS.Timeout>();
 const autoRotateProgress = new Map<string, { phase: "leader" | "people"; cycle: number }>();
 type ChantPhase = "leader" | "people";
+type AssistanceType = "accessibility" | "connection" | "safety" | "organizer";
+type AssistanceRequest = {
+  id: string;
+  demoId: string;
+  type: AssistanceType;
+  message: string;
+  sessionId: string;
+  status: "open" | "resolved";
+  createdAt: string;
+  resolvedAt: string | null;
+};
+
+const assistanceRequests = new Map<string, AssistanceRequest[]>();
 
 function getSingleParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -33,6 +46,22 @@ function getSingleParam(value: string | string[] | undefined): string | undefine
 
 function getViewerCount(demoId: string): number {
   return demoViewers.get(demoId)?.size ?? 0;
+}
+
+function getAssistanceRequests(demoId: string) {
+  return assistanceRequests.get(demoId) ?? [];
+}
+
+function serializeAssistanceRequest(request: AssistanceRequest) {
+  return {
+    id: request.id,
+    type: request.type,
+    message: request.message,
+    status: request.status,
+    createdAt: request.createdAt,
+    resolvedAt: request.resolvedAt,
+    participantLabel: `Participant ${request.sessionId.slice(-4).toUpperCase()}`,
+  };
 }
 
 async function canAccessDemo(user: User, demoIdOrPublicId: string | string[] | undefined): Promise<boolean> {
@@ -271,6 +300,82 @@ export async function registerRoutes(
       res.json({ demo, chants: chantsList, state, viewerCount, admins: admins.filter(Boolean) });
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch demonstration" });
+    }
+  });
+
+  app.get("/api/demos/:id/assistance", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      res.json(getAssistanceRequests(demo.id).map(serializeAssistanceRequest));
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch assistance requests" });
+    }
+  });
+
+  app.patch("/api/demos/:id/assistance/:requestId", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      const requestId = getSingleParam(req.params.requestId);
+      const requests = getAssistanceRequests(demo.id);
+      const request = requests.find((item) => item.id === requestId);
+      if (!request) return res.status(404).json({ message: "Assistance request not found" });
+
+      request.status = "resolved";
+      request.resolvedAt = new Date().toISOString();
+      io.to(`demo:${demo.publicId}`).emit("assistance_update", requests.map(serializeAssistanceRequest));
+      res.json(serializeAssistanceRequest(request));
+    } catch (err) {
+      res.status(500).json({ message: "Failed to update assistance request" });
+    }
+  });
+
+  app.post("/api/public/demos/:publicId/assistance", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+
+      const rawType = typeof req.body?.type === "string" ? req.body.type : "organizer";
+      const type: AssistanceType = ["accessibility", "connection", "safety", "organizer"].includes(rawType)
+        ? rawType as AssistanceType
+        : "organizer";
+      const sessionId = typeof req.body?.sessionId === "string" && req.body.sessionId.trim()
+        ? req.body.sessionId.trim().slice(0, 80)
+        : crypto.randomUUID();
+      const message = typeof req.body?.message === "string" && req.body.message.trim()
+        ? req.body.message.trim().slice(0, 240)
+        : "Participant requested help.";
+      const requests = getAssistanceRequests(demo.id);
+      const existingOpen = requests.find((item) => item.sessionId === sessionId && item.type === type && item.status === "open");
+
+      if (existingOpen) {
+        return res.json(serializeAssistanceRequest(existingOpen));
+      }
+
+      const request: AssistanceRequest = {
+        id: crypto.randomUUID(),
+        demoId: demo.id,
+        type,
+        message,
+        sessionId,
+        status: "open",
+        createdAt: new Date().toISOString(),
+        resolvedAt: null,
+      };
+
+      requests.unshift(request);
+      assistanceRequests.set(demo.id, requests.slice(0, 50));
+      io.to(`demo:${demo.publicId}`).emit("assistance_update", getAssistanceRequests(demo.id).map(serializeAssistanceRequest));
+      res.status(201).json(serializeAssistanceRequest(request));
+    } catch (err) {
+      res.status(500).json({ message: "Failed to submit assistance request" });
     }
   });
 

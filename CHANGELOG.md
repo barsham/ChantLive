@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.35 - 26 June 2026
+
+Live participant assistance requests inspired by audience-engagement and event-app competitor patterns.
+
+### Added
+
+- Live participant assistance requests: Participants can request accessibility, connection, or safety help directly from the Help panel during a live event.
+- Command-center assistance queue: Admins can see open participant help requests in the command center with participant labels, timestamps, and request categories.
+
+### Improved
+
+- Resolve assistance workflow: Admins can mark assistance requests as resolved so the command center remains focused on active participant needs.
+- Help request readiness signal: The command-center readiness row now shows whether there are open participant help requests requiring organiser attention.
+- Participant assistance API: ChantLive now has authenticated organiser endpoints and a participant submission endpoint for live help requests without requiring participants to create accounts.
+
 ## 1.1.34 - 26 June 2026
 
 Run-of-show generator, safety coordination board, command/editor workflow links, share-kit handoffs, and participant support guidance.

@@ -56,8 +56,19 @@ export default function Participant() {
   const [highContrast, setHighContrast] = useState(() => localStorage.getItem("chant_high_contrast") === "true");
   const [lowBandwidth, setLowBandwidth] = useState(() => localStorage.getItem("chant_low_bandwidth") === "true");
   const [showHelp, setShowHelp] = useState(false);
+  const [assistanceSent, setAssistanceSent] = useState<string | null>(null);
+  const [assistanceError, setAssistanceError] = useState<string | null>(null);
   const localPhaseStartRef = useRef(Date.now());
   const lowBandwidthRef = useRef(lowBandwidth);
+
+  const getSessionId = () => {
+    let sessionId = localStorage.getItem("chant_session_id");
+    if (!sessionId) {
+      sessionId = crypto.randomUUID();
+      localStorage.setItem("chant_session_id", sessionId);
+    }
+    return sessionId;
+  };
 
   useEffect(() => {
     const updateOnlineStatus = () => {
@@ -79,12 +90,7 @@ export default function Participant() {
 
     socket.on("connect", () => {
       setConnected(true);
-      let sessionId = localStorage.getItem("chant_session_id");
-      if (!sessionId) {
-        sessionId = crypto.randomUUID();
-        localStorage.setItem("chant_session_id", sessionId);
-      }
-      socket.emit("join_demo", { publicId, sessionId });
+      socket.emit("join_demo", { publicId, sessionId: getSessionId() });
     });
 
     socket.on("disconnect", () => {
@@ -124,12 +130,7 @@ export default function Participant() {
     if (!socket.connected) {
       socket.connect();
     } else {
-      let sessionId = localStorage.getItem("chant_session_id");
-      if (!sessionId) {
-        sessionId = crypto.randomUUID();
-        localStorage.setItem("chant_session_id", sessionId);
-      }
-      socket.emit("join_demo", { publicId, sessionId });
+      socket.emit("join_demo", { publicId, sessionId: getSessionId() });
     }
 
     return () => {
@@ -168,6 +169,25 @@ export default function Participant() {
   const retryConnection = () => {
     setError(null);
     window.location.reload();
+  };
+  const requestAssistance = async (type: "accessibility" | "connection" | "safety" | "organizer", message: string) => {
+    setAssistanceError(null);
+    try {
+      const response = await fetch(`/api/public/demos/${publicId}/assistance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, message, sessionId: getSessionId() }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Could not notify the organizer.");
+      }
+
+      setAssistanceSent(type);
+      setTimeout(() => setAssistanceSent(null), 3500);
+    } catch {
+      setAssistanceError("Could not notify the organizer. Please ask someone nearby for help.");
+    }
   };
 
   useEffect(() => {
@@ -532,6 +552,42 @@ export default function Participant() {
                 If you need support
               </p>
               <p className="text-neutral-400">Ask a marshal or accessibility helper for the plain link, a quieter place, repeated instructions, or help reading the chant.</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => requestAssistance("accessibility", "Participant needs accessibility support.")}
+                  className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-900"
+                  data-testid="button-request-accessibility-help"
+                >
+                  Need accessibility help
+                </button>
+                <button
+                  type="button"
+                  onClick={() => requestAssistance("connection", "Participant needs connection help.")}
+                  className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-900"
+                  data-testid="button-request-connection-help"
+                >
+                  Need connection help
+                </button>
+                <button
+                  type="button"
+                  onClick={() => requestAssistance("safety", "Participant needs safety or marshal help.")}
+                  className="rounded-md border border-red-500/40 px-3 py-1.5 text-xs font-medium text-red-100 hover:bg-red-950/40"
+                  data-testid="button-request-safety-help"
+                >
+                  Need safety help
+                </button>
+              </div>
+              {assistanceSent && (
+                <p className="mt-2 text-xs text-emerald-300" role="status" data-testid="text-assistance-sent">
+                  Organizer notified. Stay where you are if it is safe.
+                </p>
+              )}
+              {assistanceError && (
+                <p className="mt-2 text-xs text-red-300" role="alert" data-testid="text-assistance-error">
+                  {assistanceError}
+                </p>
+              )}
             </div>
           </div>
         </section>
