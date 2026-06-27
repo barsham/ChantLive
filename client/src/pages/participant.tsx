@@ -19,6 +19,11 @@ type ChantData = {
   phaseDurationMs?: number;
   serverNow?: string;
 };
+type OrganizerAnnouncement = {
+  id: string;
+  message: string;
+  createdAt: string;
+};
 
 const clampProgress = (value: number) => Math.min(100, Math.max(0, value));
 const getFallbackPhaseDuration = (phase: "leader" | "people") => phase === "leader" ? 4000 : 3000;
@@ -58,6 +63,8 @@ export default function Participant() {
   const [showHelp, setShowHelp] = useState(false);
   const [assistanceSent, setAssistanceSent] = useState<string | null>(null);
   const [assistanceError, setAssistanceError] = useState<string | null>(null);
+  const [pulseSent, setPulseSent] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState<OrganizerAnnouncement | null>(null);
   const localPhaseStartRef = useRef(Date.now());
   const lowBandwidthRef = useRef(lowBandwidth);
 
@@ -127,6 +134,10 @@ export default function Participant() {
       setError(msg);
     });
 
+    socket.on("organizer_announcement", (data: OrganizerAnnouncement) => {
+      setAnnouncement(data);
+    });
+
     if (!socket.connected) {
       socket.connect();
     } else {
@@ -139,6 +150,7 @@ export default function Participant() {
       socket.off("viewer_count");
       socket.off("demo_ended");
       socket.off("demo_error");
+      socket.off("organizer_announcement");
       socket.off("connect");
       socket.off("disconnect");
     };
@@ -187,6 +199,21 @@ export default function Participant() {
       setTimeout(() => setAssistanceSent(null), 3500);
     } catch {
       setAssistanceError("Could not notify the organizer. Please ask someone nearby for help.");
+    }
+  };
+  const sendPulse = async (type: "too_fast" | "too_slow" | "cant_hear" | "all_good") => {
+    try {
+      const response = await fetch(`/api/public/demos/${publicId}/pulse`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, sessionId: getSessionId() }),
+      });
+
+      if (!response.ok) return;
+      setPulseSent(type);
+      setTimeout(() => setPulseSent(null), 2500);
+    } catch {
+      // Crowd pulse is optional feedback; avoid interrupting the live chant view on failure.
     }
   };
 
@@ -416,6 +443,20 @@ export default function Participant() {
       <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {chantAnnouncement}
       </div>
+      {announcement && (
+        <div className="mx-4 mt-4 rounded-2xl border border-amber-300/40 bg-amber-300/15 p-4 text-center text-amber-50" role="status" data-testid="banner-organizer-announcement">
+          <p className="text-xs font-mono uppercase tracking-widest text-amber-100/80">Organizer update</p>
+          <p className="mt-1 text-lg font-semibold">{announcement.message}</p>
+          <button
+            type="button"
+            onClick={() => setAnnouncement(null)}
+            className="mt-2 text-xs font-medium text-amber-100 underline"
+            data-testid="button-dismiss-announcement"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
       <div className="flex-1 flex items-center justify-center p-6">
         <div 
           className={`text-center ${
@@ -545,6 +586,52 @@ export default function Participant() {
                 If plans change
               </p>
               <p className="text-neutral-400">Follow organiser instructions first. ChantLive shows chant timing, but local safety directions take priority.</p>
+            </div>
+            <div>
+              <p className="mb-1 flex items-center gap-2 font-semibold text-white">
+                <Users className="h-4 w-4" />
+                Send the organizer a signal
+              </p>
+              <p className="text-neutral-400">Tell the organizer if the pace, sound, or access needs attention. Your phone does not show your name.</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => sendPulse("too_fast")}
+                  className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-900"
+                  data-testid="button-pulse-too-fast"
+                >
+                  Too fast
+                </button>
+                <button
+                  type="button"
+                  onClick={() => sendPulse("too_slow")}
+                  className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-900"
+                  data-testid="button-pulse-too-slow"
+                >
+                  Too slow
+                </button>
+                <button
+                  type="button"
+                  onClick={() => sendPulse("cant_hear")}
+                  className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-900"
+                  data-testid="button-pulse-cant-hear"
+                >
+                  Can't hear
+                </button>
+                <button
+                  type="button"
+                  onClick={() => sendPulse("all_good")}
+                  className="rounded-md border border-emerald-400/40 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-950/40"
+                  data-testid="button-pulse-all-good"
+                >
+                  All good
+                </button>
+              </div>
+              {pulseSent && (
+                <p className="mt-2 text-xs text-emerald-300" role="status" data-testid="text-pulse-sent">
+                  Signal sent to the organizer.
+                </p>
+              )}
             </div>
             <div>
               <p className="mb-1 flex items-center gap-2 font-semibold text-white">

@@ -37,8 +37,21 @@ type AssistanceRequest = {
   createdAt: string;
   resolvedAt: string | null;
 };
+type CrowdPulseType = "too_fast" | "too_slow" | "cant_hear" | "all_good";
+type CrowdPulse = {
+  sessionId: string;
+  type: CrowdPulseType;
+  createdAt: string;
+};
+type OrganizerAnnouncement = {
+  id: string;
+  message: string;
+  createdAt: string;
+};
 
 const assistanceRequests = new Map<string, AssistanceRequest[]>();
+const crowdPulses = new Map<string, Map<string, CrowdPulse>>();
+const organizerAnnouncements = new Map<string, OrganizerAnnouncement[]>();
 
 function getSingleParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -61,6 +74,26 @@ function serializeAssistanceRequest(request: AssistanceRequest) {
     createdAt: request.createdAt,
     resolvedAt: request.resolvedAt,
     participantLabel: `Participant ${request.sessionId.slice(-4).toUpperCase()}`,
+  };
+}
+
+function getCrowdPulseSummary(demoId: string) {
+  const pulses = Array.from(crowdPulses.get(demoId)?.values() ?? []);
+  const counts: Record<CrowdPulseType, number> = {
+    too_fast: 0,
+    too_slow: 0,
+    cant_hear: 0,
+    all_good: 0,
+  };
+
+  for (const pulse of pulses) {
+    counts[pulse.type] += 1;
+  }
+
+  return {
+    counts,
+    total: pulses.length,
+    updatedAt: pulses[0]?.createdAt ?? null,
   };
 }
 
@@ -337,6 +370,43 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/demos/:id/pulse", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      res.json(getCrowdPulseSummary(demo.id));
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch crowd pulse" });
+    }
+  });
+
+  app.post("/api/demos/:id/announcement", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      const message = typeof req.body?.message === "string" ? req.body.message.trim().slice(0, 180) : "";
+      if (!message) return res.status(400).json({ message: "Announcement message is required" });
+
+      const announcement: OrganizerAnnouncement = {
+        id: crypto.randomUUID(),
+        message,
+        createdAt: new Date().toISOString(),
+      };
+      const announcements = organizerAnnouncements.get(demo.id) ?? [];
+      organizerAnnouncements.set(demo.id, [announcement, ...announcements].slice(0, 10));
+      io.to(`demo:${demo.publicId}`).emit("organizer_announcement", announcement);
+      res.status(201).json(announcement);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to send announcement" });
+    }
+  });
+
   app.post("/api/public/demos/:publicId/assistance", async (req, res) => {
     try {
       const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
@@ -376,6 +446,34 @@ export async function registerRoutes(
       res.status(201).json(serializeAssistanceRequest(request));
     } catch (err) {
       res.status(500).json({ message: "Failed to submit assistance request" });
+    }
+  });
+
+  app.post("/api/public/demos/:publicId/pulse", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+
+      const rawType = typeof req.body?.type === "string" ? req.body.type : "all_good";
+      const type: CrowdPulseType = ["too_fast", "too_slow", "cant_hear", "all_good"].includes(rawType)
+        ? rawType as CrowdPulseType
+        : "all_good";
+      const sessionId = typeof req.body?.sessionId === "string" && req.body.sessionId.trim()
+        ? req.body.sessionId.trim().slice(0, 80)
+        : crypto.randomUUID();
+      const demoPulseMap = crowdPulses.get(demo.id) ?? new Map<string, CrowdPulse>();
+
+      demoPulseMap.set(sessionId, {
+        sessionId,
+        type,
+        createdAt: new Date().toISOString(),
+      });
+      crowdPulses.set(demo.id, demoPulseMap);
+      const summary = getCrowdPulseSummary(demo.id);
+      io.to(`demo:${demo.publicId}`).emit("pulse_update", summary);
+      res.status(201).json(summary);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to submit crowd pulse" });
     }
   });
 

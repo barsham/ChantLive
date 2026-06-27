@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.36 - 27 June 2026
+
+Competitor-informed live crowd pulse and organiser announcements for real-time event feedback.
+
+### Added
+
+- Live crowd pulse: Participants can send quick signals such as too fast, too slow, can't hear, or all good from the Help panel.
+- Command-center pulse dashboard: Admins can monitor aggregate participant pulse signals in the command center while the event is running.
+- Organizer announcements: Admins can send short live announcements from the command center to participant screens.
+
+### Improved
+
+- Participant announcement banner: Participant screens now show dismissible organiser updates without leaving the live chant view.
+- Crowd pulse API: ChantLive now has public participant pulse submission and authenticated organiser pulse-reading endpoints without requiring participant accounts.
+
 ## 1.1.35 - 26 June 2026
 
 Live participant assistance requests inspired by audience-engagement and event-app competitor patterns.

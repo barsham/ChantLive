@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.36",
+      "releasedAt": "2026-06-27",
+      "summary": "Competitor-informed live crowd pulse and organiser announcements for real-time event feedback.",
+      "items": [
+        {
+          "id": "cl-2026-06-27-live-crowd-pulse",
+          "title": "Live crowd pulse",
+          "description": "Participants can send quick signals such as too fast, too slow, can't hear, or all good from the Help panel.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-27",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-27-command-center-pulse-dashboard",
+          "title": "Command-center pulse dashboard",
+          "description": "Admins can monitor aggregate participant pulse signals in the command center while the event is running.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-27",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-27-organizer-announcements",
+          "title": "Organizer announcements",
+          "description": "Admins can send short live announcements from the command center to participant screens.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-27",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-27-participant-announcement-banner",
+          "title": "Participant announcement banner",
+          "description": "Participant screens now show dismissible organiser updates without leaving the live chant view.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-27",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-27-pulse-api",
+          "title": "Crowd pulse API",
+          "description": "ChantLive now has public participant pulse submission and authenticated organiser pulse-reading endpoints without requiring participant accounts.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-27",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.35",
       "releasedAt": "2026-06-26",
       "summary": "Live participant assistance requests inspired by audience-engagement and event-app competitor patterns.",

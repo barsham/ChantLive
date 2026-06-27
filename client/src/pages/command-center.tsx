@@ -1,10 +1,11 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
 import { ArrowLeft, CheckCircle2, ClipboardList, FileText, LifeBuoy, Megaphone, QrCode, Route, Share2, ShieldCheck, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +35,16 @@ type AssistanceRequest = {
   resolvedAt: string | null;
   participantLabel: string;
 };
+type CrowdPulseSummary = {
+  counts: {
+    too_fast: number;
+    too_slow: number;
+    cant_hear: number;
+    all_good: number;
+  };
+  total: number;
+  updatedAt: string | null;
+};
 
 function statusTone(status: string) {
   if (status === "live") return "Live event: prioritize recovery, current chant, and participant link visibility.";
@@ -45,6 +56,7 @@ export default function CommandCenter() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const [announcementMessage, setAnnouncementMessage] = useState("");
 
   const { data, isLoading } = useQuery<DemoDetail>({
     queryKey: ["/api/demos", id],
@@ -52,6 +64,11 @@ export default function CommandCenter() {
   });
   const { data: assistance = [] } = useQuery<AssistanceRequest[]>({
     queryKey: ["/api/demos", id, "assistance"],
+    refetchInterval: 3000,
+    enabled: Boolean(id),
+  });
+  const { data: pulse } = useQuery<CrowdPulseSummary>({
+    queryKey: ["/api/demos", id, "pulse"],
     refetchInterval: 3000,
     enabled: Boolean(id),
   });
@@ -65,6 +82,18 @@ export default function CommandCenter() {
     },
     onError: (err: Error) => {
       toast({ title: "Could not resolve request", description: err.message, variant: "destructive" });
+    },
+  });
+  const sendAnnouncement = useMutation({
+    mutationFn: async (message: string) => {
+      await apiRequest("POST", `/api/demos/${id}/announcement`, { message });
+    },
+    onSuccess: () => {
+      setAnnouncementMessage("");
+      toast({ title: "Announcement sent to participants" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Could not send announcement", description: err.message, variant: "destructive" });
     },
   });
 
@@ -165,6 +194,59 @@ export default function CommandCenter() {
               <p className="break-all"><span className="font-medium text-foreground">Participant link:</span> {publicUrl}</p>
             </CardContent>
           </Card>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            <Card data-testid="card-crowd-pulse">
+              <CardHeader>
+                <CardTitle className="text-base">Crowd pulse</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  {[
+                    ["Too fast", pulse?.counts.too_fast ?? 0],
+                    ["Too slow", pulse?.counts.too_slow ?? 0],
+                    ["Can't hear", pulse?.counts.cant_hear ?? 0],
+                    ["All good", pulse?.counts.all_good ?? 0],
+                  ].map(([label, count]) => (
+                    <div key={label} className="rounded-lg border bg-background p-3">
+                      <p className="text-xs text-muted-foreground">{label}</p>
+                      <p className="mt-1 text-2xl font-bold">{count}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  {pulse?.total ? `${pulse.total} participants have sent their latest signal.` : "No participant pulse signals yet."}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card data-testid="card-send-announcement">
+              <CardHeader>
+                <CardTitle className="text-base">Send participant announcement</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Textarea
+                  value={announcementMessage}
+                  onChange={(event) => setAnnouncementMessage(event.target.value)}
+                  placeholder="Example: Move closer to the speaker, then keep this page open."
+                  rows={3}
+                  maxLength={180}
+                  data-testid="input-announcement-message"
+                />
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs text-muted-foreground">{announcementMessage.length}/180 characters</p>
+                  <Button
+                    size="sm"
+                    onClick={() => sendAnnouncement.mutate(announcementMessage.trim())}
+                    disabled={!announcementMessage.trim() || sendAnnouncement.isPending}
+                    data-testid="button-send-announcement"
+                  >
+                    Send to participants
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           <Card className="mt-6 border-primary/20 bg-primary/5" data-testid="card-live-assistance-queue">
             <CardHeader>
