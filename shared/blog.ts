@@ -19,6 +19,92 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "backup-communication-plan-for-peaceful-events",
+    title: "How to Build a Backup Communication Plan for a Peaceful Event",
+    description:
+      "A practical backup communication checklist for peaceful demonstrations and community events when mobile signal, noise, or crowd movement disrupts the main plan.",
+    publishedAt: "2026-06-28",
+    category: "Communication",
+    readingMinutes: 7,
+    tags: ["communication", "backup-plan", "live-events", "organizing"],
+    disclaimer:
+      "This article is general event-planning information only. It is not legal, medical, or emergency-response advice. Follow local authority requirements, venue rules, and emergency services instructions for your event.",
+    sections: [
+      {
+        heading: "Decide What Must Still Work If The Main Channel Fails",
+        paragraphs: [
+          "Backup communication starts by choosing the few messages that matter most when the event gets loud, crowded, or temporarily loses mobile signal. If everything feels equally important, people will not know what to repeat first.",
+          "For most peaceful events, the essential messages are usually where to gather, who participants should listen to, how schedule changes will be shared, and how people can get help without confusion.",
+        ],
+        bullets: [
+          "Write the event location and fallback meeting point in one plain sentence.",
+          "Name the people or roles allowed to give live instructions.",
+          "Decide how you will tell participants that the plan has changed.",
+        ],
+      },
+      {
+        heading: "Use One Primary Channel And One Simple Fallback",
+        paragraphs: [
+          "A backup plan works best when it is deliberately small. Choose one primary communication path for normal conditions and one fallback that people can understand without a long briefing.",
+          "Examples include a live mobile page plus printed short links, or a lead volunteer announcement plus visible handout instructions. The fallback should not require participants to remember several steps.",
+        ],
+        bullets: [
+          "Keep one primary joining path such as a QR code or short link.",
+          "Add one fallback path such as a printed handout, sign, or pre-briefed volunteer script.",
+          "Use the same wording across signs, volunteer notes, and digital posts.",
+        ],
+      },
+      {
+        heading: "Assign Relay Roles Before The Event Starts",
+        paragraphs: [
+          "Backup communication usually fails because everyone assumes someone else will repeat the message. Clear relay roles reduce that gap and help people stay calm when the environment gets noisy or distracted.",
+          "You do not need a large command structure. You need a small number of trusted people who know who speaks first, who repeats instructions, and who watches for people who missed the update.",
+        ],
+        bullets: [
+          "Event lead: approves message changes.",
+          "Volunteer relay: repeats short instructions to nearby participants.",
+          "Accessibility helper: checks whether instructions are reaching people who need a repeated or alternate format.",
+        ],
+      },
+      {
+        heading: "Prepare Short Printed And Spoken Messages",
+        paragraphs: [
+          "When conditions change quickly, short messages travel farther than detailed explanations. Write them in advance so volunteers are not improvising under pressure.",
+          "A good message says what changed, what participants should do next, and where they can check the current update.",
+        ],
+        bullets: [
+          "Example arrival message: 'If scanning is difficult, use this short link and stay near the welcome sign for updates.'",
+          "Example delay message: 'We are starting later than planned. Stay with your group lead and watch the participant page or signs for the new start time.'",
+          "Example regroup message: 'Please move to the fallback meeting point shown on the handout and wait for the next instruction there.'",
+        ],
+      },
+      {
+        heading: "Test The Plan In Five Minutes",
+        paragraphs: [
+          "A brief live test reveals unclear wording, missing handouts, and volunteer confusion before participants arrive. The goal is not a perfect drill. The goal is to find the one weak point that will slow everyone down later.",
+          "Run the test with the people who will actually be helping on the day, using the same phones, signs, and printed materials you expect to use live.",
+        ],
+        bullets: [
+          "Ask one person to join using the primary path and another to use the fallback path.",
+          "Have a volunteer repeat one prepared change message out loud.",
+          "Check that the fallback meeting point and support contact are written the same way everywhere.",
+        ],
+      },
+      {
+        heading: "Use ChantLive As Part Of A Layered Plan",
+        paragraphs: [
+          "ChantLive can help when you want one live page, a QR code, and a copyable participant link that volunteers can share quickly. It is most useful when organizers treat it as one layer in a broader communication plan rather than the only layer.",
+          "If you use ChantLive, prepare the participant page early, keep the short link ready in volunteer notes, and invite a backup admin so another trusted person can assist if the main organizer is busy.",
+        ],
+        bullets: [
+          "Print the participant handout as a fallback to the main QR sign.",
+          "Share the join link with volunteers before the event starts.",
+          "Confirm at least one backup admin can help manage live updates if needed.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "accessible-qr-code-joining-for-peaceful-events",
     title: "How to Make QR-Code Joining More Accessible at a Peaceful Event",
     description:

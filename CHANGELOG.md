@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.38 - 28 June 2026
+
+Practical backup communication guidance for peaceful events facing weak signal or noisy conditions.
+
+### Documentation
+
+- Backup communication planning guide: The public blog now includes a practical guide to building a simple backup communication plan for peaceful events when the main channel becomes unreliable.
+
 ## 1.1.37 - 28 June 2026
 
 Competitor-informed live audience Q&A with anonymous participant questions, upvotes, and organiser moderation.
