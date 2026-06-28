@@ -45,6 +45,15 @@ type CrowdPulseSummary = {
   total: number;
   updatedAt: string | null;
 };
+type AudienceQuestion = {
+  id: string;
+  text: string;
+  status: "open" | "answered" | "dismissed";
+  votes: number;
+  createdAt: string;
+  resolvedAt: string | null;
+  participantLabel: string;
+};
 
 function statusTone(status: string) {
   if (status === "live") return "Live event: prioritize recovery, current chant, and participant link visibility.";
@@ -72,6 +81,11 @@ export default function CommandCenter() {
     refetchInterval: 3000,
     enabled: Boolean(id),
   });
+  const { data: audienceQuestions = [] } = useQuery<AudienceQuestion[]>({
+    queryKey: ["/api/demos", id, "questions"],
+    refetchInterval: 3000,
+    enabled: Boolean(id),
+  });
   const resolveAssistance = useMutation({
     mutationFn: async (requestId: string) => {
       await apiRequest("PATCH", `/api/demos/${id}/assistance/${requestId}`, { status: "resolved" });
@@ -94,6 +108,18 @@ export default function CommandCenter() {
     },
     onError: (err: Error) => {
       toast({ title: "Could not send announcement", description: err.message, variant: "destructive" });
+    },
+  });
+  const moderateQuestion = useMutation({
+    mutationFn: async ({ questionId, status }: { questionId: string; status: "answered" | "dismissed" }) => {
+      await apiRequest("PATCH", `/api/demos/${id}/questions/${questionId}`, { status });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "questions"] });
+      toast({ title: "Audience question updated" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Could not update question", description: err.message, variant: "destructive" });
     },
   });
 
@@ -128,12 +154,16 @@ export default function CommandCenter() {
 
   const publicUrl = `${window.location.origin}/d/${data.demo.publicId}`;
   const openAssistance = assistance.filter((request) => request.status === "open");
+  const openQuestions = audienceQuestions
+    .filter((question) => question.status === "open")
+    .sort((a, b) => b.votes - a.votes || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   const readiness = [
     { label: "Chants", ready: data.chants.length > 0, detail: `${data.chants.length} prepared` },
     { label: "Backup admin", ready: data.admins.length > 1, detail: `${data.admins.length} admin${data.admins.length === 1 ? "" : "s"}` },
     { label: "Participant link", ready: Boolean(publicUrl), detail: "Available" },
     { label: "Live state", ready: data.demo.status === "live", detail: data.demo.status },
     { label: "Help requests", ready: openAssistance.length === 0, detail: `${openAssistance.length} open` },
+    { label: "Questions", ready: openQuestions.length === 0, detail: `${openQuestions.length} open` },
   ];
 
   const tools = [
@@ -170,7 +200,7 @@ export default function CommandCenter() {
             <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{statusTone(data.demo.status)}</p>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-5">
+          <div className="mt-6 grid gap-4 md:grid-cols-6">
             {readiness.map((item) => (
               <Card key={item.label} data-testid={`card-command-readiness-${item.label.toLowerCase().replace(/\s+/g, "-")}`}>
                 <CardContent className="p-4">
@@ -287,6 +317,60 @@ export default function CommandCenter() {
                           <CheckCircle2 className="mr-1 h-4 w-4" />
                           Mark resolved
                         </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6" data-testid="card-audience-question-queue">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between gap-3 text-base">
+                <span className="flex items-center gap-2">
+                  <Megaphone className="h-5 w-5 text-primary" />
+                  Live audience Q&A
+                </span>
+                <Badge variant={openQuestions.length > 0 ? "default" : "secondary"}>{openQuestions.length} open</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {openQuestions.length === 0 ? (
+                <p className="text-sm text-muted-foreground" data-testid="text-no-audience-question-queue">
+                  No open audience questions. Participant questions and upvotes will appear here.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {openQuestions.slice(0, 8).map((question) => (
+                    <div key={question.id} className="rounded-lg border bg-background p-3" data-testid={`card-admin-audience-question-${question.id}`}>
+                      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div>
+                          <p className="text-sm font-medium">{question.text}</p>
+                          <p className="mt-2 text-xs text-muted-foreground">
+                            {question.votes} vote{question.votes === 1 ? "" : "s"} - {question.participantLabel} - {new Date(question.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => moderateQuestion.mutate({ questionId: question.id, status: "answered" })}
+                            disabled={moderateQuestion.isPending}
+                            data-testid={`button-answer-question-${question.id}`}
+                          >
+                            Answered
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => moderateQuestion.mutate({ questionId: question.id, status: "dismissed" })}
+                            disabled={moderateQuestion.isPending}
+                            data-testid={`button-dismiss-question-${question.id}`}
+                          >
+                            Dismiss
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}

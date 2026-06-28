@@ -48,10 +48,22 @@ type OrganizerAnnouncement = {
   message: string;
   createdAt: string;
 };
+type AudienceQuestionStatus = "open" | "answered" | "dismissed";
+type AudienceQuestion = {
+  id: string;
+  demoId: string;
+  text: string;
+  sessionId: string;
+  status: AudienceQuestionStatus;
+  voterSessionIds: string[];
+  createdAt: string;
+  resolvedAt: string | null;
+};
 
 const assistanceRequests = new Map<string, AssistanceRequest[]>();
 const crowdPulses = new Map<string, Map<string, CrowdPulse>>();
 const organizerAnnouncements = new Map<string, OrganizerAnnouncement[]>();
+const audienceQuestions = new Map<string, AudienceQuestion[]>();
 
 function getSingleParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -95,6 +107,22 @@ function getCrowdPulseSummary(demoId: string) {
     total: pulses.length,
     updatedAt: pulses[0]?.createdAt ?? null,
   };
+}
+
+function serializeAudienceQuestion(question: AudienceQuestion) {
+  return {
+    id: question.id,
+    text: question.text,
+    status: question.status,
+    votes: question.voterSessionIds.length,
+    createdAt: question.createdAt,
+    resolvedAt: question.resolvedAt,
+    participantLabel: `Participant ${question.sessionId.slice(-4).toUpperCase()}`,
+  };
+}
+
+function getAudienceQuestions(demoId: string) {
+  return audienceQuestions.get(demoId) ?? [];
 }
 
 async function canAccessDemo(user: User, demoIdOrPublicId: string | string[] | undefined): Promise<boolean> {
@@ -407,6 +435,43 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/demos/:id/questions", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      res.json(getAudienceQuestions(demo.id).map(serializeAudienceQuestion));
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch audience questions" });
+    }
+  });
+
+  app.patch("/api/demos/:id/questions/:questionId", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      const questionId = getSingleParam(req.params.questionId);
+      const status = req.body?.status === "answered" ? "answered" : req.body?.status === "dismissed" ? "dismissed" : null;
+      if (!status) return res.status(400).json({ message: "Valid question status is required" });
+
+      const questions = getAudienceQuestions(demo.id);
+      const question = questions.find((item) => item.id === questionId);
+      if (!question) return res.status(404).json({ message: "Audience question not found" });
+
+      question.status = status;
+      question.resolvedAt = new Date().toISOString();
+      io.to(`demo:${demo.publicId}`).emit("question_update", questions.filter((item) => item.status === "open").map(serializeAudienceQuestion));
+      res.json(serializeAudienceQuestion(question));
+    } catch (err) {
+      res.status(500).json({ message: "Failed to update audience question" });
+    }
+  });
+
   app.post("/api/public/demos/:publicId/assistance", async (req, res) => {
     try {
       const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
@@ -446,6 +511,80 @@ export async function registerRoutes(
       res.status(201).json(serializeAssistanceRequest(request));
     } catch (err) {
       res.status(500).json({ message: "Failed to submit assistance request" });
+    }
+  });
+
+  app.get("/api/public/demos/:publicId/questions", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+
+      res.json(getAudienceQuestions(demo.id).filter((question) => question.status === "open").map(serializeAudienceQuestion));
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch audience questions" });
+    }
+  });
+
+  app.post("/api/public/demos/:publicId/questions", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+
+      const text = typeof req.body?.text === "string" ? req.body.text.trim().slice(0, 220) : "";
+      if (!text) return res.status(400).json({ message: "Question text is required" });
+      const sessionId = typeof req.body?.sessionId === "string" && req.body.sessionId.trim()
+        ? req.body.sessionId.trim().slice(0, 80)
+        : crypto.randomUUID();
+      const questions = getAudienceQuestions(demo.id);
+      const duplicate = questions.find((question) => question.sessionId === sessionId && question.status === "open" && question.text.toLowerCase() === text.toLowerCase());
+
+      if (duplicate) {
+        return res.json(serializeAudienceQuestion(duplicate));
+      }
+
+      const question: AudienceQuestion = {
+        id: crypto.randomUUID(),
+        demoId: demo.id,
+        text,
+        sessionId,
+        status: "open",
+        voterSessionIds: [sessionId],
+        createdAt: new Date().toISOString(),
+        resolvedAt: null,
+      };
+
+      questions.unshift(question);
+      audienceQuestions.set(demo.id, questions.slice(0, 80));
+      const openQuestions = getAudienceQuestions(demo.id).filter((item) => item.status === "open").map(serializeAudienceQuestion);
+      io.to(`demo:${demo.publicId}`).emit("question_update", openQuestions);
+      res.status(201).json(serializeAudienceQuestion(question));
+    } catch (err) {
+      res.status(500).json({ message: "Failed to submit audience question" });
+    }
+  });
+
+  app.post("/api/public/demos/:publicId/questions/:questionId/upvote", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+
+      const questionId = getSingleParam(req.params.questionId);
+      const sessionId = typeof req.body?.sessionId === "string" && req.body.sessionId.trim()
+        ? req.body.sessionId.trim().slice(0, 80)
+        : crypto.randomUUID();
+      const questions = getAudienceQuestions(demo.id);
+      const question = questions.find((item) => item.id === questionId && item.status === "open");
+      if (!question) return res.status(404).json({ message: "Audience question not found" });
+
+      if (!question.voterSessionIds.includes(sessionId)) {
+        question.voterSessionIds.push(sessionId);
+      }
+
+      const openQuestions = questions.filter((item) => item.status === "open").map(serializeAudienceQuestion);
+      io.to(`demo:${demo.publicId}`).emit("question_update", openQuestions);
+      res.json(serializeAudienceQuestion(question));
+    } catch (err) {
+      res.status(500).json({ message: "Failed to upvote audience question" });
     }
   });
 

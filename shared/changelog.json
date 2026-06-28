@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.37",
+      "releasedAt": "2026-06-28",
+      "summary": "Competitor-informed live audience Q&A with anonymous participant questions, upvotes, and organiser moderation.",
+      "items": [
+        {
+          "id": "cl-2026-06-28-anonymous-audience-questions",
+          "title": "Anonymous audience questions",
+          "description": "Participants can submit short anonymous questions from the Help panel without creating an account or interrupting the chant.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-28",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-28-question-upvotes",
+          "title": "Participant question upvotes",
+          "description": "Participants can vote up open questions so organisers can see which questions matter most to the crowd.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-28",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-28-command-center-qa-queue",
+          "title": "Command-center Q&A queue",
+          "description": "Admins can monitor live audience questions sorted by votes and submission time from the command center.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-28",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-28-question-moderation",
+          "title": "Question moderation workflow",
+          "description": "Admins can mark audience questions as answered or dismissed so the live queue stays focused.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-28",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-28-question-readiness-signal",
+          "title": "Open question readiness signal",
+          "description": "The command-center readiness row now shows the count of open audience questions requiring organiser attention.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-28",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.36",
       "releasedAt": "2026-06-27",
       "summary": "Competitor-informed live crowd pulse and organiser announcements for real-time event feedback.",

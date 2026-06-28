@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.37 - 28 June 2026
+
+Competitor-informed live audience Q&A with anonymous participant questions, upvotes, and organiser moderation.
+
+### Added
+
+- Anonymous audience questions: Participants can submit short anonymous questions from the Help panel without creating an account or interrupting the chant.
+- Participant question upvotes: Participants can vote up open questions so organisers can see which questions matter most to the crowd.
+- Command-center Q&A queue: Admins can monitor live audience questions sorted by votes and submission time from the command center.
+
+### Improved
+
+- Question moderation workflow: Admins can mark audience questions as answered or dismissed so the live queue stays focused.
+- Open question readiness signal: The command-center readiness row now shows the count of open audience questions requiring organiser attention.
+
 ## 1.1.36 - 27 June 2026
 
 Competitor-informed live crowd pulse and organiser announcements for real-time event feedback.

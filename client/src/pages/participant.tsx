@@ -24,6 +24,14 @@ type OrganizerAnnouncement = {
   message: string;
   createdAt: string;
 };
+type AudienceQuestion = {
+  id: string;
+  text: string;
+  status: "open" | "answered" | "dismissed";
+  votes: number;
+  createdAt: string;
+  participantLabel: string;
+};
 
 const clampProgress = (value: number) => Math.min(100, Math.max(0, value));
 const getFallbackPhaseDuration = (phase: "leader" | "people") => phase === "leader" ? 4000 : 3000;
@@ -65,6 +73,9 @@ export default function Participant() {
   const [assistanceError, setAssistanceError] = useState<string | null>(null);
   const [pulseSent, setPulseSent] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState<OrganizerAnnouncement | null>(null);
+  const [audienceQuestions, setAudienceQuestions] = useState<AudienceQuestion[]>([]);
+  const [questionText, setQuestionText] = useState("");
+  const [questionStatus, setQuestionStatus] = useState<string | null>(null);
   const localPhaseStartRef = useRef(Date.now());
   const lowBandwidthRef = useRef(lowBandwidth);
 
@@ -138,6 +149,10 @@ export default function Participant() {
       setAnnouncement(data);
     });
 
+    socket.on("question_update", (questions: AudienceQuestion[]) => {
+      setAudienceQuestions(questions);
+    });
+
     if (!socket.connected) {
       socket.connect();
     } else {
@@ -151,9 +166,17 @@ export default function Participant() {
       socket.off("demo_ended");
       socket.off("demo_error");
       socket.off("organizer_announcement");
+      socket.off("question_update");
       socket.off("connect");
       socket.off("disconnect");
     };
+  }, [publicId]);
+
+  useEffect(() => {
+    fetch(`/api/public/demos/${publicId}/questions`)
+      .then((response) => response.ok ? response.json() : [])
+      .then((questions: AudienceQuestion[]) => setAudienceQuestions(questions))
+      .catch(() => setAudienceQuestions([]));
   }, [publicId]);
 
   const hasChantContent = chantData?.callText || chantData?.responseText;
@@ -214,6 +237,39 @@ export default function Participant() {
       setTimeout(() => setPulseSent(null), 2500);
     } catch {
       // Crowd pulse is optional feedback; avoid interrupting the live chant view on failure.
+    }
+  };
+  const submitQuestion = async () => {
+    const text = questionText.trim();
+    if (!text) return;
+
+    try {
+      const response = await fetch(`/api/public/demos/${publicId}/questions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, sessionId: getSessionId() }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Could not send question.");
+      }
+
+      setQuestionText("");
+      setQuestionStatus("Question sent to the organizer.");
+      setTimeout(() => setQuestionStatus(null), 3000);
+    } catch {
+      setQuestionStatus("Could not send question. Please ask an organizer directly.");
+    }
+  };
+  const upvoteQuestion = async (questionId: string) => {
+    try {
+      await fetch(`/api/public/demos/${publicId}/questions/${questionId}/upvote`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: getSessionId() }),
+      });
+    } catch {
+      // Upvotes are best-effort and should not disrupt the live chant view.
     }
   };
 
@@ -675,6 +731,60 @@ export default function Participant() {
                   {assistanceError}
                 </p>
               )}
+            </div>
+          </div>
+          <div className="mx-auto mt-4 grid max-w-6xl gap-4 md:grid-cols-[1fr_1.2fr]">
+            <div className="rounded-xl border border-neutral-800 bg-black/30 p-4">
+              <p className="font-semibold text-white">Ask the organizer</p>
+              <p className="mt-1 text-xs text-neutral-400">Send an anonymous question without interrupting the chant.</p>
+              <textarea
+                value={questionText}
+                onChange={(event) => setQuestionText(event.target.value)}
+                maxLength={220}
+                rows={3}
+                className="mt-3 w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-sm text-neutral-100 outline-none focus:border-neutral-400"
+                placeholder="Type a short question for the organizer..."
+                data-testid="input-audience-question"
+              />
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <span className="text-xs text-neutral-500">{questionText.length}/220</span>
+                <button
+                  type="button"
+                  onClick={submitQuestion}
+                  disabled={!questionText.trim()}
+                  className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-900 disabled:cursor-not-allowed disabled:opacity-50"
+                  data-testid="button-submit-audience-question"
+                >
+                  Send question
+                </button>
+              </div>
+              {questionStatus && (
+                <p className="mt-2 text-xs text-emerald-300" role="status" data-testid="text-question-status">
+                  {questionStatus}
+                </p>
+              )}
+            </div>
+            <div className="rounded-xl border border-neutral-800 bg-black/30 p-4">
+              <p className="font-semibold text-white">Questions people have raised</p>
+              <div className="mt-3 max-h-52 space-y-2 overflow-y-auto pr-1">
+                {audienceQuestions.length === 0 ? (
+                  <p className="text-sm text-neutral-500" data-testid="text-no-audience-questions">No open questions yet.</p>
+                ) : (
+                  audienceQuestions.slice(0, 5).map((question) => (
+                    <div key={question.id} className="rounded-lg border border-neutral-800 bg-neutral-950 p-3" data-testid={`card-audience-question-${question.id}`}>
+                      <p className="text-sm text-neutral-200">{question.text}</p>
+                      <button
+                        type="button"
+                        onClick={() => upvoteQuestion(question.id)}
+                        className="mt-2 rounded-full border border-neutral-700 px-2.5 py-1 text-xs text-neutral-300 hover:bg-neutral-900"
+                        data-testid={`button-upvote-question-${question.id}`}
+                      >
+                        Vote up ({question.votes})
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         </section>
