@@ -54,6 +54,18 @@ type AudienceQuestion = {
   resolvedAt: string | null;
   participantLabel: string;
 };
+type CheckInRole = "participant" | "marshal" | "speaker" | "accessibility";
+type CheckInSummary = {
+  total: number;
+  roles: Record<CheckInRole, number>;
+  checkIns: Array<{
+    role: CheckInRole;
+    displayName: string | null;
+    checkedInAt: string;
+    updatedAt: string;
+    participantLabel: string;
+  }>;
+};
 
 function statusTone(status: string) {
   if (status === "live") return "Live event: prioritize recovery, current chant, and participant link visibility.";
@@ -83,6 +95,11 @@ export default function CommandCenter() {
   });
   const { data: audienceQuestions = [] } = useQuery<AudienceQuestion[]>({
     queryKey: ["/api/demos", id, "questions"],
+    refetchInterval: 3000,
+    enabled: Boolean(id),
+  });
+  const { data: checkIns } = useQuery<CheckInSummary>({
+    queryKey: ["/api/demos", id, "checkins"],
     refetchInterval: 3000,
     enabled: Boolean(id),
   });
@@ -162,6 +179,7 @@ export default function CommandCenter() {
     { label: "Backup admin", ready: data.admins.length > 1, detail: `${data.admins.length} admin${data.admins.length === 1 ? "" : "s"}` },
     { label: "Participant link", ready: Boolean(publicUrl), detail: "Available" },
     { label: "Live state", ready: data.demo.status === "live", detail: data.demo.status },
+    { label: "Checked in", ready: (checkIns?.total ?? 0) > 0, detail: `${checkIns?.total ?? 0} people` },
     { label: "Help requests", ready: openAssistance.length === 0, detail: `${openAssistance.length} open` },
     { label: "Questions", ready: openQuestions.length === 0, detail: `${openQuestions.length} open` },
   ];
@@ -200,7 +218,7 @@ export default function CommandCenter() {
             <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{statusTone(data.demo.status)}</p>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-6">
+          <div className="mt-6 grid gap-4 md:grid-cols-7">
             {readiness.map((item) => (
               <Card key={item.label} data-testid={`card-command-readiness-${item.label.toLowerCase().replace(/\s+/g, "-")}`}>
                 <CardContent className="p-4">
@@ -222,6 +240,51 @@ export default function CommandCenter() {
               <p><span className="font-medium text-foreground">Viewers:</span> {data.viewerCount}</p>
               <p><span className="font-medium text-foreground">Current chant:</span> {currentChant ? currentChant.callText || "Chant selected" : "None"}</p>
               <p className="break-all"><span className="font-medium text-foreground">Participant link:</span> {publicUrl}</p>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6" data-testid="card-participant-checkins">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between gap-3 text-base">
+                <span className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  Participant check-ins
+                </span>
+                <Badge variant={(checkIns?.total ?? 0) > 0 ? "default" : "secondary"}>
+                  {checkIns?.total ?? 0} checked in
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                  ["Participants", checkIns?.roles.participant ?? 0],
+                  ["Marshals", checkIns?.roles.marshal ?? 0],
+                  ["Speakers", checkIns?.roles.speaker ?? 0],
+                  ["Accessibility helpers", checkIns?.roles.accessibility ?? 0],
+                ].map(([label, count]) => (
+                  <div key={label} className="rounded-lg border bg-background p-3">
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className="mt-1 text-2xl font-bold">{count}</p>
+                  </div>
+                ))}
+              </div>
+              {(checkIns?.checkIns.length ?? 0) === 0 ? (
+                <p className="mt-4 text-sm text-muted-foreground" data-testid="text-no-checkins">
+                  No participant check-ins yet. Ask people to open Help and check in with their event role.
+                </p>
+              ) : (
+                <div className="mt-4 grid gap-2 md:grid-cols-2">
+                  {checkIns?.checkIns.slice(0, 8).map((checkIn) => (
+                    <div key={`${checkIn.participantLabel}-${checkIn.updatedAt}`} className="rounded-lg border bg-background p-3" data-testid={`card-checkin-${checkIn.role}`}>
+                      <p className="text-sm font-medium">{checkIn.participantLabel}</p>
+                      <p className="mt-1 text-xs capitalize text-muted-foreground">
+                        {checkIn.role === "accessibility" ? "Accessibility helper" : checkIn.role} - {new Date(checkIn.updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 

@@ -32,6 +32,7 @@ type AudienceQuestion = {
   createdAt: string;
   participantLabel: string;
 };
+type CheckInRole = "participant" | "marshal" | "speaker" | "accessibility";
 
 const clampProgress = (value: number) => Math.min(100, Math.max(0, value));
 const getFallbackPhaseDuration = (phase: "leader" | "people") => phase === "leader" ? 4000 : 3000;
@@ -76,6 +77,9 @@ export default function Participant() {
   const [audienceQuestions, setAudienceQuestions] = useState<AudienceQuestion[]>([]);
   const [questionText, setQuestionText] = useState("");
   const [questionStatus, setQuestionStatus] = useState<string | null>(null);
+  const [checkInName, setCheckInName] = useState(() => localStorage.getItem("chant_checkin_name") ?? "");
+  const [checkedInRole, setCheckedInRole] = useState<CheckInRole | null>(() => localStorage.getItem("chant_checkin_role") as CheckInRole | null);
+  const [checkInStatus, setCheckInStatus] = useState<string | null>(null);
   const localPhaseStartRef = useRef(Date.now());
   const lowBandwidthRef = useRef(lowBandwidth);
 
@@ -270,6 +274,28 @@ export default function Participant() {
       });
     } catch {
       // Upvotes are best-effort and should not disrupt the live chant view.
+    }
+  };
+  const submitCheckIn = async (role: CheckInRole) => {
+    try {
+      const displayName = checkInName.trim();
+      const response = await fetch(`/api/public/demos/${publicId}/checkin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role, displayName, sessionId: getSessionId() }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Could not check in.");
+      }
+
+      localStorage.setItem("chant_checkin_role", role);
+      localStorage.setItem("chant_checkin_name", displayName);
+      setCheckedInRole(role);
+      setCheckInStatus(`Checked in as ${role === "accessibility" ? "accessibility helper" : role}.`);
+      setTimeout(() => setCheckInStatus(null), 3000);
+    } catch {
+      setCheckInStatus("Could not check in. Please tell an organizer you are here.");
     }
   };
 
@@ -734,6 +760,46 @@ export default function Participant() {
             </div>
           </div>
           <div className="mx-auto mt-4 grid max-w-6xl gap-4 md:grid-cols-[1fr_1.2fr]">
+            <div className="rounded-xl border border-neutral-800 bg-black/30 p-4 md:col-span-2">
+              <p className="font-semibold text-white">Check in with the organizer</p>
+              <p className="mt-1 text-xs text-neutral-400">Let the organizer know you are here and what role you can help with. Name is optional.</p>
+              <input
+                value={checkInName}
+                onChange={(event) => setCheckInName(event.target.value)}
+                maxLength={60}
+                className="mt-3 w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-sm text-neutral-100 outline-none focus:border-neutral-400"
+                placeholder="Optional name or team label"
+                data-testid="input-checkin-name"
+              />
+              <div className="mt-3 flex flex-wrap gap-2">
+                {[
+                  ["participant", "Participant"],
+                  ["marshal", "Marshal"],
+                  ["speaker", "Speaker"],
+                  ["accessibility", "Accessibility helper"],
+                ].map(([role, label]) => (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => submitCheckIn(role as CheckInRole)}
+                    className={`rounded-md border px-3 py-1.5 text-xs font-medium ${
+                      checkedInRole === role
+                        ? "border-emerald-300/70 bg-emerald-300/15 text-emerald-100"
+                        : "border-neutral-700 text-neutral-200 hover:bg-neutral-900"
+                    }`}
+                    data-testid={`button-checkin-${role}`}
+                  >
+                    {checkedInRole === role ? "Checked in: " : ""}
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {checkInStatus && (
+                <p className="mt-2 text-xs text-emerald-300" role="status" data-testid="text-checkin-status">
+                  {checkInStatus}
+                </p>
+              )}
+            </div>
             <div className="rounded-xl border border-neutral-800 bg-black/30 p-4">
               <p className="font-semibold text-white">Ask the organizer</p>
               <p className="mt-1 text-xs text-neutral-400">Send an anonymous question without interrupting the chant.</p>

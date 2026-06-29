@@ -59,11 +59,20 @@ type AudienceQuestion = {
   createdAt: string;
   resolvedAt: string | null;
 };
+type ParticipantCheckInRole = "participant" | "marshal" | "speaker" | "accessibility";
+type ParticipantCheckIn = {
+  sessionId: string;
+  role: ParticipantCheckInRole;
+  displayName: string | null;
+  checkedInAt: string;
+  updatedAt: string;
+};
 
 const assistanceRequests = new Map<string, AssistanceRequest[]>();
 const crowdPulses = new Map<string, Map<string, CrowdPulse>>();
 const organizerAnnouncements = new Map<string, OrganizerAnnouncement[]>();
 const audienceQuestions = new Map<string, AudienceQuestion[]>();
+const participantCheckIns = new Map<string, Map<string, ParticipantCheckIn>>();
 
 function getSingleParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -123,6 +132,33 @@ function serializeAudienceQuestion(question: AudienceQuestion) {
 
 function getAudienceQuestions(demoId: string) {
   return audienceQuestions.get(demoId) ?? [];
+}
+
+function getCheckInSummary(demoId: string) {
+  const checkIns = Array.from(participantCheckIns.get(demoId)?.values() ?? [])
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  const roles: Record<ParticipantCheckInRole, number> = {
+    participant: 0,
+    marshal: 0,
+    speaker: 0,
+    accessibility: 0,
+  };
+
+  for (const checkIn of checkIns) {
+    roles[checkIn.role] += 1;
+  }
+
+  return {
+    total: checkIns.length,
+    roles,
+    checkIns: checkIns.slice(0, 20).map((checkIn) => ({
+      role: checkIn.role,
+      displayName: checkIn.displayName,
+      checkedInAt: checkIn.checkedInAt,
+      updatedAt: checkIn.updatedAt,
+      participantLabel: checkIn.displayName || `Participant ${checkIn.sessionId.slice(-4).toUpperCase()}`,
+    })),
+  };
 }
 
 async function canAccessDemo(user: User, demoIdOrPublicId: string | string[] | undefined): Promise<boolean> {
@@ -472,6 +508,19 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/demos/:id/checkins", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      res.json(getCheckInSummary(demo.id));
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch participant check-ins" });
+    }
+  });
+
   app.post("/api/public/demos/:publicId/assistance", async (req, res) => {
     try {
       const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
@@ -511,6 +560,41 @@ export async function registerRoutes(
       res.status(201).json(serializeAssistanceRequest(request));
     } catch (err) {
       res.status(500).json({ message: "Failed to submit assistance request" });
+    }
+  });
+
+  app.post("/api/public/demos/:publicId/checkin", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+
+      const rawRole = typeof req.body?.role === "string" ? req.body.role : "participant";
+      const role: ParticipantCheckInRole = ["participant", "marshal", "speaker", "accessibility"].includes(rawRole)
+        ? rawRole as ParticipantCheckInRole
+        : "participant";
+      const sessionId = typeof req.body?.sessionId === "string" && req.body.sessionId.trim()
+        ? req.body.sessionId.trim().slice(0, 80)
+        : crypto.randomUUID();
+      const displayName = typeof req.body?.displayName === "string" && req.body.displayName.trim()
+        ? req.body.displayName.trim().slice(0, 60)
+        : null;
+      const now = new Date().toISOString();
+      const demoCheckIns = participantCheckIns.get(demo.id) ?? new Map<string, ParticipantCheckIn>();
+      const existing = demoCheckIns.get(sessionId);
+
+      demoCheckIns.set(sessionId, {
+        sessionId,
+        role,
+        displayName,
+        checkedInAt: existing?.checkedInAt ?? now,
+        updatedAt: now,
+      });
+      participantCheckIns.set(demo.id, demoCheckIns);
+      const summary = getCheckInSummary(demo.id);
+      io.to(`demo:${demo.publicId}`).emit("checkin_update", summary);
+      res.status(existing ? 200 : 201).json(summary);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to check in participant" });
     }
   });
 

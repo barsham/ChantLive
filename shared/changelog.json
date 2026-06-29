@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.39",
+      "releasedAt": "2026-06-29",
+      "summary": "Competitor-informed live participant check-in with role coverage for organisers.",
+      "items": [
+        {
+          "id": "cl-2026-06-29-participant-check-in",
+          "title": "Live participant check-in",
+          "description": "Participants can check in from the Help panel so organisers know who is present without requiring an account.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-29",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-29-role-coverage-check-in",
+          "title": "Role coverage check-in",
+          "description": "Participants can identify as participant, marshal, speaker, or accessibility helper during check-in.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-29",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-29-command-center-attendance",
+          "title": "Command-center attendance view",
+          "description": "Admins can see total check-ins, role counts, and recent check-ins directly in the command center.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-29",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-29-check-in-readiness-signal",
+          "title": "Check-in readiness signal",
+          "description": "The command-center readiness row now shows how many people have checked in before or during the event.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-29",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-29-check-in-api",
+          "title": "Participant check-in API",
+          "description": "ChantLive now has public participant check-in submission and authenticated organiser check-in summary endpoints.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-29",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.38",
       "releasedAt": "2026-06-28",
       "summary": "Practical backup communication guidance for peaceful events facing weak signal or noisy conditions.",

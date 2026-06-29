@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.39 - 29 June 2026
+
+Competitor-informed live participant check-in with role coverage for organisers.
+
+### Added
+
+- Live participant check-in: Participants can check in from the Help panel so organisers know who is present without requiring an account.
+- Role coverage check-in: Participants can identify as participant, marshal, speaker, or accessibility helper during check-in.
+- Command-center attendance view: Admins can see total check-ins, role counts, and recent check-ins directly in the command center.
+
+### Improved
+
+- Check-in readiness signal: The command-center readiness row now shows how many people have checked in before or during the event.
+- Participant check-in API: ChantLive now has public participant check-in submission and authenticated organiser check-in summary endpoints.
+
 ## 1.1.38 - 28 June 2026
 
 Practical backup communication guidance for peaceful events facing weak signal or noisy conditions.
