@@ -67,12 +67,22 @@ type ParticipantCheckIn = {
   checkedInAt: string;
   updatedAt: string;
 };
+type ParticipantFeedback = {
+  sessionId: string;
+  clarityRating: number;
+  safetyRating: number;
+  accessibilityRating: number;
+  comment: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
 
 const assistanceRequests = new Map<string, AssistanceRequest[]>();
 const crowdPulses = new Map<string, Map<string, CrowdPulse>>();
 const organizerAnnouncements = new Map<string, OrganizerAnnouncement[]>();
 const audienceQuestions = new Map<string, AudienceQuestion[]>();
 const participantCheckIns = new Map<string, Map<string, ParticipantCheckIn>>();
+const participantFeedback = new Map<string, Map<string, ParticipantFeedback>>();
 
 function getSingleParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -158,6 +168,32 @@ function getCheckInSummary(demoId: string) {
       updatedAt: checkIn.updatedAt,
       participantLabel: checkIn.displayName || `Participant ${checkIn.sessionId.slice(-4).toUpperCase()}`,
     })),
+  };
+}
+
+function getFeedbackSummary(demoId: string) {
+  const feedback = Array.from(participantFeedback.get(demoId)?.values() ?? [])
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  const average = (values: number[]) => values.length
+    ? Math.round((values.reduce((total, value) => total + value, 0) / values.length) * 10) / 10
+    : 0;
+
+  return {
+    total: feedback.length,
+    averages: {
+      clarity: average(feedback.map((item) => item.clarityRating)),
+      safety: average(feedback.map((item) => item.safetyRating)),
+      accessibility: average(feedback.map((item) => item.accessibilityRating)),
+    },
+    comments: feedback
+      .filter((item) => item.comment)
+      .slice(0, 10)
+      .map((item) => ({
+        comment: item.comment,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+        participantLabel: `Participant ${item.sessionId.slice(-4).toUpperCase()}`,
+      })),
   };
 }
 
@@ -521,6 +557,19 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/demos/:id/feedback", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      res.json(getFeedbackSummary(demo.id));
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch participant feedback" });
+    }
+  });
+
   app.post("/api/public/demos/:publicId/assistance", async (req, res) => {
     try {
       const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
@@ -560,6 +609,40 @@ export async function registerRoutes(
       res.status(201).json(serializeAssistanceRequest(request));
     } catch (err) {
       res.status(500).json({ message: "Failed to submit assistance request" });
+    }
+  });
+
+  app.post("/api/public/demos/:publicId/feedback", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+
+      const sessionId = typeof req.body?.sessionId === "string" && req.body.sessionId.trim()
+        ? req.body.sessionId.trim().slice(0, 80)
+        : crypto.randomUUID();
+      const toRating = (value: unknown) => Math.min(5, Math.max(1, Number.parseInt(String(value), 10) || 3));
+      const comment = typeof req.body?.comment === "string" && req.body.comment.trim()
+        ? req.body.comment.trim().slice(0, 300)
+        : null;
+      const now = new Date().toISOString();
+      const demoFeedback = participantFeedback.get(demo.id) ?? new Map<string, ParticipantFeedback>();
+      const existing = demoFeedback.get(sessionId);
+
+      demoFeedback.set(sessionId, {
+        sessionId,
+        clarityRating: toRating(req.body?.clarityRating),
+        safetyRating: toRating(req.body?.safetyRating),
+        accessibilityRating: toRating(req.body?.accessibilityRating),
+        comment,
+        createdAt: existing?.createdAt ?? now,
+        updatedAt: now,
+      });
+      participantFeedback.set(demo.id, demoFeedback);
+      const summary = getFeedbackSummary(demo.id);
+      io.to(`demo:${demo.publicId}`).emit("feedback_update", summary);
+      res.status(existing ? 200 : 201).json(summary);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to submit participant feedback" });
     }
   });
 

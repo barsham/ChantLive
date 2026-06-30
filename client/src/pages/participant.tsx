@@ -80,6 +80,9 @@ export default function Participant() {
   const [checkInName, setCheckInName] = useState(() => localStorage.getItem("chant_checkin_name") ?? "");
   const [checkedInRole, setCheckedInRole] = useState<CheckInRole | null>(() => localStorage.getItem("chant_checkin_role") as CheckInRole | null);
   const [checkInStatus, setCheckInStatus] = useState<string | null>(null);
+  const [feedbackRatings, setFeedbackRatings] = useState({ clarity: 4, safety: 4, accessibility: 4 });
+  const [feedbackComment, setFeedbackComment] = useState("");
+  const [feedbackStatus, setFeedbackStatus] = useState<string | null>(null);
   const localPhaseStartRef = useRef(Date.now());
   const lowBandwidthRef = useRef(lowBandwidth);
 
@@ -298,6 +301,31 @@ export default function Participant() {
       setCheckInStatus("Could not check in. Please tell an organizer you are here.");
     }
   };
+  const submitFeedback = async () => {
+    try {
+      const response = await fetch(`/api/public/demos/${publicId}/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clarityRating: feedbackRatings.clarity,
+          safetyRating: feedbackRatings.safety,
+          accessibilityRating: feedbackRatings.accessibility,
+          comment: feedbackComment,
+          sessionId: getSessionId(),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Could not send feedback.");
+      }
+
+      setFeedbackComment("");
+      setFeedbackStatus("Feedback sent. Thank you.");
+      setTimeout(() => setFeedbackStatus(null), 3500);
+    } catch {
+      setFeedbackStatus("Could not send feedback. Please tell an organizer directly.");
+    }
+  };
 
   useEffect(() => {
     localStorage.setItem("chant_large_text", String(largeText));
@@ -455,7 +483,7 @@ export default function Participant() {
   if (chantData.demoStatus === "ended") {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
-        <div className="text-center">
+        <div className="w-full max-w-2xl text-center">
           <Megaphone className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
           <p className="text-neutral-300 text-2xl font-semibold mb-2" data-testid="text-ended">
             This demonstration has ended
@@ -464,6 +492,51 @@ export default function Participant() {
           <p className="text-neutral-500 text-sm mt-4 max-w-xs mx-auto" data-testid="text-ended-next-step">
             Thanks for joining. You can close this page or ask an organizer for the next participant link.
           </p>
+          <div className="mt-6 rounded-2xl border border-neutral-800 bg-neutral-950 p-4 text-left" data-testid="panel-ended-feedback">
+            <p className="font-semibold text-white">Share quick feedback</p>
+            <p className="mt-1 text-xs text-neutral-400">Help organisers improve the next chant or demonstration.</p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              {[
+                ["clarity", "Clear to follow"],
+                ["safety", "Felt safe"],
+                ["accessibility", "Accessible"],
+              ].map(([key, label]) => (
+                <label key={key} className="text-xs text-neutral-300">
+                  {label}
+                  <select
+                    value={feedbackRatings[key as keyof typeof feedbackRatings]}
+                    onChange={(event) => setFeedbackRatings((current) => ({ ...current, [key]: Number.parseInt(event.target.value, 10) }))}
+                    className="mt-1 w-full rounded-md border border-neutral-700 bg-black p-2 text-neutral-100"
+                    data-testid={`select-feedback-${key}`}
+                  >
+                    {[5, 4, 3, 2, 1].map((value) => (
+                      <option key={value} value={value}>{value}/5</option>
+                    ))}
+                  </select>
+                </label>
+              ))}
+            </div>
+            <textarea
+              value={feedbackComment}
+              onChange={(event) => setFeedbackComment(event.target.value)}
+              maxLength={300}
+              rows={3}
+              className="mt-3 w-full rounded-lg border border-neutral-700 bg-black p-3 text-sm text-neutral-100 outline-none focus:border-neutral-400"
+              placeholder="Optional note for the organizer..."
+              data-testid="input-ended-feedback-comment"
+            />
+            <button
+              type="button"
+              onClick={submitFeedback}
+              className="mt-3 rounded-md border border-emerald-400/50 px-4 py-2 text-sm font-medium text-emerald-100 hover:bg-emerald-950/40"
+              data-testid="button-submit-ended-feedback"
+            >
+              Send feedback
+            </button>
+            {feedbackStatus && (
+              <p className="mt-2 text-xs text-emerald-300" role="status" data-testid="text-feedback-status">{feedbackStatus}</p>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -851,6 +924,51 @@ export default function Participant() {
                   ))
                 )}
               </div>
+            </div>
+            <div className="rounded-xl border border-neutral-800 bg-black/30 p-4 md:col-span-2">
+              <p className="font-semibold text-white">Rate the experience</p>
+              <p className="mt-1 text-xs text-neutral-400">Send quick feedback the organiser can review after the event.</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                {[
+                  ["clarity", "Clear to follow"],
+                  ["safety", "Felt safe"],
+                  ["accessibility", "Accessible"],
+                ].map(([key, label]) => (
+                  <label key={key} className="text-xs text-neutral-300">
+                    {label}
+                    <select
+                      value={feedbackRatings[key as keyof typeof feedbackRatings]}
+                      onChange={(event) => setFeedbackRatings((current) => ({ ...current, [key]: Number.parseInt(event.target.value, 10) }))}
+                      className="mt-1 w-full rounded-md border border-neutral-700 bg-neutral-950 p-2 text-neutral-100"
+                      data-testid={`select-live-feedback-${key}`}
+                    >
+                      {[5, 4, 3, 2, 1].map((value) => (
+                        <option key={value} value={value}>{value}/5</option>
+                      ))}
+                    </select>
+                  </label>
+                ))}
+              </div>
+              <textarea
+                value={feedbackComment}
+                onChange={(event) => setFeedbackComment(event.target.value)}
+                maxLength={300}
+                rows={2}
+                className="mt-3 w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-sm text-neutral-100 outline-none focus:border-neutral-400"
+                placeholder="Optional feedback note..."
+                data-testid="input-live-feedback-comment"
+              />
+              <button
+                type="button"
+                onClick={submitFeedback}
+                className="mt-3 rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-900"
+                data-testid="button-submit-live-feedback"
+              >
+                Send feedback
+              </button>
+              {feedbackStatus && (
+                <p className="mt-2 text-xs text-emerald-300" role="status" data-testid="text-live-feedback-status">{feedbackStatus}</p>
+              )}
             </div>
           </div>
         </section>

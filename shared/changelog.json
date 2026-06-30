@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.40",
+      "releasedAt": "2026-06-30",
+      "summary": "Competitor-informed participant feedback surveys with organiser analytics and report integration.",
+      "items": [
+        {
+          "id": "cl-2026-06-30-participant-feedback-survey",
+          "title": "Participant feedback survey",
+          "description": "Participants can rate clarity, safety, and accessibility from the live Help panel or after the event ends.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-30",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-30-post-event-feedback",
+          "title": "Post-event feedback capture",
+          "description": "The ended participant screen now asks for quick feedback before people leave the page.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-30",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-30-command-center-feedback-analytics",
+          "title": "Command-center feedback analytics",
+          "description": "Admins can see participant feedback response counts, rating averages, and recent comments in the command center.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-06-30",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-30-report-feedback-summary",
+          "title": "Post-event report feedback summary",
+          "description": "Post-event reports now include participant feedback averages and comments in the visible report and copied report text.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-30",
+          "links": []
+        },
+        {
+          "id": "cl-2026-06-30-feedback-api",
+          "title": "Participant feedback API",
+          "description": "ChantLive now has public participant feedback submission and authenticated organiser feedback summary endpoints.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-06-30",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.39",
       "releasedAt": "2026-06-29",
       "summary": "Competitor-informed live participant check-in with role coverage for organisers.",

@@ -22,6 +22,20 @@ type DemoDetail = {
   viewerCount: number;
   admins: AdminInfo[];
 };
+type FeedbackSummary = {
+  total: number;
+  averages: {
+    clarity: number;
+    safety: number;
+    accessibility: number;
+  };
+  comments: Array<{
+    comment: string | null;
+    createdAt: string;
+    updatedAt: string;
+    participantLabel: string;
+  }>;
+};
 
 function formatRuntime(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
@@ -30,7 +44,7 @@ function formatRuntime(totalSeconds: number) {
   return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`;
 }
 
-function buildReportText(data: DemoDetail, runtime: string) {
+function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackSummary) {
   return [
     `ChantLive Post-Event Report: ${data.demo.title}`,
     "",
@@ -40,6 +54,8 @@ function buildReportText(data: DemoDetail, runtime: string) {
     `Estimated chant runtime: ${runtime}`,
     `Admins: ${data.admins.map((admin) => `${admin.name} <${admin.email}>`).join(", ") || "None listed"}`,
     `Current viewer count snapshot: ${data.viewerCount}`,
+    `Participant feedback responses: ${feedback?.total ?? 0}`,
+    `Feedback averages: clarity ${feedback?.averages.clarity ?? 0}/5, safety ${feedback?.averages.safety ?? 0}/5, accessibility ${feedback?.averages.accessibility ?? 0}/5`,
     "",
     "Debrief checklist:",
     "- Did participants understand how to join?",
@@ -47,6 +63,9 @@ function buildReportText(data: DemoDetail, runtime: string) {
     "- Did the backup admin know when to step in?",
     "- Did accessibility options cover visibility, scanning, and low-signal needs?",
     "- Which chants should be reused, edited, or removed next time?",
+    "",
+    "Participant comments:",
+    ...(feedback?.comments.length ? feedback.comments.map((item) => `- ${item.comment}`) : ["- No participant comments yet."]),
   ].join("\n");
 }
 
@@ -57,6 +76,10 @@ export default function EventReport() {
 
   const { data, isLoading } = useQuery<DemoDetail>({
     queryKey: ["/api/demos", id],
+  });
+  const { data: feedback } = useQuery<FeedbackSummary>({
+    queryKey: ["/api/demos", id, "feedback"],
+    enabled: Boolean(id),
   });
 
   const runtimeSeconds = useMemo(() => {
@@ -73,7 +96,7 @@ export default function EventReport() {
 
   const copyReport = async () => {
     if (!data) return;
-    await navigator.clipboard.writeText(buildReportText(data, runtime));
+    await navigator.clipboard.writeText(buildReportText(data, runtime, feedback));
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };
@@ -163,6 +186,44 @@ export default function EventReport() {
               </CardContent>
             </Card>
           </div>
+
+          <Card className="mt-6" data-testid="card-report-feedback-summary">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Check className="h-5 w-5 text-primary" />
+                Participant feedback
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 text-sm md:grid-cols-4">
+                <div className="rounded-lg border bg-background p-3">
+                  <p className="text-xs text-muted-foreground">Responses</p>
+                  <p className="mt-1 text-lg font-semibold">{feedback?.total ?? 0}</p>
+                </div>
+                <div className="rounded-lg border bg-background p-3">
+                  <p className="text-xs text-muted-foreground">Clarity</p>
+                  <p className="mt-1 text-lg font-semibold">{feedback?.averages.clarity ?? 0}/5</p>
+                </div>
+                <div className="rounded-lg border bg-background p-3">
+                  <p className="text-xs text-muted-foreground">Safety</p>
+                  <p className="mt-1 text-lg font-semibold">{feedback?.averages.safety ?? 0}/5</p>
+                </div>
+                <div className="rounded-lg border bg-background p-3">
+                  <p className="text-xs text-muted-foreground">Accessibility</p>
+                  <p className="mt-1 text-lg font-semibold">{feedback?.averages.accessibility ?? 0}/5</p>
+                </div>
+              </div>
+              {(feedback?.comments.length ?? 0) > 0 && (
+                <div className="mt-4 space-y-2">
+                  {feedback?.comments.slice(0, 6).map((item) => (
+                    <div key={`${item.participantLabel}-${item.updatedAt}`} className="rounded-lg border bg-background p-3 text-sm text-muted-foreground">
+                      {item.comment}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <Card>

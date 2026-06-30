@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.40 - 30 June 2026
+
+Competitor-informed participant feedback surveys with organiser analytics and report integration.
+
+### Added
+
+- Participant feedback survey: Participants can rate clarity, safety, and accessibility from the live Help panel or after the event ends.
+- Post-event feedback capture: The ended participant screen now asks for quick feedback before people leave the page.
+- Command-center feedback analytics: Admins can see participant feedback response counts, rating averages, and recent comments in the command center.
+
+### Improved
+
+- Post-event report feedback summary: Post-event reports now include participant feedback averages and comments in the visible report and copied report text.
+- Participant feedback API: ChantLive now has public participant feedback submission and authenticated organiser feedback summary endpoints.
+
 ## 1.1.39 - 29 June 2026
 
 Competitor-informed live participant check-in with role coverage for organisers.

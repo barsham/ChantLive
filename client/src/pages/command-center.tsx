@@ -66,6 +66,20 @@ type CheckInSummary = {
     participantLabel: string;
   }>;
 };
+type FeedbackSummary = {
+  total: number;
+  averages: {
+    clarity: number;
+    safety: number;
+    accessibility: number;
+  };
+  comments: Array<{
+    comment: string | null;
+    createdAt: string;
+    updatedAt: string;
+    participantLabel: string;
+  }>;
+};
 
 function statusTone(status: string) {
   if (status === "live") return "Live event: prioritize recovery, current chant, and participant link visibility.";
@@ -101,6 +115,11 @@ export default function CommandCenter() {
   const { data: checkIns } = useQuery<CheckInSummary>({
     queryKey: ["/api/demos", id, "checkins"],
     refetchInterval: 3000,
+    enabled: Boolean(id),
+  });
+  const { data: feedback } = useQuery<FeedbackSummary>({
+    queryKey: ["/api/demos", id, "feedback"],
+    refetchInterval: 5000,
     enabled: Boolean(id),
   });
   const resolveAssistance = useMutation({
@@ -180,6 +199,7 @@ export default function CommandCenter() {
     { label: "Participant link", ready: Boolean(publicUrl), detail: "Available" },
     { label: "Live state", ready: data.demo.status === "live", detail: data.demo.status },
     { label: "Checked in", ready: (checkIns?.total ?? 0) > 0, detail: `${checkIns?.total ?? 0} people` },
+    { label: "Feedback", ready: (feedback?.total ?? 0) > 0, detail: `${feedback?.total ?? 0} responses` },
     { label: "Help requests", ready: openAssistance.length === 0, detail: `${openAssistance.length} open` },
     { label: "Questions", ready: openQuestions.length === 0, detail: `${openQuestions.length} open` },
   ];
@@ -218,7 +238,7 @@ export default function CommandCenter() {
             <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{statusTone(data.demo.status)}</p>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-7">
+          <div className="mt-6 grid gap-4 md:grid-cols-8">
             {readiness.map((item) => (
               <Card key={item.label} data-testid={`card-command-readiness-${item.label.toLowerCase().replace(/\s+/g, "-")}`}>
                 <CardContent className="p-4">
@@ -284,6 +304,48 @@ export default function CommandCenter() {
                     </div>
                   ))}
                 </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6" data-testid="card-participant-feedback-summary">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between gap-3 text-base">
+                <span className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                  Participant feedback
+                </span>
+                <Badge variant={(feedback?.total ?? 0) > 0 ? "default" : "secondary"}>
+                  {feedback?.total ?? 0} responses
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 text-sm sm:grid-cols-3">
+                {[
+                  ["Clarity", feedback?.averages.clarity ?? 0],
+                  ["Safety", feedback?.averages.safety ?? 0],
+                  ["Accessibility", feedback?.averages.accessibility ?? 0],
+                ].map(([label, score]) => (
+                  <div key={label} className="rounded-lg border bg-background p-3">
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className="mt-1 text-2xl font-bold">{score}/5</p>
+                  </div>
+                ))}
+              </div>
+              {(feedback?.comments.length ?? 0) > 0 ? (
+                <div className="mt-4 grid gap-2 md:grid-cols-2">
+                  {feedback?.comments.slice(0, 4).map((item) => (
+                    <div key={`${item.participantLabel}-${item.updatedAt}`} className="rounded-lg border bg-background p-3">
+                      <p className="text-sm text-muted-foreground">{item.comment}</p>
+                      <p className="mt-2 text-xs text-muted-foreground">{item.participantLabel}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-4 text-sm text-muted-foreground" data-testid="text-no-participant-feedback">
+                  No participant feedback yet. Participants can rate the event from Help or after the event ends.
+                </p>
               )}
             </CardContent>
           </Card>
