@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.41 - 1 July 2026
+
+Competitor-informed participation points, badges, and organiser engagement leaderboard.
+
+### Added
+
+- Participation points: Participants now earn points for useful event actions such as checking in, sending pulse signals, asking questions, upvoting, requesting help, and leaving feedback.
+- Participant badges: Participants can see earned badges in the Help panel, including checked in, pulse contributor, asked a question, gave feedback, and active participant.
+- Command-center engagement leaderboard: Admins can see top participant engagement, total points, and badges in the command center.
+
+### Improved
+
+- Engagement readiness signal: The command-center readiness row now shows whether participants are actively engaging and how many points have been earned.
+- Participant engagement API: ChantLive now has participant and organiser engagement endpoints that summarize useful event actions without requiring participant accounts.
+
 ## 1.1.40 - 30 June 2026
 
 Competitor-informed participant feedback surveys with organiser analytics and report integration.

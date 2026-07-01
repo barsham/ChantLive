@@ -80,6 +80,16 @@ type FeedbackSummary = {
     participantLabel: string;
   }>;
 };
+type EngagementSummary = {
+  totalParticipants: number;
+  totalPoints: number;
+  topParticipants: Array<{
+    points: number;
+    badges: string[];
+    participantLabel: string;
+    updatedAt: string;
+  }>;
+};
 
 function statusTone(status: string) {
   if (status === "live") return "Live event: prioritize recovery, current chant, and participant link visibility.";
@@ -120,6 +130,11 @@ export default function CommandCenter() {
   const { data: feedback } = useQuery<FeedbackSummary>({
     queryKey: ["/api/demos", id, "feedback"],
     refetchInterval: 5000,
+    enabled: Boolean(id),
+  });
+  const { data: engagement } = useQuery<EngagementSummary>({
+    queryKey: ["/api/demos", id, "engagement"],
+    refetchInterval: 3000,
     enabled: Boolean(id),
   });
   const resolveAssistance = useMutation({
@@ -200,6 +215,7 @@ export default function CommandCenter() {
     { label: "Live state", ready: data.demo.status === "live", detail: data.demo.status },
     { label: "Checked in", ready: (checkIns?.total ?? 0) > 0, detail: `${checkIns?.total ?? 0} people` },
     { label: "Feedback", ready: (feedback?.total ?? 0) > 0, detail: `${feedback?.total ?? 0} responses` },
+    { label: "Engagement", ready: (engagement?.totalParticipants ?? 0) > 0, detail: `${engagement?.totalPoints ?? 0} points` },
     { label: "Help requests", ready: openAssistance.length === 0, detail: `${openAssistance.length} open` },
     { label: "Questions", ready: openQuestions.length === 0, detail: `${openQuestions.length} open` },
   ];
@@ -238,7 +254,7 @@ export default function CommandCenter() {
             <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{statusTone(data.demo.status)}</p>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-8">
+          <div className="mt-6 grid gap-4 md:grid-cols-9">
             {readiness.map((item) => (
               <Card key={item.label} data-testid={`card-command-readiness-${item.label.toLowerCase().replace(/\s+/g, "-")}`}>
                 <CardContent className="p-4">
@@ -346,6 +362,47 @@ export default function CommandCenter() {
                 <p className="mt-4 text-sm text-muted-foreground" data-testid="text-no-participant-feedback">
                   No participant feedback yet. Participants can rate the event from Help or after the event ends.
                 </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6" data-testid="card-engagement-leaderboard">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between gap-3 text-base">
+                <span className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                  Participation leaderboard
+                </span>
+                <Badge variant={(engagement?.totalParticipants ?? 0) > 0 ? "default" : "secondary"}>
+                  {engagement?.totalPoints ?? 0} points
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {(engagement?.topParticipants.length ?? 0) === 0 ? (
+                <p className="text-sm text-muted-foreground" data-testid="text-no-engagement">
+                  No participation points yet. Participants earn points for checking in, pulse signals, questions, upvotes, help requests, and feedback.
+                </p>
+              ) : (
+                <div className="grid gap-2 md:grid-cols-2">
+                  {engagement?.topParticipants.slice(0, 6).map((participant, index) => (
+                    <div key={`${participant.participantLabel}-${participant.updatedAt}`} className="rounded-lg border bg-background p-3" data-testid={`card-engagement-participant-${index + 1}`}>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-medium">#{index + 1} {participant.participantLabel}</p>
+                        <Badge variant="outline">{participant.points} pts</Badge>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {participant.badges.length > 0 ? participant.badges.map((badge) => (
+                          <span key={badge} className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+                            {badge}
+                          </span>
+                        )) : (
+                          <span className="text-xs text-muted-foreground">No badges yet</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </CardContent>
           </Card>

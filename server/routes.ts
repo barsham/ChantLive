@@ -76,6 +76,13 @@ type ParticipantFeedback = {
   createdAt: string;
   updatedAt: string;
 };
+type EngagementAction = "checkin" | "pulse" | "question" | "upvote" | "assistance" | "feedback";
+type ParticipantEngagement = {
+  sessionId: string;
+  points: number;
+  actions: Record<EngagementAction, number>;
+  updatedAt: string;
+};
 
 const assistanceRequests = new Map<string, AssistanceRequest[]>();
 const crowdPulses = new Map<string, Map<string, CrowdPulse>>();
@@ -83,6 +90,7 @@ const organizerAnnouncements = new Map<string, OrganizerAnnouncement[]>();
 const audienceQuestions = new Map<string, AudienceQuestion[]>();
 const participantCheckIns = new Map<string, Map<string, ParticipantCheckIn>>();
 const participantFeedback = new Map<string, Map<string, ParticipantFeedback>>();
+const participantEngagement = new Map<string, Map<string, ParticipantEngagement>>();
 
 function getSingleParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -194,6 +202,76 @@ function getFeedbackSummary(demoId: string) {
         updatedAt: item.updatedAt,
         participantLabel: `Participant ${item.sessionId.slice(-4).toUpperCase()}`,
       })),
+  };
+}
+
+function getEmptyEngagementActions(): Record<EngagementAction, number> {
+  return {
+    checkin: 0,
+    pulse: 0,
+    question: 0,
+    upvote: 0,
+    assistance: 0,
+    feedback: 0,
+  };
+}
+
+function awardEngagement(demoId: string, publicId: string, sessionId: string, action: EngagementAction, io: SocketIOServer) {
+  const pointsByAction: Record<EngagementAction, number> = {
+    checkin: 10,
+    pulse: 2,
+    question: 5,
+    upvote: 1,
+    assistance: 4,
+    feedback: 8,
+  };
+  const demoEngagement = participantEngagement.get(demoId) ?? new Map<string, ParticipantEngagement>();
+  const current = demoEngagement.get(sessionId) ?? {
+    sessionId,
+    points: 0,
+    actions: getEmptyEngagementActions(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  current.actions[action] += 1;
+  current.points += pointsByAction[action];
+  current.updatedAt = new Date().toISOString();
+  demoEngagement.set(sessionId, current);
+  participantEngagement.set(demoId, demoEngagement);
+  io.to(`demo:${publicId}`).emit("engagement_update", getEngagementSummary(demoId));
+  return current;
+}
+
+function getBadges(engagement: ParticipantEngagement) {
+  const badges: string[] = [];
+  if (engagement.actions.checkin > 0) badges.push("Checked in");
+  if (engagement.actions.pulse >= 3) badges.push("Pulse contributor");
+  if (engagement.actions.question > 0) badges.push("Asked a question");
+  if (engagement.actions.feedback > 0) badges.push("Gave feedback");
+  if (engagement.actions.assistance > 0) badges.push("Asked for help");
+  if (engagement.points >= 25) badges.push("Active participant");
+  return badges;
+}
+
+function serializeParticipantEngagement(engagement: ParticipantEngagement) {
+  return {
+    points: engagement.points,
+    actions: engagement.actions,
+    badges: getBadges(engagement),
+    participantLabel: `Participant ${engagement.sessionId.slice(-4).toUpperCase()}`,
+    updatedAt: engagement.updatedAt,
+  };
+}
+
+function getEngagementSummary(demoId: string) {
+  const participants = Array.from(participantEngagement.get(demoId)?.values() ?? [])
+    .sort((a, b) => b.points - a.points || new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .map(serializeParticipantEngagement);
+
+  return {
+    totalParticipants: participants.length,
+    totalPoints: participants.reduce((total, item) => total + item.points, 0),
+    topParticipants: participants.slice(0, 10),
   };
 }
 
@@ -570,6 +648,19 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/demos/:id/engagement", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      res.json(getEngagementSummary(demo.id));
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch participant engagement" });
+    }
+  });
+
   app.post("/api/public/demos/:publicId/assistance", async (req, res) => {
     try {
       const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
@@ -605,6 +696,7 @@ export async function registerRoutes(
 
       requests.unshift(request);
       assistanceRequests.set(demo.id, requests.slice(0, 50));
+      awardEngagement(demo.id, demo.publicId, sessionId, "assistance", io);
       io.to(`demo:${demo.publicId}`).emit("assistance_update", getAssistanceRequests(demo.id).map(serializeAssistanceRequest));
       res.status(201).json(serializeAssistanceRequest(request));
     } catch (err) {
@@ -638,6 +730,7 @@ export async function registerRoutes(
         updatedAt: now,
       });
       participantFeedback.set(demo.id, demoFeedback);
+      awardEngagement(demo.id, demo.publicId, sessionId, "feedback", io);
       const summary = getFeedbackSummary(demo.id);
       io.to(`demo:${demo.publicId}`).emit("feedback_update", summary);
       res.status(existing ? 200 : 201).json(summary);
@@ -673,6 +766,7 @@ export async function registerRoutes(
         updatedAt: now,
       });
       participantCheckIns.set(demo.id, demoCheckIns);
+      awardEngagement(demo.id, demo.publicId, sessionId, "checkin", io);
       const summary = getCheckInSummary(demo.id);
       io.to(`demo:${demo.publicId}`).emit("checkin_update", summary);
       res.status(existing ? 200 : 201).json(summary);
@@ -722,6 +816,7 @@ export async function registerRoutes(
 
       questions.unshift(question);
       audienceQuestions.set(demo.id, questions.slice(0, 80));
+      awardEngagement(demo.id, demo.publicId, sessionId, "question", io);
       const openQuestions = getAudienceQuestions(demo.id).filter((item) => item.status === "open").map(serializeAudienceQuestion);
       io.to(`demo:${demo.publicId}`).emit("question_update", openQuestions);
       res.status(201).json(serializeAudienceQuestion(question));
@@ -745,6 +840,7 @@ export async function registerRoutes(
 
       if (!question.voterSessionIds.includes(sessionId)) {
         question.voterSessionIds.push(sessionId);
+        awardEngagement(demo.id, demo.publicId, sessionId, "upvote", io);
       }
 
       const openQuestions = questions.filter((item) => item.status === "open").map(serializeAudienceQuestion);
@@ -775,6 +871,7 @@ export async function registerRoutes(
         createdAt: new Date().toISOString(),
       });
       crowdPulses.set(demo.id, demoPulseMap);
+      awardEngagement(demo.id, demo.publicId, sessionId, "pulse", io);
       const summary = getCrowdPulseSummary(demo.id);
       io.to(`demo:${demo.publicId}`).emit("pulse_update", summary);
       res.status(201).json(summary);
@@ -1387,6 +1484,25 @@ export async function registerRoutes(
       res.json({ success: true, eventDurationMinutes: duration });
     } catch (err) {
       res.status(500).json({ message: "Failed to update event duration" });
+    }
+  });
+
+  app.get("/api/public/demos/:publicId/engagement/:sessionId", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+
+      const sessionId = getSingleParam(req.params.sessionId);
+      if (!sessionId) return res.status(400).json({ message: "sessionId is required" });
+      const engagement = participantEngagement.get(demo.id)?.get(sessionId);
+      res.json(engagement ? serializeParticipantEngagement(engagement) : serializeParticipantEngagement({
+        sessionId,
+        points: 0,
+        actions: getEmptyEngagementActions(),
+        updatedAt: new Date().toISOString(),
+      }));
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch participant engagement" });
     }
   });
 

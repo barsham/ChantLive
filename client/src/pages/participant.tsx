@@ -33,6 +33,12 @@ type AudienceQuestion = {
   participantLabel: string;
 };
 type CheckInRole = "participant" | "marshal" | "speaker" | "accessibility";
+type ParticipantEngagement = {
+  points: number;
+  badges: string[];
+  participantLabel: string;
+  updatedAt: string;
+};
 
 const clampProgress = (value: number) => Math.min(100, Math.max(0, value));
 const getFallbackPhaseDuration = (phase: "leader" | "people") => phase === "leader" ? 4000 : 3000;
@@ -83,6 +89,7 @@ export default function Participant() {
   const [feedbackRatings, setFeedbackRatings] = useState({ clarity: 4, safety: 4, accessibility: 4 });
   const [feedbackComment, setFeedbackComment] = useState("");
   const [feedbackStatus, setFeedbackStatus] = useState<string | null>(null);
+  const [engagement, setEngagement] = useState<ParticipantEngagement | null>(null);
   const localPhaseStartRef = useRef(Date.now());
   const lowBandwidthRef = useRef(lowBandwidth);
 
@@ -160,6 +167,13 @@ export default function Participant() {
       setAudienceQuestions(questions);
     });
 
+    socket.on("engagement_update", () => {
+      fetch(`/api/public/demos/${publicId}/engagement/${getSessionId()}`)
+        .then((response) => response.ok ? response.json() : null)
+        .then((data: ParticipantEngagement | null) => setEngagement(data))
+        .catch(() => {});
+    });
+
     if (!socket.connected) {
       socket.connect();
     } else {
@@ -174,6 +188,7 @@ export default function Participant() {
       socket.off("demo_error");
       socket.off("organizer_announcement");
       socket.off("question_update");
+      socket.off("engagement_update");
       socket.off("connect");
       socket.off("disconnect");
     };
@@ -184,6 +199,11 @@ export default function Participant() {
       .then((response) => response.ok ? response.json() : [])
       .then((questions: AudienceQuestion[]) => setAudienceQuestions(questions))
       .catch(() => setAudienceQuestions([]));
+
+    fetch(`/api/public/demos/${publicId}/engagement/${getSessionId()}`)
+      .then((response) => response.ok ? response.json() : null)
+      .then((data: ParticipantEngagement | null) => setEngagement(data))
+      .catch(() => setEngagement(null));
   }, [publicId]);
 
   const hasChantContent = chantData?.callText || chantData?.responseText;
@@ -833,6 +853,24 @@ export default function Participant() {
             </div>
           </div>
           <div className="mx-auto mt-4 grid max-w-6xl gap-4 md:grid-cols-[1fr_1.2fr]">
+            <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 p-4 md:col-span-2" data-testid="card-participant-engagement">
+              <p className="font-semibold text-emerald-50">Participation progress</p>
+              <p className="mt-1 text-xs text-emerald-100/80">
+                Earn points for useful event actions like checking in, sending pulse signals, asking questions, and giving feedback.
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-emerald-300/40 px-3 py-1 text-sm font-semibold text-emerald-50" data-testid="text-engagement-points">
+                  {engagement?.points ?? 0} points
+                </span>
+                {(engagement?.badges.length ?? 0) > 0 ? engagement?.badges.map((badge) => (
+                  <span key={badge} className="rounded-full border border-emerald-300/30 bg-black/20 px-3 py-1 text-xs text-emerald-100">
+                    {badge}
+                  </span>
+                )) : (
+                  <span className="text-xs text-emerald-100/70">Check in or send a signal to earn your first badge.</span>
+                )}
+              </div>
+            </div>
             <div className="rounded-xl border border-neutral-800 bg-black/30 p-4 md:col-span-2">
               <p className="font-semibold text-white">Check in with the organizer</p>
               <p className="mt-1 text-xs text-neutral-400">Let the organizer know you are here and what role you can help with. Name is optional.</p>
