@@ -46,6 +46,7 @@ type CrowdPulse = {
 type OrganizerAnnouncement = {
   id: string;
   message: string;
+  targetRole: "all" | "participant" | "marshal" | "speaker" | "accessibility";
   createdAt: string;
 };
 type AudienceQuestionStatus = "open" | "answered" | "dismissed";
@@ -570,10 +571,15 @@ export async function registerRoutes(
 
       const message = typeof req.body?.message === "string" ? req.body.message.trim().slice(0, 180) : "";
       if (!message) return res.status(400).json({ message: "Announcement message is required" });
+      const rawTargetRole = typeof req.body?.targetRole === "string" ? req.body.targetRole : "all";
+      const targetRole: OrganizerAnnouncement["targetRole"] = ["all", "participant", "marshal", "speaker", "accessibility"].includes(rawTargetRole)
+        ? rawTargetRole as OrganizerAnnouncement["targetRole"]
+        : "all";
 
       const announcement: OrganizerAnnouncement = {
         id: crypto.randomUUID(),
         message,
+        targetRole,
         createdAt: new Date().toISOString(),
       };
       const announcements = organizerAnnouncements.get(demo.id) ?? [];

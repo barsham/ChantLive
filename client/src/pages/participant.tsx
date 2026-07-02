@@ -22,6 +22,7 @@ type ChantData = {
 type OrganizerAnnouncement = {
   id: string;
   message: string;
+  targetRole: "all" | CheckInRole;
   createdAt: string;
 };
 type AudienceQuestion = {
@@ -42,6 +43,17 @@ type ParticipantEngagement = {
 
 const clampProgress = (value: number) => Math.min(100, Math.max(0, value));
 const getFallbackPhaseDuration = (phase: "leader" | "people") => phase === "leader" ? 4000 : 3000;
+const getAnnouncementAudienceLabel = (targetRole: OrganizerAnnouncement["targetRole"]) => {
+  const labels: Record<OrganizerAnnouncement["targetRole"], string> = {
+    all: "Organizer update for everyone",
+    participant: "Organizer update for participants",
+    marshal: "Organizer update for marshals",
+    speaker: "Organizer update for speakers",
+    accessibility: "Organizer update for accessibility helpers",
+  };
+
+  return labels[targetRole];
+};
 
 const getChantAnnouncement = (chantData: ChantData | null) => {
   if (!chantData || chantData.demoStatus !== "live") {
@@ -160,7 +172,9 @@ export default function Participant() {
     });
 
     socket.on("organizer_announcement", (data: OrganizerAnnouncement) => {
-      setAnnouncement(data);
+      if (data.targetRole === "all" || data.targetRole === checkedInRole) {
+        setAnnouncement(data);
+      }
     });
 
     socket.on("question_update", (questions: AudienceQuestion[]) => {
@@ -192,7 +206,7 @@ export default function Participant() {
       socket.off("connect");
       socket.off("disconnect");
     };
-  }, [publicId]);
+  }, [publicId, checkedInRole]);
 
   useEffect(() => {
     fetch(`/api/public/demos/${publicId}/questions`)
@@ -620,7 +634,9 @@ export default function Participant() {
       </div>
       {announcement && (
         <div className="mx-4 mt-4 rounded-2xl border border-amber-300/40 bg-amber-300/15 p-4 text-center text-amber-50" role="status" data-testid="banner-organizer-announcement">
-          <p className="text-xs font-mono uppercase tracking-widest text-amber-100/80">Organizer update</p>
+          <p className="text-xs font-mono uppercase tracking-widest text-amber-100/80">
+            {getAnnouncementAudienceLabel(announcement.targetRole)}
+          </p>
           <p className="mt-1 text-lg font-semibold">{announcement.message}</p>
           <button
             type="button"

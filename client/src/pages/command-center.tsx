@@ -55,6 +55,7 @@ type AudienceQuestion = {
   participantLabel: string;
 };
 type CheckInRole = "participant" | "marshal" | "speaker" | "accessibility";
+type AnnouncementTargetRole = "all" | CheckInRole;
 type CheckInSummary = {
   total: number;
   roles: Record<CheckInRole, number>;
@@ -102,6 +103,7 @@ export default function CommandCenter() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [announcementMessage, setAnnouncementMessage] = useState("");
+  const [announcementTarget, setAnnouncementTarget] = useState<AnnouncementTargetRole>("all");
 
   const { data, isLoading } = useQuery<DemoDetail>({
     queryKey: ["/api/demos", id],
@@ -150,12 +152,12 @@ export default function CommandCenter() {
     },
   });
   const sendAnnouncement = useMutation({
-    mutationFn: async (message: string) => {
-      await apiRequest("POST", `/api/demos/${id}/announcement`, { message });
+    mutationFn: async ({ message, targetRole }: { message: string; targetRole: AnnouncementTargetRole }) => {
+      await apiRequest("POST", `/api/demos/${id}/announcement`, { message, targetRole });
     },
     onSuccess: () => {
       setAnnouncementMessage("");
-      toast({ title: "Announcement sent to participants" });
+      toast({ title: "Announcement sent", description: "Only the selected audience will see this update." });
     },
     onError: (err: Error) => {
       toast({ title: "Could not send announcement", description: err.message, variant: "destructive" });
@@ -437,6 +439,27 @@ export default function CommandCenter() {
                 <CardTitle className="text-base">Send participant announcement</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                <div className="space-y-1">
+                  <label htmlFor="announcement-target" className="text-xs font-medium text-muted-foreground">
+                    Audience
+                  </label>
+                  <select
+                    id="announcement-target"
+                    value={announcementTarget}
+                    onChange={(event) => setAnnouncementTarget(event.target.value as AnnouncementTargetRole)}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    data-testid="select-announcement-target"
+                  >
+                    <option value="all">Everyone</option>
+                    <option value="participant">Participants</option>
+                    <option value="marshal">Marshals</option>
+                    <option value="speaker">Speakers</option>
+                    <option value="accessibility">Accessibility helpers</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground">
+                    Role-targeted messages are shown to participants who checked in with that role.
+                  </p>
+                </div>
                 <Textarea
                   value={announcementMessage}
                   onChange={(event) => setAnnouncementMessage(event.target.value)}
@@ -449,11 +472,11 @@ export default function CommandCenter() {
                   <p className="text-xs text-muted-foreground">{announcementMessage.length}/180 characters</p>
                   <Button
                     size="sm"
-                    onClick={() => sendAnnouncement.mutate(announcementMessage.trim())}
+                    onClick={() => sendAnnouncement.mutate({ message: announcementMessage.trim(), targetRole: announcementTarget })}
                     disabled={!announcementMessage.trim() || sendAnnouncement.isPending}
                     data-testid="button-send-announcement"
                   >
-                    Send to participants
+                    Send update
                   </Button>
                 </div>
               </CardContent>

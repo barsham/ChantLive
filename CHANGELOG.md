@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.42 - 2 July 2026
+
+Competitor-informed role-targeted announcements for segmented event communication.
+
+### Added
+
+- Role-targeted announcements: Admins can target live announcements to everyone, participants, marshals, speakers, or accessibility helpers.
+- Participant role filtering: Participants only see role-targeted announcements that match their checked-in role, while everyone still receives all-hands updates.
+
+### Improved
+
+- Announcement audience selector: The command center now includes an audience selector beside the announcement composer.
+- Role-aware participant banners: Participant announcement banners now identify whether an update is for everyone or a specific role.
+- Segmented announcement API: ChantLive announcements now carry a target role so organisers can send segmented event-day instructions without requiring participant accounts.
+
 ## 1.1.41 - 1 July 2026
 
 Competitor-informed participation points, badges, and organiser engagement leaderboard.
