@@ -33,6 +33,19 @@ type AudienceQuestion = {
   createdAt: string;
   participantLabel: string;
 };
+type LivePoll = {
+  id: string;
+  question: string;
+  status: "open" | "closed";
+  options: Array<{
+    id: string;
+    label: string;
+    votes: number;
+  }>;
+  totalVotes: number;
+  createdAt: string;
+  closedAt: string | null;
+};
 type CheckInRole = "participant" | "marshal" | "speaker" | "accessibility";
 type ParticipantEngagement = {
   points: number;
@@ -43,6 +56,13 @@ type ParticipantEngagement = {
 
 const clampProgress = (value: number) => Math.min(100, Math.max(0, value));
 const getFallbackPhaseDuration = (phase: "leader" | "people") => phase === "leader" ? 4000 : 3000;
+const getStoredPollVotes = (): Record<string, string> => {
+  try {
+    return JSON.parse(localStorage.getItem("chant_poll_votes") ?? "{}") as Record<string, string>;
+  } catch {
+    return {};
+  }
+};
 const getAnnouncementAudienceLabel = (targetRole: OrganizerAnnouncement["targetRole"]) => {
   const labels: Record<OrganizerAnnouncement["targetRole"], string> = {
     all: "Organizer update for everyone",
@@ -93,6 +113,9 @@ export default function Participant() {
   const [pulseSent, setPulseSent] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState<OrganizerAnnouncement | null>(null);
   const [audienceQuestions, setAudienceQuestions] = useState<AudienceQuestion[]>([]);
+  const [activePoll, setActivePoll] = useState<LivePoll | null>(null);
+  const [pollVotes, setPollVotes] = useState<Record<string, string>>(getStoredPollVotes);
+  const [pollStatus, setPollStatus] = useState<string | null>(null);
   const [questionText, setQuestionText] = useState("");
   const [questionStatus, setQuestionStatus] = useState<string | null>(null);
   const [checkInName, setCheckInName] = useState(() => localStorage.getItem("chant_checkin_name") ?? "");
@@ -181,6 +204,15 @@ export default function Participant() {
       setAudienceQuestions(questions);
     });
 
+    socket.on("poll_update", (poll: LivePoll | null) => {
+      setActivePoll(poll);
+      setPollStatus(null);
+    });
+
+    socket.on("poll_results_update", (poll: LivePoll) => {
+      setActivePoll((current) => current?.id === poll.id ? poll : current);
+    });
+
     socket.on("engagement_update", () => {
       fetch(`/api/public/demos/${publicId}/engagement/${getSessionId()}`)
         .then((response) => response.ok ? response.json() : null)
@@ -202,6 +234,8 @@ export default function Participant() {
       socket.off("demo_error");
       socket.off("organizer_announcement");
       socket.off("question_update");
+      socket.off("poll_update");
+      socket.off("poll_results_update");
       socket.off("engagement_update");
       socket.off("connect");
       socket.off("disconnect");
@@ -213,6 +247,11 @@ export default function Participant() {
       .then((response) => response.ok ? response.json() : [])
       .then((questions: AudienceQuestion[]) => setAudienceQuestions(questions))
       .catch(() => setAudienceQuestions([]));
+
+    fetch(`/api/public/demos/${publicId}/polls/active`)
+      .then((response) => response.ok ? response.json() : null)
+      .then((poll: LivePoll | null) => setActivePoll(poll))
+      .catch(() => setActivePoll(null));
 
     fetch(`/api/public/demos/${publicId}/engagement/${getSessionId()}`)
       .then((response) => response.ok ? response.json() : null)
@@ -311,6 +350,29 @@ export default function Participant() {
       });
     } catch {
       // Upvotes are best-effort and should not disrupt the live chant view.
+    }
+  };
+  const submitPollVote = async (pollId: string, optionId: string) => {
+    try {
+      const response = await fetch(`/api/public/demos/${publicId}/polls/${pollId}/vote`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ optionId, sessionId: getSessionId() }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Could not send poll vote.");
+      }
+
+      const poll = await response.json() as LivePoll;
+      const nextVotes = { ...pollVotes, [pollId]: optionId };
+      localStorage.setItem("chant_poll_votes", JSON.stringify(nextVotes));
+      setPollVotes(nextVotes);
+      setActivePoll(poll);
+      setPollStatus("Vote sent.");
+      setTimeout(() => setPollStatus(null), 2500);
+    } catch {
+      setPollStatus("Could not send vote. Try again or tell an organizer.");
     }
   };
   const submitCheckIn = async (role: CheckInRole) => {
@@ -872,7 +934,7 @@ export default function Participant() {
             <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 p-4 md:col-span-2" data-testid="card-participant-engagement">
               <p className="font-semibold text-emerald-50">Participation progress</p>
               <p className="mt-1 text-xs text-emerald-100/80">
-                Earn points for useful event actions like checking in, sending pulse signals, asking questions, and giving feedback.
+                Earn points for useful event actions like checking in, voting in polls, sending pulse signals, asking questions, and giving feedback.
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <span className="rounded-full border border-emerald-300/40 px-3 py-1 text-sm font-semibold text-emerald-50" data-testid="text-engagement-points">
@@ -886,6 +948,49 @@ export default function Participant() {
                   <span className="text-xs text-emerald-100/70">Check in or send a signal to earn your first badge.</span>
                 )}
               </div>
+            </div>
+            <div className="rounded-xl border border-sky-400/30 bg-sky-400/10 p-4 md:col-span-2" data-testid="card-live-participant-poll">
+              <p className="font-semibold text-sky-50">Live poll</p>
+              {activePoll ? (
+                <div>
+                  <p className="mt-1 text-sm text-sky-100">{activePoll.question}</p>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                    {activePoll.options.map((option) => {
+                      const selected = pollVotes[activePoll.id] === option.id;
+                      const percent = activePoll.totalVotes > 0 ? Math.round((option.votes / activePoll.totalVotes) * 100) : 0;
+                      return (
+                        <button
+                          key={option.id}
+                          type="button"
+                          onClick={() => submitPollVote(activePoll.id, option.id)}
+                          className={`rounded-lg border p-3 text-left text-sm ${
+                            selected
+                              ? "border-sky-200 bg-sky-200/20 text-white"
+                              : "border-sky-300/30 text-sky-50 hover:bg-sky-300/10"
+                          }`}
+                          data-testid={`button-live-poll-option-${option.id}`}
+                        >
+                          <span className="font-semibold">{option.label}</span>
+                          <span className="mt-1 block text-xs text-sky-100/80">
+                            {option.votes} votes - {percent}%
+                          </span>
+                          <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-black/30">
+                            <span className="block h-full rounded-full bg-sky-200" style={{ width: `${percent}%` }} />
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-2 text-xs text-sky-100/80">
+                    {pollVotes[activePoll.id] ? "Your latest vote is counted. You can change it while the poll is open." : "Choose one option. You can change your vote while the poll is open."}
+                  </p>
+                </div>
+              ) : (
+                <p className="mt-1 text-sm text-sky-100/80">No live poll is open right now. If the organizer asks a crowd question, it will appear here.</p>
+              )}
+              {pollStatus && (
+                <p className="mt-2 text-xs text-sky-50" role="status" data-testid="text-live-poll-status">{pollStatus}</p>
+              )}
             </div>
             <div className="rounded-xl border border-neutral-800 bg-black/30 p-4 md:col-span-2">
               <p className="font-semibold text-white">Check in with the organizer</p>

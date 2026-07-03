@@ -60,6 +60,21 @@ type AudienceQuestion = {
   createdAt: string;
   resolvedAt: string | null;
 };
+type LivePollStatus = "open" | "closed";
+type LivePollOption = {
+  id: string;
+  label: string;
+  voterSessionIds: string[];
+};
+type LivePoll = {
+  id: string;
+  demoId: string;
+  question: string;
+  options: LivePollOption[];
+  status: LivePollStatus;
+  createdAt: string;
+  closedAt: string | null;
+};
 type ParticipantCheckInRole = "participant" | "marshal" | "speaker" | "accessibility";
 type ParticipantCheckIn = {
   sessionId: string;
@@ -77,7 +92,7 @@ type ParticipantFeedback = {
   createdAt: string;
   updatedAt: string;
 };
-type EngagementAction = "checkin" | "pulse" | "question" | "upvote" | "assistance" | "feedback";
+type EngagementAction = "checkin" | "pulse" | "question" | "upvote" | "assistance" | "feedback" | "poll_vote";
 type ParticipantEngagement = {
   sessionId: string;
   points: number;
@@ -89,6 +104,7 @@ const assistanceRequests = new Map<string, AssistanceRequest[]>();
 const crowdPulses = new Map<string, Map<string, CrowdPulse>>();
 const organizerAnnouncements = new Map<string, OrganizerAnnouncement[]>();
 const audienceQuestions = new Map<string, AudienceQuestion[]>();
+const livePolls = new Map<string, LivePoll[]>();
 const participantCheckIns = new Map<string, Map<string, ParticipantCheckIn>>();
 const participantFeedback = new Map<string, Map<string, ParticipantFeedback>>();
 const participantEngagement = new Map<string, Map<string, ParticipantEngagement>>();
@@ -153,6 +169,32 @@ function getAudienceQuestions(demoId: string) {
   return audienceQuestions.get(demoId) ?? [];
 }
 
+function getLivePolls(demoId: string) {
+  return livePolls.get(demoId) ?? [];
+}
+
+function getActiveLivePoll(demoId: string) {
+  return getLivePolls(demoId).find((poll) => poll.status === "open") ?? null;
+}
+
+function serializeLivePoll(poll: LivePoll) {
+  const totalVotes = poll.options.reduce((sum, option) => sum + option.voterSessionIds.length, 0);
+
+  return {
+    id: poll.id,
+    question: poll.question,
+    status: poll.status,
+    options: poll.options.map((option) => ({
+      id: option.id,
+      label: option.label,
+      votes: option.voterSessionIds.length,
+    })),
+    totalVotes,
+    createdAt: poll.createdAt,
+    closedAt: poll.closedAt,
+  };
+}
+
 function getCheckInSummary(demoId: string) {
   const checkIns = Array.from(participantCheckIns.get(demoId)?.values() ?? [])
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
@@ -214,6 +256,7 @@ function getEmptyEngagementActions(): Record<EngagementAction, number> {
     upvote: 0,
     assistance: 0,
     feedback: 0,
+    poll_vote: 0,
   };
 }
 
@@ -225,6 +268,7 @@ function awardEngagement(demoId: string, publicId: string, sessionId: string, ac
     upvote: 1,
     assistance: 4,
     feedback: 8,
+    poll_vote: 3,
   };
   const demoEngagement = participantEngagement.get(demoId) ?? new Map<string, ParticipantEngagement>();
   const current = demoEngagement.get(sessionId) ?? {
@@ -250,6 +294,7 @@ function getBadges(engagement: ParticipantEngagement) {
   if (engagement.actions.question > 0) badges.push("Asked a question");
   if (engagement.actions.feedback > 0) badges.push("Gave feedback");
   if (engagement.actions.assistance > 0) badges.push("Asked for help");
+  if (engagement.actions.poll_vote > 0) badges.push("Poll voter");
   if (engagement.points >= 25) badges.push("Active participant");
   return badges;
 }
@@ -667,6 +712,86 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/demos/:id/polls", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      res.json(getLivePolls(demo.id).map(serializeLivePoll));
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch live polls" });
+    }
+  });
+
+  app.post("/api/demos/:id/polls", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      const question = typeof req.body?.question === "string" ? req.body.question.trim().slice(0, 160) : "";
+      const optionLabels: string[] = Array.isArray(req.body?.options)
+        ? req.body.options
+            .map((option: unknown) => typeof option === "string" ? option.trim().slice(0, 48) : "")
+            .filter(Boolean)
+            .slice(0, 4)
+        : [];
+      const uniqueOptionLabels = Array.from(new Set(optionLabels));
+      if (!question) return res.status(400).json({ message: "Poll question is required" });
+      if (uniqueOptionLabels.length < 2) return res.status(400).json({ message: "Add at least two poll options" });
+
+      const polls = getLivePolls(demo.id).map((poll) => (
+        poll.status === "open" ? { ...poll, status: "closed" as LivePollStatus, closedAt: new Date().toISOString() } : poll
+      ));
+      const poll: LivePoll = {
+        id: crypto.randomUUID(),
+        demoId: demo.id,
+        question,
+        options: uniqueOptionLabels.map((label) => ({
+          id: crypto.randomUUID(),
+          label,
+          voterSessionIds: [],
+        })),
+        status: "open",
+        createdAt: new Date().toISOString(),
+        closedAt: null,
+      };
+
+      livePolls.set(demo.id, [poll, ...polls].slice(0, 12));
+      const serializedPoll = serializeLivePoll(poll);
+      io.to(`demo:${demo.publicId}`).emit("poll_update", serializedPoll);
+      res.status(201).json(serializedPoll);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to create live poll" });
+    }
+  });
+
+  app.patch("/api/demos/:id/polls/:pollId", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      const pollId = getSingleParam(req.params.pollId);
+      const polls = getLivePolls(demo.id);
+      const poll = polls.find((item) => item.id === pollId);
+      if (!poll) return res.status(404).json({ message: "Live poll not found" });
+
+      poll.status = "closed";
+      poll.closedAt = new Date().toISOString();
+      const serializedPoll = serializeLivePoll(poll);
+      io.to(`demo:${demo.publicId}`).emit("poll_update", null);
+      io.to(`demo:${demo.publicId}`).emit("poll_results_update", serializedPoll);
+      res.json(serializedPoll);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to update live poll" });
+    }
+  });
+
   app.post("/api/public/demos/:publicId/assistance", async (req, res) => {
     try {
       const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
@@ -778,6 +903,51 @@ export async function registerRoutes(
       res.status(existing ? 200 : 201).json(summary);
     } catch (err) {
       res.status(500).json({ message: "Failed to check in participant" });
+    }
+  });
+
+  app.get("/api/public/demos/:publicId/polls/active", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+
+      const activePoll = getActiveLivePoll(demo.id);
+      res.json(activePoll ? serializeLivePoll(activePoll) : null);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch active poll" });
+    }
+  });
+
+  app.post("/api/public/demos/:publicId/polls/:pollId/vote", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+
+      const pollId = getSingleParam(req.params.pollId);
+      const optionId = typeof req.body?.optionId === "string" ? req.body.optionId : "";
+      const sessionId = typeof req.body?.sessionId === "string" && req.body.sessionId.trim()
+        ? req.body.sessionId.trim().slice(0, 80)
+        : crypto.randomUUID();
+      const poll = getLivePolls(demo.id).find((item) => item.id === pollId && item.status === "open");
+      if (!poll) return res.status(404).json({ message: "Live poll not found" });
+
+      const selectedOption = poll.options.find((option) => option.id === optionId);
+      if (!selectedOption) return res.status(400).json({ message: "Valid poll option is required" });
+
+      const alreadyVoted = poll.options.some((option) => option.voterSessionIds.includes(sessionId));
+      for (const option of poll.options) {
+        option.voterSessionIds = option.voterSessionIds.filter((voterSessionId) => voterSessionId !== sessionId);
+      }
+      selectedOption.voterSessionIds.push(sessionId);
+      if (!alreadyVoted) {
+        awardEngagement(demo.id, demo.publicId, sessionId, "poll_vote", io);
+      }
+
+      const serializedPoll = serializeLivePoll(poll);
+      io.to(`demo:${demo.publicId}`).emit("poll_results_update", serializedPoll);
+      res.json(serializedPoll);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to submit poll vote" });
     }
   });
 

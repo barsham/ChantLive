@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.43 - 3 July 2026
+
+Competitor-informed live polling for real-time organiser decisions and participant engagement.
+
+### Added
+
+- Live crowd polls: Organisers can open a live poll from the command center to ask quick event-day decision questions.
+- Participant poll voting: Participants can vote from the Help panel without signing in and can change their vote while the poll is open.
+- Live poll results: The command center shows live vote totals and percentages so organisers can adapt the chant or event flow quickly.
+
+### Improved
+
+- Poll close workflow: Organisers can close an active poll, and opening a new poll automatically closes the previous one.
+- Poll engagement readiness: Poll votes now contribute to participant engagement points and the command center readiness summary.
+
 ## 1.1.42 - 2 July 2026
 
 Competitor-informed role-targeted announcements for segmented event communication.

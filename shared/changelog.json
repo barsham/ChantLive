@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.43",
+      "releasedAt": "2026-07-03",
+      "summary": "Competitor-informed live polling for real-time organiser decisions and participant engagement.",
+      "items": [
+        {
+          "id": "cl-2026-07-03-live-crowd-polls",
+          "title": "Live crowd polls",
+          "description": "Organisers can open a live poll from the command center to ask quick event-day decision questions.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-03",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-03-participant-poll-voting",
+          "title": "Participant poll voting",
+          "description": "Participants can vote from the Help panel without signing in and can change their vote while the poll is open.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-03",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-03-live-poll-results",
+          "title": "Live poll results",
+          "description": "The command center shows live vote totals and percentages so organisers can adapt the chant or event flow quickly.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-03",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-03-poll-close-workflow",
+          "title": "Poll close workflow",
+          "description": "Organisers can close an active poll, and opening a new poll automatically closes the previous one.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-03",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-03-poll-engagement-readiness",
+          "title": "Poll engagement readiness",
+          "description": "Poll votes now contribute to participant engagement points and the command center readiness summary.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-03",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.42",
       "releasedAt": "2026-07-02",
       "summary": "Competitor-informed role-targeted announcements for segmented event communication.",

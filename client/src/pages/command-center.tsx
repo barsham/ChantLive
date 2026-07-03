@@ -54,6 +54,19 @@ type AudienceQuestion = {
   resolvedAt: string | null;
   participantLabel: string;
 };
+type LivePoll = {
+  id: string;
+  question: string;
+  status: "open" | "closed";
+  options: Array<{
+    id: string;
+    label: string;
+    votes: number;
+  }>;
+  totalVotes: number;
+  createdAt: string;
+  closedAt: string | null;
+};
 type CheckInRole = "participant" | "marshal" | "speaker" | "accessibility";
 type AnnouncementTargetRole = "all" | CheckInRole;
 type CheckInSummary = {
@@ -104,6 +117,8 @@ export default function CommandCenter() {
   const { toast } = useToast();
   const [announcementMessage, setAnnouncementMessage] = useState("");
   const [announcementTarget, setAnnouncementTarget] = useState<AnnouncementTargetRole>("all");
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState(["Yes", "No", "Need more info"]);
 
   const { data, isLoading } = useQuery<DemoDetail>({
     queryKey: ["/api/demos", id],
@@ -136,6 +151,11 @@ export default function CommandCenter() {
   });
   const { data: engagement } = useQuery<EngagementSummary>({
     queryKey: ["/api/demos", id, "engagement"],
+    refetchInterval: 3000,
+    enabled: Boolean(id),
+  });
+  const { data: livePolls = [] } = useQuery<LivePoll[]>({
+    queryKey: ["/api/demos", id, "polls"],
     refetchInterval: 3000,
     enabled: Boolean(id),
   });
@@ -175,6 +195,31 @@ export default function CommandCenter() {
       toast({ title: "Could not update question", description: err.message, variant: "destructive" });
     },
   });
+  const createPoll = useMutation({
+    mutationFn: async ({ question, options }: { question: string; options: string[] }) => {
+      await apiRequest("POST", `/api/demos/${id}/polls`, { question, options });
+    },
+    onSuccess: () => {
+      setPollQuestion("");
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "polls"] });
+      toast({ title: "Live poll opened", description: "Participants can vote from the Help panel." });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Could not open poll", description: err.message, variant: "destructive" });
+    },
+  });
+  const closePoll = useMutation({
+    mutationFn: async (pollId: string) => {
+      await apiRequest("PATCH", `/api/demos/${id}/polls/${pollId}`, { status: "closed" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "polls"] });
+      toast({ title: "Live poll closed" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Could not close poll", description: err.message, variant: "destructive" });
+    },
+  });
 
   const currentChant = useMemo(() => {
     if (!data?.state?.currentChantId) return null;
@@ -210,6 +255,7 @@ export default function CommandCenter() {
   const openQuestions = audienceQuestions
     .filter((question) => question.status === "open")
     .sort((a, b) => b.votes - a.votes || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  const activePoll = livePolls.find((poll) => poll.status === "open") ?? null;
   const readiness = [
     { label: "Chants", ready: data.chants.length > 0, detail: `${data.chants.length} prepared` },
     { label: "Backup admin", ready: data.admins.length > 1, detail: `${data.admins.length} admin${data.admins.length === 1 ? "" : "s"}` },
@@ -218,6 +264,7 @@ export default function CommandCenter() {
     { label: "Checked in", ready: (checkIns?.total ?? 0) > 0, detail: `${checkIns?.total ?? 0} people` },
     { label: "Feedback", ready: (feedback?.total ?? 0) > 0, detail: `${feedback?.total ?? 0} responses` },
     { label: "Engagement", ready: (engagement?.totalParticipants ?? 0) > 0, detail: `${engagement?.totalPoints ?? 0} points` },
+    { label: "Live poll", ready: Boolean(activePoll), detail: activePoll ? `${activePoll.totalVotes} votes` : "None open" },
     { label: "Help requests", ready: openAssistance.length === 0, detail: `${openAssistance.length} open` },
     { label: "Questions", ready: openQuestions.length === 0, detail: `${openQuestions.length} open` },
   ];
@@ -256,7 +303,7 @@ export default function CommandCenter() {
             <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{statusTone(data.demo.status)}</p>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-9">
+          <div className="mt-6 grid gap-4 md:grid-cols-10">
             {readiness.map((item) => (
               <Card key={item.label} data-testid={`card-command-readiness-${item.label.toLowerCase().replace(/\s+/g, "-")}`}>
                 <CardContent className="p-4">
@@ -482,6 +529,116 @@ export default function CommandCenter() {
               </CardContent>
             </Card>
           </div>
+
+          <Card className="mt-6 border-emerald-500/20 bg-emerald-500/5" data-testid="card-live-poll">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between gap-3 text-base">
+                <span className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                  Live crowd poll
+                </span>
+                <Badge variant={activePoll ? "default" : "secondary"}>
+                  {activePoll ? `${activePoll.totalVotes} votes` : "No active poll"}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-5 lg:grid-cols-[1fr_1.2fr]">
+              <div className="space-y-3">
+                <div>
+                  <label htmlFor="poll-question" className="text-xs font-medium text-muted-foreground">
+                    Decision question
+                  </label>
+                  <Textarea
+                    id="poll-question"
+                    value={pollQuestion}
+                    onChange={(event) => setPollQuestion(event.target.value)}
+                    placeholder="Example: Should we repeat the current chant one more time?"
+                    rows={2}
+                    maxLength={160}
+                    data-testid="input-live-poll-question"
+                  />
+                </div>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {pollOptions.map((option, index) => (
+                    <label key={index} className="text-xs font-medium text-muted-foreground">
+                      Option {index + 1}
+                      <input
+                        value={option}
+                        onChange={(event) => setPollOptions((current) => current.map((item, itemIndex) => itemIndex === index ? event.target.value : item))}
+                        maxLength={48}
+                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+                        data-testid={`input-live-poll-option-${index + 1}`}
+                      />
+                    </label>
+                  ))}
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs text-muted-foreground">
+                    Opening a new poll automatically closes the previous open poll.
+                  </p>
+                  <Button
+                    size="sm"
+                    onClick={() => createPoll.mutate({ question: pollQuestion.trim(), options: pollOptions.map((option) => option.trim()).filter(Boolean) })}
+                    disabled={!pollQuestion.trim() || pollOptions.map((option) => option.trim()).filter(Boolean).length < 2 || createPoll.isPending}
+                    data-testid="button-open-live-poll"
+                  >
+                    Open live poll
+                  </Button>
+                </div>
+              </div>
+              <div className="rounded-xl border bg-background p-4">
+                {activePoll ? (
+                  <div data-testid="panel-active-live-poll">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold">{activePoll.question}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Opened {new Date(activePoll.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => closePoll.mutate(activePoll.id)}
+                        disabled={closePoll.isPending}
+                        data-testid="button-close-live-poll"
+                      >
+                        Close poll
+                      </Button>
+                    </div>
+                    <div className="mt-4 space-y-3">
+                      {activePoll.options.map((option) => {
+                        const percent = activePoll.totalVotes > 0 ? Math.round((option.votes / activePoll.totalVotes) * 100) : 0;
+                        return (
+                          <div key={option.id}>
+                            <div className="flex items-center justify-between gap-3 text-sm">
+                              <span className="font-medium">{option.label}</span>
+                              <span className="text-muted-foreground">{option.votes} votes - {percent}%</span>
+                            </div>
+                            <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted">
+                              <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <div data-testid="text-no-live-poll">
+                    <p className="text-sm font-medium">No live poll is open.</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Use polls for quick event-day decisions like repeating a chant, slowing down, changing location, or checking readiness.
+                    </p>
+                    {livePolls[0] && (
+                      <p className="mt-3 text-xs text-muted-foreground">
+                        Last poll: {livePolls[0].question} ({livePolls[0].totalVotes} votes)
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
           <Card className="mt-6 border-primary/20 bg-primary/5" data-testid="card-live-assistance-queue">
             <CardHeader>
