@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.44 - 5 July 2026
+
+Practical volunteer-role guidance for peaceful events with clearer arrivals, accessibility, and live communication handoffs.
+
+### Documentation
+
+- Volunteer role planning guide: The public blog now includes a practical guide to assigning volunteer roles for peaceful events before participants arrive.
+
 ## 1.1.43 - 3 July 2026
 
 Competitor-informed live polling for real-time organiser decisions and participant engagement.

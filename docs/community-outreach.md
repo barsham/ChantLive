@@ -95,6 +95,113 @@ I am looking for practical feedback:
 Critical feedback is very welcome.
 ```
 
+## Ready-to-Post Forum Variants
+
+Use these as starting points. Before posting, add your name, disclose your relationship to the project, and adjust the wording to match each community's self-promotion rules.
+
+### Civic-Tech / Public-Interest Tech
+
+```text
+Hi everyone,
+
+I maintain ChantLive, a free and open-source tool for real-time chant coordination at demonstrations and public events:
+
+https://chantlive.online/
+https://github.com/barsham/ChantLive
+
+The basic flow: organizers prepare a chant list, then push the current chant live. Participants join from a public link or QR code and do not need an account.
+
+I am looking for public-interest tech feedback before encouraging broader use:
+
+- What privacy or safety expectations should this meet?
+- Should groups be encouraged to self-host, and what docs would make that realistic?
+- What failure modes should be planned for at crowded events?
+- What would make the participant experience more trustworthy?
+
+I would especially value critique from people who have built or deployed tools for civic groups, public events, or high-trust community settings.
+```
+
+### Open Source / Self-Hosting
+
+```text
+Hi everyone,
+
+I built ChantLive, a free/open-source realtime web app for demonstrations and events:
+
+https://github.com/barsham/ChantLive
+https://chantlive.online/
+
+It uses React, TypeScript, Vite, Tailwind, Express, PostgreSQL, Drizzle, and Socket.IO. Organizers manage chant lists and push the current chant live; participants join a public URL or QR code without logging in.
+
+I would appreciate review on:
+
+- Realtime reliability and reconnection behavior
+- Security and privacy assumptions
+- What a good self-hosting path should include
+- Accessibility of public-link and QR-code participation
+- Issues that would make contribution easier
+
+Critical feedback is very welcome, especially around anything that could fail under real event conditions.
+```
+
+### Accessibility Review
+
+```text
+Hi everyone,
+
+I maintain ChantLive, a free and open-source tool for coordinating chants at demonstrations and public events:
+
+https://chantlive.online/
+Accessibility notes: https://github.com/barsham/ChantLive/blob/main/docs/qr-accessibility.md
+
+Participants join from a public link or QR code and see the current chant update live. No participant login is required.
+
+I would value accessibility feedback on:
+
+- Whether the live-updating participant view is understandable
+- QR-code and public-link sharing guidance
+- Screen reader expectations for chant changes
+- Reduced-motion or visual clarity concerns
+- What organizers should provide for people who cannot or do not want to use a phone
+
+I am trying to identify issues before people rely on this at real events, so candid critique would help a lot.
+```
+
+### Product / Side Project Feedback
+
+```text
+Hi everyone,
+
+I built ChantLive, a free open-source tool for coordinating chants at demonstrations and events:
+
+https://chantlive.online/
+
+The problem I am trying to solve: printed chant sheets and shouted instructions can be hard to use in large, noisy, fast-moving crowds.
+
+With ChantLive, an organizer controls the current chant, and participants join from a public link or QR code with no account.
+
+I am looking for feedback on the first-use experience:
+
+- Is the purpose clear quickly?
+- Would an organizer understand when to use this?
+- What would make the tool feel more trustworthy?
+- What is missing before a group could test it safely?
+
+Source code is here:
+https://github.com/barsham/ChantLive
+```
+
+### Short Invite
+
+```text
+I maintain ChantLive, a free/open-source realtime chant coordination tool for demonstrations and events:
+
+https://chantlive.online/
+https://github.com/barsham/ChantLive
+
+Organizers control the current chant; participants join from a public link or QR code with no login. I am looking for feedback from organizers, accessibility reviewers, civic-tech folks, and open-source contributors. What would make this useful, trustworthy, or safer for real events?
+```
+
 ## Organizer-Focused Post
 
 ```text

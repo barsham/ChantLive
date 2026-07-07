@@ -1,6 +1,22 @@
 {
   "releases": [
     {
+      "version": "1.1.44",
+      "releasedAt": "2026-07-05",
+      "summary": "Practical volunteer-role guidance for peaceful events with clearer arrivals, accessibility, and live communication handoffs.",
+      "items": [
+        {
+          "id": "cl-2026-07-05-volunteer-role-planning-guide",
+          "title": "Volunteer role planning guide",
+          "description": "The public blog now includes a practical guide to assigning volunteer roles for peaceful events before participants arrive.",
+          "type": "docs",
+          "visibility": "public",
+          "dateAdded": "2026-07-05",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.43",
       "releasedAt": "2026-07-03",
       "summary": "Competitor-informed live polling for real-time organiser decisions and participant engagement.",

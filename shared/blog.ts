@@ -19,6 +19,92 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "volunteer-roles-for-peaceful-events",
+    title: "Volunteer Roles Every Peaceful Event Should Assign Before It Starts",
+    description:
+      "A practical checklist for assigning volunteer roles at peaceful demonstrations and community events so communication, accessibility, and participant support stay clear from the start.",
+    publishedAt: "2026-07-05",
+    category: "Organizing",
+    readingMinutes: 7,
+    tags: ["volunteers", "organizing", "accessibility", "communication"],
+    disclaimer:
+      "This article is general event-planning information only. It is not legal, medical, or security advice. Follow local authority requirements, venue rules, and emergency services instructions for your event.",
+    sections: [
+      {
+        heading: "Assign Roles Before You Recruit Specific People",
+        paragraphs: [
+          "Volunteer coordination gets easier when organizers define the jobs first and then match people to those jobs. If everyone arrives as a general helper, important tasks can be missed while several people crowd around the same problem.",
+          "Start with a short role list that reflects the real needs of the event: who welcomes people, who relays updates, who watches for accessibility barriers, and who keeps the day moving calmly.",
+        ],
+        bullets: [
+          "Write each role in one sentence with a clear handoff point.",
+          "Keep the first version small enough that one volunteer can explain it quickly.",
+          "Share the same role list in volunteer notes, briefing messages, and printed checklists.",
+        ],
+      },
+      {
+        heading: "Name One Event Lead And One Communication Lead",
+        paragraphs: [
+          "Peaceful events usually need fewer decision-makers than organizers expect. One event lead should own the final call on schedule or location changes, while one communication lead should turn those decisions into short messages participants can actually follow.",
+          "Separating those responsibilities reduces mixed instructions. It also makes it easier for volunteers to know whose message should be repeated when the crowd gets noisy or arrivals are still joining.",
+        ],
+        bullets: [
+          "Event lead: approves the plan and any major changes.",
+          "Communication lead: writes and repeats the current participant update.",
+          "Backup contact: can step in if one of those people becomes unavailable.",
+        ],
+      },
+      {
+        heading: "Assign Arrival, QR-Join, And Accessibility Support",
+        paragraphs: [
+          "The busiest point of confusion is often the first five minutes after people arrive. A welcome volunteer can direct people to the right place, a joining helper can assist with QR codes or short links, and an accessibility helper can watch for barriers that slow participation before the event has properly started.",
+          "These roles work best when they are visible and easy to approach. Participants should not need to guess who can answer a basic joining or access question.",
+        ],
+        bullets: [
+          "Welcome volunteer: confirms where people should gather.",
+          "Join helper: supports QR scanning and offers the short link fallback.",
+          "Accessibility helper: checks whether signs, spoken instructions, and joining paths are working for different participants.",
+        ],
+      },
+      {
+        heading: "Use Marshals Or Stewards For Flow, Not For Improvisation",
+        paragraphs: [
+          "If your event uses marshals or stewards, keep their role focused on calm crowd flow, visible guidance, and relaying agreed instructions. They should know the route or layout, the fallback meeting point, and who to contact when something needs escalation.",
+          "A short written brief is better than relying on memory. Volunteers make steadier decisions when they know what they are responsible for and what should be passed back to the event lead.",
+        ],
+        bullets: [
+          "Give marshals one simple map or movement plan if the event includes movement.",
+          "Tell them which issues they should report instead of trying to solve alone.",
+          "Use the same wording for regroup points, timing changes, and support contacts.",
+        ],
+      },
+      {
+        heading: "Create A Small Participant Support Team",
+        paragraphs: [
+          "Not every useful volunteer role needs to be high visibility. A small participant support team can answer routine questions, help people find rest points or facilities, and notice when someone needs practical assistance or a quieter explanation.",
+          "This role helps the whole event feel more organized because participants know there is a human place to go for non-urgent help instead of interrupting the main speaker or crowd lead.",
+        ],
+        bullets: [
+          "Keep one support point or roaming helper available during arrival and transitions.",
+          "Prepare answers for the most common questions: timing, joining, location changes, and who to ask next.",
+          "Agree in advance how volunteers should escalate urgent concerns to official services or venue staff when needed.",
+        ],
+      },
+      {
+        heading: "Brief Everyone In Ten Minutes And Test The Handoffs",
+        paragraphs: [
+          "A short live briefing is more useful than a long document. Walk through each role, say who gives the final instruction, and test one realistic scenario such as a delayed start or a participant who cannot scan the main QR code.",
+          "ChantLive can help here because organizers can prepare the participant page, share the same short link with volunteers, and invite a backup admin before people arrive. That makes the handoff between welcome, communication, and support roles much cleaner.",
+        ],
+        bullets: [
+          "Ask each volunteer to repeat their role in one sentence.",
+          "Run one message test from the event lead to the communication lead to the volunteer team.",
+          "Confirm the ChantLive join link, printed fallback, and backup admin are ready before the start time.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "backup-communication-plan-for-peaceful-events",
     title: "How to Build a Backup Communication Plan for a Peaceful Event",
     description:
