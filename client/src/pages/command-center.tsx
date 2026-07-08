@@ -67,6 +67,26 @@ type LivePoll = {
   createdAt: string;
   closedAt: string | null;
 };
+type SafetyCheck = {
+  id: string;
+  message: string;
+  status: "open" | "closed";
+  counts: {
+    ok: number;
+    need_help: number;
+    leaving: number;
+    not_sure: number;
+  };
+  totalResponses: number;
+  needsAttention: Array<{
+    response: "need_help" | "not_sure";
+    note: string | null;
+    updatedAt: string;
+    participantLabel: string;
+  }>;
+  createdAt: string;
+  closedAt: string | null;
+};
 type CheckInRole = "participant" | "marshal" | "speaker" | "accessibility";
 type AnnouncementTargetRole = "all" | CheckInRole;
 type CheckInSummary = {
@@ -119,6 +139,7 @@ export default function CommandCenter() {
   const [announcementTarget, setAnnouncementTarget] = useState<AnnouncementTargetRole>("all");
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState(["Yes", "No", "Need more info"]);
+  const [safetyCheckMessage, setSafetyCheckMessage] = useState("Safety check: please confirm whether you are okay.");
 
   const { data, isLoading } = useQuery<DemoDetail>({
     queryKey: ["/api/demos", id],
@@ -156,6 +177,11 @@ export default function CommandCenter() {
   });
   const { data: livePolls = [] } = useQuery<LivePoll[]>({
     queryKey: ["/api/demos", id, "polls"],
+    refetchInterval: 3000,
+    enabled: Boolean(id),
+  });
+  const { data: safetyChecks = [] } = useQuery<SafetyCheck[]>({
+    queryKey: ["/api/demos", id, "safety-checks"],
     refetchInterval: 3000,
     enabled: Boolean(id),
   });
@@ -220,6 +246,31 @@ export default function CommandCenter() {
       toast({ title: "Could not close poll", description: err.message, variant: "destructive" });
     },
   });
+  const startSafetyCheck = useMutation({
+    mutationFn: async (message: string) => {
+      await apiRequest("POST", `/api/demos/${id}/safety-checks`, { message });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "safety-checks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "assistance"] });
+      toast({ title: "Safety check started", description: "Participants can respond from the Help panel." });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Could not start safety check", description: err.message, variant: "destructive" });
+    },
+  });
+  const closeSafetyCheck = useMutation({
+    mutationFn: async (checkId: string) => {
+      await apiRequest("PATCH", `/api/demos/${id}/safety-checks/${checkId}`, { status: "closed" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "safety-checks"] });
+      toast({ title: "Safety check closed" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Could not close safety check", description: err.message, variant: "destructive" });
+    },
+  });
 
   const currentChant = useMemo(() => {
     if (!data?.state?.currentChantId) return null;
@@ -256,6 +307,7 @@ export default function CommandCenter() {
     .filter((question) => question.status === "open")
     .sort((a, b) => b.votes - a.votes || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   const activePoll = livePolls.find((poll) => poll.status === "open") ?? null;
+  const activeSafetyCheck = safetyChecks.find((check) => check.status === "open") ?? null;
   const readiness = [
     { label: "Chants", ready: data.chants.length > 0, detail: `${data.chants.length} prepared` },
     { label: "Backup admin", ready: data.admins.length > 1, detail: `${data.admins.length} admin${data.admins.length === 1 ? "" : "s"}` },
@@ -265,6 +317,7 @@ export default function CommandCenter() {
     { label: "Feedback", ready: (feedback?.total ?? 0) > 0, detail: `${feedback?.total ?? 0} responses` },
     { label: "Engagement", ready: (engagement?.totalParticipants ?? 0) > 0, detail: `${engagement?.totalPoints ?? 0} points` },
     { label: "Live poll", ready: Boolean(activePoll), detail: activePoll ? `${activePoll.totalVotes} votes` : "None open" },
+    { label: "Safety check", ready: !activeSafetyCheck || activeSafetyCheck.counts.need_help === 0, detail: activeSafetyCheck ? `${activeSafetyCheck.totalResponses} responses` : "None open" },
     { label: "Help requests", ready: openAssistance.length === 0, detail: `${openAssistance.length} open` },
     { label: "Questions", ready: openQuestions.length === 0, detail: `${openQuestions.length} open` },
   ];
@@ -632,6 +685,109 @@ export default function CommandCenter() {
                     {livePolls[0] && (
                       <p className="mt-3 text-xs text-muted-foreground">
                         Last poll: {livePolls[0].question} ({livePolls[0].totalVotes} votes)
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6 border-red-500/20 bg-red-500/5" data-testid="card-safety-check">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between gap-3 text-base">
+                <span className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-red-600" />
+                  Live safety check
+                </span>
+                <Badge variant={activeSafetyCheck ? "default" : "secondary"}>
+                  {activeSafetyCheck ? `${activeSafetyCheck.totalResponses} responses` : "No active check"}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-5 lg:grid-cols-[1fr_1.2fr]">
+              <div className="space-y-3">
+                <div>
+                  <label htmlFor="safety-check-message" className="text-xs font-medium text-muted-foreground">
+                    Participant prompt
+                  </label>
+                  <Textarea
+                    id="safety-check-message"
+                    value={safetyCheckMessage}
+                    onChange={(event) => setSafetyCheckMessage(event.target.value)}
+                    rows={3}
+                    maxLength={180}
+                    data-testid="input-safety-check-message"
+                  />
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs text-muted-foreground">
+                    Use this after a route change, disruption, separation, or accessibility/safety concern.
+                  </p>
+                  <Button
+                    size="sm"
+                    onClick={() => startSafetyCheck.mutate(safetyCheckMessage.trim())}
+                    disabled={!safetyCheckMessage.trim() || startSafetyCheck.isPending}
+                    data-testid="button-start-safety-check"
+                  >
+                    Start safety check
+                  </Button>
+                </div>
+              </div>
+              <div className="rounded-xl border bg-background p-4">
+                {activeSafetyCheck ? (
+                  <div data-testid="panel-active-safety-check">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold">{activeSafetyCheck.message}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Started {new Date(activeSafetyCheck.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => closeSafetyCheck.mutate(activeSafetyCheck.id)}
+                        disabled={closeSafetyCheck.isPending}
+                        data-testid="button-close-safety-check"
+                      >
+                        Close check
+                      </Button>
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+                      {[
+                        ["OK", activeSafetyCheck.counts.ok],
+                        ["Need help", activeSafetyCheck.counts.need_help],
+                        ["Leaving", activeSafetyCheck.counts.leaving],
+                        ["Not sure", activeSafetyCheck.counts.not_sure],
+                      ].map(([label, count]) => (
+                        <div key={label} className="rounded-lg border bg-card p-3">
+                          <p className="text-xs text-muted-foreground">{label}</p>
+                          <p className="mt-1 text-2xl font-bold">{count}</p>
+                        </div>
+                      ))}
+                    </div>
+                    {activeSafetyCheck.needsAttention.length > 0 && (
+                      <div className="mt-4 space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-red-600">Needs organiser attention</p>
+                        {activeSafetyCheck.needsAttention.map((item) => (
+                          <div key={`${item.participantLabel}-${item.updatedAt}`} className="rounded-lg border bg-card p-3 text-sm">
+                            <p className="font-medium">{item.participantLabel}: {item.response === "need_help" ? "Needs help" : "Not sure"}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">{item.note || "No note provided."}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div data-testid="text-no-safety-check">
+                    <p className="text-sm font-medium">No safety check is active.</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Start one when organisers need a quick roll call without collecting participant accounts.
+                    </p>
+                    {safetyChecks[0] && (
+                      <p className="mt-3 text-xs text-muted-foreground">
+                        Last check: {safetyChecks[0].totalResponses} responses, {safetyChecks[0].counts.need_help} needed help.
                       </p>
                     )}
                   </div>

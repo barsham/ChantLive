@@ -46,6 +46,20 @@ type LivePoll = {
   createdAt: string;
   closedAt: string | null;
 };
+type SafetyCheck = {
+  id: string;
+  message: string;
+  status: "open" | "closed";
+  counts: {
+    ok: number;
+    need_help: number;
+    leaving: number;
+    not_sure: number;
+  };
+  totalResponses: number;
+  createdAt: string;
+  closedAt: string | null;
+};
 type CheckInRole = "participant" | "marshal" | "speaker" | "accessibility";
 type ParticipantEngagement = {
   points: number;
@@ -59,6 +73,13 @@ const getFallbackPhaseDuration = (phase: "leader" | "people") => phase === "lead
 const getStoredPollVotes = (): Record<string, string> => {
   try {
     return JSON.parse(localStorage.getItem("chant_poll_votes") ?? "{}") as Record<string, string>;
+  } catch {
+    return {};
+  }
+};
+const getStoredSafetyResponses = (): Record<string, string> => {
+  try {
+    return JSON.parse(localStorage.getItem("chant_safety_responses") ?? "{}") as Record<string, string>;
   } catch {
     return {};
   }
@@ -116,6 +137,10 @@ export default function Participant() {
   const [activePoll, setActivePoll] = useState<LivePoll | null>(null);
   const [pollVotes, setPollVotes] = useState<Record<string, string>>(getStoredPollVotes);
   const [pollStatus, setPollStatus] = useState<string | null>(null);
+  const [activeSafetyCheck, setActiveSafetyCheck] = useState<SafetyCheck | null>(null);
+  const [safetyResponses, setSafetyResponses] = useState<Record<string, string>>(getStoredSafetyResponses);
+  const [safetyNote, setSafetyNote] = useState("");
+  const [safetyStatus, setSafetyStatus] = useState<string | null>(null);
   const [questionText, setQuestionText] = useState("");
   const [questionStatus, setQuestionStatus] = useState<string | null>(null);
   const [checkInName, setCheckInName] = useState(() => localStorage.getItem("chant_checkin_name") ?? "");
@@ -213,6 +238,15 @@ export default function Participant() {
       setActivePoll((current) => current?.id === poll.id ? poll : current);
     });
 
+    socket.on("safety_check_update", (check: SafetyCheck | null) => {
+      setActiveSafetyCheck(check);
+      setSafetyStatus(null);
+    });
+
+    socket.on("safety_check_results_update", (check: SafetyCheck) => {
+      setActiveSafetyCheck((current) => current?.id === check.id ? check : current);
+    });
+
     socket.on("engagement_update", () => {
       fetch(`/api/public/demos/${publicId}/engagement/${getSessionId()}`)
         .then((response) => response.ok ? response.json() : null)
@@ -236,6 +270,8 @@ export default function Participant() {
       socket.off("question_update");
       socket.off("poll_update");
       socket.off("poll_results_update");
+      socket.off("safety_check_update");
+      socket.off("safety_check_results_update");
       socket.off("engagement_update");
       socket.off("connect");
       socket.off("disconnect");
@@ -252,6 +288,11 @@ export default function Participant() {
       .then((response) => response.ok ? response.json() : null)
       .then((poll: LivePoll | null) => setActivePoll(poll))
       .catch(() => setActivePoll(null));
+
+    fetch(`/api/public/demos/${publicId}/safety-checks/active`)
+      .then((response) => response.ok ? response.json() : null)
+      .then((check: SafetyCheck | null) => setActiveSafetyCheck(check))
+      .catch(() => setActiveSafetyCheck(null));
 
     fetch(`/api/public/demos/${publicId}/engagement/${getSessionId()}`)
       .then((response) => response.ok ? response.json() : null)
@@ -373,6 +414,29 @@ export default function Participant() {
       setTimeout(() => setPollStatus(null), 2500);
     } catch {
       setPollStatus("Could not send vote. Try again or tell an organizer.");
+    }
+  };
+  const submitSafetyResponse = async (checkId: string, responseType: "ok" | "need_help" | "leaving" | "not_sure") => {
+    try {
+      const response = await fetch(`/api/public/demos/${publicId}/safety-checks/${checkId}/respond`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ response: responseType, note: safetyNote, sessionId: getSessionId() }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Could not send safety response.");
+      }
+
+      const check = await response.json() as SafetyCheck;
+      const nextResponses = { ...safetyResponses, [checkId]: responseType };
+      localStorage.setItem("chant_safety_responses", JSON.stringify(nextResponses));
+      setSafetyResponses(nextResponses);
+      setActiveSafetyCheck(check);
+      setSafetyStatus(responseType === "need_help" ? "Organizer notified. Stay where you are if it is safe." : "Safety response sent.");
+      setTimeout(() => setSafetyStatus(null), 3500);
+    } catch {
+      setSafetyStatus("Could not send safety response. Tell a marshal or organizer directly.");
     }
   };
   const submitCheckIn = async (role: CheckInRole) => {
@@ -990,6 +1054,56 @@ export default function Participant() {
               )}
               {pollStatus && (
                 <p className="mt-2 text-xs text-sky-50" role="status" data-testid="text-live-poll-status">{pollStatus}</p>
+              )}
+            </div>
+            <div className="rounded-xl border border-red-400/30 bg-red-400/10 p-4 md:col-span-2" data-testid="card-participant-safety-check">
+              <p className="font-semibold text-red-50">Safety check</p>
+              {activeSafetyCheck ? (
+                <div>
+                  <p className="mt-1 text-sm text-red-100">{activeSafetyCheck.message}</p>
+                  <textarea
+                    value={safetyNote}
+                    onChange={(event) => setSafetyNote(event.target.value)}
+                    maxLength={160}
+                    rows={2}
+                    className="mt-3 w-full rounded-lg border border-red-300/30 bg-black/30 p-3 text-sm text-red-50 outline-none focus:border-red-200"
+                    placeholder="Optional note, meeting point, or support needed..."
+                    data-testid="input-safety-check-note"
+                  />
+                  <div className="mt-3 grid gap-2 sm:grid-cols-4">
+                    {[
+                      ["ok", "I'm OK"],
+                      ["need_help", "Need help"],
+                      ["leaving", "Leaving now"],
+                      ["not_sure", "Not sure"],
+                    ].map(([value, label]) => {
+                      const selected = safetyResponses[activeSafetyCheck.id] === value;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => submitSafetyResponse(activeSafetyCheck.id, value as "ok" | "need_help" | "leaving" | "not_sure")}
+                          className={`rounded-lg border px-3 py-2 text-sm font-medium ${
+                            selected
+                              ? "border-red-100 bg-red-100/20 text-white"
+                              : "border-red-300/30 text-red-50 hover:bg-red-300/10"
+                          }`}
+                          data-testid={`button-safety-check-${value}`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-2 text-xs text-red-100/80">
+                    {safetyResponses[activeSafetyCheck.id] ? "Your latest safety response is counted. You can update it while the check is open." : "Respond once so organisers know whether anyone needs attention."}
+                  </p>
+                </div>
+              ) : (
+                <p className="mt-1 text-sm text-red-100/80">No safety check is active. If organisers need a quick roll call, it will appear here.</p>
+              )}
+              {safetyStatus && (
+                <p className="mt-2 text-xs text-red-50" role="status" data-testid="text-safety-check-status">{safetyStatus}</p>
               )}
             </div>
             <div className="rounded-xl border border-neutral-800 bg-black/30 p-4 md:col-span-2">

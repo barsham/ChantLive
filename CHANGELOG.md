@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.45 - 8 July 2026
+
+Real-time safety checks for organisers to run quick participant roll calls during disruptions.
+
+### Added
+
+- Live safety checks: Organisers can start a live safety check from the command center when plans change, people separate, or conditions become uncertain.
+- Participant safety responses: Participants can respond from the Help panel with I'm OK, need help, leaving now, or not sure without creating an account.
+- Safety attention queue: The command center highlights participants who need help or are not sure, including optional notes for organisers.
+
+### Improved
+
+- Safety assistance routing: Need-help safety responses automatically create a live safety assistance request for organisers to resolve.
+- Safety readiness and engagement: Safety checks now appear in the command-center readiness summary and count toward participant engagement badges.
+
 ## 1.1.44 - 5 July 2026
 
 Practical volunteer-role guidance for peaceful events with clearer arrivals, accessibility, and live communication handoffs.

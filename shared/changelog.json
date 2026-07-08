@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.45",
+      "releasedAt": "2026-07-08",
+      "summary": "Real-time safety checks for organisers to run quick participant roll calls during disruptions.",
+      "items": [
+        {
+          "id": "cl-2026-07-08-live-safety-checks",
+          "title": "Live safety checks",
+          "description": "Organisers can start a live safety check from the command center when plans change, people separate, or conditions become uncertain.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-08",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-08-participant-safety-responses",
+          "title": "Participant safety responses",
+          "description": "Participants can respond from the Help panel with I'm OK, need help, leaving now, or not sure without creating an account.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-08",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-08-safety-attention-queue",
+          "title": "Safety attention queue",
+          "description": "The command center highlights participants who need help or are not sure, including optional notes for organisers.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-08",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-08-safety-assistance-routing",
+          "title": "Safety assistance routing",
+          "description": "Need-help safety responses automatically create a live safety assistance request for organisers to resolve.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-08",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-08-safety-engagement-readiness",
+          "title": "Safety readiness and engagement",
+          "description": "Safety checks now appear in the command-center readiness summary and count toward participant engagement badges.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-08",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.44",
       "releasedAt": "2026-07-05",
       "summary": "Practical volunteer-role guidance for peaceful events with clearer arrivals, accessibility, and live communication handoffs.",

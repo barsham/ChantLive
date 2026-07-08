@@ -75,6 +75,23 @@ type LivePoll = {
   createdAt: string;
   closedAt: string | null;
 };
+type SafetyCheckStatus = "open" | "closed";
+type SafetyCheckResponseType = "ok" | "need_help" | "leaving" | "not_sure";
+type SafetyCheckResponse = {
+  sessionId: string;
+  response: SafetyCheckResponseType;
+  note: string | null;
+  updatedAt: string;
+};
+type SafetyCheck = {
+  id: string;
+  demoId: string;
+  message: string;
+  status: SafetyCheckStatus;
+  responses: SafetyCheckResponse[];
+  createdAt: string;
+  closedAt: string | null;
+};
 type ParticipantCheckInRole = "participant" | "marshal" | "speaker" | "accessibility";
 type ParticipantCheckIn = {
   sessionId: string;
@@ -92,7 +109,7 @@ type ParticipantFeedback = {
   createdAt: string;
   updatedAt: string;
 };
-type EngagementAction = "checkin" | "pulse" | "question" | "upvote" | "assistance" | "feedback" | "poll_vote";
+type EngagementAction = "checkin" | "pulse" | "question" | "upvote" | "assistance" | "feedback" | "poll_vote" | "safety_check";
 type ParticipantEngagement = {
   sessionId: string;
   points: number;
@@ -105,6 +122,7 @@ const crowdPulses = new Map<string, Map<string, CrowdPulse>>();
 const organizerAnnouncements = new Map<string, OrganizerAnnouncement[]>();
 const audienceQuestions = new Map<string, AudienceQuestion[]>();
 const livePolls = new Map<string, LivePoll[]>();
+const safetyChecks = new Map<string, SafetyCheck[]>();
 const participantCheckIns = new Map<string, Map<string, ParticipantCheckIn>>();
 const participantFeedback = new Map<string, Map<string, ParticipantFeedback>>();
 const participantEngagement = new Map<string, Map<string, ParticipantEngagement>>();
@@ -195,6 +213,46 @@ function serializeLivePoll(poll: LivePoll) {
   };
 }
 
+function getSafetyChecks(demoId: string) {
+  return safetyChecks.get(demoId) ?? [];
+}
+
+function getActiveSafetyCheck(demoId: string) {
+  return getSafetyChecks(demoId).find((check) => check.status === "open") ?? null;
+}
+
+function serializeSafetyCheck(check: SafetyCheck) {
+  const counts: Record<SafetyCheckResponseType, number> = {
+    ok: 0,
+    need_help: 0,
+    leaving: 0,
+    not_sure: 0,
+  };
+
+  for (const response of check.responses) {
+    counts[response.response] += 1;
+  }
+
+  return {
+    id: check.id,
+    message: check.message,
+    status: check.status,
+    counts,
+    totalResponses: check.responses.length,
+    needsAttention: check.responses
+      .filter((response) => response.response === "need_help" || response.response === "not_sure")
+      .slice(0, 8)
+      .map((response) => ({
+        response: response.response,
+        note: response.note,
+        updatedAt: response.updatedAt,
+        participantLabel: `Participant ${response.sessionId.slice(-4).toUpperCase()}`,
+      })),
+    createdAt: check.createdAt,
+    closedAt: check.closedAt,
+  };
+}
+
 function getCheckInSummary(demoId: string) {
   const checkIns = Array.from(participantCheckIns.get(demoId)?.values() ?? [])
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
@@ -257,6 +315,7 @@ function getEmptyEngagementActions(): Record<EngagementAction, number> {
     assistance: 0,
     feedback: 0,
     poll_vote: 0,
+    safety_check: 0,
   };
 }
 
@@ -269,6 +328,7 @@ function awardEngagement(demoId: string, publicId: string, sessionId: string, ac
     assistance: 4,
     feedback: 8,
     poll_vote: 3,
+    safety_check: 4,
   };
   const demoEngagement = participantEngagement.get(demoId) ?? new Map<string, ParticipantEngagement>();
   const current = demoEngagement.get(sessionId) ?? {
@@ -295,6 +355,7 @@ function getBadges(engagement: ParticipantEngagement) {
   if (engagement.actions.feedback > 0) badges.push("Gave feedback");
   if (engagement.actions.assistance > 0) badges.push("Asked for help");
   if (engagement.actions.poll_vote > 0) badges.push("Poll voter");
+  if (engagement.actions.safety_check > 0) badges.push("Safety check responder");
   if (engagement.points >= 25) badges.push("Active participant");
   return badges;
 }
@@ -792,6 +853,73 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/demos/:id/safety-checks", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      res.json(getSafetyChecks(demo.id).map(serializeSafetyCheck));
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch safety checks" });
+    }
+  });
+
+  app.post("/api/demos/:id/safety-checks", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      const message = typeof req.body?.message === "string" && req.body.message.trim()
+        ? req.body.message.trim().slice(0, 180)
+        : "Safety check: please confirm whether you are okay.";
+      const checks = getSafetyChecks(demo.id).map((check) => (
+        check.status === "open" ? { ...check, status: "closed" as SafetyCheckStatus, closedAt: new Date().toISOString() } : check
+      ));
+      const check: SafetyCheck = {
+        id: crypto.randomUUID(),
+        demoId: demo.id,
+        message,
+        status: "open",
+        responses: [],
+        createdAt: new Date().toISOString(),
+        closedAt: null,
+      };
+
+      safetyChecks.set(demo.id, [check, ...checks].slice(0, 12));
+      const serializedCheck = serializeSafetyCheck(check);
+      io.to(`demo:${demo.publicId}`).emit("safety_check_update", serializedCheck);
+      res.status(201).json(serializedCheck);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to start safety check" });
+    }
+  });
+
+  app.patch("/api/demos/:id/safety-checks/:checkId", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+
+      const checkId = getSingleParam(req.params.checkId);
+      const check = getSafetyChecks(demo.id).find((item) => item.id === checkId);
+      if (!check) return res.status(404).json({ message: "Safety check not found" });
+
+      check.status = "closed";
+      check.closedAt = new Date().toISOString();
+      const serializedCheck = serializeSafetyCheck(check);
+      io.to(`demo:${demo.publicId}`).emit("safety_check_update", null);
+      io.to(`demo:${demo.publicId}`).emit("safety_check_results_update", serializedCheck);
+      res.json(serializedCheck);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to update safety check" });
+    }
+  });
+
   app.post("/api/public/demos/:publicId/assistance", async (req, res) => {
     try {
       const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
@@ -948,6 +1076,80 @@ export async function registerRoutes(
       res.json(serializedPoll);
     } catch (err) {
       res.status(500).json({ message: "Failed to submit poll vote" });
+    }
+  });
+
+  app.get("/api/public/demos/:publicId/safety-checks/active", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+
+      const activeCheck = getActiveSafetyCheck(demo.id);
+      res.json(activeCheck ? serializeSafetyCheck(activeCheck) : null);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch active safety check" });
+    }
+  });
+
+  app.post("/api/public/demos/:publicId/safety-checks/:checkId/respond", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+
+      const checkId = getSingleParam(req.params.checkId);
+      const rawResponse = typeof req.body?.response === "string" ? req.body.response : "ok";
+      const response: SafetyCheckResponseType = ["ok", "need_help", "leaving", "not_sure"].includes(rawResponse)
+        ? rawResponse as SafetyCheckResponseType
+        : "ok";
+      const sessionId = typeof req.body?.sessionId === "string" && req.body.sessionId.trim()
+        ? req.body.sessionId.trim().slice(0, 80)
+        : crypto.randomUUID();
+      const note = typeof req.body?.note === "string" && req.body.note.trim()
+        ? req.body.note.trim().slice(0, 160)
+        : null;
+      const check = getSafetyChecks(demo.id).find((item) => item.id === checkId && item.status === "open");
+      if (!check) return res.status(404).json({ message: "Safety check not found" });
+
+      const existing = check.responses.find((item) => item.sessionId === sessionId);
+      if (existing) {
+        existing.response = response;
+        existing.note = note;
+        existing.updatedAt = new Date().toISOString();
+      } else {
+        check.responses.unshift({
+          sessionId,
+          response,
+          note,
+          updatedAt: new Date().toISOString(),
+        });
+        awardEngagement(demo.id, demo.publicId, sessionId, "safety_check", io);
+      }
+
+      if (response === "need_help") {
+        const requests = getAssistanceRequests(demo.id);
+        const existingOpen = requests.find((item) => item.sessionId === sessionId && item.type === "safety" && item.status === "open");
+        if (!existingOpen) {
+          const request: AssistanceRequest = {
+            id: crypto.randomUUID(),
+            demoId: demo.id,
+            type: "safety",
+            message: note || "Participant marked need help during safety check.",
+            sessionId,
+            status: "open",
+            createdAt: new Date().toISOString(),
+            resolvedAt: null,
+          };
+          requests.unshift(request);
+          assistanceRequests.set(demo.id, requests.slice(0, 50));
+          io.to(`demo:${demo.publicId}`).emit("assistance_update", getAssistanceRequests(demo.id).map(serializeAssistanceRequest));
+        }
+      }
+
+      const serializedCheck = serializeSafetyCheck(check);
+      io.to(`demo:${demo.publicId}`).emit("safety_check_results_update", serializedCheck);
+      res.json(serializedCheck);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to submit safety check response" });
     }
   });
 
