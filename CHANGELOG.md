@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.46 - 9 July 2026
+
+Multilingual participant controls and organiser invite snippets for mixed-language events.
+
+### Added
+
+- Participant language selector: Participants can choose English, Spanish, French, Arabic, or Persian from the live participant page.
+- Translated participant controls: Core Help, connection, accessibility, poll, safety check, check-in, Q&A, and feedback controls now follow the selected participant language.
+- Multilingual organiser invites: The command center now provides ready-to-copy participant invite snippets in five languages.
+
+### Improved
+
+- Saved language preference: Participant language choice is saved locally so returning participants keep the same language after refresh.
+- Browser language start: The participant page now starts in a supported browser language when possible before falling back to English.
+
 ## 1.1.45 - 8 July 2026
 
 Real-time safety checks for organisers to run quick participant roll calls during disruptions.

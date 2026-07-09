@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.46",
+      "releasedAt": "2026-07-09",
+      "summary": "Multilingual participant controls and organiser invite snippets for mixed-language events.",
+      "items": [
+        {
+          "id": "cl-2026-07-09-participant-language-selector",
+          "title": "Participant language selector",
+          "description": "Participants can choose English, Spanish, French, Arabic, or Persian from the live participant page.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-09",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-09-translated-participant-controls",
+          "title": "Translated participant controls",
+          "description": "Core Help, connection, accessibility, poll, safety check, check-in, Q&A, and feedback controls now follow the selected participant language.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-09",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-09-multilingual-organiser-invites",
+          "title": "Multilingual organiser invites",
+          "description": "The command center now provides ready-to-copy participant invite snippets in five languages.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-09",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-09-language-preference-persistence",
+          "title": "Saved language preference",
+          "description": "Participant language choice is saved locally so returning participants keep the same language after refresh.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-09",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-09-browser-language-start",
+          "title": "Browser language start",
+          "description": "The participant page now starts in a supported browser language when possible before falling back to English.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-09",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.45",
       "releasedAt": "2026-07-08",
       "summary": "Real-time safety checks for organisers to run quick participant roll calls during disruptions.",

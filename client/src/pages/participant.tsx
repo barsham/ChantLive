@@ -61,6 +61,7 @@ type SafetyCheck = {
   closedAt: string | null;
 };
 type CheckInRole = "participant" | "marshal" | "speaker" | "accessibility";
+type ParticipantLanguage = "en" | "es" | "fr" | "ar" | "fa";
 type ParticipantEngagement = {
   points: number;
   badges: string[];
@@ -83,6 +84,410 @@ const getStoredSafetyResponses = (): Record<string, string> => {
   } catch {
     return {};
   }
+};
+const participantLanguageOptions: Array<{ code: ParticipantLanguage; label: string }> = [
+  { code: "en", label: "English" },
+  { code: "es", label: "Español" },
+  { code: "fr", label: "Français" },
+  { code: "ar", label: "العربية" },
+  { code: "fa", label: "فارسی" },
+];
+const getDefaultParticipantLanguage = (): ParticipantLanguage => {
+  const stored = localStorage.getItem("chant_participant_language") as ParticipantLanguage | null;
+  if (stored && participantLanguageOptions.some((option) => option.code === stored)) return stored;
+  const browserLanguage = navigator.language.toLowerCase();
+  if (browserLanguage.startsWith("es")) return "es";
+  if (browserLanguage.startsWith("fr")) return "fr";
+  if (browserLanguage.startsWith("ar")) return "ar";
+  if (browserLanguage.startsWith("fa") || browserLanguage.startsWith("prs")) return "fa";
+  return "en";
+};
+const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
+  en: {
+    help: "Help",
+    helpOpen: "Help open",
+    lowBandwidth: "Low bandwidth",
+    lowBandwidthOn: "Low bandwidth on",
+    largeText: "Large text",
+    largeTextOn: "Large text on",
+    highContrast: "High contrast",
+    highContrastOn: "High contrast on",
+    viewingNow: "Viewing now",
+    connected: "Connected to live updates",
+    reconnecting: "Reconnecting - updates resume automatically",
+    offline: "Offline - reconnect to receive updates",
+    leader: "Leader",
+    everyone: "Everyone",
+    next: "Coming Up Next",
+    waitNext: "Waiting for next chant...",
+    pageStops: "If the page stops updating",
+    pageStopsBody: "Stay on this page. If the status says reconnecting for more than a few seconds, use refresh connection.",
+    refresh: "Refresh connection",
+    visibility: "If visibility is difficult",
+    visibilityBody: "Turn on large text or high contrast below. Move closer to the organiser if you need audio cues.",
+    plansChange: "If plans change",
+    plansChangeBody: "Follow organiser instructions first. ChantLive shows chant timing, but local safety directions take priority.",
+    signalTitle: "Send the organizer a signal",
+    signalBody: "Tell the organizer if the pace, sound, or access needs attention. Your phone does not show your name.",
+    tooFast: "Too fast",
+    tooSlow: "Too slow",
+    cantHear: "Can't hear",
+    allGood: "All good",
+    signalSent: "Signal sent to the organizer.",
+    supportTitle: "If you need support",
+    supportBody: "Ask a marshal or accessibility helper for the plain link, a quieter place, repeated instructions, or help reading the chant.",
+    needAccessibility: "Need accessibility help",
+    needConnection: "Need connection help",
+    needSafety: "Need safety help",
+    organizerNotified: "Organizer notified. Stay where you are if it is safe.",
+    participation: "Participation progress",
+    participationBody: "Earn points for useful event actions like checking in, voting in polls, sending pulse signals, asking questions, and giving feedback.",
+    points: "points",
+    firstBadge: "Check in or send a signal to earn your first badge.",
+    livePoll: "Live poll",
+    noPoll: "No live poll is open right now. If the organizer asks a crowd question, it will appear here.",
+    voteGuidance: "Choose one option. You can change your vote while the poll is open.",
+    voteCounted: "Your latest vote is counted. You can change it while the poll is open.",
+    safetyCheck: "Safety check",
+    noSafetyCheck: "No safety check is active. If organisers need a quick roll call, it will appear here.",
+    optionalSafetyNote: "Optional note, meeting point, or support needed...",
+    imOk: "I'm OK",
+    needHelp: "Need help",
+    leaving: "Leaving now",
+    notSure: "Not sure",
+    safetyGuidance: "Respond once so organisers know whether anyone needs attention.",
+    safetyCounted: "Your latest safety response is counted. You can update it while the check is open.",
+    checkInTitle: "Check in with the organizer",
+    checkInBody: "Let the organizer know you are here and what role you can help with. Name is optional.",
+    optionalName: "Optional name or team label",
+    participant: "Participant",
+    marshal: "Marshal",
+    speaker: "Speaker",
+    accessibilityHelper: "Accessibility helper",
+    askOrganizer: "Ask the organizer",
+    askBody: "Send an anonymous question without interrupting the chant.",
+    askPlaceholder: "Type a short question for the organizer...",
+    sendQuestion: "Send question",
+    raisedQuestions: "Questions people have raised",
+    noQuestions: "No open questions yet.",
+    voteUp: "Vote up",
+    rateExperience: "Rate the experience",
+    rateBody: "Send quick feedback the organiser can review after the event.",
+    clearFollow: "Clear to follow",
+    feltSafe: "Felt safe",
+    accessible: "Accessible",
+    feedbackNote: "Optional feedback note...",
+    sendFeedback: "Send feedback",
+    language: "Language",
+  },
+  es: {
+    help: "Ayuda",
+    helpOpen: "Ayuda abierta",
+    lowBandwidth: "Bajo consumo",
+    lowBandwidthOn: "Bajo consumo activo",
+    largeText: "Texto grande",
+    largeTextOn: "Texto grande activo",
+    highContrast: "Alto contraste",
+    highContrastOn: "Alto contraste activo",
+    viewingNow: "Viendo ahora",
+    connected: "Conectado a actualizaciones en vivo",
+    reconnecting: "Reconectando - las actualizaciones volverán automáticamente",
+    offline: "Sin conexión - reconecta para recibir actualizaciones",
+    leader: "Guía",
+    everyone: "Todos",
+    next: "A continuación",
+    waitNext: "Esperando el siguiente canto...",
+    pageStops: "Si la página deja de actualizarse",
+    pageStopsBody: "Quédate en esta página. Si dice reconectando por más de unos segundos, usa refrescar conexión.",
+    refresh: "Refrescar conexión",
+    visibility: "Si es difícil ver",
+    visibilityBody: "Activa texto grande o alto contraste. Acércate al organizador si necesitas señales de audio.",
+    plansChange: "Si los planes cambian",
+    plansChangeBody: "Sigue primero las instrucciones del organizador. ChantLive muestra el ritmo, pero la seguridad local tiene prioridad.",
+    signalTitle: "Enviar una señal al organizador",
+    signalBody: "Avisa si el ritmo, sonido o acceso necesita atención. Tu teléfono no muestra tu nombre.",
+    tooFast: "Muy rápido",
+    tooSlow: "Muy lento",
+    cantHear: "No escucho",
+    allGood: "Todo bien",
+    signalSent: "Señal enviada al organizador.",
+    supportTitle: "Si necesitas apoyo",
+    supportBody: "Pide a un marshal o ayudante de accesibilidad el enlace simple, un lugar más tranquilo, instrucciones repetidas o ayuda para leer.",
+    needAccessibility: "Necesito accesibilidad",
+    needConnection: "Necesito conexión",
+    needSafety: "Necesito seguridad",
+    organizerNotified: "Organizador avisado. Quédate donde estás si es seguro.",
+    participation: "Progreso de participación",
+    participationBody: "Gana puntos por acciones útiles como registrarte, votar, enviar señales, hacer preguntas y dar comentarios.",
+    points: "puntos",
+    firstBadge: "Regístrate o envía una señal para ganar tu primera insignia.",
+    livePoll: "Encuesta en vivo",
+    noPoll: "No hay encuesta abierta. Si el organizador pregunta algo al grupo, aparecerá aquí.",
+    voteGuidance: "Elige una opción. Puedes cambiar tu voto mientras la encuesta esté abierta.",
+    voteCounted: "Tu último voto fue contado. Puedes cambiarlo mientras la encuesta esté abierta.",
+    safetyCheck: "Chequeo de seguridad",
+    noSafetyCheck: "No hay chequeo de seguridad activo. Si hace falta pasar lista, aparecerá aquí.",
+    optionalSafetyNote: "Nota opcional, punto de encuentro o apoyo necesario...",
+    imOk: "Estoy bien",
+    needHelp: "Necesito ayuda",
+    leaving: "Me voy ahora",
+    notSure: "No estoy seguro",
+    safetyGuidance: "Responde una vez para que los organizadores sepan si alguien necesita atención.",
+    safetyCounted: "Tu respuesta de seguridad fue contada. Puedes actualizarla mientras esté abierta.",
+    checkInTitle: "Registrarte con el organizador",
+    checkInBody: "Avisa que estás aquí y qué rol puedes apoyar. El nombre es opcional.",
+    optionalName: "Nombre o equipo opcional",
+    participant: "Participante",
+    marshal: "Marshal",
+    speaker: "Orador",
+    accessibilityHelper: "Ayuda de accesibilidad",
+    askOrganizer: "Preguntar al organizador",
+    askBody: "Envía una pregunta anónima sin interrumpir el canto.",
+    askPlaceholder: "Escribe una pregunta corta...",
+    sendQuestion: "Enviar pregunta",
+    raisedQuestions: "Preguntas del grupo",
+    noQuestions: "No hay preguntas abiertas.",
+    voteUp: "Votar",
+    rateExperience: "Calificar experiencia",
+    rateBody: "Envía comentarios rápidos para que el organizador revise después.",
+    clearFollow: "Fácil de seguir",
+    feltSafe: "Me sentí seguro",
+    accessible: "Accesible",
+    feedbackNote: "Nota opcional...",
+    sendFeedback: "Enviar comentarios",
+    language: "Idioma",
+  },
+  fr: {
+    help: "Aide",
+    helpOpen: "Aide ouverte",
+    lowBandwidth: "Faible bande passante",
+    lowBandwidthOn: "Faible bande passante activée",
+    largeText: "Grand texte",
+    largeTextOn: "Grand texte activé",
+    highContrast: "Contraste élevé",
+    highContrastOn: "Contraste élevé activé",
+    viewingNow: "En ligne",
+    connected: "Connecté aux mises à jour",
+    reconnecting: "Reconnexion - les mises à jour reprendront",
+    offline: "Hors ligne - reconnectez-vous",
+    leader: "Meneur",
+    everyone: "Tout le monde",
+    next: "À suivre",
+    waitNext: "En attente du prochain chant...",
+    pageStops: "Si la page ne se met plus à jour",
+    pageStopsBody: "Restez sur cette page. Si la reconnexion dure plus de quelques secondes, actualisez la connexion.",
+    refresh: "Actualiser la connexion",
+    visibility: "Si la visibilité est difficile",
+    visibilityBody: "Activez le grand texte ou le contraste élevé. Rapprochez-vous de l'organisateur si vous avez besoin de repères audio.",
+    plansChange: "Si les plans changent",
+    plansChangeBody: "Suivez d'abord les consignes de l'organisateur. La sécurité locale reste prioritaire.",
+    signalTitle: "Envoyer un signal",
+    signalBody: "Dites si le rythme, le son ou l'accès doit être amélioré. Votre téléphone n'affiche pas votre nom.",
+    tooFast: "Trop vite",
+    tooSlow: "Trop lent",
+    cantHear: "Je n'entends pas",
+    allGood: "Tout va bien",
+    signalSent: "Signal envoyé.",
+    supportTitle: "Si vous avez besoin d'aide",
+    supportBody: "Demandez le lien simple, un lieu plus calme, des consignes répétées ou de l'aide pour lire.",
+    needAccessibility: "Besoin d'accessibilité",
+    needConnection: "Besoin de connexion",
+    needSafety: "Besoin de sécurité",
+    organizerNotified: "Organisateur prévenu. Restez où vous êtes si c'est sûr.",
+    participation: "Participation",
+    participationBody: "Gagnez des points en vous enregistrant, votant, envoyant des signaux, posant des questions et donnant un avis.",
+    points: "points",
+    firstBadge: "Enregistrez-vous ou envoyez un signal pour gagner votre premier badge.",
+    livePoll: "Sondage en direct",
+    noPoll: "Aucun sondage ouvert. Si l'organisateur pose une question, elle apparaîtra ici.",
+    voteGuidance: "Choisissez une option. Vous pouvez changer votre vote tant que le sondage est ouvert.",
+    voteCounted: "Votre vote est compté. Vous pouvez le changer tant que le sondage est ouvert.",
+    safetyCheck: "Contrôle de sécurité",
+    noSafetyCheck: "Aucun contrôle de sécurité actif. Il apparaîtra ici si nécessaire.",
+    optionalSafetyNote: "Note facultative, lieu de rendez-vous ou aide nécessaire...",
+    imOk: "Je vais bien",
+    needHelp: "Besoin d'aide",
+    leaving: "Je pars",
+    notSure: "Pas sûr",
+    safetyGuidance: "Répondez pour que les organisateurs sachent si quelqu'un a besoin d'aide.",
+    safetyCounted: "Votre réponse est comptée. Vous pouvez la modifier tant que le contrôle est ouvert.",
+    checkInTitle: "Signaler votre présence",
+    checkInBody: "Indiquez que vous êtes là et le rôle que vous pouvez aider. Le nom est facultatif.",
+    optionalName: "Nom ou équipe facultatif",
+    participant: "Participant",
+    marshal: "Marshal",
+    speaker: "Intervenant",
+    accessibilityHelper: "Aide accessibilité",
+    askOrganizer: "Question à l'organisateur",
+    askBody: "Envoyez une question anonyme sans interrompre le chant.",
+    askPlaceholder: "Écrivez une courte question...",
+    sendQuestion: "Envoyer",
+    raisedQuestions: "Questions posées",
+    noQuestions: "Aucune question ouverte.",
+    voteUp: "Voter",
+    rateExperience: "Évaluer l'expérience",
+    rateBody: "Envoyez un avis rapide pour l'organisateur.",
+    clearFollow: "Facile à suivre",
+    feltSafe: "Je me suis senti en sécurité",
+    accessible: "Accessible",
+    feedbackNote: "Note facultative...",
+    sendFeedback: "Envoyer l'avis",
+    language: "Langue",
+  },
+  ar: {
+    help: "مساعدة",
+    helpOpen: "المساعدة مفتوحة",
+    lowBandwidth: "وضع الاتصال الضعيف",
+    lowBandwidthOn: "وضع الاتصال الضعيف مفعل",
+    largeText: "نص كبير",
+    largeTextOn: "النص الكبير مفعل",
+    highContrast: "تباين عال",
+    highContrastOn: "التباين العالي مفعل",
+    viewingNow: "يشاهد الآن",
+    connected: "متصل بالتحديثات المباشرة",
+    reconnecting: "إعادة الاتصال - ستعود التحديثات تلقائياً",
+    offline: "غير متصل - أعد الاتصال للتحديثات",
+    leader: "القائد",
+    everyone: "الجميع",
+    next: "التالي",
+    waitNext: "بانتظار الهتاف التالي...",
+    pageStops: "إذا توقفت الصفحة عن التحديث",
+    pageStopsBody: "ابق على هذه الصفحة. إذا استمرت إعادة الاتصال، اضغط تحديث الاتصال.",
+    refresh: "تحديث الاتصال",
+    visibility: "إذا كانت الرؤية صعبة",
+    visibilityBody: "فعّل النص الكبير أو التباين العالي. اقترب من المنظم إذا احتجت إلى إشارات صوتية.",
+    plansChange: "إذا تغيرت الخطة",
+    plansChangeBody: "اتبع تعليمات المنظم أولاً. تعليمات السلامة المحلية لها الأولوية.",
+    signalTitle: "أرسل إشارة للمنظم",
+    signalBody: "أخبر المنظم إذا كان الإيقاع أو الصوت أو الوصول يحتاج إلى انتباه. لا يظهر اسمك.",
+    tooFast: "سريع جداً",
+    tooSlow: "بطيء جداً",
+    cantHear: "لا أسمع",
+    allGood: "كل شيء جيد",
+    signalSent: "تم إرسال الإشارة.",
+    supportTitle: "إذا احتجت دعماً",
+    supportBody: "اطلب الرابط البسيط أو مكاناً أهدأ أو تكرار التعليمات أو مساعدة في القراءة.",
+    needAccessibility: "أحتاج مساعدة وصول",
+    needConnection: "أحتاج مساعدة اتصال",
+    needSafety: "أحتاج مساعدة سلامة",
+    organizerNotified: "تم تنبيه المنظم. ابق مكانك إذا كان آمناً.",
+    participation: "تقدم المشاركة",
+    participationBody: "اكسب نقاطاً عبر تسجيل الحضور والتصويت وإرسال الإشارات والأسئلة والتعليقات.",
+    points: "نقاط",
+    firstBadge: "سجل حضورك أو أرسل إشارة لتحصل على أول شارة.",
+    livePoll: "تصويت مباشر",
+    noPoll: "لا يوجد تصويت مفتوح الآن. إذا سأل المنظم سؤالاً سيظهر هنا.",
+    voteGuidance: "اختر خياراً واحداً. يمكنك تغيير صوتك ما دام التصويت مفتوحاً.",
+    voteCounted: "تم احتساب صوتك. يمكنك تغييره ما دام التصويت مفتوحاً.",
+    safetyCheck: "فحص السلامة",
+    noSafetyCheck: "لا يوجد فحص سلامة نشط. سيظهر هنا عند الحاجة.",
+    optionalSafetyNote: "ملاحظة اختيارية أو نقطة لقاء أو دعم مطلوب...",
+    imOk: "أنا بخير",
+    needHelp: "أحتاج مساعدة",
+    leaving: "أغادر الآن",
+    notSure: "لست متأكداً",
+    safetyGuidance: "أجب مرة واحدة ليعرف المنظمون إن كان أحد يحتاج انتباهاً.",
+    safetyCounted: "تم احتساب رد السلامة. يمكنك تحديثه ما دام الفحص مفتوحاً.",
+    checkInTitle: "سجل حضورك مع المنظم",
+    checkInBody: "أخبر المنظم أنك هنا وما الدور الذي يمكنك المساعدة به. الاسم اختياري.",
+    optionalName: "اسم أو فريق اختياري",
+    participant: "مشارك",
+    marshal: "منسق",
+    speaker: "متحدث",
+    accessibilityHelper: "مساعد وصول",
+    askOrganizer: "اسأل المنظم",
+    askBody: "أرسل سؤالاً مجهولاً دون مقاطعة الهتاف.",
+    askPlaceholder: "اكتب سؤالاً قصيراً...",
+    sendQuestion: "إرسال السؤال",
+    raisedQuestions: "أسئلة المجموعة",
+    noQuestions: "لا توجد أسئلة مفتوحة.",
+    voteUp: "تصويت",
+    rateExperience: "قيّم التجربة",
+    rateBody: "أرسل ملاحظات سريعة للمنظم.",
+    clearFollow: "سهل المتابعة",
+    feltSafe: "شعرت بالأمان",
+    accessible: "سهل الوصول",
+    feedbackNote: "ملاحظة اختيارية...",
+    sendFeedback: "إرسال الملاحظات",
+    language: "اللغة",
+  },
+  fa: {
+    help: "کمک",
+    helpOpen: "کمک باز است",
+    lowBandwidth: "مصرف کم اینترنت",
+    lowBandwidthOn: "مصرف کم اینترنت روشن",
+    largeText: "متن بزرگ",
+    largeTextOn: "متن بزرگ روشن",
+    highContrast: "کنتراست بالا",
+    highContrastOn: "کنتراست بالا روشن",
+    viewingNow: "در حال مشاهده",
+    connected: "به به‌روزرسانی زنده وصل است",
+    reconnecting: "در حال اتصال دوباره - به‌روزرسانی‌ها خودکار برمی‌گردند",
+    offline: "آفلاین - برای دریافت به‌روزرسانی دوباره وصل شوید",
+    leader: "رهبر",
+    everyone: "همه",
+    next: "بعدی",
+    waitNext: "در انتظار شعار بعدی...",
+    pageStops: "اگر صفحه به‌روز نشد",
+    pageStopsBody: "در همین صفحه بمانید. اگر اتصال دوباره طول کشید، دکمه تازه‌سازی اتصال را بزنید.",
+    refresh: "تازه‌سازی اتصال",
+    visibility: "اگر دیدن سخت است",
+    visibilityBody: "متن بزرگ یا کنتراست بالا را روشن کنید. اگر راهنمای صوتی لازم دارید به برگزارکننده نزدیک‌تر شوید.",
+    plansChange: "اگر برنامه تغییر کرد",
+    plansChangeBody: "اول دستور برگزارکننده را دنبال کنید. دستورهای ایمنی محلی اولویت دارند.",
+    signalTitle: "ارسال علامت به برگزارکننده",
+    signalBody: "اگر سرعت، صدا یا دسترسی نیاز به توجه دارد اطلاع دهید. نام شما نمایش داده نمی‌شود.",
+    tooFast: "خیلی سریع",
+    tooSlow: "خیلی کند",
+    cantHear: "نمی‌شنوم",
+    allGood: "همه چیز خوب است",
+    signalSent: "علامت ارسال شد.",
+    supportTitle: "اگر کمک لازم دارید",
+    supportBody: "از راهنما یا کمک‌یار دسترسی لینک ساده، جای آرام‌تر، تکرار دستورها یا کمک برای خواندن بخواهید.",
+    needAccessibility: "کمک دسترسی لازم دارم",
+    needConnection: "کمک اتصال لازم دارم",
+    needSafety: "کمک ایمنی لازم دارم",
+    organizerNotified: "برگزارکننده مطلع شد. اگر امن است همان‌جا بمانید.",
+    participation: "پیشرفت مشارکت",
+    participationBody: "با اعلام حضور، رأی دادن، ارسال علامت، سؤال و بازخورد امتیاز بگیرید.",
+    points: "امتیاز",
+    firstBadge: "اعلام حضور کنید یا علامت بفرستید تا اولین نشان را بگیرید.",
+    livePoll: "نظرسنجی زنده",
+    noPoll: "فعلاً نظرسنجی زنده‌ای نیست. اگر برگزارکننده سؤال گروهی بپرسد اینجا می‌آید.",
+    voteGuidance: "یک گزینه انتخاب کنید. تا وقتی باز است می‌توانید رأی را تغییر دهید.",
+    voteCounted: "آخرین رأی شما ثبت شد. تا وقتی باز است می‌توانید تغییر دهید.",
+    safetyCheck: "بررسی ایمنی",
+    noSafetyCheck: "بررسی ایمنی فعال نیست. اگر لازم شود اینجا نمایش داده می‌شود.",
+    optionalSafetyNote: "یادداشت اختیاری، محل دیدار یا کمک موردنیاز...",
+    imOk: "من خوبم",
+    needHelp: "کمک لازم دارم",
+    leaving: "دارم می‌روم",
+    notSure: "مطمئن نیستم",
+    safetyGuidance: "یک پاسخ بدهید تا برگزارکنندگان بدانند کسی نیاز به توجه دارد یا نه.",
+    safetyCounted: "پاسخ ایمنی شما ثبت شد. تا وقتی باز است می‌توانید به‌روزرسانی کنید.",
+    checkInTitle: "اعلام حضور به برگزارکننده",
+    checkInBody: "بگویید اینجا هستید و چه نقشی می‌توانید کمک کنید. نام اختیاری است.",
+    optionalName: "نام یا تیم اختیاری",
+    participant: "شرکت‌کننده",
+    marshal: "راهنما",
+    speaker: "سخنران",
+    accessibilityHelper: "کمک‌یار دسترسی",
+    askOrganizer: "از برگزارکننده بپرسید",
+    askBody: "بدون قطع کردن شعار، سؤال ناشناس بفرستید.",
+    askPlaceholder: "یک سؤال کوتاه بنویسید...",
+    sendQuestion: "ارسال سؤال",
+    raisedQuestions: "سؤال‌های مطرح‌شده",
+    noQuestions: "سؤال بازی نیست.",
+    voteUp: "رأی مثبت",
+    rateExperience: "ارزیابی تجربه",
+    rateBody: "بازخورد کوتاه برای بررسی برگزارکننده بفرستید.",
+    clearFollow: "پیگیری آسان بود",
+    feltSafe: "احساس امنیت داشتم",
+    accessible: "دسترس‌پذیر بود",
+    feedbackNote: "یادداشت اختیاری...",
+    sendFeedback: "ارسال بازخورد",
+    language: "زبان",
+  },
 };
 const getAnnouncementAudienceLabel = (targetRole: OrganizerAnnouncement["targetRole"]) => {
   const labels: Record<OrganizerAnnouncement["targetRole"], string> = {
@@ -128,6 +533,7 @@ export default function Participant() {
   const [largeText, setLargeText] = useState(() => localStorage.getItem("chant_large_text") === "true");
   const [highContrast, setHighContrast] = useState(() => localStorage.getItem("chant_high_contrast") === "true");
   const [lowBandwidth, setLowBandwidth] = useState(() => localStorage.getItem("chant_low_bandwidth") === "true");
+  const [participantLanguage, setParticipantLanguage] = useState<ParticipantLanguage>(getDefaultParticipantLanguage);
   const [showHelp, setShowHelp] = useState(false);
   const [assistanceSent, setAssistanceSent] = useState<string | null>(null);
   const [assistanceError, setAssistanceError] = useState<string | null>(null);
@@ -152,6 +558,7 @@ export default function Participant() {
   const [engagement, setEngagement] = useState<ParticipantEngagement | null>(null);
   const localPhaseStartRef = useRef(Date.now());
   const lowBandwidthRef = useRef(lowBandwidth);
+  const t = participantCopy[participantLanguage];
 
   const getSessionId = () => {
     let sessionId = localStorage.getItem("chant_session_id");
@@ -304,12 +711,12 @@ export default function Participant() {
   const activePhase = chantData?.currentPhase ?? "leader";
   const phaseGuidance = activePhase === "people"
     ? {
-      label: "Everyone respond now",
+      label: `${t.everyone} respond now`,
       detail: "Read the blue response together.",
       className: "border-sky-400/40 bg-sky-400/10 text-sky-200",
     }
     : {
-      label: "Leader is speaking now",
+      label: `${t.leader} is speaking now`,
       detail: "Listen for the orange call.",
       className: "border-orange-500/40 bg-orange-500/10 text-orange-200",
     };
@@ -503,6 +910,10 @@ export default function Participant() {
       setFadeIn(true);
     }
   }, [lowBandwidth]);
+
+  useEffect(() => {
+    localStorage.setItem("chant_participant_language", participantLanguage);
+  }, [participantLanguage]);
 
   useEffect(() => {
     if (lowBandwidth) {
@@ -801,7 +1212,7 @@ export default function Participant() {
               </div>
               {chantData.callText && (
                 <div data-testid="text-call" className={chantData.currentPhase === "leader" ? "ring-2 ring-orange-500/80 rounded-xl p-2" : "p-2"}>
-                  <p className="text-neutral-400 text-xs font-mono uppercase tracking-widest mb-2">Leader</p>
+                  <p className="text-neutral-400 text-xs font-mono uppercase tracking-widest mb-2">{t.leader}</p>
                   <h1
                     className="font-bold leading-tight break-words"
                     style={{
@@ -817,7 +1228,7 @@ export default function Participant() {
               )}
               {chantData.responseText && (
                 <div data-testid="text-response" className={chantData.currentPhase === "people" ? "ring-2 ring-sky-400/80 rounded-xl p-2" : "p-2"}>
-                  <p className="text-neutral-400 text-xs font-mono uppercase tracking-widest mb-2">Everyone</p>
+                  <p className="text-neutral-400 text-xs font-mono uppercase tracking-widest mb-2">{t.everyone}</p>
                   <h1
                     className="font-bold leading-tight break-words"
                     style={{
@@ -836,12 +1247,12 @@ export default function Participant() {
               {!lowBandwidth && (chantData.nextCallText || chantData.nextResponseText) && (
                 <div className="mt-12 pt-8 border-t border-neutral-800 opacity-50 relative">
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-black px-3 text-xs font-mono text-neutral-600 uppercase tracking-widest">
-                    Coming Up Next
+                    {t.next}
                   </span>
                   <div className="space-y-4">
                     {chantData.nextCallText && (
                       <div>
-                        <p className="text-neutral-500 text-[10px] font-mono uppercase tracking-wider mb-1">Leader</p>
+                        <p className="text-neutral-500 text-[10px] font-mono uppercase tracking-wider mb-1">{t.leader}</p>
                         <h2 className="font-semibold text-orange-500/70 text-base leading-snug break-words">
                           {chantData.nextCallText}
                         </h2>
@@ -849,7 +1260,7 @@ export default function Participant() {
                     )}
                     {chantData.nextResponseText && (
                       <div>
-                        <p className="text-neutral-500 text-[10px] font-mono uppercase tracking-wider mb-1">Everyone</p>
+                        <p className="text-neutral-500 text-[10px] font-mono uppercase tracking-wider mb-1">{t.everyone}</p>
                         <h2 className="font-semibold text-sky-400/70 text-base leading-snug break-words">
                           {chantData.nextResponseText}
                         </h2>
@@ -861,7 +1272,7 @@ export default function Participant() {
             </div>
           ) : (
             <p className="text-neutral-500 text-xl" data-testid="text-no-chant">
-              Waiting for next chant...
+              {t.waitNext}
             </p>
           )}
         </div>
@@ -877,9 +1288,9 @@ export default function Participant() {
             <div>
               <p className="mb-1 flex items-center gap-2 font-semibold text-white">
                 <HelpCircle className="h-4 w-4" />
-                If the page stops updating
+                {t.pageStops}
               </p>
-              <p className="text-neutral-400">Stay on this page. If the status says reconnecting for more than a few seconds, use refresh connection.</p>
+              <p className="text-neutral-400">{t.pageStopsBody}</p>
               <button
                 type="button"
                 onClick={retryConnection}
@@ -887,29 +1298,29 @@ export default function Participant() {
                 data-testid="button-help-refresh-connection"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
-                Refresh connection
+                {t.refresh}
               </button>
             </div>
             <div>
               <p className="mb-1 flex items-center gap-2 font-semibold text-white">
                 <Eye className="h-4 w-4" />
-                If visibility is difficult
+                {t.visibility}
               </p>
-              <p className="text-neutral-400">Turn on large text or high contrast below. Move closer to the organiser if you need audio cues.</p>
+              <p className="text-neutral-400">{t.visibilityBody}</p>
             </div>
             <div>
               <p className="mb-1 flex items-center gap-2 font-semibold text-white">
                 <ShieldCheck className="h-4 w-4" />
-                If plans change
+                {t.plansChange}
               </p>
-              <p className="text-neutral-400">Follow organiser instructions first. ChantLive shows chant timing, but local safety directions take priority.</p>
+              <p className="text-neutral-400">{t.plansChangeBody}</p>
             </div>
             <div>
               <p className="mb-1 flex items-center gap-2 font-semibold text-white">
                 <Users className="h-4 w-4" />
-                Send the organizer a signal
+                {t.signalTitle}
               </p>
-              <p className="text-neutral-400">Tell the organizer if the pace, sound, or access needs attention. Your phone does not show your name.</p>
+              <p className="text-neutral-400">{t.signalBody}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   type="button"
@@ -917,7 +1328,7 @@ export default function Participant() {
                   className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-900"
                   data-testid="button-pulse-too-fast"
                 >
-                  Too fast
+                  {t.tooFast}
                 </button>
                 <button
                   type="button"
@@ -925,7 +1336,7 @@ export default function Participant() {
                   className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-900"
                   data-testid="button-pulse-too-slow"
                 >
-                  Too slow
+                  {t.tooSlow}
                 </button>
                 <button
                   type="button"
@@ -933,7 +1344,7 @@ export default function Participant() {
                   className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-900"
                   data-testid="button-pulse-cant-hear"
                 >
-                  Can't hear
+                  {t.cantHear}
                 </button>
                 <button
                   type="button"
@@ -941,21 +1352,21 @@ export default function Participant() {
                   className="rounded-md border border-emerald-400/40 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-950/40"
                   data-testid="button-pulse-all-good"
                 >
-                  All good
+                  {t.allGood}
                 </button>
               </div>
               {pulseSent && (
                 <p className="mt-2 text-xs text-emerald-300" role="status" data-testid="text-pulse-sent">
-                  Signal sent to the organizer.
+                  {t.signalSent}
                 </p>
               )}
             </div>
             <div>
               <p className="mb-1 flex items-center gap-2 font-semibold text-white">
                 <Users className="h-4 w-4" />
-                If you need support
+                {t.supportTitle}
               </p>
-              <p className="text-neutral-400">Ask a marshal or accessibility helper for the plain link, a quieter place, repeated instructions, or help reading the chant.</p>
+              <p className="text-neutral-400">{t.supportBody}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   type="button"
@@ -963,7 +1374,7 @@ export default function Participant() {
                   className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-900"
                   data-testid="button-request-accessibility-help"
                 >
-                  Need accessibility help
+                  {t.needAccessibility}
                 </button>
                 <button
                   type="button"
@@ -971,7 +1382,7 @@ export default function Participant() {
                   className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-900"
                   data-testid="button-request-connection-help"
                 >
-                  Need connection help
+                  {t.needConnection}
                 </button>
                 <button
                   type="button"
@@ -979,12 +1390,12 @@ export default function Participant() {
                   className="rounded-md border border-red-500/40 px-3 py-1.5 text-xs font-medium text-red-100 hover:bg-red-950/40"
                   data-testid="button-request-safety-help"
                 >
-                  Need safety help
+                  {t.needSafety}
                 </button>
               </div>
               {assistanceSent && (
                 <p className="mt-2 text-xs text-emerald-300" role="status" data-testid="text-assistance-sent">
-                  Organizer notified. Stay where you are if it is safe.
+                  {t.organizerNotified}
                 </p>
               )}
               {assistanceError && (
@@ -996,25 +1407,25 @@ export default function Participant() {
           </div>
           <div className="mx-auto mt-4 grid max-w-6xl gap-4 md:grid-cols-[1fr_1.2fr]">
             <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 p-4 md:col-span-2" data-testid="card-participant-engagement">
-              <p className="font-semibold text-emerald-50">Participation progress</p>
+              <p className="font-semibold text-emerald-50">{t.participation}</p>
               <p className="mt-1 text-xs text-emerald-100/80">
-                Earn points for useful event actions like checking in, voting in polls, sending pulse signals, asking questions, and giving feedback.
+                {t.participationBody}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <span className="rounded-full border border-emerald-300/40 px-3 py-1 text-sm font-semibold text-emerald-50" data-testid="text-engagement-points">
-                  {engagement?.points ?? 0} points
+                  {engagement?.points ?? 0} {t.points}
                 </span>
                 {(engagement?.badges.length ?? 0) > 0 ? engagement?.badges.map((badge) => (
                   <span key={badge} className="rounded-full border border-emerald-300/30 bg-black/20 px-3 py-1 text-xs text-emerald-100">
                     {badge}
                   </span>
                 )) : (
-                  <span className="text-xs text-emerald-100/70">Check in or send a signal to earn your first badge.</span>
+                  <span className="text-xs text-emerald-100/70">{t.firstBadge}</span>
                 )}
               </div>
             </div>
             <div className="rounded-xl border border-sky-400/30 bg-sky-400/10 p-4 md:col-span-2" data-testid="card-live-participant-poll">
-              <p className="font-semibold text-sky-50">Live poll</p>
+              <p className="font-semibold text-sky-50">{t.livePoll}</p>
               {activePoll ? (
                 <div>
                   <p className="mt-1 text-sm text-sky-100">{activePoll.question}</p>
@@ -1046,18 +1457,18 @@ export default function Participant() {
                     })}
                   </div>
                   <p className="mt-2 text-xs text-sky-100/80">
-                    {pollVotes[activePoll.id] ? "Your latest vote is counted. You can change it while the poll is open." : "Choose one option. You can change your vote while the poll is open."}
+                    {pollVotes[activePoll.id] ? t.voteCounted : t.voteGuidance}
                   </p>
                 </div>
               ) : (
-                <p className="mt-1 text-sm text-sky-100/80">No live poll is open right now. If the organizer asks a crowd question, it will appear here.</p>
+                <p className="mt-1 text-sm text-sky-100/80">{t.noPoll}</p>
               )}
               {pollStatus && (
                 <p className="mt-2 text-xs text-sky-50" role="status" data-testid="text-live-poll-status">{pollStatus}</p>
               )}
             </div>
             <div className="rounded-xl border border-red-400/30 bg-red-400/10 p-4 md:col-span-2" data-testid="card-participant-safety-check">
-              <p className="font-semibold text-red-50">Safety check</p>
+              <p className="font-semibold text-red-50">{t.safetyCheck}</p>
               {activeSafetyCheck ? (
                 <div>
                   <p className="mt-1 text-sm text-red-100">{activeSafetyCheck.message}</p>
@@ -1067,15 +1478,15 @@ export default function Participant() {
                     maxLength={160}
                     rows={2}
                     className="mt-3 w-full rounded-lg border border-red-300/30 bg-black/30 p-3 text-sm text-red-50 outline-none focus:border-red-200"
-                    placeholder="Optional note, meeting point, or support needed..."
+                    placeholder={t.optionalSafetyNote}
                     data-testid="input-safety-check-note"
                   />
                   <div className="mt-3 grid gap-2 sm:grid-cols-4">
                     {[
-                      ["ok", "I'm OK"],
-                      ["need_help", "Need help"],
-                      ["leaving", "Leaving now"],
-                      ["not_sure", "Not sure"],
+                      ["ok", t.imOk],
+                      ["need_help", t.needHelp],
+                      ["leaving", t.leaving],
+                      ["not_sure", t.notSure],
                     ].map(([value, label]) => {
                       const selected = safetyResponses[activeSafetyCheck.id] === value;
                       return (
@@ -1096,33 +1507,33 @@ export default function Participant() {
                     })}
                   </div>
                   <p className="mt-2 text-xs text-red-100/80">
-                    {safetyResponses[activeSafetyCheck.id] ? "Your latest safety response is counted. You can update it while the check is open." : "Respond once so organisers know whether anyone needs attention."}
+                    {safetyResponses[activeSafetyCheck.id] ? t.safetyCounted : t.safetyGuidance}
                   </p>
                 </div>
               ) : (
-                <p className="mt-1 text-sm text-red-100/80">No safety check is active. If organisers need a quick roll call, it will appear here.</p>
+                <p className="mt-1 text-sm text-red-100/80">{t.noSafetyCheck}</p>
               )}
               {safetyStatus && (
                 <p className="mt-2 text-xs text-red-50" role="status" data-testid="text-safety-check-status">{safetyStatus}</p>
               )}
             </div>
             <div className="rounded-xl border border-neutral-800 bg-black/30 p-4 md:col-span-2">
-              <p className="font-semibold text-white">Check in with the organizer</p>
-              <p className="mt-1 text-xs text-neutral-400">Let the organizer know you are here and what role you can help with. Name is optional.</p>
+              <p className="font-semibold text-white">{t.checkInTitle}</p>
+              <p className="mt-1 text-xs text-neutral-400">{t.checkInBody}</p>
               <input
                 value={checkInName}
                 onChange={(event) => setCheckInName(event.target.value)}
                 maxLength={60}
                 className="mt-3 w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-sm text-neutral-100 outline-none focus:border-neutral-400"
-                placeholder="Optional name or team label"
+                placeholder={t.optionalName}
                 data-testid="input-checkin-name"
               />
               <div className="mt-3 flex flex-wrap gap-2">
                 {[
-                  ["participant", "Participant"],
-                  ["marshal", "Marshal"],
-                  ["speaker", "Speaker"],
-                  ["accessibility", "Accessibility helper"],
+                  ["participant", t.participant],
+                  ["marshal", t.marshal],
+                  ["speaker", t.speaker],
+                  ["accessibility", t.accessibilityHelper],
                 ].map(([role, label]) => (
                   <button
                     key={role}
@@ -1147,15 +1558,15 @@ export default function Participant() {
               )}
             </div>
             <div className="rounded-xl border border-neutral-800 bg-black/30 p-4">
-              <p className="font-semibold text-white">Ask the organizer</p>
-              <p className="mt-1 text-xs text-neutral-400">Send an anonymous question without interrupting the chant.</p>
+              <p className="font-semibold text-white">{t.askOrganizer}</p>
+              <p className="mt-1 text-xs text-neutral-400">{t.askBody}</p>
               <textarea
                 value={questionText}
                 onChange={(event) => setQuestionText(event.target.value)}
                 maxLength={220}
                 rows={3}
                 className="mt-3 w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-sm text-neutral-100 outline-none focus:border-neutral-400"
-                placeholder="Type a short question for the organizer..."
+                placeholder={t.askPlaceholder}
                 data-testid="input-audience-question"
               />
               <div className="mt-2 flex items-center justify-between gap-2">
@@ -1167,7 +1578,7 @@ export default function Participant() {
                   className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-900 disabled:cursor-not-allowed disabled:opacity-50"
                   data-testid="button-submit-audience-question"
                 >
-                  Send question
+                  {t.sendQuestion}
                 </button>
               </div>
               {questionStatus && (
@@ -1177,10 +1588,10 @@ export default function Participant() {
               )}
             </div>
             <div className="rounded-xl border border-neutral-800 bg-black/30 p-4">
-              <p className="font-semibold text-white">Questions people have raised</p>
+              <p className="font-semibold text-white">{t.raisedQuestions}</p>
               <div className="mt-3 max-h-52 space-y-2 overflow-y-auto pr-1">
                 {audienceQuestions.length === 0 ? (
-                  <p className="text-sm text-neutral-500" data-testid="text-no-audience-questions">No open questions yet.</p>
+                  <p className="text-sm text-neutral-500" data-testid="text-no-audience-questions">{t.noQuestions}</p>
                 ) : (
                   audienceQuestions.slice(0, 5).map((question) => (
                     <div key={question.id} className="rounded-lg border border-neutral-800 bg-neutral-950 p-3" data-testid={`card-audience-question-${question.id}`}>
@@ -1191,7 +1602,7 @@ export default function Participant() {
                         className="mt-2 rounded-full border border-neutral-700 px-2.5 py-1 text-xs text-neutral-300 hover:bg-neutral-900"
                         data-testid={`button-upvote-question-${question.id}`}
                       >
-                        Vote up ({question.votes})
+                        {t.voteUp} ({question.votes})
                       </button>
                     </div>
                   ))
@@ -1199,13 +1610,13 @@ export default function Participant() {
               </div>
             </div>
             <div className="rounded-xl border border-neutral-800 bg-black/30 p-4 md:col-span-2">
-              <p className="font-semibold text-white">Rate the experience</p>
-              <p className="mt-1 text-xs text-neutral-400">Send quick feedback the organiser can review after the event.</p>
+              <p className="font-semibold text-white">{t.rateExperience}</p>
+              <p className="mt-1 text-xs text-neutral-400">{t.rateBody}</p>
               <div className="mt-3 grid gap-3 sm:grid-cols-3">
                 {[
-                  ["clarity", "Clear to follow"],
-                  ["safety", "Felt safe"],
-                  ["accessibility", "Accessible"],
+                  ["clarity", t.clearFollow],
+                  ["safety", t.feltSafe],
+                  ["accessibility", t.accessible],
                 ].map(([key, label]) => (
                   <label key={key} className="text-xs text-neutral-300">
                     {label}
@@ -1228,7 +1639,7 @@ export default function Participant() {
                 maxLength={300}
                 rows={2}
                 className="mt-3 w-full rounded-lg border border-neutral-700 bg-neutral-950 p-3 text-sm text-neutral-100 outline-none focus:border-neutral-400"
-                placeholder="Optional feedback note..."
+                placeholder={t.feedbackNote}
                 data-testid="input-live-feedback-comment"
               />
               <button
@@ -1237,7 +1648,7 @@ export default function Participant() {
                 className="mt-3 rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-900"
                 data-testid="button-submit-live-feedback"
               >
-                Send feedback
+                {t.sendFeedback}
               </button>
               {feedbackStatus && (
                 <p className="mt-2 text-xs text-emerald-300" role="status" data-testid="text-live-feedback-status">{feedbackStatus}</p>
@@ -1259,7 +1670,7 @@ export default function Participant() {
           data-testid="button-toggle-participant-help"
         >
           <HelpCircle className="h-3.5 w-3.5" />
-          {showHelp ? "Help open" : "Help"}
+          {showHelp ? t.helpOpen : t.help}
         </button>
         <button
           type="button"
@@ -1272,7 +1683,7 @@ export default function Participant() {
           data-testid="button-toggle-low-bandwidth"
         >
           <WifiOff className="h-3.5 w-3.5" />
-          {lowBandwidth ? "Low bandwidth on" : "Low bandwidth"}
+          {lowBandwidth ? t.lowBandwidthOn : t.lowBandwidth}
         </button>
         <button
           type="button"
@@ -1284,7 +1695,7 @@ export default function Participant() {
           data-testid="button-toggle-large-text"
         >
           <Type className="h-3.5 w-3.5" />
-          {largeText ? "Large text on" : "Large text"}
+          {largeText ? t.largeTextOn : t.largeText}
         </button>
         <button
           type="button"
@@ -1296,12 +1707,25 @@ export default function Participant() {
           data-testid="button-toggle-high-contrast"
         >
           <Eye className="h-3.5 w-3.5" />
-          {highContrast ? "High contrast on" : "High contrast"}
+          {highContrast ? t.highContrastOn : t.highContrast}
         </button>
+        <label className="inline-flex items-center gap-2 rounded-full border border-neutral-700 px-3 py-1 text-xs font-medium text-neutral-300" data-testid="select-participant-language-label">
+          {t.language}
+          <select
+            value={participantLanguage}
+            onChange={(event) => setParticipantLanguage(event.target.value as ParticipantLanguage)}
+            className="bg-black text-neutral-100 outline-none"
+            data-testid="select-participant-language"
+          >
+            {participantLanguageOptions.map((option) => (
+              <option key={option.code} value={option.code}>{option.label}</option>
+            ))}
+          </select>
+        </label>
         <span className="inline-flex items-center gap-2">
           <Users className="w-4 h-4 text-neutral-500" />
           <span className="text-neutral-400 text-sm font-mono" data-testid="text-viewer-count">
-            Viewing now: {viewerCount}
+            {t.viewingNow}: {viewerCount}
           </span>
         </span>
         <span
@@ -1316,10 +1740,10 @@ export default function Participant() {
         >
           <span className={`h-2 w-2 rounded-full ${connected && !isOffline ? "bg-emerald-300" : "bg-red-300"}`} aria-hidden="true" />
           {isOffline
-            ? "Offline - reconnect to receive updates"
+            ? t.offline
             : connected
-              ? "Connected to live updates"
-              : "Reconnecting - updates resume automatically"}
+              ? t.connected
+              : t.reconnecting}
         </span>
       </footer>
     </div>

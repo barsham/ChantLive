@@ -131,6 +131,29 @@ function statusTone(status: string) {
   return "Draft event: prioritize readiness, sharing, volunteer briefing, and handouts.";
 }
 
+const multilingualInviteTemplates = [
+  {
+    label: "English",
+    getText: (url: string) => `Join the live ChantLive page here: ${url}\nNo account is needed. Use the Language selector at the bottom of the participant page if you need translated controls.`,
+  },
+  {
+    label: "Español",
+    getText: (url: string) => `Únete a la página en vivo de ChantLive aquí: ${url}\nNo necesitas cuenta. Usa el selector de idioma al final de la página si necesitas controles traducidos.`,
+  },
+  {
+    label: "Français",
+    getText: (url: string) => `Rejoignez la page ChantLive en direct ici : ${url}\nAucun compte n'est nécessaire. Utilisez le sélecteur de langue en bas de la page si vous avez besoin des commandes traduites.`,
+  },
+  {
+    label: "العربية",
+    getText: (url: string) => `انضم إلى صفحة ChantLive المباشرة هنا: ${url}\nلا تحتاج إلى حساب. استخدم اختيار اللغة في أسفل صفحة المشاركين إذا احتجت إلى أزرار مترجمة.`,
+  },
+  {
+    label: "فارسی",
+    getText: (url: string) => `از این لینک وارد صفحه زنده ChantLive شوید: ${url}\nنیازی به حساب کاربری نیست. اگر کنترل‌های ترجمه‌شده لازم دارید، از انتخاب زبان پایین صفحه استفاده کنید.`,
+  },
+];
+
 export default function CommandCenter() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
@@ -302,6 +325,14 @@ export default function CommandCenter() {
   }
 
   const publicUrl = `${window.location.origin}/d/${data.demo.publicId}`;
+  const copyInvite = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({ title: `${label} invite copied` });
+    } catch {
+      toast({ title: "Could not copy invite", description: "Copy the text manually from this card.", variant: "destructive" });
+    }
+  };
   const openAssistance = assistance.filter((request) => request.status === "open");
   const openQuestions = audienceQuestions
     .filter((question) => question.status === "open")
@@ -378,6 +409,41 @@ export default function CommandCenter() {
               <p><span className="font-medium text-foreground">Viewers:</span> {data.viewerCount}</p>
               <p><span className="font-medium text-foreground">Current chant:</span> {currentChant ? currentChant.callText || "Chant selected" : "None"}</p>
               <p className="break-all"><span className="font-medium text-foreground">Participant link:</span> {publicUrl}</p>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6 border-sky-500/20 bg-sky-500/5" data-testid="card-multilingual-access">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Share2 className="h-5 w-5 text-primary" />
+                Multilingual participant access
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Participants can choose English, Spanish, French, Arabic, or Persian from the participant page. Copy a ready-to-send invite in the language a group needs.
+              </p>
+              <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {multilingualInviteTemplates.map((template) => {
+                  const text = template.getText(publicUrl);
+                  return (
+                    <div key={template.label} className="rounded-lg border bg-background p-3" data-testid={`card-multilingual-invite-${template.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-semibold">{template.label}</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyInvite(text, template.label)}
+                          data-testid={`button-copy-multilingual-invite-${template.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+                        >
+                          Copy
+                        </Button>
+                      </div>
+                      <p className="mt-2 line-clamp-3 whitespace-pre-line text-xs text-muted-foreground">{text}</p>
+                    </div>
+                  );
+                })}
+              </div>
             </CardContent>
           </Card>
 
