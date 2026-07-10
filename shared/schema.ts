@@ -25,6 +25,8 @@ export const demonstrations = pgTable("demonstrations", {
   title: text("title").notNull(),
   status: text("status").notNull().default("draft"),
   createdBy: varchar("created_by", { length: 255 }).notNull().references(() => users.id),
+  supportUrl: text("support_url"),
+  supportLabel: text("support_label"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

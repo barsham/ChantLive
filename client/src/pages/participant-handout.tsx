@@ -23,6 +23,7 @@ export default function ParticipantHandout() {
 
   const demo = data?.demo;
   const publicUrl = demo ? `${window.location.origin}/d/${demo.publicId}` : "";
+  const supportLabel = demo?.supportLabel || "Support this event";
 
   useEffect(() => {
     if (!id) return;
@@ -153,6 +154,18 @@ export default function ParticipantHandout() {
           <p className="break-all rounded-lg border bg-background p-3 text-sm font-medium" data-testid="text-handout-url">
             {publicUrl}
           </p>
+
+          {demo.supportUrl && (
+            <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-left text-emerald-950" data-testid="card-handout-support-action">
+              <p className="text-sm font-semibold">Optional organizer action</p>
+              <p className="mt-1 text-sm">
+                After joining the chant page, participants can also open: <span className="font-semibold">{supportLabel}</span>
+              </p>
+              <p className="mt-2 break-all rounded-lg border border-emerald-200 bg-white p-3 text-sm font-medium" data-testid="text-handout-support-url">
+                {demo.supportUrl}
+              </p>
+            </div>
+          )}
 
           <div className="mt-6 grid gap-3 text-left text-sm text-muted-foreground sm:grid-cols-3">
             <p className="rounded-lg border bg-background p-3">1. Open your camera and scan.</p>

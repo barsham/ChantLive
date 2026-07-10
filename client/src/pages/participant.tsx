@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "wouter";
 import { getSocket } from "@/lib/socket";
-import { Eye, HelpCircle, ShieldCheck, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
+import { ExternalLink, Eye, HelpCircle, ShieldCheck, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
 
 type ChantData = {
   callText: string | null;
@@ -18,6 +18,8 @@ type ChantData = {
   phaseStartedAt?: string;
   phaseDurationMs?: number;
   serverNow?: string;
+  supportUrl?: string | null;
+  supportLabel?: string | null;
 };
 type OrganizerAnnouncement = {
   id: string;
@@ -1063,6 +1065,18 @@ export default function Participant() {
           <p className="text-neutral-500 text-sm mt-4 max-w-xs mx-auto" data-testid="text-ended-next-step">
             Thanks for joining. You can close this page or ask an organizer for the next participant link.
           </p>
+          {chantData.supportUrl && (
+            <a
+              href={chantData.supportUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-5 inline-flex items-center gap-2 rounded-full border border-emerald-400/50 px-4 py-2 text-sm font-semibold text-emerald-100 hover:bg-emerald-950/40"
+              data-testid="link-ended-support-action"
+            >
+              {chantData.supportLabel || "Support this event"}
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          )}
           <div className="mt-6 rounded-2xl border border-neutral-800 bg-neutral-950 p-4 text-left" data-testid="panel-ended-feedback">
             <p className="font-semibold text-white">Share quick feedback</p>
             <p className="mt-1 text-xs text-neutral-400">Help organisers improve the next chant or demonstration.</p>
@@ -1137,6 +1151,18 @@ export default function Participant() {
           >
             {isOffline ? "Offline - reconnect to receive chants" : "Connected and waiting for the organizer"}
           </p>
+          {chantData.supportUrl && (
+            <a
+              href={chantData.supportUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/50 px-4 py-2 text-sm font-semibold text-emerald-100 hover:bg-emerald-950/40"
+              data-testid="link-waiting-support-action"
+            >
+              {chantData.supportLabel || "Support this event"}
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          )}
           <div className="mt-5 rounded-lg border border-neutral-800 bg-neutral-950/70 p-4 text-left text-sm text-neutral-400" data-testid="text-waiting-tips">
             <p className="font-medium text-neutral-300 mb-2">While you wait</p>
             <ul className="space-y-1">
@@ -1183,6 +1209,26 @@ export default function Participant() {
           >
             Dismiss
           </button>
+        </div>
+      )}
+      {chantData.supportUrl && (
+        <div className="mx-4 mt-4 rounded-2xl border border-emerald-300/40 bg-emerald-300/15 p-4 text-center text-emerald-50" data-testid="banner-participant-support-action">
+          <p className="text-xs font-mono uppercase tracking-widest text-emerald-100/80">
+            Organizer action
+          </p>
+          <a
+            href={chantData.supportUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-emerald-300 px-5 py-2 text-sm font-bold text-emerald-950 shadow-lg shadow-emerald-950/20"
+            data-testid="link-participant-support-action"
+          >
+            {chantData.supportLabel || "Support this event"}
+            <ExternalLink className="h-4 w-4" />
+          </a>
+          <p className="mx-auto mt-2 max-w-md text-xs text-emerald-50/80">
+            Opens an organizer-provided page in a new tab.
+          </p>
         </div>
       )}
       <div className="flex-1 flex items-center justify-center p-6">

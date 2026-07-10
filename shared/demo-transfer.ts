@@ -35,6 +35,8 @@ export const demoTransferPackageSchema = z.object({
     title: z.string().min(1),
     originalStatus: z.enum(["draft", "live", "ended"]),
     createdAt: z.string().datetime(),
+    supportUrl: z.string().url().nullable().optional(),
+    supportLabel: z.string().max(80).nullable().optional(),
   }),
   chants: z.array(demoTransferChantSchema).max(30),
   state: demoTransferStateSchema,

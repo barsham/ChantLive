@@ -33,6 +33,12 @@ export async function ensureDemoColumnsAndTables(): Promise<void> {
     ALTER TABLE demonstrations
     ADD COLUMN IF NOT EXISTS public_id varchar(12);
 
+    ALTER TABLE demonstrations
+    ADD COLUMN IF NOT EXISTS support_url text;
+
+    ALTER TABLE demonstrations
+    ADD COLUMN IF NOT EXISTS support_label text;
+
     UPDATE demonstrations
     SET public_id = substr(md5(random()::text || clock_timestamp()::text), 1, 8)
     WHERE public_id IS NULL;

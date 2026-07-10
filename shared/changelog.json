@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.47",
+      "releasedAt": "2026-07-10",
+      "summary": "Organizer-controlled participant support actions for donations, signup, petitions, and campaign follow-up.",
+      "items": [
+        {
+          "id": "cl-2026-07-10-organizer-support-action",
+          "title": "Organizer support action",
+          "description": "Event admins can add an approved support, donation, volunteer, petition, or campaign link directly from the event editor.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-10",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-10-participant-support-cta",
+          "title": "Participant support CTA",
+          "description": "Participants see the organizer action on waiting, live, and ended event screens without needing an account.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-10",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-10-command-support-workflow",
+          "title": "Command center support workflow",
+          "description": "The command center now shows whether a support action is configured and provides copy-ready follow-up text.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-10",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-10-handout-support-link",
+          "title": "Handout support link",
+          "description": "Printable participant handouts include the organizer support action so projector and paper fallback workflows stay complete.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-10",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-10-support-link-portability",
+          "title": "Support link portability",
+          "description": "Support action metadata is validated server-side and included in demonstration export/import packages.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-10",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.46",
       "releasedAt": "2026-07-09",
       "summary": "Multilingual participant controls and organiser invite snippets for mixed-language events.",

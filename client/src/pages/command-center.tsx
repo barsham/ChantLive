@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowLeft, CheckCircle2, ClipboardList, FileText, LifeBuoy, Megaphone, QrCode, Route, Share2, ShieldCheck, Users } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ClipboardList, ExternalLink, FileText, LifeBuoy, Megaphone, QrCode, Route, Share2, ShieldCheck, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -343,6 +343,7 @@ export default function CommandCenter() {
     { label: "Chants", ready: data.chants.length > 0, detail: `${data.chants.length} prepared` },
     { label: "Backup admin", ready: data.admins.length > 1, detail: `${data.admins.length} admin${data.admins.length === 1 ? "" : "s"}` },
     { label: "Participant link", ready: Boolean(publicUrl), detail: "Available" },
+    { label: "Support action", ready: Boolean(data.demo.supportUrl), detail: data.demo.supportUrl ? "Configured" : "Optional" },
     { label: "Live state", ready: data.demo.status === "live", detail: data.demo.status },
     { label: "Checked in", ready: (checkIns?.total ?? 0) > 0, detail: `${checkIns?.total ?? 0} people` },
     { label: "Feedback", ready: (feedback?.total ?? 0) > 0, detail: `${feedback?.total ?? 0} responses` },
@@ -409,6 +410,57 @@ export default function CommandCenter() {
               <p><span className="font-medium text-foreground">Viewers:</span> {data.viewerCount}</p>
               <p><span className="font-medium text-foreground">Current chant:</span> {currentChant ? currentChant.callText || "Chant selected" : "None"}</p>
               <p className="break-all"><span className="font-medium text-foreground">Participant link:</span> {publicUrl}</p>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6 border-emerald-500/20 bg-emerald-500/5" data-testid="card-command-support-action">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ExternalLink className="h-5 w-5 text-primary" />
+                Participant support action
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {data.demo.supportUrl ? (
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-sm font-medium">{data.demo.supportLabel || "Support this event"}</p>
+                    <p className="mt-1 break-all text-xs text-muted-foreground">{data.demo.supportUrl}</p>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Participants see this action on the live page, waiting page, ended page, and printable handout.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyInvite([
+                        `Support ${data.demo.title}:`,
+                        `${data.demo.supportLabel || "Support this event"}: ${data.demo.supportUrl}`,
+                        "",
+                        `Participant page: ${publicUrl}`,
+                      ].join("\n"), "Support action")}
+                      data-testid="button-copy-command-support-action"
+                    >
+                      Copy message
+                    </Button>
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={data.demo.supportUrl} target="_blank" rel="noopener noreferrer" data-testid="link-command-support-action">
+                        Open link
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    No support action is configured. Add one from Control event if this gathering needs a donation, volunteer, petition, or campaign follow-up link.
+                  </p>
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}`)} data-testid="button-command-add-support-action">
+                    Add action
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 

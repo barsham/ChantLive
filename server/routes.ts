@@ -451,6 +451,8 @@ async function emitCurrentChant(io: SocketIOServer, demo: any) {
     phaseStartedAt: getPhaseStartedAt(state),
     phaseDurationMs: getPhaseDurationMs(currentChant, currentPhase),
     serverNow: new Date().toISOString(),
+    supportUrl: demo.supportUrl ?? null,
+    supportLabel: demo.supportLabel ?? null,
   });
 }
 export async function registerRoutes(
@@ -517,6 +519,13 @@ export async function registerRoutes(
         status: "draft",
         createdBy: user.id,
       });
+
+      if (transferPackage.demonstration.supportUrl || transferPackage.demonstration.supportLabel) {
+        await storage.updateDemoSupport(importedDemo.id, {
+          supportUrl: transferPackage.demonstration.supportUrl ?? null,
+          supportLabel: transferPackage.demonstration.supportLabel ?? null,
+        });
+      }
 
       await storage.addDemoAdmin(importedDemo.id, user.id);
 
@@ -1292,6 +1301,8 @@ export async function registerRoutes(
           title: demo.title,
           originalStatus: demo.status as "draft" | "live" | "ended",
           createdAt: demo.createdAt.toISOString(),
+          supportUrl: demo.supportUrl ?? null,
+          supportLabel: demo.supportLabel ?? null,
         },
         chants: chantsList.map((chant) => ({
           orderIndex: chant.orderIndex,
@@ -1332,7 +1343,45 @@ export async function registerRoutes(
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
-      const { title } = req.body;
+      const { title, supportUrl, supportLabel } = req.body;
+      if (typeof title === "string") {
+        if (title.trim().length === 0) {
+          return res.status(400).json({ message: "Title is required" });
+        }
+
+        const updated = await storage.updateDemoTitle(demo.id, title.trim());
+        return res.json(updated);
+      }
+
+      if (supportUrl !== undefined || supportLabel !== undefined) {
+        const trimmedUrl = typeof supportUrl === "string" ? supportUrl.trim() : "";
+        let normalizedUrl: string | null = null;
+
+        if (trimmedUrl) {
+          try {
+            const parsedUrl = new URL(trimmedUrl);
+            if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+              return res.status(400).json({ message: "Support link must start with http:// or https://" });
+            }
+            normalizedUrl = parsedUrl.toString();
+          } catch {
+            return res.status(400).json({ message: "Enter a valid support link URL" });
+          }
+        }
+
+        const normalizedLabel = typeof supportLabel === "string" && supportLabel.trim()
+          ? supportLabel.trim().slice(0, 80)
+          : null;
+        const updated = await storage.updateDemoSupport(demo.id, {
+          supportUrl: normalizedUrl,
+          supportLabel: normalizedLabel,
+        });
+        if (updated?.status === "live") {
+          await emitCurrentChant(io, updated);
+        }
+        return res.json(updated);
+      }
+
       if (!title || typeof title !== "string" || title.trim().length === 0) {
         return res.status(400).json({ message: "Title is required" });
       }
@@ -1513,6 +1562,8 @@ export async function registerRoutes(
           phaseStartedAt: getPhaseStartedAt(state),
           phaseDurationMs: getPhaseDurationMs(chant, currentPhase),
           serverNow: new Date().toISOString(),
+          supportUrl: demo.supportUrl ?? null,
+          supportLabel: demo.supportLabel ?? null,
         });
       }
 
@@ -1595,6 +1646,8 @@ export async function registerRoutes(
         phaseStartedAt: getPhaseStartedAt(currentState),
         phaseDurationMs: getPhaseDurationMs(chant, currentPhase),
         serverNow: new Date().toISOString(),
+        supportUrl: demo.supportUrl ?? null,
+        supportLabel: demo.supportLabel ?? null,
       });
 
       io.to(`demo:${demo.publicId}`).emit("viewer_count", getViewerCount(demo.id));
@@ -1642,6 +1695,8 @@ export async function registerRoutes(
         phaseStartedAt: getPhaseStartedAt(state),
         phaseDurationMs: getPhaseDurationMs(chantsList[0], currentPhase),
         serverNow: new Date().toISOString(),
+        supportUrl: demo.supportUrl ?? null,
+        supportLabel: demo.supportLabel ?? null,
       });
 
       if (state?.autoRotate) {
@@ -1754,6 +1809,8 @@ export async function registerRoutes(
           phaseStartedAt: getPhaseStartedAt(refreshedState),
           phaseDurationMs: getPhaseDurationMs(chantForEmit, emittedPhase),
           serverNow: new Date().toISOString(),
+          supportUrl: demo.supportUrl ?? null,
+          supportLabel: demo.supportLabel ?? null,
         });
 
         const delaySeconds = nextPhase === "leader" ? (chantForEmit?.leaderDuration ?? 4) : (chantForEmit?.peopleDuration ?? 3);
@@ -2009,6 +2066,8 @@ export async function registerRoutes(
           phaseStartedAt: getPhaseStartedAt(state),
           phaseDurationMs: getPhaseDurationMs(currentChant, currentPhase),
           serverNow: new Date().toISOString(),
+          supportUrl: demo.supportUrl ?? null,
+          supportLabel: demo.supportLabel ?? null,
         });
 
         const count = getViewerCount(demo.id);

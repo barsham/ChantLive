@@ -62,6 +62,17 @@ function buildTemplates(
         "If QR scanning does not work, use this same link.",
       ].join("\n"),
     },
+    ...(data.demo.supportUrl ? [{
+      id: "support-action",
+      title: "Support action",
+      audience: "Send during or after the event",
+      body: [
+        `${title} has an organizer-approved action page:`,
+        `${data.demo.supportLabel || "Support this event"}: ${data.demo.supportUrl}`,
+        "",
+        "Use this for donations, volunteer signup, petitions, campaign updates, or other event follow-up.",
+      ].join("\n"),
+    }] : []),
     {
       id: "accessibility-fallback",
       title: "Accessible joining fallback",

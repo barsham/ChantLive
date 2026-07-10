@@ -132,6 +132,8 @@ export default function DemoEditor() {
   const [remainingTime, setRemainingTime] = useState<number | null>(null);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState("");
+  const [supportUrl, setSupportUrl] = useState("");
+  const [supportLabel, setSupportLabel] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [adminDialogOpen, setAdminDialogOpen] = useState(false);
   const [phaseProgress, setPhaseProgress] = useState(0);
@@ -197,6 +199,12 @@ export default function DemoEditor() {
     if (state.cycleDelay != null) setCycleDelay(state.cycleDelay);
     if (state.eventDurationMinutes) setEventDuration(state.eventDurationMinutes);
   }, [state]);
+
+  useEffect(() => {
+    if (!demo) return;
+    setSupportUrl(demo.supportUrl ?? "");
+    setSupportLabel(demo.supportLabel ?? "");
+  }, [demo?.id, demo?.supportUrl, demo?.supportLabel]);
 
   useEffect(() => {
     if (!state?.liveStartedAt || !isLive) {
@@ -439,6 +447,22 @@ export default function DemoEditor() {
       queryClient.invalidateQueries({ queryKey: ["/api/demos"] });
       setEditingTitle(false);
       toast({ title: "Event name updated" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const updateSupportLink = useMutation({
+    mutationFn: async ({ url, label }: { url: string; label: string }) => {
+      await apiRequest("PATCH", `/api/demos/${id}`, {
+        supportUrl: url,
+        supportLabel: label,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
+      toast({ title: supportUrl.trim() ? "Participant support link saved" : "Participant support link cleared" });
     },
     onError: (err: Error) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -1146,6 +1170,77 @@ export default function DemoEditor() {
             </CardContent>
           </Card>
         )}
+
+        <Card className="mb-6" data-testid="card-participant-support-link">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Share2 className="h-5 w-5 text-primary" />
+              Participant support action
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Add one organizer-approved link participants can open from the live view, handout, and command workflow. Use it for donations, volunteer signup, petitions, permits information, or a campaign page.
+            </p>
+            <div className="grid gap-3 md:grid-cols-[0.8fr_1.4fr]">
+              <div className="space-y-1.5">
+                <Label htmlFor="support-label">Button label</Label>
+                <Input
+                  id="support-label"
+                  value={supportLabel}
+                  onChange={(event) => setSupportLabel(event.target.value)}
+                  maxLength={80}
+                  placeholder="Support this event"
+                  data-testid="input-support-label"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="support-url">Support link</Label>
+                <Input
+                  id="support-url"
+                  value={supportUrl}
+                  onChange={(event) => setSupportUrl(event.target.value)}
+                  placeholder="https://example.org/donate-volunteer-or-sign"
+                  data-testid="input-support-url"
+                />
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                size="sm"
+                onClick={() => updateSupportLink.mutate({ url: supportUrl.trim(), label: supportLabel.trim() })}
+                disabled={updateSupportLink.isPending || !supportUrl.trim()}
+                data-testid="button-save-support-link"
+              >
+                Save support link
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSupportUrl("");
+                  setSupportLabel("");
+                  updateSupportLink.mutate({ url: "", label: "" });
+                }}
+                disabled={updateSupportLink.isPending || (!demo.supportUrl && !demo.supportLabel)}
+                data-testid="button-clear-support-link"
+              >
+                Clear
+              </Button>
+              {demo.supportUrl && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={demo.supportUrl} target="_blank" rel="noopener noreferrer" data-testid="link-test-support-link">
+                    <ExternalLink className="mr-1 h-3.5 w-3.5" />
+                    Test link
+                  </a>
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              The link must start with http:// or https://. Leave it empty if the event should only show chant controls.
+            </p>
+          </CardContent>
+        </Card>
 
         <Card className="mb-6">
           <CardContent className="py-4">

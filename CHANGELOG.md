@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.47 - 10 July 2026
+
+Organizer-controlled participant support actions for donations, signup, petitions, and campaign follow-up.
+
+### Added
+
+- Organizer support action: Event admins can add an approved support, donation, volunteer, petition, or campaign link directly from the event editor.
+- Participant support CTA: Participants see the organizer action on waiting, live, and ended event screens without needing an account.
+- Command center support workflow: The command center now shows whether a support action is configured and provides copy-ready follow-up text.
+
+### Improved
+
+- Handout support link: Printable participant handouts include the organizer support action so projector and paper fallback workflows stay complete.
+- Support link portability: Support action metadata is validated server-side and included in demonstration export/import packages.
+
 ## 1.1.46 - 9 July 2026
 
 Multilingual participant controls and organiser invite snippets for mixed-language events.
