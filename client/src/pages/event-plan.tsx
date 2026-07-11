@@ -32,6 +32,16 @@ function formatMinutes(totalSeconds: number) {
   return `${minutes}m ${seconds}s`;
 }
 
+function formatEventDateTime(value: Date | string | null | undefined) {
+  if (!value) return "Not scheduled";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Not scheduled";
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
 function buildPlanText(data: DemoDetail, publicUrl: string) {
   const chantCount = data.chants.length;
   const admins = data.admins.map((admin) => `${admin.name} <${admin.email}>`).join(", ") || "Add a backup admin";
@@ -42,9 +52,13 @@ function buildPlanText(data: DemoDetail, publicUrl: string) {
     "",
     `Participant link: ${publicUrl}`,
     `Status: ${data.demo.status}`,
+    `Date and time: ${formatEventDateTime(data.demo.scheduledAt)}`,
+    `Location: ${data.demo.locationName || "Not set"}`,
+    `Meeting point: ${data.demo.meetingPoint || "Not set"}`,
     `Planned duration: ${eventDuration} minutes`,
     `Chants prepared: ${chantCount}`,
     `Admins: ${admins}`,
+    data.demo.arrivalNote ? `Arrival note: ${data.demo.arrivalNote}` : "",
     "",
     "Before arrival:",
     "- Confirm permits, gathering rules, amplification limits, route, and site contact.",
@@ -123,6 +137,7 @@ export default function EventPlan() {
     { label: "Chants prepared", ready: data.chants.length > 0 },
     { label: "Backup admin assigned", ready: hasBackupAdmin },
     { label: "Participant link available", ready: Boolean(publicUrl) },
+    { label: "Logistics added", ready: Boolean(data.demo.scheduledAt || data.demo.locationName || data.demo.meetingPoint) },
     { label: "Timing configured", ready: eventDuration > 0 },
   ];
 
@@ -167,6 +182,14 @@ export default function EventPlan() {
               <p className="font-medium">Operational snapshot</p>
               <dl className="mt-3 grid grid-cols-2 gap-3 text-xs text-muted-foreground">
                 <div>
+                  <dt>When</dt>
+                  <dd className="font-semibold text-foreground">{formatEventDateTime(data.demo.scheduledAt)}</dd>
+                </div>
+                <div>
+                  <dt>Where</dt>
+                  <dd className="font-semibold text-foreground">{data.demo.locationName || "Not set"}</dd>
+                </div>
+                <div>
                   <dt>Status</dt>
                   <dd className="font-semibold text-foreground">{data.demo.status}</dd>
                 </div>
@@ -186,7 +209,7 @@ export default function EventPlan() {
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-4">
+          <div className="mt-6 grid gap-4 md:grid-cols-5">
             {readinessChecks.map((item) => (
               <div key={item.label} className="rounded-xl border bg-background p-4" data-testid={`text-plan-readiness-${item.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}>
                 <CheckCircle2 className={`mb-2 h-5 w-5 ${item.ready ? "text-emerald-600" : "text-muted-foreground"}`} />
@@ -206,6 +229,9 @@ export default function EventPlan() {
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-muted-foreground">
                 <p>Confirm local permit requirements, amplification limits, route boundaries, site contacts, and any private-property permissions.</p>
+                {data.demo.locationName && <p>Use the configured location as the single source of truth: {data.demo.locationName}.</p>}
+                {data.demo.meetingPoint && <p>Tell volunteers to direct arrivals to: {data.demo.meetingPoint}.</p>}
+                {data.demo.arrivalNote && <p>Arrival note to repeat: {data.demo.arrivalNote}</p>}
                 <p>Pick accessible meeting points, exits, shelter options, water, first-aid point, and a quiet place for anyone who needs support.</p>
                 <p>Agree who gives crowd instructions if the route changes, the event pauses, or people need to reconnect.</p>
               </CardContent>

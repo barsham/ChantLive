@@ -453,6 +453,10 @@ async function emitCurrentChant(io: SocketIOServer, demo: any) {
     serverNow: new Date().toISOString(),
     supportUrl: demo.supportUrl ?? null,
     supportLabel: demo.supportLabel ?? null,
+    scheduledAt: demo.scheduledAt ? new Date(demo.scheduledAt).toISOString() : null,
+    locationName: demo.locationName ?? null,
+    meetingPoint: demo.meetingPoint ?? null,
+    arrivalNote: demo.arrivalNote ?? null,
   });
 }
 export async function registerRoutes(
@@ -524,6 +528,20 @@ export async function registerRoutes(
         await storage.updateDemoSupport(importedDemo.id, {
           supportUrl: transferPackage.demonstration.supportUrl ?? null,
           supportLabel: transferPackage.demonstration.supportLabel ?? null,
+        });
+      }
+
+      if (
+        transferPackage.demonstration.scheduledAt ||
+        transferPackage.demonstration.locationName ||
+        transferPackage.demonstration.meetingPoint ||
+        transferPackage.demonstration.arrivalNote
+      ) {
+        await storage.updateDemoLogistics(importedDemo.id, {
+          scheduledAt: transferPackage.demonstration.scheduledAt ? new Date(transferPackage.demonstration.scheduledAt) : null,
+          locationName: transferPackage.demonstration.locationName ?? null,
+          meetingPoint: transferPackage.demonstration.meetingPoint ?? null,
+          arrivalNote: transferPackage.demonstration.arrivalNote ?? null,
         });
       }
 
@@ -1303,6 +1321,10 @@ export async function registerRoutes(
           createdAt: demo.createdAt.toISOString(),
           supportUrl: demo.supportUrl ?? null,
           supportLabel: demo.supportLabel ?? null,
+          scheduledAt: demo.scheduledAt ? demo.scheduledAt.toISOString() : null,
+          locationName: demo.locationName ?? null,
+          meetingPoint: demo.meetingPoint ?? null,
+          arrivalNote: demo.arrivalNote ?? null,
         },
         chants: chantsList.map((chant) => ({
           orderIndex: chant.orderIndex,
@@ -1343,7 +1365,7 @@ export async function registerRoutes(
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
-      const { title, supportUrl, supportLabel } = req.body;
+      const { title, supportUrl, supportLabel, scheduledAt, locationName, meetingPoint, arrivalNote } = req.body;
       if (typeof title === "string") {
         if (title.trim().length === 0) {
           return res.status(400).json({ message: "Title is required" });
@@ -1375,6 +1397,34 @@ export async function registerRoutes(
         const updated = await storage.updateDemoSupport(demo.id, {
           supportUrl: normalizedUrl,
           supportLabel: normalizedLabel,
+        });
+        if (updated?.status === "live") {
+          await emitCurrentChant(io, updated);
+        }
+        return res.json(updated);
+      }
+
+      if (
+        scheduledAt !== undefined ||
+        locationName !== undefined ||
+        meetingPoint !== undefined ||
+        arrivalNote !== undefined
+      ) {
+        let normalizedScheduledAt: Date | null = null;
+        const rawScheduledAt = typeof scheduledAt === "string" ? scheduledAt.trim() : "";
+
+        if (rawScheduledAt) {
+          normalizedScheduledAt = new Date(rawScheduledAt);
+          if (Number.isNaN(normalizedScheduledAt.getTime())) {
+            return res.status(400).json({ message: "Enter a valid event date and time" });
+          }
+        }
+
+        const updated = await storage.updateDemoLogistics(demo.id, {
+          scheduledAt: normalizedScheduledAt,
+          locationName: typeof locationName === "string" && locationName.trim() ? locationName.trim().slice(0, 160) : null,
+          meetingPoint: typeof meetingPoint === "string" && meetingPoint.trim() ? meetingPoint.trim().slice(0, 240) : null,
+          arrivalNote: typeof arrivalNote === "string" && arrivalNote.trim() ? arrivalNote.trim().slice(0, 500) : null,
         });
         if (updated?.status === "live") {
           await emitCurrentChant(io, updated);
@@ -1564,6 +1614,10 @@ export async function registerRoutes(
           serverNow: new Date().toISOString(),
           supportUrl: demo.supportUrl ?? null,
           supportLabel: demo.supportLabel ?? null,
+          scheduledAt: demo.scheduledAt ? new Date(demo.scheduledAt).toISOString() : null,
+          locationName: demo.locationName ?? null,
+          meetingPoint: demo.meetingPoint ?? null,
+          arrivalNote: demo.arrivalNote ?? null,
         });
       }
 
@@ -1648,6 +1702,10 @@ export async function registerRoutes(
         serverNow: new Date().toISOString(),
         supportUrl: demo.supportUrl ?? null,
         supportLabel: demo.supportLabel ?? null,
+        scheduledAt: demo.scheduledAt ? new Date(demo.scheduledAt).toISOString() : null,
+        locationName: demo.locationName ?? null,
+        meetingPoint: demo.meetingPoint ?? null,
+        arrivalNote: demo.arrivalNote ?? null,
       });
 
       io.to(`demo:${demo.publicId}`).emit("viewer_count", getViewerCount(demo.id));
@@ -1697,6 +1755,10 @@ export async function registerRoutes(
         serverNow: new Date().toISOString(),
         supportUrl: demo.supportUrl ?? null,
         supportLabel: demo.supportLabel ?? null,
+        scheduledAt: demo.scheduledAt ? new Date(demo.scheduledAt).toISOString() : null,
+        locationName: demo.locationName ?? null,
+        meetingPoint: demo.meetingPoint ?? null,
+        arrivalNote: demo.arrivalNote ?? null,
       });
 
       if (state?.autoRotate) {
@@ -1811,6 +1873,10 @@ export async function registerRoutes(
           serverNow: new Date().toISOString(),
           supportUrl: demo.supportUrl ?? null,
           supportLabel: demo.supportLabel ?? null,
+          scheduledAt: demo.scheduledAt ? new Date(demo.scheduledAt).toISOString() : null,
+          locationName: demo.locationName ?? null,
+          meetingPoint: demo.meetingPoint ?? null,
+          arrivalNote: demo.arrivalNote ?? null,
         });
 
         const delaySeconds = nextPhase === "leader" ? (chantForEmit?.leaderDuration ?? 4) : (chantForEmit?.peopleDuration ?? 3);
@@ -2068,6 +2134,10 @@ export async function registerRoutes(
           serverNow: new Date().toISOString(),
           supportUrl: demo.supportUrl ?? null,
           supportLabel: demo.supportLabel ?? null,
+          scheduledAt: demo.scheduledAt ? new Date(demo.scheduledAt).toISOString() : null,
+          locationName: demo.locationName ?? null,
+          meetingPoint: demo.meetingPoint ?? null,
+          arrivalNote: demo.arrivalNote ?? null,
         });
 
         const count = getViewerCount(demo.id);

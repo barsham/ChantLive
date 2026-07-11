@@ -11,6 +11,16 @@ type DemoDetail = {
   demo: Demonstration;
 };
 
+function formatHandoutSchedule(value: Date | string | null | undefined) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
 export default function ParticipantHandout() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
@@ -24,6 +34,12 @@ export default function ParticipantHandout() {
   const demo = data?.demo;
   const publicUrl = demo ? `${window.location.origin}/d/${demo.publicId}` : "";
   const supportLabel = demo?.supportLabel || "Support this event";
+  const logisticsItems = demo ? [
+    { label: "When", value: formatHandoutSchedule(demo.scheduledAt) },
+    { label: "Where", value: demo.locationName },
+    { label: "Meet", value: demo.meetingPoint },
+    { label: "Arrival", value: demo.arrivalNote },
+  ].filter((item) => item.value) : [];
 
   useEffect(() => {
     if (!id) return;
@@ -142,6 +158,20 @@ export default function ParticipantHandout() {
           <p className="mx-auto mt-3 max-w-md text-muted-foreground">
             Scan the QR code or open the link below to follow the live chants on your phone.
           </p>
+
+          {logisticsItems.length > 0 && (
+            <div className="mx-auto mt-5 max-w-xl rounded-xl border bg-background p-4 text-left" data-testid="card-handout-logistics">
+              <p className="text-sm font-semibold">Event details</p>
+              <dl className="mt-3 grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
+                {logisticsItems.map((item) => (
+                  <div key={item.label}>
+                    <dt className="text-xs font-medium uppercase tracking-wide">{item.label}</dt>
+                    <dd className="mt-1 text-foreground">{item.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
 
           <div className="my-8 flex justify-center">
             {qrDataUrl ? (

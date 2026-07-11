@@ -39,6 +39,18 @@ export async function ensureDemoColumnsAndTables(): Promise<void> {
     ALTER TABLE demonstrations
     ADD COLUMN IF NOT EXISTS support_label text;
 
+    ALTER TABLE demonstrations
+    ADD COLUMN IF NOT EXISTS scheduled_at timestamp;
+
+    ALTER TABLE demonstrations
+    ADD COLUMN IF NOT EXISTS location_name text;
+
+    ALTER TABLE demonstrations
+    ADD COLUMN IF NOT EXISTS meeting_point text;
+
+    ALTER TABLE demonstrations
+    ADD COLUMN IF NOT EXISTS arrival_note text;
+
     UPDATE demonstrations
     SET public_id = substr(md5(random()::text || clock_timestamp()::text), 1, 8)
     WHERE public_id IS NULL;

@@ -50,6 +50,7 @@ export interface IStorage {
   updateDemoStatus(id: string, status: string): Promise<void>;
   updateDemoTitle(id: string, title: string): Promise<Demonstration | undefined>;
   updateDemoSupport(id: string, data: { supportUrl: string | null; supportLabel: string | null }): Promise<Demonstration | undefined>;
+  updateDemoLogistics(id: string, data: { scheduledAt: Date | null; locationName: string | null; meetingPoint: string | null; arrivalNote: string | null }): Promise<Demonstration | undefined>;
 
   getChants(demonstrationId: string): Promise<Chant[]>;
   addChant(data: InsertChant): Promise<Chant>;
@@ -204,6 +205,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateDemoSupport(id: string, data: { supportUrl: string | null; supportLabel: string | null }): Promise<Demonstration | undefined> {
+    const [demo] = await db.update(demonstrations).set(data).where(eq(demonstrations.id, id)).returning();
+    return demo;
+  }
+
+  async updateDemoLogistics(id: string, data: { scheduledAt: Date | null; locationName: string | null; meetingPoint: string | null; arrivalNote: string | null }): Promise<Demonstration | undefined> {
     const [demo] = await db.update(demonstrations).set(data).where(eq(demonstrations.id, id)).returning();
     return demo;
   }

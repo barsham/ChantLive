@@ -20,6 +20,10 @@ type ChantData = {
   serverNow?: string;
   supportUrl?: string | null;
   supportLabel?: string | null;
+  scheduledAt?: string | null;
+  locationName?: string | null;
+  meetingPoint?: string | null;
+  arrivalNote?: string | null;
 };
 type OrganizerAnnouncement = {
   id: string;
@@ -73,6 +77,15 @@ type ParticipantEngagement = {
 
 const clampProgress = (value: number) => Math.min(100, Math.max(0, value));
 const getFallbackPhaseDuration = (phase: "leader" | "people") => phase === "leader" ? 4000 : 3000;
+const formatParticipantSchedule = (value?: string | null) => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+};
 const getStoredPollVotes = (): Record<string, string> => {
   try {
     return JSON.parse(localStorage.getItem("chant_poll_votes") ?? "{}") as Record<string, string>;
@@ -731,6 +744,12 @@ export default function Participant() {
   const participantDisplayMode = lowBandwidth
     ? "Low-bandwidth mode reduces animation and hides next-up previews."
     : "Full display mode shows motion, timing, and next-up previews.";
+  const logisticsItems = [
+    { label: "When", value: formatParticipantSchedule(chantData?.scheduledAt) },
+    { label: "Where", value: chantData?.locationName },
+    { label: "Meet", value: chantData?.meetingPoint },
+    { label: "Arrival", value: chantData?.arrivalNote },
+  ].filter((item) => item.value);
   const retryConnection = () => {
     setError(null);
     window.location.reload();
@@ -1065,6 +1084,19 @@ export default function Participant() {
           <p className="text-neutral-500 text-sm mt-4 max-w-xs mx-auto" data-testid="text-ended-next-step">
             Thanks for joining. You can close this page or ask an organizer for the next participant link.
           </p>
+          {logisticsItems.length > 0 && (
+            <div className="mx-auto mt-5 max-w-lg rounded-2xl border border-neutral-800 bg-neutral-950 p-4 text-left" data-testid="panel-ended-logistics">
+              <p className="text-sm font-semibold text-neutral-100">Event details</p>
+              <dl className="mt-3 space-y-2 text-sm text-neutral-400">
+                {logisticsItems.map((item) => (
+                  <div key={item.label}>
+                    <dt className="text-xs uppercase tracking-wide text-neutral-600">{item.label}</dt>
+                    <dd className="mt-0.5 text-neutral-200">{item.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
           {chantData.supportUrl && (
             <a
               href={chantData.supportUrl}
@@ -1136,6 +1168,19 @@ export default function Participant() {
             Waiting to begin...
           </p>
           <p className="text-neutral-500">{chantData.demoTitle}</p>
+          {logisticsItems.length > 0 && (
+            <div className="mx-auto mt-5 max-w-lg rounded-2xl border border-neutral-800 bg-neutral-950/80 p-4 text-left" data-testid="panel-waiting-logistics">
+              <p className="text-sm font-semibold text-neutral-100">Event details</p>
+              <dl className="mt-3 space-y-2 text-sm text-neutral-400">
+                {logisticsItems.map((item) => (
+                  <div key={item.label}>
+                    <dt className="text-xs uppercase tracking-wide text-neutral-600">{item.label}</dt>
+                    <dd className="mt-0.5 text-neutral-200">{item.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
           <p className="text-neutral-500 text-sm mt-4 max-w-xs mx-auto">
             Keep this page open. Chants will appear automatically when an organiser starts the demonstration.
           </p>
@@ -1229,6 +1274,19 @@ export default function Participant() {
           <p className="mx-auto mt-2 max-w-md text-xs text-emerald-50/80">
             Opens an organizer-provided page in a new tab.
           </p>
+        </div>
+      )}
+      {logisticsItems.length > 0 && (
+        <div className="mx-4 mt-4 rounded-2xl border border-neutral-800 bg-neutral-950/90 p-4 text-neutral-100" data-testid="banner-participant-logistics">
+          <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">Event details</p>
+          <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+            {logisticsItems.map((item) => (
+              <div key={item.label}>
+                <dt className="text-xs uppercase tracking-wide text-neutral-600">{item.label}</dt>
+                <dd className="mt-0.5 text-neutral-200">{item.value}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       )}
       <div className="flex-1 flex items-center justify-center p-6">

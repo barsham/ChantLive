@@ -30,6 +30,16 @@ type MessageTemplate = {
   body: string;
 };
 
+function formatShareSchedule(value: Date | string | null | undefined) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
 function buildTemplates(
   data: DemoDetail,
   publicUrl: string,
@@ -45,6 +55,13 @@ function buildTemplates(
   const title = data.demo.title;
   const chantCount = data.chants.length;
   const duration = data.state?.eventDurationMinutes ?? 300;
+  const schedule = formatShareSchedule(data.demo.scheduledAt);
+  const logisticsLines = [
+    schedule ? `When: ${schedule}` : null,
+    data.demo.locationName ? `Where: ${data.demo.locationName}` : null,
+    data.demo.meetingPoint ? `Meeting point: ${data.demo.meetingPoint}` : null,
+    data.demo.arrivalNote ? `Arrival note: ${data.demo.arrivalNote}` : null,
+  ].filter(Boolean) as string[];
   const backupAdminLine = data.admins.length > 1
     ? `Backup admins are set: ${data.admins.map((admin) => admin.name).join(", ")}.`
     : "Please add one backup admin before going live.";
@@ -57,11 +74,24 @@ function buildTemplates(
       body: [
         `Join ${title} on ChantLive:`,
         publicUrl,
+        ...(logisticsLines.length ? ["", ...logisticsLines] : []),
         "",
         "Open this link before the event starts and keep the page open. The current chant will update automatically.",
         "If QR scanning does not work, use this same link.",
       ].join("\n"),
     },
+    ...(logisticsLines.length ? [{
+      id: "arrival-details",
+      title: "Arrival details",
+      audience: "Send before people travel",
+      body: [
+        `Arrival details for ${title}:`,
+        ...logisticsLines,
+        "",
+        `Participant link: ${publicUrl}`,
+        "Keep this message handy and ask a volunteer if the meeting point changes.",
+      ].join("\n"),
+    }] : []),
     ...(data.demo.supportUrl ? [{
       id: "support-action",
       title: "Support action",

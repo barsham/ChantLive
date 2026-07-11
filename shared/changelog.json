@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.48",
+      "releasedAt": "2026-07-11",
+      "summary": "Event logistics workflow for date, location, meeting point, and arrival instructions across organizer and participant surfaces.",
+      "items": [
+        {
+          "id": "cl-2026-07-11-event-logistics-editor",
+          "title": "Event logistics editor",
+          "description": "Organizers can add event date, time, location, meeting point, and arrival notes from the event editor.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-11",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-11-participant-event-details",
+          "title": "Participant event details",
+          "description": "Participant waiting, live, and ended screens now show organizer-provided logistics so people know where to be and how to arrive.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-11",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-11-handout-logistics",
+          "title": "Handout logistics",
+          "description": "Printable participant handouts include event date, location, meeting point, and arrival instructions when configured.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-11",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-11-share-kit-arrival-details",
+          "title": "Share kit arrival details",
+          "description": "The share kit now generates an arrival-details message and enriches participant invites with configured logistics.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-11",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-11-logistics-command-context",
+          "title": "Logistics in organizer workflows",
+          "description": "Dashboard cards, command center context, event-day plan, and export/import packages now carry event logistics.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-11",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.47",
       "releasedAt": "2026-07-10",
       "summary": "Organizer-controlled participant support actions for donations, signup, petitions, and campaign follow-up.",

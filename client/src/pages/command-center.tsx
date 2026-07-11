@@ -26,6 +26,16 @@ type DemoDetail = {
   admins: AdminInfo[];
 };
 
+function formatCommandSchedule(value: Date | string | null | undefined) {
+  if (!value) return "Not scheduled";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Not scheduled";
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
 type AssistanceRequest = {
   id: string;
   type: "accessibility" | "connection" | "safety" | "organizer";
@@ -343,6 +353,7 @@ export default function CommandCenter() {
     { label: "Chants", ready: data.chants.length > 0, detail: `${data.chants.length} prepared` },
     { label: "Backup admin", ready: data.admins.length > 1, detail: `${data.admins.length} admin${data.admins.length === 1 ? "" : "s"}` },
     { label: "Participant link", ready: Boolean(publicUrl), detail: "Available" },
+    { label: "Logistics", ready: Boolean(data.demo.scheduledAt || data.demo.locationName || data.demo.meetingPoint), detail: data.demo.locationName || "Optional" },
     { label: "Support action", ready: Boolean(data.demo.supportUrl), detail: data.demo.supportUrl ? "Configured" : "Optional" },
     { label: "Live state", ready: data.demo.status === "live", detail: data.demo.status },
     { label: "Checked in", ready: (checkIns?.total ?? 0) > 0, detail: `${checkIns?.total ?? 0} people` },
@@ -408,8 +419,11 @@ export default function CommandCenter() {
             </CardHeader>
             <CardContent className="grid gap-4 text-sm text-muted-foreground md:grid-cols-3">
               <p><span className="font-medium text-foreground">Viewers:</span> {data.viewerCount}</p>
+              <p><span className="font-medium text-foreground">When:</span> {formatCommandSchedule(data.demo.scheduledAt)}</p>
+              <p><span className="font-medium text-foreground">Where:</span> {data.demo.locationName || "Not set"}</p>
               <p><span className="font-medium text-foreground">Current chant:</span> {currentChant ? currentChant.callText || "Chant selected" : "None"}</p>
               <p className="break-all"><span className="font-medium text-foreground">Participant link:</span> {publicUrl}</p>
+              <p><span className="font-medium text-foreground">Meeting point:</span> {data.demo.meetingPoint || "Not set"}</p>
             </CardContent>
           </Card>
 

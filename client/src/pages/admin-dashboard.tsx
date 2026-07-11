@@ -30,7 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload, Search, X, ClipboardList, Share2 } from "lucide-react";
+import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload, Search, X, ClipboardList, Share2, CalendarClock, MapPin } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppVersion } from "@/components/app-version";
@@ -85,6 +85,16 @@ function statusIcon(status: string) {
     default:
       return null;
   }
+}
+
+function formatDashboardSchedule(value: Date | string | null | undefined) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
 }
 
 export default function AdminDashboard() {
@@ -476,6 +486,22 @@ export default function AdminDashboard() {
                     Created by: <span className="font-medium text-foreground">{demo.creator?.name ?? "Unknown user"}</span>
                     {demo.creator?.email ? <span> ({demo.creator.email})</span> : null}
                   </p>
+                  {(demo.scheduledAt || demo.locationName) && (
+                    <div className="mt-3 space-y-1 rounded-lg border bg-muted/30 p-2 text-xs text-muted-foreground" data-testid={`text-demo-logistics-${demo.id}`}>
+                      {demo.scheduledAt && (
+                        <p className="flex items-center gap-1.5">
+                          <CalendarClock className="h-3.5 w-3.5" />
+                          <span>{formatDashboardSchedule(demo.scheduledAt)}</span>
+                        </p>
+                      )}
+                      {demo.locationName && (
+                        <p className="flex items-center gap-1.5">
+                          <MapPin className="h-3.5 w-3.5" />
+                          <span>{demo.locationName}</span>
+                        </p>
+                      )}
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 gap-2 mt-3">
                     <Button className="w-full justify-center" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/demos/${demo.id}/command`); }} data-testid={`button-command-demo-${demo.id}`}>
                       <Eye className="w-3.5 h-3.5 mr-1" />

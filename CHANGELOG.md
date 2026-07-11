@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.48 - 11 July 2026
+
+Event logistics workflow for date, location, meeting point, and arrival instructions across organizer and participant surfaces.
+
+### Added
+
+- Event logistics editor: Organizers can add event date, time, location, meeting point, and arrival notes from the event editor.
+- Participant event details: Participant waiting, live, and ended screens now show organizer-provided logistics so people know where to be and how to arrive.
+
+### Improved
+
+- Handout logistics: Printable participant handouts include event date, location, meeting point, and arrival instructions when configured.
+- Share kit arrival details: The share kit now generates an arrival-details message and enriches participant invites with configured logistics.
+- Logistics in organizer workflows: Dashboard cards, command center context, event-day plan, and export/import packages now carry event logistics.
+
 ## 1.1.47 - 10 July 2026
 
 Organizer-controlled participant support actions for donations, signup, petitions, and campaign follow-up.

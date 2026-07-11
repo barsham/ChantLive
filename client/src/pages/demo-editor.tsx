@@ -56,6 +56,7 @@ import {
   UserPlus,
   Download,
   X,
+  CalendarClock,
   CheckCircle2,
   ClipboardCheck,
   ClipboardList,
@@ -65,6 +66,7 @@ import {
   Smartphone,
   Printer,
   Route,
+  MapPin,
   Share2,
   ShieldCheck,
 } from "lucide-react";
@@ -104,6 +106,24 @@ const chantStarters = [
   { label: "March cadence", call: "Whose streets?", response: "Our streets!" },
 ];
 
+function toDateTimeLocalValue(value: Date | string | null | undefined) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const offsetMs = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
+function formatEventSchedule(value: Date | string | null | undefined) {
+  if (!value) return "Not scheduled";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Not scheduled";
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
 export default function DemoEditor() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
@@ -134,6 +154,10 @@ export default function DemoEditor() {
   const [titleValue, setTitleValue] = useState("");
   const [supportUrl, setSupportUrl] = useState("");
   const [supportLabel, setSupportLabel] = useState("");
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [locationName, setLocationName] = useState("");
+  const [meetingPoint, setMeetingPoint] = useState("");
+  const [arrivalNote, setArrivalNote] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [adminDialogOpen, setAdminDialogOpen] = useState(false);
   const [phaseProgress, setPhaseProgress] = useState(0);
@@ -205,6 +229,14 @@ export default function DemoEditor() {
     setSupportUrl(demo.supportUrl ?? "");
     setSupportLabel(demo.supportLabel ?? "");
   }, [demo?.id, demo?.supportUrl, demo?.supportLabel]);
+
+  useEffect(() => {
+    if (!demo) return;
+    setScheduledAt(toDateTimeLocalValue(demo.scheduledAt));
+    setLocationName(demo.locationName ?? "");
+    setMeetingPoint(demo.meetingPoint ?? "");
+    setArrivalNote(demo.arrivalNote ?? "");
+  }, [demo?.id, demo?.scheduledAt, demo?.locationName, demo?.meetingPoint, demo?.arrivalNote]);
 
   useEffect(() => {
     if (!state?.liveStartedAt || !isLive) {
@@ -463,6 +495,20 @@ export default function DemoEditor() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
       toast({ title: supportUrl.trim() ? "Participant support link saved" : "Participant support link cleared" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const updateLogistics = useMutation({
+    mutationFn: async (payload: { scheduledAt: string; locationName: string; meetingPoint: string; arrivalNote: string }) => {
+      await apiRequest("PATCH", `/api/demos/${id}`, payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/demos"] });
+      toast({ title: "Event logistics saved" });
     },
     onError: (err: Error) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -1170,6 +1216,107 @@ export default function DemoEditor() {
             </CardContent>
           </Card>
         )}
+
+        <Card className="mb-6" data-testid="card-event-logistics">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <CalendarClock className="h-5 w-5 text-primary" />
+              Event logistics
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Add the core details participants need before they arrive. These details appear on the live page, participant handout, share kit, and event-day plan.
+            </p>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="scheduled-at">Date and time</Label>
+                <Input
+                  id="scheduled-at"
+                  type="datetime-local"
+                  value={scheduledAt}
+                  onChange={(event) => setScheduledAt(event.target.value)}
+                  data-testid="input-event-scheduled-at"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="location-name">Location or venue</Label>
+                <Input
+                  id="location-name"
+                  value={locationName}
+                  onChange={(event) => setLocationName(event.target.value)}
+                  maxLength={160}
+                  placeholder="State Library steps, north lawn, main hall..."
+                  data-testid="input-event-location"
+                />
+              </div>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="meeting-point">Meeting point</Label>
+                <Input
+                  id="meeting-point"
+                  value={meetingPoint}
+                  onChange={(event) => setMeetingPoint(event.target.value)}
+                  maxLength={240}
+                  placeholder="Meet near the orange banner at the east entrance"
+                  data-testid="input-event-meeting-point"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="arrival-note">Arrival note</Label>
+                <Textarea
+                  id="arrival-note"
+                  value={arrivalNote}
+                  onChange={(event) => setArrivalNote(event.target.value)}
+                  maxLength={500}
+                  rows={3}
+                  placeholder="Arrive 15 minutes early, bring water, and ask marshals for accessibility help."
+                  data-testid="input-event-arrival-note"
+                />
+              </div>
+            </div>
+            <div className="rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground">
+              <p className="flex items-center gap-2 font-medium text-foreground">
+                <MapPin className="h-4 w-4 text-primary" />
+                Participant preview
+              </p>
+              <p className="mt-1">{formatEventSchedule(scheduledAt)}</p>
+              <p className="mt-1">{locationName || "No location set yet"}</p>
+              {meetingPoint && <p className="mt-1">Meet: {meetingPoint}</p>}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                onClick={() => updateLogistics.mutate({
+                  scheduledAt,
+                  locationName: locationName.trim(),
+                  meetingPoint: meetingPoint.trim(),
+                  arrivalNote: arrivalNote.trim(),
+                })}
+                disabled={updateLogistics.isPending}
+                data-testid="button-save-event-logistics"
+              >
+                Save logistics
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setScheduledAt("");
+                  setLocationName("");
+                  setMeetingPoint("");
+                  setArrivalNote("");
+                  updateLogistics.mutate({ scheduledAt: "", locationName: "", meetingPoint: "", arrivalNote: "" });
+                }}
+                disabled={updateLogistics.isPending || (!demo.scheduledAt && !demo.locationName && !demo.meetingPoint && !demo.arrivalNote)}
+                data-testid="button-clear-event-logistics"
+              >
+                Clear
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="mb-6" data-testid="card-participant-support-link">
           <CardHeader className="pb-3">
