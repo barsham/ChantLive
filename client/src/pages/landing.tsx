@@ -1,14 +1,47 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Accessibility, QrCode, Shield, Zap, Users, ArrowRight, Megaphone, Wifi } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Accessibility, QrCode, Shield, Zap, Users, ArrowRight, Megaphone, Wifi, LogIn } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { AppVersion } from "@/components/app-version";
 import { blogPosts } from "@shared/blog";
+import { useState, type FormEvent } from "react";
+
+function getParticipantCode(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  let candidate = trimmed;
+  const participantPath = trimmed.match(/^(?:(?:https?:\/\/)?[^/\s]+\.[^/\s]+)?\/?d\/([^/?#]+)\/?(?:[?#].*)?$/i);
+  try {
+    if (participantPath) candidate = decodeURIComponent(participantPath[1]);
+  } catch {
+    return null;
+  }
+
+  candidate = candidate.replace(/^d\//i, "");
+  return /^[A-Za-z0-9_-]{6,12}$/.test(candidate) ? candidate : null;
+}
 
 export default function Landing() {
   const { isAuthenticated } = useAuth();
+  const [, navigate] = useLocation();
   const latestPost = blogPosts[0];
+  const [joinValue, setJoinValue] = useState("");
+  const [joinError, setJoinError] = useState("");
+
+  const handleJoin = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const participantCode = getParticipantCode(joinValue);
+    if (!participantCode) {
+      setJoinError("Enter the code from your organiser, or paste the full participant link.");
+      return;
+    }
+
+    setJoinError("");
+    navigate(`/d/${participantCode}`);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -110,6 +143,54 @@ export default function Landing() {
                 </span>
               ))}
             </div>
+            <Card id="join-event" className="mt-8 scroll-mt-24 text-left border-primary/30 bg-primary/5">
+              <CardContent className="p-5 sm:p-6">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 rounded-full bg-primary/10 p-2" aria-hidden="true">
+                    <LogIn className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-lg font-semibold">Joining an event?</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Enter the code shared by your organiser, or paste the full participant link. No account is needed.
+                    </p>
+                    <form className="mt-4 flex flex-col gap-2 sm:flex-row" onSubmit={handleJoin} noValidate>
+                      <div className="min-w-0 flex-1">
+                        <label htmlFor="participant-code" className="sr-only">Participant code or link</label>
+                        <Input
+                          id="participant-code"
+                          value={joinValue}
+                          onChange={(event) => {
+                            setJoinValue(event.target.value);
+                            if (joinError) setJoinError("");
+                          }}
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          inputMode="text"
+                          placeholder="Example: V1StGXR8 or chantlive.online/d/..."
+                          aria-invalid={joinError ? true : undefined}
+                          aria-describedby={joinError ? "participant-code-help participant-code-error" : "participant-code-help"}
+                          data-testid="input-participant-code"
+                        />
+                      </div>
+                      <Button type="submit" className="sm:shrink-0" data-testid="button-join-event">
+                        Join event
+                        <ArrowRight className="ml-1 h-4 w-4" />
+                      </Button>
+                    </form>
+                    <p id="participant-code-help" className="mt-2 text-xs text-muted-foreground">
+                      Your entry is used only to open the event on this device; participants join anonymously.
+                    </p>
+                    {joinError && (
+                      <p id="participant-code-error" className="mt-2 text-sm text-destructive" role="alert" data-testid="text-participant-code-error">
+                        {joinError}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
             {latestPost && (
               <Card className="mt-8 text-left">
                 <CardContent className="p-5">

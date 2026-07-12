@@ -30,7 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload, Search, X, ClipboardList, Share2, CalendarClock, MapPin } from "lucide-react";
+import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload, Search, X, ClipboardList, Share2, CalendarClock, MapPin, Copy, Hash } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppVersion } from "@/components/app-version";
@@ -174,6 +174,25 @@ export default function AdminDashboard() {
   const handleCreate = () => {
     if (!newTitle.trim()) return;
     createDemo.mutate(newTitle.trim());
+  };
+
+  const copyParticipantAccess = async (demo: DashboardDemonstration, kind: "link" | "code") => {
+    const value = kind === "link" ? `${window.location.origin}/d/${demo.publicId}` : demo.publicId;
+    try {
+      await navigator.clipboard.writeText(value);
+      toast({
+        title: kind === "link" ? "Participant link copied" : "Join code copied",
+        description: kind === "link"
+          ? "Ready to paste into a message or accessibility fallback."
+          : `Share ${demo.publicId} with participants who cannot scan the QR code.`,
+      });
+    } catch {
+      toast({
+        title: "Could not copy participant access",
+        description: "Open the event and copy the participant link from its sharing panel.",
+        variant: "destructive",
+      });
+    }
   };
 
   const demoStats = {
@@ -514,6 +533,14 @@ export default function AdminDashboard() {
                     <Button className="w-full justify-center" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/demos/${demo.id}/share-kit`); }} data-testid={`button-share-kit-demo-${demo.id}`}>
                       <Share2 className="w-3.5 h-3.5 mr-1" />
                       Share
+                    </Button>
+                    <Button className="w-full justify-center" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); void copyParticipantAccess(demo, "link"); }} data-testid={`button-copy-link-demo-${demo.id}`}>
+                      <Copy className="w-3.5 h-3.5 mr-1" />
+                      Copy link
+                    </Button>
+                    <Button className="w-full justify-center" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); void copyParticipantAccess(demo, "code"); }} data-testid={`button-copy-code-demo-${demo.id}`}>
+                      <Hash className="w-3.5 h-3.5 mr-1" />
+                      Copy code
                     </Button>
                     <Button variant="outline" size="sm" className="w-full justify-center text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700" onClick={(e) => { e.stopPropagation(); setDeleteTarget(demo); }} data-testid={`button-delete-demo-${demo.id}`}>
                       <Trash2 className="w-3.5 h-3.5 mr-1" />

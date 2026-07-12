@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "wouter";
+import { Link, useParams } from "wouter";
 import { getSocket } from "@/lib/socket";
 import { ExternalLink, Eye, HelpCircle, ShieldCheck, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
 
@@ -1042,6 +1042,13 @@ export default function Participant() {
             <RefreshCw className="h-4 w-4" />
             Try again
           </button>
+          <Link
+            href="/#join-event"
+            className="mt-3 block text-sm font-medium text-orange-300 underline underline-offset-4 hover:text-orange-200"
+            data-testid="link-enter-different-code"
+          >
+            Enter a different event code
+          </Link>
         </div>
       </div>
     );

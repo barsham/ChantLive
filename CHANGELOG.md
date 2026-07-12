@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.49 - 12 July 2026
+
+Participant join-code onboarding and faster organizer sharing fallbacks for real event conditions.
+
+### Added
+
+- Participant code entry: The landing page now lets participants open an event with the short code shared by an organizer, without scanning a QR code or creating an account.
+- Flexible participant link entry: The join tool accepts either a short event code or a full participant URL, making copied messages and printed instructions easier to use.
+
+### Improved
+
+- Join guidance and privacy reassurance: Inline validation explains how to fix an invalid entry and confirms that participants join anonymously.
+- Participant error recovery: Invalid or expired participant links now offer a direct route back to enter a different event code.
+- Dashboard participant access copy: Organizers can copy either the participant link or short join code directly from each dashboard event card.
+
 ## 1.1.48 - 11 July 2026
 
 Event logistics workflow for date, location, meeting point, and arrival instructions across organizer and participant surfaces.

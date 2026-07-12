@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.49",
+      "releasedAt": "2026-07-12",
+      "summary": "Participant join-code onboarding and faster organizer sharing fallbacks for real event conditions.",
+      "items": [
+        {
+          "id": "cl-2026-07-12-participant-code-entry",
+          "title": "Participant code entry",
+          "description": "The landing page now lets participants open an event with the short code shared by an organizer, without scanning a QR code or creating an account.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-12",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-12-flexible-participant-link-entry",
+          "title": "Flexible participant link entry",
+          "description": "The join tool accepts either a short event code or a full participant URL, making copied messages and printed instructions easier to use.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-12",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-12-join-guidance-and-privacy",
+          "title": "Join guidance and privacy reassurance",
+          "description": "Inline validation explains how to fix an invalid entry and confirms that participants join anonymously.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-12",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-12-participant-error-recovery",
+          "title": "Participant error recovery",
+          "description": "Invalid or expired participant links now offer a direct route back to enter a different event code.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-12",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-12-dashboard-participant-access-copy",
+          "title": "Dashboard participant access copy",
+          "description": "Organizers can copy either the participant link or short join code directly from each dashboard event card.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-12",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.48",
       "releasedAt": "2026-07-11",
       "summary": "Event logistics workflow for date, location, meeting point, and arrival instructions across organizer and participant surfaces.",
