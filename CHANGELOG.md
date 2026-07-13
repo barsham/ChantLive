@@ -4,6 +4,18 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.50 - 13 July 2026
+
+Mobile-first navigation, clearer organizer registration, and resilient short-code sharing for live events.
+
+### Improved
+
+- Compact mobile navigation: The landing page now uses a keyboard-accessible mobile menu so joining guidance and account actions stay easy to reach without a crowded two-row header.
+- Registration password visibility: Organizers can show or hide both password fields while creating an account, reducing typing errors on mobile devices.
+- Registration trust guidance: Live password-match feedback and clear email and participant-privacy notes make organizer account creation easier to understand and correct.
+- Handout short-code fallback: Printable participant handouts now feature the short event code and plain instructions for joining from the ChantLive home page when QR scanning fails.
+- Share kit participant access: Organizers can copy the participant code or link from one quick panel, while participant-facing message templates include the short-code fallback.
+
 ## 1.1.49 - 12 July 2026
 
 Participant join-code onboarding and faster organizer sharing fallbacks for real event conditions.

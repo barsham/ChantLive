@@ -4,7 +4,7 @@ import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Copy, ExternalLink, Printer, QrCode, Share2 } from "lucide-react";
+import { ArrowLeft, Copy, ExternalLink, Hash, Printer, QrCode, Share2 } from "lucide-react";
 import type { Demonstration } from "@shared/schema";
 
 type DemoDetail = {
@@ -25,7 +25,7 @@ export default function ParticipantHandout() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const [qrDataUrl, setQrDataUrl] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"link" | "code" | null>(null);
 
   const { data, isLoading } = useQuery<DemoDetail>({
     queryKey: ["/api/demos", id],
@@ -33,6 +33,7 @@ export default function ParticipantHandout() {
 
   const demo = data?.demo;
   const publicUrl = demo ? `${window.location.origin}/d/${demo.publicId}` : "";
+  const joinSite = window.location.host;
   const supportLabel = demo?.supportLabel || "Support this event";
   const logisticsItems = demo ? [
     { label: "When", value: formatHandoutSchedule(demo.scheduledAt) },
@@ -67,8 +68,15 @@ export default function ParticipantHandout() {
   const copyLink = async () => {
     if (!publicUrl) return;
     await navigator.clipboard.writeText(publicUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopied("link");
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  const copyCode = async () => {
+    if (!demo?.publicId) return;
+    await navigator.clipboard.writeText(demo.publicId);
+    setCopied("code");
+    setTimeout(() => setCopied(null), 2000);
   };
 
   const shareLink = async () => {
@@ -123,9 +131,13 @@ export default function ParticipantHandout() {
             Back to event
           </Button>
           <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={copyCode} data-testid="button-copy-handout-code">
+              <Hash className="mr-1 h-4 w-4" />
+              {copied === "code" ? "Code copied" : "Copy code"}
+            </Button>
             <Button variant="outline" size="sm" onClick={copyLink} data-testid="button-copy-handout-link">
               <Copy className="mr-1 h-4 w-4" />
-              {copied ? "Copied" : "Copy link"}
+              {copied === "link" ? "Link copied" : "Copy link"}
             </Button>
             <Button variant="outline" size="sm" onClick={shareLink} data-testid="button-share-handout-link">
               <Share2 className="mr-1 h-4 w-4" />
@@ -185,6 +197,16 @@ export default function ParticipantHandout() {
             {publicUrl}
           </p>
 
+          <div className="mt-4 rounded-xl border-2 border-primary/40 bg-primary/5 p-4" data-testid="card-handout-join-code">
+            <p className="text-sm font-medium text-muted-foreground">Cannot scan the QR code?</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Go to <span className="font-semibold text-foreground">{joinSite}</span> and enter this event code:
+            </p>
+            <p className="mt-3 font-mono text-3xl font-bold tracking-[0.18em] text-primary" data-testid="text-handout-join-code">
+              {demo.publicId}
+            </p>
+          </div>
+
           {demo.supportUrl && (
             <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-left text-emerald-950" data-testid="card-handout-support-action">
               <p className="text-sm font-semibold">Optional organizer action</p>
@@ -200,7 +222,7 @@ export default function ParticipantHandout() {
           <div className="mt-6 grid gap-3 text-left text-sm text-muted-foreground sm:grid-cols-3">
             <p className="rounded-lg border bg-background p-3">1. Open your camera and scan.</p>
             <p className="rounded-lg border bg-background p-3">2. Keep the page open during the event.</p>
-            <p className="rounded-lg border bg-background p-3">3. If scanning fails, type the link.</p>
+            <p className="rounded-lg border bg-background p-3">3. If scanning fails, enter the short code at {joinSite}.</p>
           </div>
 
           <Button variant="outline" className="no-print mt-6" asChild>

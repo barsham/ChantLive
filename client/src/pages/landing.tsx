@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Accessibility, QrCode, Shield, Zap, Users, ArrowRight, Megaphone, Wifi, LogIn } from "lucide-react";
+import { Accessibility, QrCode, Shield, Zap, Users, ArrowRight, Megaphone, Wifi, LogIn, Menu, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
 import { AppVersion } from "@/components/app-version";
@@ -30,6 +30,7 @@ export default function Landing() {
   const latestPost = blogPosts[0];
   const [joinValue, setJoinValue] = useState("");
   const [joinError, setJoinError] = useState("");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const handleJoin = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -46,13 +47,26 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4 flex-wrap">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="flex items-center gap-2 text-xl font-bold" data-testid="text-brand"><Megaphone className="w-6 h-6 text-orange-500" />ChantLive</span>
             <AppVersion />
           </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setMobileNavOpen((open) => !open)}
+            aria-label={mobileNavOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={mobileNavOpen}
+            aria-controls="mobile-navigation"
+            data-testid="button-mobile-menu"
+          >
+            {mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
           {isAuthenticated ? (
-            <div className="flex items-center gap-2 flex-wrap">
+            <nav className="hidden items-center gap-2 md:flex" aria-label="Primary navigation">
               <Button variant="ghost" asChild data-testid="link-for-organizers">
                 <Link href="/for-organizers">For Organizers</Link>
               </Button>
@@ -71,9 +85,9 @@ export default function Landing() {
                   <ArrowRight className="w-4 h-4 ml-1" />
                 </Link>
               </Button>
-            </div>
+            </nav>
           ) : (
-            <div className="flex items-center gap-2 flex-wrap">
+            <nav className="hidden items-center gap-2 md:flex" aria-label="Primary navigation">
               <Button variant="ghost" asChild data-testid="link-for-organizers">
                 <Link href="/for-organizers">For Organizers</Link>
               </Button>
@@ -92,9 +106,41 @@ export default function Landing() {
               <Button asChild data-testid="button-register">
                 <Link href="/register">Register</Link>
               </Button>
-            </div>
+            </nav>
           )}
         </div>
+        {mobileNavOpen && (
+          <nav id="mobile-navigation" className="border-t px-4 py-3 md:hidden" aria-label="Mobile navigation">
+            <div className="mx-auto grid max-w-6xl grid-cols-2 gap-2">
+              <Button variant="ghost" className="justify-start" asChild>
+                <Link href="/for-organizers" onClick={() => setMobileNavOpen(false)}>For organizers</Link>
+              </Button>
+              <Button variant="ghost" className="justify-start" asChild>
+                <Link href="/about" onClick={() => setMobileNavOpen(false)}>About</Link>
+              </Button>
+              <Button variant="ghost" className="justify-start" asChild>
+                <Link href="/blog" onClick={() => setMobileNavOpen(false)}>Blog</Link>
+              </Button>
+              <Button variant="ghost" className="justify-start" asChild>
+                <Link href="/changelog" onClick={() => setMobileNavOpen(false)}>Changelog</Link>
+              </Button>
+              {isAuthenticated ? (
+                <Button className="col-span-2" asChild>
+                  <Link href="/admin" onClick={() => setMobileNavOpen(false)}>Go to dashboard</Link>
+                </Button>
+              ) : (
+                <>
+                  <Button variant="outline" asChild>
+                    <Link href="/login" onClick={() => setMobileNavOpen(false)}>Sign in</Link>
+                  </Button>
+                  <Button asChild>
+                    <Link href="/register" onClick={() => setMobileNavOpen(false)}>Create account</Link>
+                  </Button>
+                </>
+              )}
+            </div>
+          </nav>
+        )}
       </header>
 
       <main>

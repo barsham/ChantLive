@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Megaphone } from "lucide-react";
+import { Eye, EyeOff, Mail, Megaphone, ShieldCheck } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { AppVersion } from "@/components/app-version";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +14,7 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPasswords, setShowPasswords] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -104,14 +105,18 @@ export default function Register() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                aria-describedby="email-privacy-note"
                 data-testid="input-email"
               />
+              <p className="text-xs text-muted-foreground" id="email-privacy-note">
+                Used for admin sign-in, verification, and account recovery. Participants never see your email.
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
-                type="password"
+                type={showPasswords ? "text" : "password"}
                 placeholder="At least 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -124,7 +129,7 @@ export default function Register() {
               <Label htmlFor="confirm-password">Confirm Password</Label>
               <Input
                 id="confirm-password"
-                type="password"
+                type={showPasswords ? "text" : "password"}
                 placeholder="Repeat your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -132,7 +137,29 @@ export default function Register() {
                 minLength={8}
                 data-testid="input-confirm-password"
               />
+              {confirmPassword && (
+                <p
+                  className={password === confirmPassword ? "text-xs text-emerald-700" : "text-xs text-destructive"}
+                  role="status"
+                  aria-live="polite"
+                  data-testid="text-password-match"
+                >
+                  {password === confirmPassword ? "Passwords match." : "Passwords do not match yet."}
+                </p>
+              )}
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => setShowPasswords((visible) => !visible)}
+              aria-pressed={showPasswords}
+              data-testid="button-toggle-passwords"
+            >
+              {showPasswords ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
+              {showPasswords ? "Hide passwords" : "Show passwords"}
+            </Button>
             <Button type="submit" className="w-full" disabled={isLoading} data-testid="button-register">
               {isLoading ? "Creating account..." : "Create Account"}
             </Button>
@@ -143,6 +170,10 @@ export default function Register() {
             <Link href="/login" className="text-primary font-medium" data-testid="link-login">
               Sign in
             </Link>
+          </div>
+          <div className="mt-5 flex items-start gap-2 rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground" data-testid="text-registration-privacy">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+            <p>Your account controls organiser tools only. Participants join event links anonymously without creating an account.</p>
           </div>
         </CardContent>
       </Card>

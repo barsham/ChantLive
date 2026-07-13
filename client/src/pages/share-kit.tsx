@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowLeft, Check, Copy, ExternalLink, MessageSquare, Printer, Share2 } from "lucide-react";
+import { ArrowLeft, Check, Copy, ExternalLink, Hash, Link2, MessageSquare, Printer } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,6 +53,7 @@ function buildTemplates(
   safetyUrl: string,
 ): MessageTemplate[] {
   const title = data.demo.title;
+  const participantCode = data.demo.publicId;
   const chantCount = data.chants.length;
   const duration = data.state?.eventDurationMinutes ?? 300;
   const schedule = formatShareSchedule(data.demo.scheduledAt);
@@ -74,10 +75,11 @@ function buildTemplates(
       body: [
         `Join ${title} on ChantLive:`,
         publicUrl,
+        `Short code: ${participantCode} (enter it at ${new URL(publicUrl).host})`,
         ...(logisticsLines.length ? ["", ...logisticsLines] : []),
         "",
         "Open this link before the event starts and keep the page open. The current chant will update automatically.",
-        "If QR scanning does not work, use this same link.",
+        "If QR scanning does not work, enter the short code on the ChantLive home page.",
       ].join("\n"),
     },
     ...(logisticsLines.length ? [{
@@ -110,6 +112,7 @@ function buildTemplates(
       body: [
         `For ${title}, you can join without scanning a QR code.`,
         `Open this link: ${publicUrl}`,
+        `Or go to ${new URL(publicUrl).host} and enter code: ${participantCode}`,
         "",
         "Ask an organiser if you need large text, high contrast, a quieter place, or help reconnecting.",
       ].join("\n"),
@@ -179,6 +182,7 @@ function buildTemplates(
       body: [
         `We are using ChantLive for ${title}.`,
         "Please scan the QR code or open the participant link, then keep the page open.",
+        `If scanning fails, go to ${new URL(publicUrl).host} and enter code ${participantCode}.`,
         `There are ${chantCount} chants prepared and the event timer is set for ${duration} minutes.`,
         "If the page stops updating, use the Help button or refresh your connection.",
       ].join("\n"),
@@ -246,6 +250,14 @@ export default function ShareKit() {
   const copyAll = async () => {
     await navigator.clipboard.writeText(templates.map((template) => `${template.title}\n${template.body}`).join("\n\n---\n\n"));
     setCopiedId("all");
+    setTimeout(() => setCopiedId(null), 1800);
+  };
+
+  const copyParticipantAccess = async (kind: "link" | "code") => {
+    const value = kind === "link" ? publicUrl : data?.demo.publicId;
+    if (!value) return;
+    await navigator.clipboard.writeText(value);
+    setCopiedId(`participant-${kind}`);
     setTimeout(() => setCopiedId(null), 1800);
   };
 
@@ -321,6 +333,33 @@ export default function ShareKit() {
               <p className="mt-1 break-all">Safety: {safetyUrl}</p>
               <p className="mt-1 break-all">Recovery: {recoveryUrl}</p>
               <p className="mt-1 break-all">Report: {reportUrl}</p>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-xl border border-primary/30 bg-primary/5 p-4" data-testid="card-share-participant-access">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold">Quick participant access</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Share the short code when a QR code is hard to scan or a long link is difficult to read aloud.
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className="rounded-lg border bg-background px-3 py-2 font-mono text-lg font-bold tracking-widest" data-testid="text-share-participant-code">
+                    {data.demo.publicId}
+                  </span>
+                  <span className="text-xs text-muted-foreground">Enter at {window.location.host}</span>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 sm:justify-end">
+                <Button variant="outline" size="sm" onClick={() => copyParticipantAccess("code")} data-testid="button-copy-share-code">
+                  {copiedId === "participant-code" ? <Check className="mr-1 h-4 w-4" /> : <Hash className="mr-1 h-4 w-4" />}
+                  {copiedId === "participant-code" ? "Code copied" : "Copy code"}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => copyParticipantAccess("link")} data-testid="button-copy-share-link">
+                  {copiedId === "participant-link" ? <Check className="mr-1 h-4 w-4" /> : <Link2 className="mr-1 h-4 w-4" />}
+                  {copiedId === "participant-link" ? "Link copied" : "Copy link"}
+                </Button>
+              </div>
             </div>
           </div>
 

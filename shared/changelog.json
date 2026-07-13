@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.50",
+      "releasedAt": "2026-07-13",
+      "summary": "Mobile-first navigation, clearer organizer registration, and resilient short-code sharing for live events.",
+      "items": [
+        {
+          "id": "cl-2026-07-13-compact-mobile-navigation",
+          "title": "Compact mobile navigation",
+          "description": "The landing page now uses a keyboard-accessible mobile menu so joining guidance and account actions stay easy to reach without a crowded two-row header.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-13",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-13-registration-password-visibility",
+          "title": "Registration password visibility",
+          "description": "Organizers can show or hide both password fields while creating an account, reducing typing errors on mobile devices.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-13",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-13-registration-trust-guidance",
+          "title": "Registration trust guidance",
+          "description": "Live password-match feedback and clear email and participant-privacy notes make organizer account creation easier to understand and correct.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-13",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-13-handout-short-code-fallback",
+          "title": "Handout short-code fallback",
+          "description": "Printable participant handouts now feature the short event code and plain instructions for joining from the ChantLive home page when QR scanning fails.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-13",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-13-share-kit-participant-access",
+          "title": "Share kit participant access",
+          "description": "Organizers can copy the participant code or link from one quick panel, while participant-facing message templates include the short-code fallback.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-13",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.49",
       "releasedAt": "2026-07-12",
       "summary": "Participant join-code onboarding and faster organizer sharing fallbacks for real event conditions.",
