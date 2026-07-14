@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useParams } from "wouter";
 import { getSocket } from "@/lib/socket";
-import { ExternalLink, Eye, HelpCircle, ShieldCheck, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
+import { Copy, ExternalLink, Eye, HelpCircle, Share2, ShieldCheck, Sun, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
 
 type ChantData = {
   callText: string | null;
@@ -571,9 +571,15 @@ export default function Participant() {
   const [feedbackComment, setFeedbackComment] = useState("");
   const [feedbackStatus, setFeedbackStatus] = useState<string | null>(null);
   const [engagement, setEngagement] = useState<ParticipantEngagement | null>(null);
+  const [shareStatus, setShareStatus] = useState<string | null>(null);
+  const [keepScreenAwake, setKeepScreenAwake] = useState(false);
+  const [screenAwakeActive, setScreenAwakeActive] = useState(false);
+  const [wakeLockError, setWakeLockError] = useState<string | null>(null);
   const localPhaseStartRef = useRef(Date.now());
   const lowBandwidthRef = useRef(lowBandwidth);
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const t = participantCopy[participantLanguage];
+  const wakeLockSupported = typeof navigator !== "undefined" && "wakeLock" in navigator;
 
   const getSessionId = () => {
     let sessionId = localStorage.getItem("chant_session_id");
@@ -750,6 +756,97 @@ export default function Participant() {
     { label: "Meet", value: chantData?.meetingPoint },
     { label: "Arrival", value: chantData?.arrivalNote },
   ].filter((item) => item.value);
+  const copyParticipantCode = async () => {
+    try {
+      await navigator.clipboard.writeText(publicId);
+      setShareStatus("Event code copied.");
+    } catch {
+      setShareStatus(`Event code: ${publicId}`);
+    }
+  };
+  const shareParticipantEvent = async () => {
+    const title = chantData?.demoTitle ? `Join ${chantData.demoTitle}` : "Join this ChantLive event";
+    const text = `${title} on ChantLive. Event code: ${publicId}`;
+    const url = window.location.href;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text, url });
+        setShareStatus("Event shared.");
+        return;
+      }
+
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      setShareStatus("Event invitation copied.");
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      try {
+        await navigator.clipboard.writeText(`${text}\n${url}`);
+        setShareStatus("Event invitation copied.");
+      } catch {
+        setShareStatus(`Share event code ${publicId}.`);
+      }
+    }
+  };
+  const requestScreenWakeLock = async () => {
+    try {
+      const wakeLock = await navigator.wakeLock.request("screen");
+      wakeLockRef.current = wakeLock;
+      setScreenAwakeActive(true);
+      setWakeLockError(null);
+      wakeLock.addEventListener("release", () => {
+        if (wakeLockRef.current === wakeLock) wakeLockRef.current = null;
+        setScreenAwakeActive(false);
+      }, { once: true });
+      return true;
+    } catch {
+      setWakeLockError("This device could not keep the screen on. Check battery or browser settings.");
+      return false;
+    }
+  };
+  const toggleScreenWakeLock = async () => {
+    if (keepScreenAwake) {
+      setKeepScreenAwake(false);
+      setScreenAwakeActive(false);
+      await wakeLockRef.current?.release();
+      wakeLockRef.current = null;
+      return;
+    }
+
+    if (await requestScreenWakeLock()) setKeepScreenAwake(true);
+  };
+  const renderParticipantAccess = (className = "", compact = false) => (
+    <div className={`rounded-2xl border border-neutral-800 bg-neutral-950/90 text-left ${compact ? "p-2.5" : "p-4"} ${className}`} data-testid="panel-participant-access">
+      <div className={`flex gap-3 ${compact ? "items-center justify-between" : "flex-col sm:flex-row sm:items-center sm:justify-between"}`}>
+        <div>
+          <p className="text-xs uppercase tracking-widest text-neutral-500">Event code</p>
+          <p className={`mt-1 font-mono font-bold tracking-[0.2em] text-white ${compact ? "text-base" : "text-xl"}`} data-testid="text-participant-event-code">{publicId}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={copyParticipantCode}
+            className={`inline-flex items-center gap-2 rounded-full border border-neutral-700 text-xs font-medium text-neutral-200 hover:bg-neutral-900 ${compact ? "px-2.5 py-1.5" : "px-3 py-2"}`}
+            aria-label="Copy event code"
+            data-testid="button-copy-participant-code"
+          >
+            <Copy className="h-3.5 w-3.5" />
+            {compact ? "Copy" : "Copy code"}
+          </button>
+          <button
+            type="button"
+            onClick={shareParticipantEvent}
+            className={`inline-flex items-center gap-2 rounded-full border border-orange-400/60 text-xs font-medium text-orange-100 hover:bg-orange-950/40 ${compact ? "px-2.5 py-1.5" : "px-3 py-2"}`}
+            data-testid="button-share-participant-event"
+          >
+            <Share2 className="h-3.5 w-3.5" />
+            Share event
+          </button>
+        </div>
+      </div>
+      {shareStatus && <p className="mt-2 text-xs text-emerald-300" role="status" data-testid="text-participant-share-status">{shareStatus}</p>}
+    </div>
+  );
   const retryConnection = () => {
     setError(null);
     window.location.reload();
@@ -937,6 +1034,31 @@ export default function Participant() {
   }, [participantLanguage]);
 
   useEffect(() => {
+    if (!wakeLockSupported || !keepScreenAwake) return;
+
+    const restoreWakeLock = () => {
+      if (document.visibilityState === "visible" && !wakeLockRef.current) {
+        void requestScreenWakeLock();
+      }
+    };
+
+    document.addEventListener("visibilitychange", restoreWakeLock);
+    return () => document.removeEventListener("visibilitychange", restoreWakeLock);
+  }, [keepScreenAwake, wakeLockSupported]);
+
+  useEffect(() => () => {
+    void wakeLockRef.current?.release();
+  }, []);
+
+  useEffect(() => {
+    if (chantData?.demoStatus === "live" || !keepScreenAwake) return;
+    setKeepScreenAwake(false);
+    setScreenAwakeActive(false);
+    void wakeLockRef.current?.release();
+    wakeLockRef.current = null;
+  }, [chantData?.demoStatus, keepScreenAwake]);
+
+  useEffect(() => {
     if (lowBandwidth) {
       setPhaseProgress(0);
       return;
@@ -1091,6 +1213,7 @@ export default function Participant() {
           <p className="text-neutral-500 text-sm mt-4 max-w-xs mx-auto" data-testid="text-ended-next-step">
             Thanks for joining. You can close this page or ask an organizer for the next participant link.
           </p>
+          {renderParticipantAccess("mt-5")}
           {logisticsItems.length > 0 && (
             <div className="mx-auto mt-5 max-w-lg rounded-2xl border border-neutral-800 bg-neutral-950 p-4 text-left" data-testid="panel-ended-logistics">
               <p className="text-sm font-semibold text-neutral-100">Event details</p>
@@ -1175,6 +1298,7 @@ export default function Participant() {
             Waiting to begin...
           </p>
           <p className="text-neutral-500">{chantData.demoTitle}</p>
+          {renderParticipantAccess("mx-auto mt-5 max-w-lg")}
           {logisticsItems.length > 0 && (
             <div className="mx-auto mt-5 max-w-lg rounded-2xl border border-neutral-800 bg-neutral-950/80 p-4 text-left" data-testid="panel-waiting-logistics">
               <p className="text-sm font-semibold text-neutral-100">Event details</p>
@@ -1263,6 +1387,7 @@ export default function Participant() {
           </button>
         </div>
       )}
+      {renderParticipantAccess("mx-4 mt-3", true)}
       {chantData.supportUrl && (
         <div className="mx-4 mt-4 rounded-2xl border border-emerald-300/40 bg-emerald-300/15 p-4 text-center text-emerald-50" data-testid="banner-participant-support-action">
           <p className="text-xs font-mono uppercase tracking-widest text-emerald-100/80">
@@ -1820,6 +1945,21 @@ export default function Participant() {
           <Eye className="h-3.5 w-3.5" />
           {highContrast ? t.highContrastOn : t.highContrast}
         </button>
+        {wakeLockSupported && (
+          <button
+            type="button"
+            onClick={toggleScreenWakeLock}
+            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
+              keepScreenAwake ? "border-amber-300/80 bg-amber-300/15 text-amber-100" : "border-neutral-700 text-neutral-300"
+            }`}
+            aria-pressed={keepScreenAwake}
+            title={screenAwakeActive ? "Screen wake lock is active" : "Prevent the screen from sleeping during this live chant"}
+            data-testid="button-toggle-screen-awake"
+          >
+            <Sun className="h-3.5 w-3.5" />
+            {keepScreenAwake ? "Screen stays on" : "Keep screen on"}
+          </button>
+        )}
         <label className="inline-flex items-center gap-2 rounded-full border border-neutral-700 px-3 py-1 text-xs font-medium text-neutral-300" data-testid="select-participant-language-label">
           {t.language}
           <select
@@ -1856,6 +1996,11 @@ export default function Participant() {
               ? t.connected
               : t.reconnecting}
         </span>
+        {wakeLockError && (
+          <span className="w-full text-center text-xs text-amber-300" role="status" data-testid="text-screen-awake-error">
+            {wakeLockError}
+          </span>
+        )}
       </footer>
     </div>
   );

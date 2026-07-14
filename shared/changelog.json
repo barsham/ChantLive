@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.51",
+      "releasedAt": "2026-07-14",
+      "summary": "Faster participant joining and sharing, screen-awake reliability, and event-day access controls for organisers.",
+      "items": [
+        {
+          "id": "cl-2026-07-14-participant-first-hero-shortcut",
+          "title": "Participant-first hero shortcut",
+          "description": "A prominent Join an event action now takes mobile visitors directly to the participant code field, keeping the join path ahead of organiser-only navigation.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-14",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-14-participant-event-code-strip",
+          "title": "Participant event code strip",
+          "description": "Waiting, live, and ended participant screens now show the short event code with a copy action so people can confirm or relay access when QR scanning fails.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-14",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-14-participant-event-sharing",
+          "title": "Participant event sharing",
+          "description": "Participants can share the current event from the chant page using the device share sheet, with a copyable invitation fallback on browsers without native sharing.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-14",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-14-keep-screen-on-control",
+          "title": "Keep screen on control",
+          "description": "Supported devices can keep the participant screen awake during a live chant, with clear active state and automatic release when the event ends.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-14",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-14-command-center-participant-access",
+          "title": "Command center participant access",
+          "description": "Organisers now have the short code, participant link, copy actions, and participant-page shortcut together beside live event controls.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-14",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.50",
       "releasedAt": "2026-07-13",
       "summary": "Mobile-first navigation, clearer organizer registration, and resilient short-code sharing for live events.",

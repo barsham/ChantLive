@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.51 - 14 July 2026
+
+Faster participant joining and sharing, screen-awake reliability, and event-day access controls for organisers.
+
+### Improved
+
+- Participant-first hero shortcut: A prominent Join an event action now takes mobile visitors directly to the participant code field, keeping the join path ahead of organiser-only navigation.
+- Participant event code strip: Waiting, live, and ended participant screens now show the short event code with a copy action so people can confirm or relay access when QR scanning fails.
+- Command center participant access: Organisers now have the short code, participant link, copy actions, and participant-page shortcut together beside live event controls.
+
+### Added
+
+- Participant event sharing: Participants can share the current event from the chant page using the device share sheet, with a copyable invitation fallback on browsers without native sharing.
+- Keep screen on control: Supported devices can keep the participant screen awake during a live chant, with clear active state and automatic release when the event ends.
+
 ## 1.1.50 - 13 July 2026
 
 Mobile-first navigation, clearer organizer registration, and resilient short-code sharing for live events.

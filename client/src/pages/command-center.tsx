@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowLeft, CheckCircle2, ClipboardList, ExternalLink, FileText, LifeBuoy, Megaphone, QrCode, Route, Share2, ShieldCheck, Users } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ClipboardList, Copy, ExternalLink, FileText, LifeBuoy, Megaphone, QrCode, Route, Share2, ShieldCheck, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -343,6 +343,14 @@ export default function CommandCenter() {
       toast({ title: "Could not copy invite", description: "Copy the text manually from this card.", variant: "destructive" });
     }
   };
+  const copyParticipantAccess = async (value: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast({ title: `${label} copied`, description: "Ready to share with participants." });
+    } catch {
+      toast({ title: `Could not copy ${label.toLowerCase()}`, description: "Select the value from the participant access card instead.", variant: "destructive" });
+    }
+  };
   const openAssistance = assistance.filter((request) => request.status === "open");
   const openQuestions = audienceQuestions
     .filter((question) => question.status === "open")
@@ -398,6 +406,37 @@ export default function CommandCenter() {
             <h1 className="text-3xl font-bold tracking-tight">{data.demo.title}</h1>
             <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{statusTone(data.demo.status)}</p>
           </div>
+
+          <Card className="mt-6 border-primary/30 bg-primary/5" data-testid="card-command-participant-access">
+            <CardContent className="p-5">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="flex items-center gap-2 text-sm font-semibold">
+                    <QrCode className="h-4 w-4 text-primary" />
+                    Participant access
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">Read the code aloud when QR scanning or message links are unreliable.</p>
+                  <p className="mt-3 font-mono text-2xl font-bold tracking-[0.2em]" data-testid="text-command-participant-code">{data.demo.publicId}</p>
+                  <p className="mt-1 break-all text-xs text-muted-foreground">{publicUrl}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" size="sm" onClick={() => copyParticipantAccess(data.demo.publicId, "Participant code")} data-testid="button-command-copy-code">
+                    <Copy className="mr-1 h-4 w-4" />
+                    Copy code
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => copyParticipantAccess(publicUrl, "Participant link")} data-testid="button-command-copy-link">
+                    <Copy className="mr-1 h-4 w-4" />
+                    Copy link
+                  </Button>
+                  <Button size="sm" asChild>
+                    <a href={publicUrl} target="_blank" rel="noopener noreferrer" data-testid="link-command-open-participant">
+                      Open participant page
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           <div className="mt-6 grid gap-4 md:grid-cols-10">
             {readiness.map((item) => (

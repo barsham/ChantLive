@@ -159,12 +159,20 @@ export default function Landing() {
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
               {isAuthenticated ? (
-                <Button size="lg" asChild data-testid="button-get-started">
-                  <Link href="/admin">
-                    Go to Dashboard
-                    <ArrowRight className="w-4 h-4 ml-1" />
-                  </Link>
-                </Button>
+                <>
+                  <Button size="lg" asChild data-testid="button-get-started">
+                    <Link href="/admin">
+                      Go to Dashboard
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </Link>
+                  </Button>
+                  <Button size="lg" variant="outline" asChild data-testid="button-hero-join-event">
+                    <a href="#join-event">
+                      <LogIn className="w-4 h-4 mr-1" />
+                      Join an event
+                    </a>
+                  </Button>
+                </>
               ) : (
                 <>
                   <Button size="lg" asChild data-testid="button-get-started">
@@ -173,8 +181,11 @@ export default function Landing() {
                       <ArrowRight className="w-4 h-4 ml-1" />
                     </Link>
                   </Button>
-                  <Button size="lg" variant="outline" asChild data-testid="button-hero-sign-in">
-                    <Link href="/login">Sign In</Link>
+                  <Button size="lg" variant="outline" asChild data-testid="button-hero-join-event">
+                    <a href="#join-event">
+                      <LogIn className="w-4 h-4 mr-1" />
+                      Join an event
+                    </a>
                   </Button>
                   <Button size="lg" variant="ghost" asChild data-testid="button-for-organizers">
                     <Link href="/for-organizers">For organizers</Link>
