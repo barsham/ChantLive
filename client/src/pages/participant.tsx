@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useParams } from "wouter";
 import { getSocket } from "@/lib/socket";
-import { Copy, ExternalLink, Eye, HelpCircle, Share2, ShieldCheck, Sun, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
+import { CalendarPlus, Copy, ExternalLink, Eye, HelpCircle, Share2, ShieldCheck, Sun, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
+import { downloadCalendarFile } from "@/lib/calendar";
 
 type ChantData = {
   callText: string | null;
@@ -24,6 +25,7 @@ type ChantData = {
   locationName?: string | null;
   meetingPoint?: string | null;
   arrivalNote?: string | null;
+  eventDurationMinutes?: number;
 };
 type OrganizerAnnouncement = {
   id: string;
@@ -572,6 +574,7 @@ export default function Participant() {
   const [feedbackStatus, setFeedbackStatus] = useState<string | null>(null);
   const [engagement, setEngagement] = useState<ParticipantEngagement | null>(null);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
+  const [calendarStatus, setCalendarStatus] = useState<string | null>(null);
   const [keepScreenAwake, setKeepScreenAwake] = useState(false);
   const [screenAwakeActive, setScreenAwakeActive] = useState(false);
   const [wakeLockError, setWakeLockError] = useState<string | null>(null);
@@ -708,7 +711,13 @@ export default function Participant() {
 
   useEffect(() => {
     fetch(`/api/public/demos/${publicId}/questions`)
-      .then((response) => response.ok ? response.json() : [])
+      .then((response) => {
+        if (response.status === 404) {
+          setError("Demonstration not found");
+          return [];
+        }
+        return response.ok ? response.json() : [];
+      })
       .then((questions: AudienceQuestion[]) => setAudienceQuestions(questions))
       .catch(() => setAudienceQuestions([]));
 
@@ -727,6 +736,14 @@ export default function Participant() {
       .then((data: ParticipantEngagement | null) => setEngagement(data))
       .catch(() => setEngagement(null));
   }, [publicId]);
+
+  useEffect(() => {
+    if (chantData || error || isOffline) return;
+    const timeout = window.setTimeout(() => {
+      setError("We could not connect to this event");
+    }, 12_000);
+    return () => window.clearTimeout(timeout);
+  }, [chantData, error, isOffline, publicId]);
 
   const hasChantContent = chantData?.callText || chantData?.responseText;
   const activePhase = chantData?.currentPhase ?? "leader";
@@ -788,6 +805,18 @@ export default function Participant() {
       }
     }
   };
+  const addParticipantEventToCalendar = () => {
+    if (!chantData?.scheduledAt) return;
+    const added = downloadCalendarFile({
+      title: chantData.demoTitle,
+      scheduledAt: chantData.scheduledAt,
+      durationMinutes: chantData.eventDurationMinutes,
+      location: chantData.locationName,
+      description: `ChantLive participant link: ${window.location.href}\nEvent code: ${publicId}`,
+      uid: `chantlive-${publicId}@chantlive.online`,
+    });
+    setCalendarStatus(added ? "Calendar invite downloaded." : "The event date could not be added to your calendar.");
+  };
   const requestScreenWakeLock = async () => {
     try {
       const wakeLock = await navigator.wakeLock.request("screen");
@@ -823,6 +852,17 @@ export default function Participant() {
           <p className={`mt-1 font-mono font-bold tracking-[0.2em] text-white ${compact ? "text-base" : "text-xl"}`} data-testid="text-participant-event-code">{publicId}</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {chantData?.scheduledAt && (
+            <button
+              type="button"
+              onClick={addParticipantEventToCalendar}
+              className={`inline-flex items-center gap-2 rounded-full border border-sky-400/60 text-xs font-medium text-sky-100 hover:bg-sky-950/40 ${compact ? "px-2.5 py-1.5" : "px-3 py-2"}`}
+              data-testid="button-add-participant-calendar"
+            >
+              <CalendarPlus className="h-3.5 w-3.5" />
+              {compact ? "Calendar" : "Add to calendar"}
+            </button>
+          )}
           <button
             type="button"
             onClick={copyParticipantCode}
@@ -845,6 +885,7 @@ export default function Participant() {
         </div>
       </div>
       {shareStatus && <p className="mt-2 text-xs text-emerald-300" role="status" data-testid="text-participant-share-status">{shareStatus}</p>}
+      {calendarStatus && <p className="mt-2 text-xs text-sky-300" role="status" data-testid="text-participant-calendar-status">{calendarStatus}</p>}
     </div>
   );
   const retryConnection = () => {

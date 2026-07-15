@@ -4,11 +4,13 @@ import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Copy, ExternalLink, Hash, Printer, QrCode, Share2 } from "lucide-react";
-import type { Demonstration } from "@shared/schema";
+import { ArrowLeft, CalendarPlus, Copy, ExternalLink, Hash, Printer, QrCode, Share2 } from "lucide-react";
+import { downloadCalendarFile } from "@/lib/calendar";
+import type { DemoState, Demonstration } from "@shared/schema";
 
 type DemoDetail = {
   demo: Demonstration;
+  state: DemoState | null;
 };
 
 function formatHandoutSchedule(value: Date | string | null | undefined) {
@@ -98,6 +100,18 @@ export default function ParticipantHandout() {
     copyLink();
   };
 
+  const downloadCalendarInvite = () => {
+    if (!demo?.scheduledAt) return;
+    downloadCalendarFile({
+      title: demo.title,
+      scheduledAt: demo.scheduledAt,
+      durationMinutes: data?.state?.eventDurationMinutes,
+      location: demo.locationName,
+      description: `Join on ChantLive: ${publicUrl}\nEvent code: ${demo.publicId}`,
+      uid: `chantlive-${demo.publicId}@chantlive.online`,
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background p-4">
@@ -131,6 +145,12 @@ export default function ParticipantHandout() {
             Back to event
           </Button>
           <div className="flex flex-wrap gap-2">
+            {demo.scheduledAt && (
+              <Button variant="outline" size="sm" onClick={downloadCalendarInvite} data-testid="button-download-handout-calendar">
+                <CalendarPlus className="mr-1 h-4 w-4" />
+                Calendar
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={copyCode} data-testid="button-copy-handout-code">
               <Hash className="mr-1 h-4 w-4" />
               {copied === "code" ? "Code copied" : "Copy code"}
@@ -182,6 +202,19 @@ export default function ParticipantHandout() {
                   </div>
                 ))}
               </dl>
+            </div>
+          )}
+
+          {demo.scheduledAt && (
+            <div className="no-print mx-auto mt-4 flex max-w-xl items-center justify-between gap-3 rounded-xl border border-sky-200 bg-sky-50 p-4 text-left text-sky-950" data-testid="card-handout-calendar">
+              <div>
+                <p className="text-sm font-semibold">Save the event details</p>
+                <p className="mt-1 text-xs text-sky-800">Download a calendar file with the event time, location, participant link, and join code.</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={downloadCalendarInvite} className="shrink-0 border-sky-300 bg-white" data-testid="button-handout-calendar-card">
+                <CalendarPlus className="mr-1 h-4 w-4" />
+                Add
+              </Button>
             </div>
           )}
 

@@ -102,6 +102,8 @@ export default function AdminDashboard() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [newTitle, setNewTitle] = useState("");
+  const [newScheduledAt, setNewScheduledAt] = useState("");
+  const [newLocationName, setNewLocationName] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Demonstration | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -114,14 +116,16 @@ export default function AdminDashboard() {
   });
 
   const createDemo = useMutation({
-    mutationFn: async (title: string) => {
-      const res = await apiRequest("POST", "/api/demos", { title });
+    mutationFn: async (payload: { title: string; scheduledAt: string; locationName: string }) => {
+      const res = await apiRequest("POST", "/api/demos", payload);
       return res.json();
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/demos"] });
       setDialogOpen(false);
       setNewTitle("");
+      setNewScheduledAt("");
+      setNewLocationName("");
       navigate(`/admin/demos/${data.id}`);
     },
     onError: (err: Error) => {
@@ -173,7 +177,11 @@ export default function AdminDashboard() {
 
   const handleCreate = () => {
     if (!newTitle.trim()) return;
-    createDemo.mutate(newTitle.trim());
+    createDemo.mutate({
+      title: newTitle.trim(),
+      scheduledAt: newScheduledAt ? new Date(newScheduledAt).toISOString() : "",
+      locationName: newLocationName.trim(),
+    });
   };
 
   const copyParticipantAccess = async (demo: DashboardDemonstration, kind: "link" | "code") => {
@@ -329,6 +337,38 @@ export default function AdminDashboard() {
                       data-testid="input-demo-title"
                     />
                   </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="new-demo-scheduled-at" className="flex items-center gap-1.5">
+                        <CalendarClock className="h-3.5 w-3.5" />
+                        Date and time <span className="font-normal text-muted-foreground">(optional)</span>
+                      </Label>
+                      <Input
+                        id="new-demo-scheduled-at"
+                        type="datetime-local"
+                        value={newScheduledAt}
+                        onChange={(event) => setNewScheduledAt(event.target.value)}
+                        data-testid="input-new-demo-scheduled-at"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="new-demo-location" className="flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5" />
+                        Venue <span className="font-normal text-muted-foreground">(optional)</span>
+                      </Label>
+                      <Input
+                        id="new-demo-location"
+                        value={newLocationName}
+                        onChange={(event) => setNewLocationName(event.target.value)}
+                        maxLength={160}
+                        placeholder="Main hall, north lawn..."
+                        data-testid="input-new-demo-location"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Adding logistics now makes calendar invites, handouts, and participant arrival details ready sooner.
+                  </p>
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-muted-foreground">Quick title starters</p>
                     <div className="flex flex-wrap gap-2" aria-label="Quick demonstration title starters">

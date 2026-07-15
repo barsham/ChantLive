@@ -492,14 +492,23 @@ export async function registerRoutes(
   app.post("/api/demos", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
-      const { title } = req.body;
+      const { title, scheduledAt, locationName } = req.body;
       if (!title || typeof title !== "string" || title.trim().length === 0) {
         return res.status(400).json({ message: "Title is required" });
+      }
+      if (locationName != null && (typeof locationName !== "string" || locationName.length > 160)) {
+        return res.status(400).json({ message: "Location must be 160 characters or fewer" });
+      }
+      const parsedScheduledAt = scheduledAt ? new Date(scheduledAt) : null;
+      if (parsedScheduledAt && Number.isNaN(parsedScheduledAt.getTime())) {
+        return res.status(400).json({ message: "Choose a valid event date and time" });
       }
       const demo = await storage.createDemonstration({
         title: title.trim(),
         status: "draft",
         createdBy: user.id,
+        scheduledAt: parsedScheduledAt,
+        locationName: typeof locationName === "string" && locationName.trim() ? locationName.trim() : null,
       });
       await storage.addDemoAdmin(demo.id, user.id);
       res.json(demo);
@@ -1618,6 +1627,7 @@ export async function registerRoutes(
           locationName: demo.locationName ?? null,
           meetingPoint: demo.meetingPoint ?? null,
           arrivalNote: demo.arrivalNote ?? null,
+          eventDurationMinutes: state?.eventDurationMinutes ?? 120,
         });
       }
 
@@ -2138,6 +2148,7 @@ export async function registerRoutes(
           locationName: demo.locationName ?? null,
           meetingPoint: demo.meetingPoint ?? null,
           arrivalNote: demo.arrivalNote ?? null,
+          eventDurationMinutes: state?.eventDurationMinutes ?? 120,
         });
 
         const count = getViewerCount(demo.id);

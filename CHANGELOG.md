@@ -4,6 +4,24 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.52 - 15 July 2026
+
+Calendar-ready event planning and faster participant recovery from broken or unreachable links.
+
+### Fixed
+
+- Participant connection recovery: Invalid event codes now reach the recovery screen as soon as the public lookup returns not found, while stalled connections time out with clear retry and code-entry actions.
+
+### Added
+
+- Participant calendar invites: Scheduled waiting, live, and ended event screens now let participants download a calendar file containing the event time, duration, location, participant link, and join code.
+- Share Kit calendar workflow: Organisers can download an event calendar invite and copy a ready-made save-the-date message that directs participants to the calendar action.
+
+### Improved
+
+- Handout calendar action: Participant handouts now offer a calendar download alongside QR, link, and short-code joining fallbacks when the organiser has scheduled the event.
+- Faster scheduled event setup: The creation dialog now accepts an optional date, time, and venue, and local organiser times are converted accurately before saving across creation and event editing.
+
 ## 1.1.51 - 14 July 2026
 
 Faster participant joining and sharing, screen-awake reliability, and event-day access controls for organisers.

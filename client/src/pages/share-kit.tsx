@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowLeft, Check, Copy, ExternalLink, Hash, Link2, MessageSquare, Printer } from "lucide-react";
+import { ArrowLeft, CalendarPlus, Check, Copy, ExternalLink, Hash, Link2, MessageSquare, Printer } from "lucide-react";
+import { downloadCalendarFile } from "@/lib/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -92,6 +93,19 @@ function buildTemplates(
         "",
         `Participant link: ${publicUrl}`,
         "Keep this message handy and ask a volunteer if the meeting point changes.",
+      ].join("\n"),
+    }] : []),
+    ...(schedule ? [{
+      id: "calendar-reminder",
+      title: "Save the date",
+      audience: "Send to participants before the event",
+      body: [
+        `Save ${title} in your calendar:`,
+        `When: ${schedule}`,
+        ...(data.demo.locationName ? [`Where: ${data.demo.locationName}`] : []),
+        "",
+        `Open the participant page and choose Add to calendar: ${publicUrl}`,
+        `Event code: ${participantCode}`,
       ].join("\n"),
     }] : []),
     ...(data.demo.supportUrl ? [{
@@ -261,6 +275,18 @@ export default function ShareKit() {
     setTimeout(() => setCopiedId(null), 1800);
   };
 
+  const downloadCalendarInvite = () => {
+    if (!data?.demo.scheduledAt) return;
+    downloadCalendarFile({
+      title: data.demo.title,
+      scheduledAt: data.demo.scheduledAt,
+      durationMinutes: data.state?.eventDurationMinutes,
+      location: data.demo.locationName,
+      description: `Join on ChantLive: ${publicUrl}\nEvent code: ${data.demo.publicId}`,
+      uid: `chantlive-${data.demo.publicId}@chantlive.online`,
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background p-4">
@@ -294,6 +320,12 @@ export default function ShareKit() {
             Back to event
           </Button>
           <div className="flex flex-wrap gap-2">
+            {data?.demo.scheduledAt && (
+              <Button variant="outline" size="sm" onClick={downloadCalendarInvite} data-testid="button-download-share-calendar">
+                <CalendarPlus className="mr-1 h-4 w-4" />
+                Calendar invite
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={copyAll} data-testid="button-copy-all-share-kit">
               {copiedId === "all" ? <Check className="mr-1 h-4 w-4" /> : <Copy className="mr-1 h-4 w-4" />}
               {copiedId === "all" ? "Copied all" : "Copy all"}

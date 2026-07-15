@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.52",
+      "releasedAt": "2026-07-15",
+      "summary": "Calendar-ready event planning and faster participant recovery from broken or unreachable links.",
+      "items": [
+        {
+          "id": "cl-2026-07-15-participant-connection-recovery",
+          "title": "Participant connection recovery",
+          "description": "Invalid event codes now reach the recovery screen as soon as the public lookup returns not found, while stalled connections time out with clear retry and code-entry actions.",
+          "type": "fix",
+          "visibility": "public",
+          "dateAdded": "2026-07-15",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-15-participant-calendar-invites",
+          "title": "Participant calendar invites",
+          "description": "Scheduled waiting, live, and ended event screens now let participants download a calendar file containing the event time, duration, location, participant link, and join code.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-15",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-15-handout-calendar-action",
+          "title": "Handout calendar action",
+          "description": "Participant handouts now offer a calendar download alongside QR, link, and short-code joining fallbacks when the organiser has scheduled the event.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-15",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-15-share-kit-calendar-workflow",
+          "title": "Share Kit calendar workflow",
+          "description": "Organisers can download an event calendar invite and copy a ready-made save-the-date message that directs participants to the calendar action.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-15",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-15-faster-scheduled-event-setup",
+          "title": "Faster scheduled event setup",
+          "description": "The creation dialog now accepts an optional date, time, and venue, and local organiser times are converted accurately before saving across creation and event editing.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-15",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.51",
       "releasedAt": "2026-07-14",
       "summary": "Faster participant joining and sharing, screen-awake reliability, and event-day access controls for organisers.",

@@ -1289,7 +1289,7 @@ export default function DemoEditor() {
               <Button
                 size="sm"
                 onClick={() => updateLogistics.mutate({
-                  scheduledAt,
+                  scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : "",
                   locationName: locationName.trim(),
                   meetingPoint: meetingPoint.trim(),
                   arrivalNote: arrivalNote.trim(),
