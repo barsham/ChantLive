@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.53",
+      "releasedAt": "2026-07-16",
+      "summary": "Clearer organiser scheduling, protected logistics edits, and calendar choices that work across participant devices.",
+      "items": [
+        {
+          "id": "cl-2026-07-16-duration-at-event-creation",
+          "title": "Event duration during creation",
+          "description": "Organisers can set a 15-to-300-minute event duration while creating a demonstration so calendar invitations reserve the right amount of time immediately.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-16",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-16-local-schedule-preview",
+          "title": "Local schedule and timezone preview",
+          "description": "The creation flow now shows the full local date, time, timezone, and calendar duration before an organiser creates the event.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-16",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-16-unsaved-logistics-feedback",
+          "title": "Unsaved logistics protection",
+          "description": "The event editor now identifies unsaved date, venue, meeting-point, and arrival-note changes, disables redundant saves, and warns before a browser exit could lose edits.",
+          "type": "fix",
+          "visibility": "public",
+          "dateAdded": "2026-07-16",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-16-participant-calendar-choices",
+          "title": "Participant calendar choices",
+          "description": "Scheduled participant screens now offer Google Calendar, Outlook Calendar, and downloadable calendar-file options from one mobile-friendly menu.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-16",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-16-command-center-calendar-card",
+          "title": "Command-center calendar card",
+          "description": "Organisers can confirm the saved schedule, duration, venue, and timezone from the command center, then open Google or Outlook Calendar or download an offline invite.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-16",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.52",
       "releasedAt": "2026-07-15",
       "summary": "Calendar-ready event planning and faster participant recovery from broken or unreachable links.",

@@ -4,6 +4,24 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.53 - 16 July 2026
+
+Clearer organiser scheduling, protected logistics edits, and calendar choices that work across participant devices.
+
+### Improved
+
+- Event duration during creation: Organisers can set a 15-to-300-minute event duration while creating a demonstration so calendar invitations reserve the right amount of time immediately.
+- Local schedule and timezone preview: The creation flow now shows the full local date, time, timezone, and calendar duration before an organiser creates the event.
+
+### Fixed
+
+- Unsaved logistics protection: The event editor now identifies unsaved date, venue, meeting-point, and arrival-note changes, disables redundant saves, and warns before a browser exit could lose edits.
+
+### Added
+
+- Participant calendar choices: Scheduled participant screens now offer Google Calendar, Outlook Calendar, and downloadable calendar-file options from one mobile-friendly menu.
+- Command-center calendar card: Organisers can confirm the saved schedule, duration, venue, and timezone from the command center, then open Google or Outlook Calendar or download an offline invite.
+
 ## 1.1.52 - 15 July 2026
 
 Calendar-ready event planning and faster participant recovery from broken or unreachable links.

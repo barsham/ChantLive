@@ -2,7 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useParams } from "wouter";
 import { getSocket } from "@/lib/socket";
 import { CalendarPlus, Copy, ExternalLink, Eye, HelpCircle, Share2, ShieldCheck, Sun, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
-import { downloadCalendarFile } from "@/lib/calendar";
+import { buildGoogleCalendarUrl, buildOutlookCalendarUrl, downloadCalendarFile, type CalendarEventDetails } from "@/lib/calendar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type ChantData = {
   callText: string | null;
@@ -773,6 +779,16 @@ export default function Participant() {
     { label: "Meet", value: chantData?.meetingPoint },
     { label: "Arrival", value: chantData?.arrivalNote },
   ].filter((item) => item.value);
+  const participantCalendarDetails: CalendarEventDetails | null = chantData?.scheduledAt ? {
+    title: chantData.demoTitle,
+    scheduledAt: chantData.scheduledAt,
+    durationMinutes: chantData.eventDurationMinutes,
+    location: chantData.locationName,
+    description: `ChantLive participant link: ${window.location.href}\nEvent code: ${publicId}`,
+    uid: `chantlive-${publicId}@chantlive.online`,
+  } : null;
+  const googleCalendarUrl = participantCalendarDetails ? buildGoogleCalendarUrl(participantCalendarDetails) : null;
+  const outlookCalendarUrl = participantCalendarDetails ? buildOutlookCalendarUrl(participantCalendarDetails) : null;
   const copyParticipantCode = async () => {
     try {
       await navigator.clipboard.writeText(publicId);
@@ -806,15 +822,8 @@ export default function Participant() {
     }
   };
   const addParticipantEventToCalendar = () => {
-    if (!chantData?.scheduledAt) return;
-    const added = downloadCalendarFile({
-      title: chantData.demoTitle,
-      scheduledAt: chantData.scheduledAt,
-      durationMinutes: chantData.eventDurationMinutes,
-      location: chantData.locationName,
-      description: `ChantLive participant link: ${window.location.href}\nEvent code: ${publicId}`,
-      uid: `chantlive-${publicId}@chantlive.online`,
-    });
+    if (!participantCalendarDetails) return;
+    const added = downloadCalendarFile(participantCalendarDetails);
     setCalendarStatus(added ? "Calendar invite downloaded." : "The event date could not be added to your calendar.");
   };
   const requestScreenWakeLock = async () => {
@@ -853,15 +862,37 @@ export default function Participant() {
         </div>
         <div className="flex flex-wrap gap-2">
           {chantData?.scheduledAt && (
-            <button
-              type="button"
-              onClick={addParticipantEventToCalendar}
-              className={`inline-flex items-center gap-2 rounded-full border border-sky-400/60 text-xs font-medium text-sky-100 hover:bg-sky-950/40 ${compact ? "px-2.5 py-1.5" : "px-3 py-2"}`}
-              data-testid="button-add-participant-calendar"
-            >
-              <CalendarPlus className="h-3.5 w-3.5" />
-              {compact ? "Calendar" : "Add to calendar"}
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className={`inline-flex items-center gap-2 rounded-full border border-sky-400/60 text-xs font-medium text-sky-100 hover:bg-sky-950/40 ${compact ? "px-2.5 py-1.5" : "px-3 py-2"}`}
+                  data-testid="button-add-participant-calendar"
+                >
+                  <CalendarPlus className="h-3.5 w-3.5" />
+                  {compact ? "Calendar" : "Add to calendar"}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {googleCalendarUrl && (
+                  <DropdownMenuItem asChild>
+                    <a href={googleCalendarUrl} target="_blank" rel="noopener noreferrer" data-testid="link-participant-google-calendar">
+                      Google Calendar
+                    </a>
+                  </DropdownMenuItem>
+                )}
+                {outlookCalendarUrl && (
+                  <DropdownMenuItem asChild>
+                    <a href={outlookCalendarUrl} target="_blank" rel="noopener noreferrer" data-testid="link-participant-outlook-calendar">
+                      Outlook Calendar
+                    </a>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={addParticipantEventToCalendar} data-testid="button-download-participant-calendar">
+                  Download calendar file (.ics)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
           <button
             type="button"

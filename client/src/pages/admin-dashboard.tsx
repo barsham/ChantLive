@@ -97,6 +97,17 @@ function formatDashboardSchedule(value: Date | string | null | undefined) {
   }).format(date);
 }
 
+function formatCreationSchedule(value: string) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  return `${new Intl.DateTimeFormat(undefined, {
+    dateStyle: "full",
+    timeStyle: "short",
+  }).format(date)} (${timeZone})`;
+}
+
 export default function AdminDashboard() {
   const { user, isSuperAdmin } = useAuth();
   const [, navigate] = useLocation();
@@ -104,6 +115,7 @@ export default function AdminDashboard() {
   const [newTitle, setNewTitle] = useState("");
   const [newScheduledAt, setNewScheduledAt] = useState("");
   const [newLocationName, setNewLocationName] = useState("");
+  const [newDurationMinutes, setNewDurationMinutes] = useState(120);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Demonstration | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -116,7 +128,7 @@ export default function AdminDashboard() {
   });
 
   const createDemo = useMutation({
-    mutationFn: async (payload: { title: string; scheduledAt: string; locationName: string }) => {
+    mutationFn: async (payload: { title: string; scheduledAt: string; locationName: string; eventDurationMinutes: number }) => {
       const res = await apiRequest("POST", "/api/demos", payload);
       return res.json();
     },
@@ -126,6 +138,7 @@ export default function AdminDashboard() {
       setNewTitle("");
       setNewScheduledAt("");
       setNewLocationName("");
+      setNewDurationMinutes(120);
       navigate(`/admin/demos/${data.id}`);
     },
     onError: (err: Error) => {
@@ -181,6 +194,7 @@ export default function AdminDashboard() {
       title: newTitle.trim(),
       scheduledAt: newScheduledAt ? new Date(newScheduledAt).toISOString() : "",
       locationName: newLocationName.trim(),
+      eventDurationMinutes: newDurationMinutes,
     });
   };
 
@@ -365,7 +379,32 @@ export default function AdminDashboard() {
                         data-testid="input-new-demo-location"
                       />
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="new-demo-duration" className="flex items-center gap-1.5">
+                        <CalendarClock className="h-3.5 w-3.5" />
+                        Duration
+                      </Label>
+                      <Input
+                        id="new-demo-duration"
+                        type="number"
+                        min={15}
+                        max={300}
+                        step={15}
+                        value={newDurationMinutes}
+                        onChange={(event) => setNewDurationMinutes(Math.min(300, Math.max(15, Number(event.target.value) || 15)))}
+                        aria-describedby="new-demo-duration-help"
+                        data-testid="input-new-demo-duration"
+                      />
+                      <p id="new-demo-duration-help" className="text-xs text-muted-foreground">Minutes, 15 to 300</p>
+                    </div>
                   </div>
+                  {newScheduledAt && formatCreationSchedule(newScheduledAt) && (
+                    <div className="rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-950" role="status" data-testid="preview-new-demo-schedule">
+                      <p className="font-medium">Schedule check</p>
+                      <p className="mt-1">{formatCreationSchedule(newScheduledAt)}</p>
+                      <p className="mt-1 text-xs text-sky-800">Calendar invites will reserve {newDurationMinutes} minutes. Times are saved from your current timezone.</p>
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     Adding logistics now makes calendar invites, handouts, and participant arrival details ready sooner.
                   </p>

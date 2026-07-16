@@ -1,4 +1,4 @@
-type CalendarEventDetails = {
+export type CalendarEventDetails = {
   title: string;
   scheduledAt: Date | string;
   durationMinutes?: number | null;
@@ -19,6 +19,47 @@ function formatCalendarDate(value: Date) {
   return value.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
 }
 
+function getCalendarRange(details: CalendarEventDetails) {
+  const start = new Date(details.scheduledAt);
+  if (Number.isNaN(start.getTime())) return null;
+
+  const durationMinutes = Math.max(15, details.durationMinutes ?? 120);
+  return {
+    start,
+    end: new Date(start.getTime() + durationMinutes * 60_000),
+  };
+}
+
+export function buildGoogleCalendarUrl(details: CalendarEventDetails) {
+  const range = getCalendarRange(details);
+  if (!range) return null;
+
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: details.title,
+    dates: `${formatCalendarDate(range.start)}/${formatCalendarDate(range.end)}`,
+  });
+  if (details.description) params.set("details", details.description);
+  if (details.location) params.set("location", details.location);
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+export function buildOutlookCalendarUrl(details: CalendarEventDetails) {
+  const range = getCalendarRange(details);
+  if (!range) return null;
+
+  const params = new URLSearchParams({
+    path: "/calendar/action/compose",
+    rru: "addevent",
+    subject: details.title,
+    startdt: range.start.toISOString(),
+    enddt: range.end.toISOString(),
+  });
+  if (details.description) params.set("body", details.description);
+  if (details.location) params.set("location", details.location);
+  return `https://outlook.live.com/calendar/0/deeplink/compose?${params.toString()}`;
+}
+
 function calendarFilename(title: string) {
   const slug = title
     .toLowerCase()
@@ -29,11 +70,8 @@ function calendarFilename(title: string) {
 }
 
 export function buildCalendarFile(details: CalendarEventDetails) {
-  const start = new Date(details.scheduledAt);
-  if (Number.isNaN(start.getTime())) return null;
-
-  const durationMinutes = Math.max(15, details.durationMinutes ?? 120);
-  const end = new Date(start.getTime() + durationMinutes * 60_000);
+  const range = getCalendarRange(details);
+  if (!range) return null;
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
@@ -43,8 +81,8 @@ export function buildCalendarFile(details: CalendarEventDetails) {
     "BEGIN:VEVENT",
     `UID:${escapeCalendarText(details.uid)}`,
     `DTSTAMP:${formatCalendarDate(new Date())}`,
-    `DTSTART:${formatCalendarDate(start)}`,
-    `DTEND:${formatCalendarDate(end)}`,
+    `DTSTART:${formatCalendarDate(range.start)}`,
+    `DTEND:${formatCalendarDate(range.end)}`,
     `SUMMARY:${escapeCalendarText(details.title)}`,
     ...(details.location ? [`LOCATION:${escapeCalendarText(details.location)}`] : []),
     ...(details.description ? [`DESCRIPTION:${escapeCalendarText(details.description)}`] : []),

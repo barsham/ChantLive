@@ -158,6 +158,7 @@ export default function DemoEditor() {
   const [locationName, setLocationName] = useState("");
   const [meetingPoint, setMeetingPoint] = useState("");
   const [arrivalNote, setArrivalNote] = useState("");
+  const [logisticsLoadedFor, setLogisticsLoadedFor] = useState<string | null>(null);
   const [inviteEmail, setInviteEmail] = useState("");
   const [adminDialogOpen, setAdminDialogOpen] = useState(false);
   const [phaseProgress, setPhaseProgress] = useState(0);
@@ -182,6 +183,13 @@ export default function DemoEditor() {
   const currentChant = state?.currentChantId
     ? chantsList.find((chant) => chant.id === state.currentChantId)
     : undefined;
+  const savedScheduledAt = toDateTimeLocalValue(demo?.scheduledAt);
+  const logisticsDirty = demo && logisticsLoadedFor === demo.id
+    ? scheduledAt !== savedScheduledAt ||
+      locationName !== (demo.locationName ?? "") ||
+      meetingPoint !== (demo.meetingPoint ?? "") ||
+      arrivalNote !== (demo.arrivalNote ?? "")
+    : false;
   const readinessItems = [
     {
       label: "Add at least one chant",
@@ -236,7 +244,18 @@ export default function DemoEditor() {
     setLocationName(demo.locationName ?? "");
     setMeetingPoint(demo.meetingPoint ?? "");
     setArrivalNote(demo.arrivalNote ?? "");
+    setLogisticsLoadedFor(demo.id);
   }, [demo?.id, demo?.scheduledAt, demo?.locationName, demo?.meetingPoint, demo?.arrivalNote]);
+
+  useEffect(() => {
+    if (!logisticsDirty) return;
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warnBeforeLeaving);
+    return () => window.removeEventListener("beforeunload", warnBeforeLeaving);
+  }, [logisticsDirty]);
 
   useEffect(() => {
     if (!state?.liveStartedAt || !isLive) {
@@ -1282,8 +1301,21 @@ export default function DemoEditor() {
                 Participant preview
               </p>
               <p className="mt-1">{formatEventSchedule(scheduledAt)}</p>
+              {scheduledAt && (
+                <p className="mt-1 text-xs">Local timezone: {Intl.DateTimeFormat().resolvedOptions().timeZone}</p>
+              )}
               <p className="mt-1">{locationName || "No location set yet"}</p>
               {meetingPoint && <p className="mt-1">Meet: {meetingPoint}</p>}
+            </div>
+            <div
+              className={`rounded-lg border px-3 py-2 text-sm ${logisticsDirty ? "border-amber-300 bg-amber-50 text-amber-950" : "border-emerald-200 bg-emerald-50 text-emerald-900"}`}
+              role="status"
+              aria-live="polite"
+              data-testid="status-event-logistics"
+            >
+              {logisticsDirty
+                ? "Unsaved logistics changes — save before leaving this event."
+                : "Logistics match the saved participant details."}
             </div>
             <div className="flex flex-wrap gap-2">
               <Button
@@ -1294,10 +1326,10 @@ export default function DemoEditor() {
                   meetingPoint: meetingPoint.trim(),
                   arrivalNote: arrivalNote.trim(),
                 })}
-                disabled={updateLogistics.isPending}
+                disabled={updateLogistics.isPending || !logisticsDirty}
                 data-testid="button-save-event-logistics"
               >
-                Save logistics
+                {updateLogistics.isPending ? "Saving..." : "Save logistics"}
               </Button>
               <Button
                 variant="outline"

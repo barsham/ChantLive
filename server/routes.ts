@@ -492,7 +492,7 @@ export async function registerRoutes(
   app.post("/api/demos", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
-      const { title, scheduledAt, locationName } = req.body;
+      const { title, scheduledAt, locationName, eventDurationMinutes } = req.body;
       if (!title || typeof title !== "string" || title.trim().length === 0) {
         return res.status(400).json({ message: "Title is required" });
       }
@@ -503,6 +503,12 @@ export async function registerRoutes(
       if (parsedScheduledAt && Number.isNaN(parsedScheduledAt.getTime())) {
         return res.status(400).json({ message: "Choose a valid event date and time" });
       }
+      const normalizedDuration = typeof eventDurationMinutes === "number"
+        ? Math.round(eventDurationMinutes)
+        : 120;
+      if (normalizedDuration < 15 || normalizedDuration > 300) {
+        return res.status(400).json({ message: "Event duration must be between 15 and 300 minutes" });
+      }
       const demo = await storage.createDemonstration({
         title: title.trim(),
         status: "draft",
@@ -511,6 +517,7 @@ export async function registerRoutes(
         locationName: typeof locationName === "string" && locationName.trim() ? locationName.trim() : null,
       });
       await storage.addDemoAdmin(demo.id, user.id);
+      await storage.updateEventDuration(demo.id, normalizedDuration);
       res.json(demo);
     } catch (err) {
       res.status(500).json({ message: "Failed to create demonstration" });

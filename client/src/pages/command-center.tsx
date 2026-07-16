@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowLeft, CheckCircle2, ClipboardList, Copy, ExternalLink, FileText, LifeBuoy, Megaphone, QrCode, Route, Share2, ShieldCheck, Users } from "lucide-react";
+import { ArrowLeft, CalendarPlus, CheckCircle2, ClipboardList, Copy, Download, ExternalLink, FileText, LifeBuoy, Megaphone, QrCode, Route, Share2, ShieldCheck, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { buildGoogleCalendarUrl, buildOutlookCalendarUrl, downloadCalendarFile, type CalendarEventDetails } from "@/lib/calendar";
 import type { Chant, DemoState, Demonstration } from "@shared/schema";
 
 type AdminInfo = {
@@ -335,6 +336,25 @@ export default function CommandCenter() {
   }
 
   const publicUrl = `${window.location.origin}/d/${data.demo.publicId}`;
+  const calendarDetails: CalendarEventDetails | null = data.demo.scheduledAt ? {
+    title: data.demo.title,
+    scheduledAt: data.demo.scheduledAt,
+    durationMinutes: data.state?.eventDurationMinutes,
+    location: data.demo.locationName,
+    description: `ChantLive participant link: ${publicUrl}\nEvent code: ${data.demo.publicId}`,
+    uid: `chantlive-${data.demo.publicId}@chantlive.online`,
+  } : null;
+  const googleCalendarUrl = calendarDetails ? buildGoogleCalendarUrl(calendarDetails) : null;
+  const outlookCalendarUrl = calendarDetails ? buildOutlookCalendarUrl(calendarDetails) : null;
+  const downloadCommandCalendar = () => {
+    if (!calendarDetails) return;
+    const downloaded = downloadCalendarFile(calendarDetails);
+    toast({
+      title: downloaded ? "Calendar invite downloaded" : "Could not create calendar invite",
+      description: downloaded ? "Ready to send as a calendar attachment or offline fallback." : "Check the event date and try again.",
+      variant: downloaded ? "default" : "destructive",
+    });
+  };
   const copyInvite = async (text: string, label: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -435,6 +455,52 @@ export default function CommandCenter() {
                   </Button>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6 border-sky-500/20 bg-sky-500/5" data-testid="card-command-calendar">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <CalendarPlus className="h-5 w-5 text-primary" />
+                Event schedule and calendar
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {calendarDetails ? (
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="text-sm">
+                    <p className="font-medium" data-testid="text-command-calendar-schedule">{formatCommandSchedule(data.demo.scheduledAt)}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {data.state?.eventDurationMinutes ?? 300} minutes
+                      {data.demo.locationName ? ` - ${data.demo.locationName}` : ""}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">Timezone: {Intl.DateTimeFormat().resolvedOptions().timeZone}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {googleCalendarUrl && (
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={googleCalendarUrl} target="_blank" rel="noopener noreferrer" data-testid="link-command-google-calendar">Google</a>
+                      </Button>
+                    )}
+                    {outlookCalendarUrl && (
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={outlookCalendarUrl} target="_blank" rel="noopener noreferrer" data-testid="link-command-outlook-calendar">Outlook</a>
+                      </Button>
+                    )}
+                    <Button variant="outline" size="sm" onClick={downloadCommandCalendar} data-testid="button-command-download-calendar">
+                      <Download className="mr-1 h-4 w-4" />
+                      Download .ics
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <p className="text-sm text-muted-foreground">No event date is set, so calendar invitations are not ready yet.</p>
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}`)} data-testid="button-command-set-schedule">
+                    Set event schedule
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 
