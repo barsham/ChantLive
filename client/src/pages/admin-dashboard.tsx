@@ -38,16 +38,12 @@ import type { Demonstration } from "@shared/schema";
 import type { ChangeEvent } from "react";
 import { useRef, useState } from "react";
 
-const titleTemplates = [
-  "Community Gathering",
-  "Prayer Circle",
-  "Campus Action",
-  "March Support",
-  "Candlelight Vigil",
-  "Community Prayer",
-  "Student Walkout",
-  "Solidarity Rally",
-];
+const eventSetupTemplates = [
+  { id: "march", label: "March or rally", title: "Community March", durationMinutes: 120, description: "Two-hour outdoor gathering" },
+  { id: "vigil", label: "Vigil", title: "Candlelight Vigil", durationMinutes: 60, description: "One-hour reflective event" },
+  { id: "prayer", label: "Prayer circle", title: "Community Prayer Circle", durationMinutes: 60, description: "One-hour shared prayer" },
+  { id: "community", label: "Community gathering", title: "Community Gathering", durationMinutes: 90, description: "Ninety-minute local event" },
+] as const;
 
 const statusFilters = ["all", "live", "draft", "ended"] as const;
 type StatusFilter = (typeof statusFilters)[number];
@@ -116,6 +112,7 @@ export default function AdminDashboard() {
   const [newScheduledAt, setNewScheduledAt] = useState("");
   const [newLocationName, setNewLocationName] = useState("");
   const [newDurationMinutes, setNewDurationMinutes] = useState(120);
+  const [selectedSetupTemplate, setSelectedSetupTemplate] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Demonstration | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -139,6 +136,7 @@ export default function AdminDashboard() {
       setNewScheduledAt("");
       setNewLocationName("");
       setNewDurationMinutes(120);
+      setSelectedSetupTemplate(null);
       navigate(`/admin/demos/${data.id}`);
     },
     onError: (err: Error) => {
@@ -196,6 +194,12 @@ export default function AdminDashboard() {
       locationName: newLocationName.trim(),
       eventDurationMinutes: newDurationMinutes,
     });
+  };
+
+  const applyEventSetupTemplate = (template: (typeof eventSetupTemplates)[number]) => {
+    setNewTitle(template.title);
+    setNewDurationMinutes(template.durationMinutes);
+    setSelectedSetupTemplate(template.id);
   };
 
   const copyParticipantAccess = async (demo: DashboardDemonstration, kind: "link" | "code") => {
@@ -346,7 +350,10 @@ export default function AdminDashboard() {
                       id="demo-title"
                       placeholder="e.g., Climate March 2026"
                       value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
+                      onChange={(e) => {
+                        setNewTitle(e.target.value);
+                        setSelectedSetupTemplate(null);
+                      }}
                       onKeyDown={(e) => e.key === "Enter" && handleCreate()}
                       data-testid="input-demo-title"
                     />
@@ -391,7 +398,10 @@ export default function AdminDashboard() {
                         max={300}
                         step={15}
                         value={newDurationMinutes}
-                        onChange={(event) => setNewDurationMinutes(Math.min(300, Math.max(15, Number(event.target.value) || 15)))}
+                        onChange={(event) => {
+                          setNewDurationMinutes(Math.min(300, Math.max(15, Number(event.target.value) || 15)));
+                          setSelectedSetupTemplate(null);
+                        }}
                         aria-describedby="new-demo-duration-help"
                         data-testid="input-new-demo-duration"
                       />
@@ -409,21 +419,30 @@ export default function AdminDashboard() {
                     Adding logistics now makes calendar invites, handouts, and participant arrival details ready sooner.
                   </p>
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground">Quick title starters</p>
-                    <div className="flex flex-wrap gap-2" aria-label="Quick demonstration title starters">
-                      {titleTemplates.map((template) => (
+                    <p className="text-xs font-medium text-muted-foreground">Start from an event type</p>
+                    <div className="grid gap-2 sm:grid-cols-2" aria-label="Event setup starters">
+                      {eventSetupTemplates.map((template) => (
                         <Button
-                          key={template}
+                          key={template.id}
                           type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setNewTitle(template)}
-                          data-testid={`button-title-template-${template.toLowerCase().replace(/\s+/g, "-")}`}
+                          variant={selectedSetupTemplate === template.id ? "secondary" : "outline"}
+                          className="h-auto items-start justify-start px-3 py-2 text-left"
+                          onClick={() => applyEventSetupTemplate(template)}
+                          aria-pressed={selectedSetupTemplate === template.id}
+                          data-testid={`button-event-template-${template.id}`}
                         >
-                          {template}
+                          <span>
+                            <span className="block text-sm font-medium">{template.label}</span>
+                            <span className="block text-xs font-normal text-muted-foreground">{template.description}</span>
+                          </span>
                         </Button>
                       ))}
                     </div>
+                    <p className="text-xs text-muted-foreground" role="status" aria-live="polite" data-testid="text-selected-event-template">
+                      {selectedSetupTemplate
+                        ? "Starter applied. You can adjust the title, duration, date, or venue before creating."
+                        : "Choose a starter to fill a practical title and duration, or enter your own details."}
+                    </p>
                   </div>
                   <Button
                     className="w-full"

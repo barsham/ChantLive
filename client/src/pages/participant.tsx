@@ -202,6 +202,34 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     feedbackNote: "Optional feedback note...",
     sendFeedback: "Send feedback",
     language: "Language",
+    eventCode: "Event code",
+    calendar: "Calendar",
+    addToCalendar: "Add to calendar",
+    googleCalendar: "Google Calendar",
+    outlookCalendar: "Outlook Calendar",
+    downloadCalendarFile: "Download calendar file (.ics)",
+    calendarDownloaded: "Calendar invite downloaded.",
+    calendarFailed: "The event date could not be added to your calendar.",
+    copy: "Copy",
+    copyCode: "Copy code",
+    copyEventCode: "Copy event code",
+    eventCodeCopied: "Event code copied.",
+    shareEvent: "Share event",
+    eventShared: "Event shared.",
+    eventInvitationCopied: "Event invitation copied.",
+    shareEventCode: "Share event code",
+    join: "Join",
+    joinThisEvent: "Join this ChantLive event",
+    connecting: "Connecting...",
+    waitingNetwork: "Waiting for network...",
+    offlineLoadingBody: "You appear to be offline. Reconnect to receive live chants.",
+    connectingBody: "If this takes too long, retry the connection or ask an organiser to confirm the QR/link.",
+    retryConnection: "Retry connection",
+    notFound: "Demonstration not found",
+    couldNotConnect: "We could not connect to this event",
+    recoveryBody: "Check the participant link or try reconnecting.",
+    tryAgain: "Try again",
+    differentEventCode: "Enter a different event code",
   },
   es: {
     help: "Ayuda",
@@ -279,6 +307,34 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     feedbackNote: "Nota opcional...",
     sendFeedback: "Enviar comentarios",
     language: "Idioma",
+    eventCode: "Código del evento",
+    calendar: "Calendario",
+    addToCalendar: "Añadir al calendario",
+    googleCalendar: "Google Calendar",
+    outlookCalendar: "Outlook Calendar",
+    downloadCalendarFile: "Descargar archivo de calendario (.ics)",
+    calendarDownloaded: "Invitación de calendario descargada.",
+    calendarFailed: "No se pudo añadir la fecha al calendario.",
+    copy: "Copiar",
+    copyCode: "Copiar código",
+    copyEventCode: "Copiar código del evento",
+    eventCodeCopied: "Código del evento copiado.",
+    shareEvent: "Compartir evento",
+    eventShared: "Evento compartido.",
+    eventInvitationCopied: "Invitación al evento copiada.",
+    shareEventCode: "Comparte el código del evento",
+    join: "Únete a",
+    joinThisEvent: "Únete a este evento de ChantLive",
+    connecting: "Conectando...",
+    waitingNetwork: "Esperando conexión...",
+    offlineLoadingBody: "Parece que no tienes conexión. Reconéctate para recibir los cánticos en vivo.",
+    connectingBody: "Si tarda demasiado, actualiza la conexión o pide al organizador que confirme el QR o enlace.",
+    retryConnection: "Actualizar conexión",
+    notFound: "No se encontró la demostración",
+    couldNotConnect: "No pudimos conectar con este evento",
+    recoveryBody: "Comprueba el enlace de participante o intenta conectarte de nuevo.",
+    tryAgain: "Intentar de nuevo",
+    differentEventCode: "Introducir otro código de evento",
   },
   fr: {
     help: "Aide",
@@ -356,6 +412,34 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     feedbackNote: "Note facultative...",
     sendFeedback: "Envoyer l'avis",
     language: "Langue",
+    eventCode: "Code de l'événement",
+    calendar: "Calendrier",
+    addToCalendar: "Ajouter au calendrier",
+    googleCalendar: "Google Agenda",
+    outlookCalendar: "Calendrier Outlook",
+    downloadCalendarFile: "Télécharger le fichier calendrier (.ics)",
+    calendarDownloaded: "Invitation calendrier téléchargée.",
+    calendarFailed: "La date n'a pas pu être ajoutée au calendrier.",
+    copy: "Copier",
+    copyCode: "Copier le code",
+    copyEventCode: "Copier le code de l'événement",
+    eventCodeCopied: "Code de l'événement copié.",
+    shareEvent: "Partager l'événement",
+    eventShared: "Événement partagé.",
+    eventInvitationCopied: "Invitation à l'événement copiée.",
+    shareEventCode: "Partagez le code de l'événement",
+    join: "Rejoindre",
+    joinThisEvent: "Rejoindre cet événement ChantLive",
+    connecting: "Connexion...",
+    waitingNetwork: "En attente du réseau...",
+    offlineLoadingBody: "Vous semblez hors ligne. Reconnectez-vous pour recevoir les chants en direct.",
+    connectingBody: "Si cela prend trop de temps, actualisez la connexion ou demandez à l'organisateur de confirmer le QR ou le lien.",
+    retryConnection: "Actualiser la connexion",
+    notFound: "Manifestation introuvable",
+    couldNotConnect: "Impossible de se connecter à cet événement",
+    recoveryBody: "Vérifiez le lien participant ou essayez de vous reconnecter.",
+    tryAgain: "Réessayer",
+    differentEventCode: "Saisir un autre code d'événement",
   },
   ar: {
     help: "مساعدة",
@@ -433,6 +517,34 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     feedbackNote: "ملاحظة اختيارية...",
     sendFeedback: "إرسال الملاحظات",
     language: "اللغة",
+    eventCode: "رمز الفعالية",
+    calendar: "التقويم",
+    addToCalendar: "إضافة إلى التقويم",
+    googleCalendar: "تقويم Google",
+    outlookCalendar: "تقويم Outlook",
+    downloadCalendarFile: "تنزيل ملف التقويم (.ics)",
+    calendarDownloaded: "تم تنزيل دعوة التقويم.",
+    calendarFailed: "تعذرت إضافة موعد الفعالية إلى التقويم.",
+    copy: "نسخ",
+    copyCode: "نسخ الرمز",
+    copyEventCode: "نسخ رمز الفعالية",
+    eventCodeCopied: "تم نسخ رمز الفعالية.",
+    shareEvent: "مشاركة الفعالية",
+    eventShared: "تمت مشاركة الفعالية.",
+    eventInvitationCopied: "تم نسخ دعوة الفعالية.",
+    shareEventCode: "شارك رمز الفعالية",
+    join: "انضم إلى",
+    joinThisEvent: "انضم إلى فعالية ChantLive هذه",
+    connecting: "جارٍ الاتصال...",
+    waitingNetwork: "في انتظار الشبكة...",
+    offlineLoadingBody: "يبدو أنك غير متصل. أعد الاتصال لتلقي الهتافات المباشرة.",
+    connectingBody: "إذا استغرق ذلك وقتًا طويلًا، حدّث الاتصال أو اطلب من المنظم تأكيد رمز QR أو الرابط.",
+    retryConnection: "تحديث الاتصال",
+    notFound: "لم يتم العثور على الفعالية",
+    couldNotConnect: "تعذر الاتصال بهذه الفعالية",
+    recoveryBody: "تحقق من رابط المشارك أو حاول الاتصال مرة أخرى.",
+    tryAgain: "حاول مرة أخرى",
+    differentEventCode: "أدخل رمز فعالية آخر",
   },
   fa: {
     help: "کمک",
@@ -510,6 +622,34 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     feedbackNote: "یادداشت اختیاری...",
     sendFeedback: "ارسال بازخورد",
     language: "زبان",
+    eventCode: "کد رویداد",
+    calendar: "تقویم",
+    addToCalendar: "افزودن به تقویم",
+    googleCalendar: "تقویم Google",
+    outlookCalendar: "تقویم Outlook",
+    downloadCalendarFile: "دانلود فایل تقویم (.ics)",
+    calendarDownloaded: "دعوت‌نامه تقویم دانلود شد.",
+    calendarFailed: "زمان رویداد به تقویم افزوده نشد.",
+    copy: "کپی",
+    copyCode: "کپی کد",
+    copyEventCode: "کپی کد رویداد",
+    eventCodeCopied: "کد رویداد کپی شد.",
+    shareEvent: "اشتراک‌گذاری رویداد",
+    eventShared: "رویداد به اشتراک گذاشته شد.",
+    eventInvitationCopied: "دعوت‌نامه رویداد کپی شد.",
+    shareEventCode: "کد رویداد را به اشتراک بگذارید",
+    join: "پیوستن به",
+    joinThisEvent: "پیوستن به این رویداد ChantLive",
+    connecting: "در حال اتصال...",
+    waitingNetwork: "در انتظار شبکه...",
+    offlineLoadingBody: "به نظر می‌رسد آفلاین هستید. برای دریافت شعارهای زنده دوباره وصل شوید.",
+    connectingBody: "اگر اتصال طول کشید، اتصال را تازه کنید یا از برگزارکننده بخواهید کد QR یا لینک را تأیید کند.",
+    retryConnection: "تازه‌سازی اتصال",
+    notFound: "رویداد پیدا نشد",
+    couldNotConnect: "اتصال به این رویداد ممکن نشد",
+    recoveryBody: "لینک شرکت‌کننده را بررسی کنید یا دوباره متصل شوید.",
+    tryAgain: "تلاش دوباره",
+    differentEventCode: "وارد کردن کد رویداد دیگر",
   },
 };
 const getAnnouncementAudienceLabel = (targetRole: OrganizerAnnouncement["targetRole"]) => {
@@ -589,6 +729,28 @@ export default function Participant() {
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const t = participantCopy[participantLanguage];
   const wakeLockSupported = typeof navigator !== "undefined" && "wakeLock" in navigator;
+  const participantDirection = participantLanguage === "ar" || participantLanguage === "fa" ? "rtl" : "ltr";
+
+  const renderParticipantLanguageSelect = (className = "") => (
+    <label
+      className={`inline-flex items-center gap-2 rounded-full border border-neutral-700 px-3 py-1 text-xs font-medium text-neutral-300 ${className}`}
+      dir={participantDirection}
+      data-testid="select-participant-language-label"
+    >
+      {t.language}
+      <select
+        value={participantLanguage}
+        onChange={(event) => setParticipantLanguage(event.target.value as ParticipantLanguage)}
+        className="bg-black text-neutral-100 outline-none"
+        aria-label={t.language}
+        data-testid="select-participant-language"
+      >
+        {participantLanguageOptions.map((option) => (
+          <option key={option.code} value={option.code}>{option.label}</option>
+        ))}
+      </select>
+    </label>
+  );
 
   const getSessionId = () => {
     let sessionId = localStorage.getItem("chant_session_id");
@@ -792,39 +954,39 @@ export default function Participant() {
   const copyParticipantCode = async () => {
     try {
       await navigator.clipboard.writeText(publicId);
-      setShareStatus("Event code copied.");
+      setShareStatus(t.eventCodeCopied);
     } catch {
-      setShareStatus(`Event code: ${publicId}`);
+      setShareStatus(`${t.eventCode}: ${publicId}`);
     }
   };
   const shareParticipantEvent = async () => {
-    const title = chantData?.demoTitle ? `Join ${chantData.demoTitle}` : "Join this ChantLive event";
-    const text = `${title} on ChantLive. Event code: ${publicId}`;
+    const title = chantData?.demoTitle ? `${t.join} ${chantData.demoTitle}` : t.joinThisEvent;
+    const text = `${title} — ChantLive. ${t.eventCode}: ${publicId}`;
     const url = window.location.href;
 
     try {
       if (navigator.share) {
         await navigator.share({ title, text, url });
-        setShareStatus("Event shared.");
+        setShareStatus(t.eventShared);
         return;
       }
 
       await navigator.clipboard.writeText(`${text}\n${url}`);
-      setShareStatus("Event invitation copied.");
+      setShareStatus(t.eventInvitationCopied);
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       try {
         await navigator.clipboard.writeText(`${text}\n${url}`);
-        setShareStatus("Event invitation copied.");
+        setShareStatus(t.eventInvitationCopied);
       } catch {
-        setShareStatus(`Share event code ${publicId}.`);
+        setShareStatus(`${t.shareEventCode} ${publicId}.`);
       }
     }
   };
   const addParticipantEventToCalendar = () => {
     if (!participantCalendarDetails) return;
     const added = downloadCalendarFile(participantCalendarDetails);
-    setCalendarStatus(added ? "Calendar invite downloaded." : "The event date could not be added to your calendar.");
+    setCalendarStatus(added ? t.calendarDownloaded : t.calendarFailed);
   };
   const requestScreenWakeLock = async () => {
     try {
@@ -857,7 +1019,7 @@ export default function Participant() {
     <div className={`rounded-2xl border border-neutral-800 bg-neutral-950/90 text-left ${compact ? "p-2.5" : "p-4"} ${className}`} data-testid="panel-participant-access">
       <div className={`flex gap-3 ${compact ? "items-center justify-between" : "flex-col sm:flex-row sm:items-center sm:justify-between"}`}>
         <div>
-          <p className="text-xs uppercase tracking-widest text-neutral-500">Event code</p>
+          <p className="text-xs uppercase tracking-widest text-neutral-500">{t.eventCode}</p>
           <p className={`mt-1 font-mono font-bold tracking-[0.2em] text-white ${compact ? "text-base" : "text-xl"}`} data-testid="text-participant-event-code">{publicId}</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -870,26 +1032,26 @@ export default function Participant() {
                   data-testid="button-add-participant-calendar"
                 >
                   <CalendarPlus className="h-3.5 w-3.5" />
-                  {compact ? "Calendar" : "Add to calendar"}
+                  {compact ? t.calendar : t.addToCalendar}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 {googleCalendarUrl && (
                   <DropdownMenuItem asChild>
                     <a href={googleCalendarUrl} target="_blank" rel="noopener noreferrer" data-testid="link-participant-google-calendar">
-                      Google Calendar
+                      {t.googleCalendar}
                     </a>
                   </DropdownMenuItem>
                 )}
                 {outlookCalendarUrl && (
                   <DropdownMenuItem asChild>
                     <a href={outlookCalendarUrl} target="_blank" rel="noopener noreferrer" data-testid="link-participant-outlook-calendar">
-                      Outlook Calendar
+                      {t.outlookCalendar}
                     </a>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem onClick={addParticipantEventToCalendar} data-testid="button-download-participant-calendar">
-                  Download calendar file (.ics)
+                  {t.downloadCalendarFile}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -898,11 +1060,11 @@ export default function Participant() {
             type="button"
             onClick={copyParticipantCode}
             className={`inline-flex items-center gap-2 rounded-full border border-neutral-700 text-xs font-medium text-neutral-200 hover:bg-neutral-900 ${compact ? "px-2.5 py-1.5" : "px-3 py-2"}`}
-            aria-label="Copy event code"
+            aria-label={t.copyEventCode}
             data-testid="button-copy-participant-code"
           >
             <Copy className="h-3.5 w-3.5" />
-            {compact ? "Copy" : "Copy code"}
+            {compact ? t.copy : t.copyCode}
           </button>
           <button
             type="button"
@@ -911,7 +1073,7 @@ export default function Participant() {
             data-testid="button-share-participant-event"
           >
             <Share2 className="h-3.5 w-3.5" />
-            Share event
+            {t.shareEvent}
           </button>
         </div>
       </div>
@@ -1221,12 +1383,13 @@ export default function Participant() {
   };
 
   if (error) {
+    const localizedError = error.toLowerCase().includes("not found") ? t.notFound : t.couldNotConnect;
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+      <div className="min-h-screen bg-black flex items-center justify-center p-4" dir={participantDirection}>
         <div className="text-center">
           <Megaphone className="w-16 h-16 text-neutral-500 mx-auto mb-4" />
-          <p className="text-white text-xl mb-2" data-testid="text-error">{error}</p>
-          <p className="text-neutral-500 text-sm mb-5">Check the participant link or try reconnecting.</p>
+          <p className="text-white text-xl mb-2" data-testid="text-error">{localizedError}</p>
+          <p className="text-neutral-500 text-sm mb-5">{t.recoveryBody}</p>
           <button
             type="button"
             onClick={retryConnection}
@@ -1234,15 +1397,16 @@ export default function Participant() {
             data-testid="button-retry-participant"
           >
             <RefreshCw className="h-4 w-4" />
-            Try again
+            {t.tryAgain}
           </button>
           <Link
             href="/#join-event"
             className="mt-3 block text-sm font-medium text-orange-300 underline underline-offset-4 hover:text-orange-200"
             data-testid="link-enter-different-code"
           >
-            Enter a different event code
+            {t.differentEventCode}
           </Link>
+          {renderParticipantLanguageSelect("mt-6")}
         </div>
       </div>
     );
@@ -1250,14 +1414,14 @@ export default function Participant() {
 
   if (!chantData) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+      <div className="min-h-screen bg-black flex items-center justify-center p-4" dir={participantDirection}>
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-neutral-400 text-sm mb-2">{isOffline ? "Waiting for network..." : "Connecting..."}</p>
+          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4" aria-hidden="true" />
+          <p className="text-neutral-400 text-sm mb-2" role="status" aria-live="polite">{isOffline ? t.waitingNetwork : t.connecting}</p>
           <p className="text-neutral-600 text-xs mb-5 max-w-xs">
             {isOffline
-              ? "You appear to be offline. Reconnect to receive live chants."
-              : "If this takes too long, retry the connection or ask an organiser to confirm the QR/link."}
+              ? t.offlineLoadingBody
+              : t.connectingBody}
           </p>
           <button
             type="button"
@@ -1266,8 +1430,9 @@ export default function Participant() {
             data-testid="button-retry-loading"
           >
             <RefreshCw className="h-3.5 w-3.5" />
-            Retry connection
+            {t.retryConnection}
           </button>
+          <div>{renderParticipantLanguageSelect("mt-6")}</div>
         </div>
       </div>
     );
@@ -1286,6 +1451,7 @@ export default function Participant() {
             Thanks for joining. You can close this page or ask an organizer for the next participant link.
           </p>
           {renderParticipantAccess("mt-5")}
+          <div className="mt-4">{renderParticipantLanguageSelect()}</div>
           {logisticsItems.length > 0 && (
             <div className="mx-auto mt-5 max-w-lg rounded-2xl border border-neutral-800 bg-neutral-950 p-4 text-left" data-testid="panel-ended-logistics">
               <p className="text-sm font-semibold text-neutral-100">Event details</p>
@@ -1371,6 +1537,7 @@ export default function Participant() {
           </p>
           <p className="text-neutral-500">{chantData.demoTitle}</p>
           {renderParticipantAccess("mx-auto mt-5 max-w-lg")}
+          <div className="mt-4">{renderParticipantLanguageSelect()}</div>
           {logisticsItems.length > 0 && (
             <div className="mx-auto mt-5 max-w-lg rounded-2xl border border-neutral-800 bg-neutral-950/80 p-4 text-left" data-testid="panel-waiting-logistics">
               <p className="text-sm font-semibold text-neutral-100">Event details</p>
@@ -2032,19 +2199,7 @@ export default function Participant() {
             {keepScreenAwake ? "Screen stays on" : "Keep screen on"}
           </button>
         )}
-        <label className="inline-flex items-center gap-2 rounded-full border border-neutral-700 px-3 py-1 text-xs font-medium text-neutral-300" data-testid="select-participant-language-label">
-          {t.language}
-          <select
-            value={participantLanguage}
-            onChange={(event) => setParticipantLanguage(event.target.value as ParticipantLanguage)}
-            className="bg-black text-neutral-100 outline-none"
-            data-testid="select-participant-language"
-          >
-            {participantLanguageOptions.map((option) => (
-              <option key={option.code} value={option.code}>{option.label}</option>
-            ))}
-          </select>
-        </label>
+        {renderParticipantLanguageSelect()}
         <span className="inline-flex items-center gap-2">
           <Users className="w-4 h-4 text-neutral-500" />
           <span className="text-neutral-400 text-sm font-mono" data-testid="text-viewer-count">

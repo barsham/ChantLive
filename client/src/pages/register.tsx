@@ -92,6 +92,8 @@ export default function Register() {
                 placeholder="Your name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
+                autoCapitalize="words"
                 required
                 data-testid="input-name"
               />
@@ -104,6 +106,10 @@ export default function Register() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                autoCapitalize="none"
+                inputMode="email"
+                spellCheck={false}
                 required
                 aria-describedby="email-privacy-note"
                 data-testid="input-email"
@@ -120,6 +126,7 @@ export default function Register() {
                 placeholder="At least 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
                 required
                 minLength={8}
                 data-testid="input-password"
@@ -133,6 +140,7 @@ export default function Register() {
                 placeholder="Repeat your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
                 required
                 minLength={8}
                 data-testid="input-confirm-password"

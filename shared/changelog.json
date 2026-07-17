@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.54",
+      "releasedAt": "2026-07-17",
+      "summary": "Faster event setup and multilingual participant recovery, sharing, and calendar tools.",
+      "items": [
+        {
+          "id": "cl-2026-07-17-event-setup-presets",
+          "title": "Practical event setup presets",
+          "description": "Organisers can start a march, vigil, prayer circle, or community gathering with a suggested title and duration, then adjust any detail before creating the event.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-07-17",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-17-multilingual-connection-recovery",
+          "title": "Multilingual participant recovery",
+          "description": "Connecting, offline, invalid-link, retry, and alternate-code guidance now follows the participant's selected language, with language choice available before an event connects.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-17",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-17-multilingual-event-access",
+          "title": "Multilingual event access actions",
+          "description": "Participant event-code, copy, share, and confirmation text now appears in English, Spanish, French, Arabic, or Persian.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-17",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-17-multilingual-calendar-actions",
+          "title": "Multilingual calendar choices",
+          "description": "Google Calendar, Outlook Calendar, calendar-file download, and calendar result messages now follow the participant's selected language.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-17",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-17-registration-autofill",
+          "title": "Faster organiser registration",
+          "description": "Registration fields now provide browser and password-manager hints for names, email addresses, and new passwords, reducing mobile typing and input mistakes.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-17",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.53",
       "releasedAt": "2026-07-16",
       "summary": "Clearer organiser scheduling, protected logistics edits, and calendar choices that work across participant devices.",

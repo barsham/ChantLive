@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.54 - 17 July 2026
+
+Faster event setup and multilingual participant recovery, sharing, and calendar tools.
+
+### Added
+
+- Practical event setup presets: Organisers can start a march, vigil, prayer circle, or community gathering with a suggested title and duration, then adjust any detail before creating the event.
+
+### Improved
+
+- Multilingual participant recovery: Connecting, offline, invalid-link, retry, and alternate-code guidance now follows the participant's selected language, with language choice available before an event connects.
+- Multilingual event access actions: Participant event-code, copy, share, and confirmation text now appears in English, Spanish, French, Arabic, or Persian.
+- Multilingual calendar choices: Google Calendar, Outlook Calendar, calendar-file download, and calendar result messages now follow the participant's selected language.
+- Faster organiser registration: Registration fields now provide browser and password-manager hints for names, email addresses, and new passwords, reducing mobile typing and input mistakes.
+
 ## 1.1.53 - 16 July 2026
 
 Clearer organiser scheduling, protected logistics edits, and calendar choices that work across participant devices.
