@@ -492,12 +492,18 @@ export async function registerRoutes(
   app.post("/api/demos", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
-      const { title, scheduledAt, locationName, eventDurationMinutes } = req.body;
+      const { title, scheduledAt, locationName, meetingPoint, arrivalNote, eventDurationMinutes } = req.body;
       if (!title || typeof title !== "string" || title.trim().length === 0) {
         return res.status(400).json({ message: "Title is required" });
       }
       if (locationName != null && (typeof locationName !== "string" || locationName.length > 160)) {
         return res.status(400).json({ message: "Location must be 160 characters or fewer" });
+      }
+      if (meetingPoint != null && (typeof meetingPoint !== "string" || meetingPoint.length > 240)) {
+        return res.status(400).json({ message: "Meeting point must be 240 characters or fewer" });
+      }
+      if (arrivalNote != null && (typeof arrivalNote !== "string" || arrivalNote.length > 500)) {
+        return res.status(400).json({ message: "Arrival guidance must be 500 characters or fewer" });
       }
       const parsedScheduledAt = scheduledAt ? new Date(scheduledAt) : null;
       if (parsedScheduledAt && Number.isNaN(parsedScheduledAt.getTime())) {
@@ -515,6 +521,8 @@ export async function registerRoutes(
         createdBy: user.id,
         scheduledAt: parsedScheduledAt,
         locationName: typeof locationName === "string" && locationName.trim() ? locationName.trim() : null,
+        meetingPoint: typeof meetingPoint === "string" && meetingPoint.trim() ? meetingPoint.trim() : null,
+        arrivalNote: typeof arrivalNote === "string" && arrivalNote.trim() ? arrivalNote.trim() : null,
       });
       await storage.addDemoAdmin(demo.id, user.id);
       await storage.updateEventDuration(demo.id, normalizedDuration);

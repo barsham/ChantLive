@@ -230,6 +230,25 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     recoveryBody: "Check the participant link or try reconnecting.",
     tryAgain: "Try again",
     differentEventCode: "Enter a different event code",
+    waitingToBegin: "Waiting to begin...",
+    eventDetails: "Event details",
+    when: "When",
+    where: "Where",
+    meet: "Meet",
+    arrival: "Arrival",
+    waitingBody: "Keep this page open. Chants will appear automatically when an organiser starts the demonstration.",
+    waitingOfflineStatus: "Offline - reconnect to receive chants",
+    waitingConnectedStatus: "Connected and waiting for the organizer",
+    supportEvent: "Support this event",
+    whileWaiting: "While you wait",
+    waitTipOpen: "Keep this page open.",
+    waitTipAudio: "Stay near the organizer or speaker if you need audio cues.",
+    waitTipRefresh: "If the page stops updating, use refresh connection.",
+    waitingOfflineBody: "You are offline. Reconnect before the demonstration starts so live chants can appear.",
+    eventEnded: "This demonstration has ended",
+    endedNextStep: "Thanks for joining. You can close this page or ask an organizer for the next participant link.",
+    feedbackSent: "Feedback sent. Thank you.",
+    feedbackFailed: "Could not send feedback. Please tell an organizer directly.",
   },
   es: {
     help: "Ayuda",
@@ -335,6 +354,25 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     recoveryBody: "Comprueba el enlace de participante o intenta conectarte de nuevo.",
     tryAgain: "Intentar de nuevo",
     differentEventCode: "Introducir otro código de evento",
+    waitingToBegin: "Esperando a que comience...",
+    eventDetails: "Detalles del evento",
+    when: "Cuándo",
+    where: "Dónde",
+    meet: "Punto de encuentro",
+    arrival: "Llegada",
+    waitingBody: "Mantén esta página abierta. Los cánticos aparecerán automáticamente cuando el organizador inicie la demostración.",
+    waitingOfflineStatus: "Sin conexión - reconéctate para recibir los cánticos",
+    waitingConnectedStatus: "Conectado y esperando al organizador",
+    supportEvent: "Apoyar este evento",
+    whileWaiting: "Mientras esperas",
+    waitTipOpen: "Mantén esta página abierta.",
+    waitTipAudio: "Quédate cerca del organizador o del orador si necesitas señales de audio.",
+    waitTipRefresh: "Si la página deja de actualizarse, actualiza la conexión.",
+    waitingOfflineBody: "Estás sin conexión. Reconéctate antes de que comience la demostración para recibir los cánticos en vivo.",
+    eventEnded: "La demostración ha terminado",
+    endedNextStep: "Gracias por participar. Puedes cerrar esta página o pedir al organizador el siguiente enlace de participante.",
+    feedbackSent: "Comentarios enviados. Gracias.",
+    feedbackFailed: "No se pudieron enviar los comentarios. Avísale directamente al organizador.",
   },
   fr: {
     help: "Aide",
@@ -440,6 +478,25 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     recoveryBody: "Vérifiez le lien participant ou essayez de vous reconnecter.",
     tryAgain: "Réessayer",
     differentEventCode: "Saisir un autre code d'événement",
+    waitingToBegin: "En attente du début...",
+    eventDetails: "Détails de l'événement",
+    when: "Quand",
+    where: "Où",
+    meet: "Point de rendez-vous",
+    arrival: "Arrivée",
+    waitingBody: "Gardez cette page ouverte. Les chants apparaîtront automatiquement lorsque l'organisateur lancera la manifestation.",
+    waitingOfflineStatus: "Hors ligne - reconnectez-vous pour recevoir les chants",
+    waitingConnectedStatus: "Connecté et en attente de l'organisateur",
+    supportEvent: "Soutenir cet événement",
+    whileWaiting: "Pendant l'attente",
+    waitTipOpen: "Gardez cette page ouverte.",
+    waitTipAudio: "Restez près de l'organisateur ou de l'intervenant si vous avez besoin de repères audio.",
+    waitTipRefresh: "Si la page ne se met plus à jour, actualisez la connexion.",
+    waitingOfflineBody: "Vous êtes hors ligne. Reconnectez-vous avant le début pour recevoir les chants en direct.",
+    eventEnded: "La manifestation est terminée",
+    endedNextStep: "Merci d'avoir participé. Vous pouvez fermer cette page ou demander à l'organisateur le prochain lien participant.",
+    feedbackSent: "Avis envoyé. Merci.",
+    feedbackFailed: "Impossible d'envoyer l'avis. Prévenez directement un organisateur.",
   },
   ar: {
     help: "مساعدة",
@@ -545,6 +602,25 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     recoveryBody: "تحقق من رابط المشارك أو حاول الاتصال مرة أخرى.",
     tryAgain: "حاول مرة أخرى",
     differentEventCode: "أدخل رمز فعالية آخر",
+    waitingToBegin: "في انتظار البدء...",
+    eventDetails: "تفاصيل الفعالية",
+    when: "الوقت",
+    where: "المكان",
+    meet: "نقطة التجمع",
+    arrival: "الوصول",
+    waitingBody: "أبقِ هذه الصفحة مفتوحة. ستظهر الهتافات تلقائيًا عندما يبدأ المنظم الفعالية.",
+    waitingOfflineStatus: "غير متصل - أعد الاتصال لتلقي الهتافات",
+    waitingConnectedStatus: "متصل وفي انتظار المنظم",
+    supportEvent: "دعم هذه الفعالية",
+    whileWaiting: "أثناء الانتظار",
+    waitTipOpen: "أبقِ هذه الصفحة مفتوحة.",
+    waitTipAudio: "ابق قريبًا من المنظم أو المتحدث إذا احتجت إلى إشارات صوتية.",
+    waitTipRefresh: "إذا توقفت الصفحة عن التحديث، حدّث الاتصال.",
+    waitingOfflineBody: "أنت غير متصل. أعد الاتصال قبل بدء الفعالية لتظهر الهتافات المباشرة.",
+    eventEnded: "انتهت الفعالية",
+    endedNextStep: "شكرًا لمشاركتك. يمكنك إغلاق الصفحة أو طلب رابط المشارك التالي من المنظم.",
+    feedbackSent: "تم إرسال الملاحظات. شكرًا لك.",
+    feedbackFailed: "تعذر إرسال الملاحظات. أخبر المنظم مباشرة.",
   },
   fa: {
     help: "کمک",
@@ -650,6 +726,25 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     recoveryBody: "لینک شرکت‌کننده را بررسی کنید یا دوباره متصل شوید.",
     tryAgain: "تلاش دوباره",
     differentEventCode: "وارد کردن کد رویداد دیگر",
+    waitingToBegin: "در انتظار شروع...",
+    eventDetails: "جزئیات رویداد",
+    when: "زمان",
+    where: "مکان",
+    meet: "محل دیدار",
+    arrival: "راهنمای ورود",
+    waitingBody: "این صفحه را باز نگه دارید. با شروع رویداد توسط برگزارکننده، شعارها خودکار ظاهر می‌شوند.",
+    waitingOfflineStatus: "آفلاین - برای دریافت شعارها دوباره وصل شوید",
+    waitingConnectedStatus: "متصل و در انتظار برگزارکننده",
+    supportEvent: "حمایت از این رویداد",
+    whileWaiting: "در زمان انتظار",
+    waitTipOpen: "این صفحه را باز نگه دارید.",
+    waitTipAudio: "اگر راهنمای صوتی لازم دارید نزدیک برگزارکننده یا سخنران بمانید.",
+    waitTipRefresh: "اگر صفحه به‌روز نشد، اتصال را تازه کنید.",
+    waitingOfflineBody: "آفلاین هستید. پیش از شروع رویداد دوباره وصل شوید تا شعارهای زنده نمایش داده شوند.",
+    eventEnded: "رویداد پایان یافته است",
+    endedNextStep: "از همراهی شما سپاسگزاریم. می‌توانید صفحه را ببندید یا لینک بعدی را از برگزارکننده بخواهید.",
+    feedbackSent: "بازخورد ارسال شد. سپاسگزاریم.",
+    feedbackFailed: "بازخورد ارسال نشد. مستقیماً به برگزارکننده اطلاع دهید.",
   },
 };
 const getAnnouncementAudienceLabel = (targetRole: OrganizerAnnouncement["targetRole"]) => {
@@ -936,10 +1031,10 @@ export default function Participant() {
     ? "Low-bandwidth mode reduces animation and hides next-up previews."
     : "Full display mode shows motion, timing, and next-up previews.";
   const logisticsItems = [
-    { label: "When", value: formatParticipantSchedule(chantData?.scheduledAt) },
-    { label: "Where", value: chantData?.locationName },
-    { label: "Meet", value: chantData?.meetingPoint },
-    { label: "Arrival", value: chantData?.arrivalNote },
+    { label: t.when, value: formatParticipantSchedule(chantData?.scheduledAt) },
+    { label: t.where, value: chantData?.locationName },
+    { label: t.meet, value: chantData?.meetingPoint },
+    { label: t.arrival, value: chantData?.arrivalNote },
   ].filter((item) => item.value);
   const participantCalendarDetails: CalendarEventDetails | null = chantData?.scheduledAt ? {
     title: chantData.demoTitle,
@@ -1016,7 +1111,7 @@ export default function Participant() {
     if (await requestScreenWakeLock()) setKeepScreenAwake(true);
   };
   const renderParticipantAccess = (className = "", compact = false) => (
-    <div className={`rounded-2xl border border-neutral-800 bg-neutral-950/90 text-left ${compact ? "p-2.5" : "p-4"} ${className}`} data-testid="panel-participant-access">
+    <div className={`rounded-2xl border border-neutral-800 bg-neutral-950/90 text-start ${compact ? "p-2.5" : "p-4"} ${className}`} data-testid="panel-participant-access">
       <div className={`flex gap-3 ${compact ? "items-center justify-between" : "flex-col sm:flex-row sm:items-center sm:justify-between"}`}>
         <div>
           <p className="text-xs uppercase tracking-widest text-neutral-500">{t.eventCode}</p>
@@ -1239,10 +1334,10 @@ export default function Participant() {
       }
 
       setFeedbackComment("");
-      setFeedbackStatus("Feedback sent. Thank you.");
+      setFeedbackStatus(t.feedbackSent);
       setTimeout(() => setFeedbackStatus(null), 3500);
     } catch {
-      setFeedbackStatus("Could not send feedback. Please tell an organizer directly.");
+      setFeedbackStatus(t.feedbackFailed);
     }
   };
 
@@ -1440,21 +1535,21 @@ export default function Participant() {
 
   if (chantData.demoStatus === "ended") {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+      <div className="min-h-screen bg-black flex items-center justify-center p-4" dir={participantDirection}>
         <div className="w-full max-w-2xl text-center">
           <Megaphone className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
           <p className="text-neutral-300 text-2xl font-semibold mb-2" data-testid="text-ended">
-            This demonstration has ended
+            {t.eventEnded}
           </p>
           <p className="text-neutral-500 text-sm">{chantData.demoTitle}</p>
           <p className="text-neutral-500 text-sm mt-4 max-w-xs mx-auto" data-testid="text-ended-next-step">
-            Thanks for joining. You can close this page or ask an organizer for the next participant link.
+            {t.endedNextStep}
           </p>
           {renderParticipantAccess("mt-5")}
           <div className="mt-4">{renderParticipantLanguageSelect()}</div>
           {logisticsItems.length > 0 && (
-            <div className="mx-auto mt-5 max-w-lg rounded-2xl border border-neutral-800 bg-neutral-950 p-4 text-left" data-testid="panel-ended-logistics">
-              <p className="text-sm font-semibold text-neutral-100">Event details</p>
+            <div className="mx-auto mt-5 max-w-lg rounded-2xl border border-neutral-800 bg-neutral-950 p-4 text-start" data-testid="panel-ended-logistics">
+              <p className="text-sm font-semibold text-neutral-100">{t.eventDetails}</p>
               <dl className="mt-3 space-y-2 text-sm text-neutral-400">
                 {logisticsItems.map((item) => (
                   <div key={item.label}>
@@ -1473,18 +1568,18 @@ export default function Participant() {
               className="mt-5 inline-flex items-center gap-2 rounded-full border border-emerald-400/50 px-4 py-2 text-sm font-semibold text-emerald-100 hover:bg-emerald-950/40"
               data-testid="link-ended-support-action"
             >
-              {chantData.supportLabel || "Support this event"}
+              {chantData.supportLabel || t.supportEvent}
               <ExternalLink className="h-4 w-4" />
             </a>
           )}
-          <div className="mt-6 rounded-2xl border border-neutral-800 bg-neutral-950 p-4 text-left" data-testid="panel-ended-feedback">
-            <p className="font-semibold text-white">Share quick feedback</p>
-            <p className="mt-1 text-xs text-neutral-400">Help organisers improve the next chant or demonstration.</p>
+          <div className="mt-6 rounded-2xl border border-neutral-800 bg-neutral-950 p-4 text-start" data-testid="panel-ended-feedback">
+            <p className="font-semibold text-white">{t.rateExperience}</p>
+            <p className="mt-1 text-xs text-neutral-400">{t.rateBody}</p>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               {[
-                ["clarity", "Clear to follow"],
-                ["safety", "Felt safe"],
-                ["accessibility", "Accessible"],
+                ["clarity", t.clearFollow],
+                ["safety", t.feltSafe],
+                ["accessibility", t.accessible],
               ].map(([key, label]) => (
                 <label key={key} className="text-xs text-neutral-300">
                   {label}
@@ -1507,7 +1602,7 @@ export default function Participant() {
               maxLength={300}
               rows={3}
               className="mt-3 w-full rounded-lg border border-neutral-700 bg-black p-3 text-sm text-neutral-100 outline-none focus:border-neutral-400"
-              placeholder="Optional note for the organizer..."
+              placeholder={t.feedbackNote}
               data-testid="input-ended-feedback-comment"
             />
             <button
@@ -1516,7 +1611,7 @@ export default function Participant() {
               className="mt-3 rounded-md border border-emerald-400/50 px-4 py-2 text-sm font-medium text-emerald-100 hover:bg-emerald-950/40"
               data-testid="button-submit-ended-feedback"
             >
-              Send feedback
+              {t.sendFeedback}
             </button>
             {feedbackStatus && (
               <p className="mt-2 text-xs text-emerald-300" role="status" data-testid="text-feedback-status">{feedbackStatus}</p>
@@ -1529,18 +1624,18 @@ export default function Participant() {
 
   if (chantData.demoStatus === "draft") {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+      <div className="min-h-screen bg-black flex items-center justify-center p-4" dir={participantDirection}>
         <div className="text-center">
           <Megaphone className="w-16 h-16 text-neutral-600 mx-auto mb-6" />
           <p className="text-neutral-300 text-2xl font-semibold mb-2" data-testid="text-waiting">
-            Waiting to begin...
+            {t.waitingToBegin}
           </p>
           <p className="text-neutral-500">{chantData.demoTitle}</p>
           {renderParticipantAccess("mx-auto mt-5 max-w-lg")}
           <div className="mt-4">{renderParticipantLanguageSelect()}</div>
           {logisticsItems.length > 0 && (
-            <div className="mx-auto mt-5 max-w-lg rounded-2xl border border-neutral-800 bg-neutral-950/80 p-4 text-left" data-testid="panel-waiting-logistics">
-              <p className="text-sm font-semibold text-neutral-100">Event details</p>
+            <div className="mx-auto mt-5 max-w-lg rounded-2xl border border-neutral-800 bg-neutral-950/80 p-4 text-start" data-testid="panel-waiting-logistics">
+              <p className="text-sm font-semibold text-neutral-100">{t.eventDetails}</p>
               <dl className="mt-3 space-y-2 text-sm text-neutral-400">
                 {logisticsItems.map((item) => (
                   <div key={item.label}>
@@ -1552,7 +1647,7 @@ export default function Participant() {
             </div>
           )}
           <p className="text-neutral-500 text-sm mt-4 max-w-xs mx-auto">
-            Keep this page open. Chants will appear automatically when an organiser starts the demonstration.
+            {t.waitingBody}
           </p>
           <p
             className={`mt-4 inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${
@@ -1564,7 +1659,7 @@ export default function Participant() {
             aria-live="polite"
             data-testid="text-waiting-connection-status"
           >
-            {isOffline ? "Offline - reconnect to receive chants" : "Connected and waiting for the organizer"}
+            {isOffline ? t.waitingOfflineStatus : t.waitingConnectedStatus}
           </p>
           {chantData.supportUrl && (
             <a
@@ -1574,21 +1669,21 @@ export default function Participant() {
               className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/50 px-4 py-2 text-sm font-semibold text-emerald-100 hover:bg-emerald-950/40"
               data-testid="link-waiting-support-action"
             >
-              {chantData.supportLabel || "Support this event"}
+              {chantData.supportLabel || t.supportEvent}
               <ExternalLink className="h-4 w-4" />
             </a>
           )}
-          <div className="mt-5 rounded-lg border border-neutral-800 bg-neutral-950/70 p-4 text-left text-sm text-neutral-400" data-testid="text-waiting-tips">
-            <p className="font-medium text-neutral-300 mb-2">While you wait</p>
+          <div className="mt-5 rounded-lg border border-neutral-800 bg-neutral-950/70 p-4 text-start text-sm text-neutral-400" data-testid="text-waiting-tips">
+            <p className="font-medium text-neutral-300 mb-2">{t.whileWaiting}</p>
             <ul className="space-y-1">
-              <li>Keep this page open.</li>
-              <li>Stay near the organizer or speaker if you need audio cues.</li>
-              <li>If the page stops updating, use refresh connection.</li>
+              <li>{t.waitTipOpen}</li>
+              <li>{t.waitTipAudio}</li>
+              <li>{t.waitTipRefresh}</li>
             </ul>
           </div>
           {isOffline && (
             <p className="text-red-300 text-sm mt-4 max-w-xs mx-auto" role="status" data-testid="text-waiting-offline">
-              You are offline. Reconnect before the demonstration starts so live chants can appear.
+              {t.waitingOfflineBody}
             </p>
           )}
           <button
@@ -1598,7 +1693,7 @@ export default function Participant() {
             data-testid="button-retry-waiting"
           >
             <RefreshCw className="h-3.5 w-3.5" />
-            Refresh connection
+            {t.refresh}
           </button>
         </div>
       </div>
@@ -1606,7 +1701,7 @@ export default function Participant() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col select-none" data-testid="participant-view">
+    <div className="min-h-screen bg-black flex flex-col select-none" dir={participantDirection} data-testid="participant-view">
       <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {chantAnnouncement}
       </div>
@@ -1639,7 +1734,7 @@ export default function Participant() {
             className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-emerald-300 px-5 py-2 text-sm font-bold text-emerald-950 shadow-lg shadow-emerald-950/20"
             data-testid="link-participant-support-action"
           >
-            {chantData.supportLabel || "Support this event"}
+            {chantData.supportLabel || t.supportEvent}
             <ExternalLink className="h-4 w-4" />
           </a>
           <p className="mx-auto mt-2 max-w-md text-xs text-emerald-50/80">
@@ -1649,7 +1744,7 @@ export default function Participant() {
       )}
       {logisticsItems.length > 0 && (
         <div className="mx-4 mt-4 rounded-2xl border border-neutral-800 bg-neutral-950/90 p-4 text-neutral-100" data-testid="banner-participant-logistics">
-          <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">Event details</p>
+          <p className="text-xs font-mono uppercase tracking-widest text-neutral-500">{t.eventDetails}</p>
           <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
             {logisticsItems.map((item) => (
               <div key={item.label}>
@@ -1913,7 +2008,7 @@ export default function Participant() {
                           key={option.id}
                           type="button"
                           onClick={() => submitPollVote(activePoll.id, option.id)}
-                          className={`rounded-lg border p-3 text-left text-sm ${
+                          className={`rounded-lg border p-3 text-start text-sm ${
                             selected
                               ? "border-sky-200 bg-sky-200/20 text-white"
                               : "border-sky-300/30 text-sky-50 hover:bg-sky-300/10"

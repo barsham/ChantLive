@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.55",
+      "releasedAt": "2026-07-18",
+      "summary": "Complete arrival details at creation and clearer multilingual participant guidance before and after events.",
+      "items": [
+        {
+          "id": "cl-2026-07-18-meeting-point-at-creation",
+          "title": "Meeting point during event creation",
+          "description": "Organisers can add an exact assembly point while creating an event so participant pages and event materials are useful immediately.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-18",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-18-arrival-guidance-at-creation",
+          "title": "Arrival guidance during event creation",
+          "description": "Organisers can add timing, entrance, preparation, or accessibility guidance before creating an event instead of returning to the editor later.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-18",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-18-multilingual-waiting-screen",
+          "title": "Multilingual participant waiting screen",
+          "description": "Waiting status, connection guidance, retry controls, and practical pre-event tips now follow the participant's selected language.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-18",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-18-multilingual-event-details",
+          "title": "Multilingual event detail labels",
+          "description": "Date, venue, meeting-point, arrival, and event-detail labels now appear in English, Spanish, French, Arabic, or Persian across participant states.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-18",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-18-multilingual-ended-experience",
+          "title": "Multilingual ended-event experience",
+          "description": "Ended-event guidance, support actions, feedback prompts, confirmation messages, and right-to-left layout now follow the participant's language.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-18",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.54",
       "releasedAt": "2026-07-17",
       "summary": "Faster event setup and multilingual participant recovery, sharing, and calendar tools.",

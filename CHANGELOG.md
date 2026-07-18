@@ -4,6 +4,18 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.55 - 18 July 2026
+
+Complete arrival details at creation and clearer multilingual participant guidance before and after events.
+
+### Improved
+
+- Meeting point during event creation: Organisers can add an exact assembly point while creating an event so participant pages and event materials are useful immediately.
+- Arrival guidance during event creation: Organisers can add timing, entrance, preparation, or accessibility guidance before creating an event instead of returning to the editor later.
+- Multilingual participant waiting screen: Waiting status, connection guidance, retry controls, and practical pre-event tips now follow the participant's selected language.
+- Multilingual event detail labels: Date, venue, meeting-point, arrival, and event-detail labels now appear in English, Spanish, French, Arabic, or Persian across participant states.
+- Multilingual ended-event experience: Ended-event guidance, support actions, feedback prompts, confirmation messages, and right-to-left layout now follow the participant's language.
+
 ## 1.1.54 - 17 July 2026
 
 Faster event setup and multilingual participant recovery, sharing, and calendar tools.

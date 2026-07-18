@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -111,6 +112,8 @@ export default function AdminDashboard() {
   const [newTitle, setNewTitle] = useState("");
   const [newScheduledAt, setNewScheduledAt] = useState("");
   const [newLocationName, setNewLocationName] = useState("");
+  const [newMeetingPoint, setNewMeetingPoint] = useState("");
+  const [newArrivalNote, setNewArrivalNote] = useState("");
   const [newDurationMinutes, setNewDurationMinutes] = useState(120);
   const [selectedSetupTemplate, setSelectedSetupTemplate] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -125,7 +128,7 @@ export default function AdminDashboard() {
   });
 
   const createDemo = useMutation({
-    mutationFn: async (payload: { title: string; scheduledAt: string; locationName: string; eventDurationMinutes: number }) => {
+    mutationFn: async (payload: { title: string; scheduledAt: string; locationName: string; meetingPoint: string; arrivalNote: string; eventDurationMinutes: number }) => {
       const res = await apiRequest("POST", "/api/demos", payload);
       return res.json();
     },
@@ -135,6 +138,8 @@ export default function AdminDashboard() {
       setNewTitle("");
       setNewScheduledAt("");
       setNewLocationName("");
+      setNewMeetingPoint("");
+      setNewArrivalNote("");
       setNewDurationMinutes(120);
       setSelectedSetupTemplate(null);
       navigate(`/admin/demos/${data.id}`);
@@ -192,6 +197,8 @@ export default function AdminDashboard() {
       title: newTitle.trim(),
       scheduledAt: newScheduledAt ? new Date(newScheduledAt).toISOString() : "",
       locationName: newLocationName.trim(),
+      meetingPoint: newMeetingPoint.trim(),
+      arrivalNote: newArrivalNote.trim(),
       eventDurationMinutes: newDurationMinutes,
     });
   };
@@ -339,7 +346,7 @@ export default function AdminDashboard() {
                   New Demonstration
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Create Demonstration</DialogTitle>
                 </DialogHeader>
@@ -406,6 +413,29 @@ export default function AdminDashboard() {
                         data-testid="input-new-demo-duration"
                       />
                       <p id="new-demo-duration-help" className="text-xs text-muted-foreground">Minutes, 15 to 300</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="new-demo-meeting-point">Meeting point <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                      <Input
+                        id="new-demo-meeting-point"
+                        value={newMeetingPoint}
+                        onChange={(event) => setNewMeetingPoint(event.target.value)}
+                        maxLength={240}
+                        placeholder="East entrance, information desk..."
+                        data-testid="input-new-demo-meeting-point"
+                      />
+                    </div>
+                    <div className="space-y-2 sm:col-span-2">
+                      <Label htmlFor="new-demo-arrival-note">Arrival guidance <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                      <Textarea
+                        id="new-demo-arrival-note"
+                        value={newArrivalNote}
+                        onChange={(event) => setNewArrivalNote(event.target.value)}
+                        maxLength={500}
+                        rows={2}
+                        placeholder="Arrive 15 minutes early; step-free access is beside the main gate..."
+                        data-testid="input-new-demo-arrival-note"
+                      />
                     </div>
                   </div>
                   {newScheduledAt && formatCreationSchedule(newScheduledAt) && (
