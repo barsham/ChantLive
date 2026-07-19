@@ -1,6 +1,68 @@
 {
   "releases": [
     {
+      "version": "1.1.56",
+      "releasedAt": "2026-07-19",
+      "summary": "Faster arrival preparation and multilingual live guidance for every participant.",
+      "items": [
+        {
+          "id": "cl-2026-07-19-logistics-character-guidance",
+          "title": "Logistics character guidance",
+          "description": "Meeting-point and arrival fields now show clear limits and live counts so organisers can prepare complete instructions without submission surprises.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-19",
+          "links": [
+            {
+              "label": "GitHub issue #15",
+              "url": "https://github.com/barsham/ChantLive/issues/15"
+            }
+          ]
+        },
+        {
+          "id": "cl-2026-07-19-arrival-guidance-starters",
+          "title": "Arrival guidance starters",
+          "description": "Organisers can add useful early-arrival, step-free-access, and route-change guidance with one tap while creating an event.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-19",
+          "links": [
+            {
+              "label": "GitHub issue #15",
+              "url": "https://github.com/barsham/ChantLive/issues/15"
+            }
+          ]
+        },
+        {
+          "id": "cl-2026-07-19-multilingual-live-phase-guidance",
+          "title": "Multilingual live phase guidance",
+          "description": "Leader and crowd turn-taking cues now follow the participant's selected English, Spanish, French, Arabic, or Persian language.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-19",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-19-multilingual-screen-awake-control",
+          "title": "Multilingual keep-screen-on control",
+          "description": "The keep-screen-on action, active state, explanation, and device failure message now follow the participant's language.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-19",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-19-multilingual-accessibility-announcements",
+          "title": "Multilingual accessibility announcements",
+          "description": "Screen-reader chant progress and display-mode descriptions now use the participant's selected language during live events.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-19",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.55",
       "releasedAt": "2026-07-18",
       "summary": "Complete arrival details at creation and clearer multilingual participant guidance before and after events.",

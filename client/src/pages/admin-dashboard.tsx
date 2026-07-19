@@ -46,6 +46,12 @@ const eventSetupTemplates = [
   { id: "community", label: "Community gathering", title: "Community Gathering", durationMinutes: 90, description: "Ninety-minute local event" },
 ] as const;
 
+const arrivalGuidanceStarters = [
+  { id: "early", label: "Arrive early", text: "Arrive 15 minutes early for check-in and the volunteer briefing." },
+  { id: "step-free", label: "Step-free access", text: "Step-free access is available; ask an accessibility helper at the meeting point." },
+  { id: "route", label: "Route changes", text: "Follow organiser and marshal directions if the meeting point or route changes." },
+] as const;
+
 const statusFilters = ["all", "live", "draft", "ended"] as const;
 type StatusFilter = (typeof statusFilters)[number];
 const sortOptions = ["newest", "oldest", "title"] as const;
@@ -207,6 +213,14 @@ export default function AdminDashboard() {
     setNewTitle(template.title);
     setNewDurationMinutes(template.durationMinutes);
     setSelectedSetupTemplate(template.id);
+  };
+
+  const addArrivalGuidance = (starter: (typeof arrivalGuidanceStarters)[number]) => {
+    setNewArrivalNote((current) => {
+      if (current.includes(starter.text)) return current;
+      const next = current.trim() ? `${current.trim()} ${starter.text}` : starter.text;
+      return next.slice(0, 500);
+    });
   };
 
   const copyParticipantAccess = async (demo: DashboardDemonstration, kind: "link" | "code") => {
@@ -422,8 +436,13 @@ export default function AdminDashboard() {
                         onChange={(event) => setNewMeetingPoint(event.target.value)}
                         maxLength={240}
                         placeholder="East entrance, information desk..."
+                        aria-describedby="new-demo-meeting-point-help"
                         data-testid="input-new-demo-meeting-point"
                       />
+                      <div id="new-demo-meeting-point-help" className="flex items-start justify-between gap-3 text-xs text-muted-foreground">
+                        <span>Use a precise landmark participants can find in a crowd.</span>
+                        <span className="shrink-0 tabular-nums" aria-live="polite" data-testid="count-new-demo-meeting-point">{newMeetingPoint.length}/240</span>
+                      </div>
                     </div>
                     <div className="space-y-2 sm:col-span-2">
                       <Label htmlFor="new-demo-arrival-note">Arrival guidance <span className="font-normal text-muted-foreground">(optional)</span></Label>
@@ -434,8 +453,29 @@ export default function AdminDashboard() {
                         maxLength={500}
                         rows={2}
                         placeholder="Arrive 15 minutes early; step-free access is beside the main gate..."
+                        aria-describedby="new-demo-arrival-note-help new-demo-arrival-note-count"
                         data-testid="input-new-demo-arrival-note"
                       />
+                      <div className="flex items-start justify-between gap-3 text-xs text-muted-foreground">
+                        <span id="new-demo-arrival-note-help">Add timing, access, entrance, or route-change instructions.</span>
+                        <span id="new-demo-arrival-note-count" className="shrink-0 tabular-nums" aria-live="polite" data-testid="count-new-demo-arrival-note">{newArrivalNote.length}/500</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2" aria-label="Arrival guidance starters">
+                        {arrivalGuidanceStarters.map((starter) => (
+                          <Button
+                            key={starter.id}
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs"
+                            onClick={() => addArrivalGuidance(starter)}
+                            disabled={newArrivalNote.includes(starter.text)}
+                            data-testid={`button-arrival-starter-${starter.id}`}
+                          >
+                            + {starter.label}
+                          </Button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                   {newScheduledAt && formatCreationSchedule(newScheduledAt) && (

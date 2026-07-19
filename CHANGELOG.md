@@ -4,6 +4,18 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.56 - 19 July 2026
+
+Faster arrival preparation and multilingual live guidance for every participant.
+
+### Improved
+
+- Logistics character guidance: Meeting-point and arrival fields now show clear limits and live counts so organisers can prepare complete instructions without submission surprises. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Arrival guidance starters: Organisers can add useful early-arrival, step-free-access, and route-change guidance with one tap while creating an event. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Multilingual live phase guidance: Leader and crowd turn-taking cues now follow the participant's selected English, Spanish, French, Arabic, or Persian language.
+- Multilingual keep-screen-on control: The keep-screen-on action, active state, explanation, and device failure message now follow the participant's language.
+- Multilingual accessibility announcements: Screen-reader chant progress and display-mode descriptions now use the participant's selected language during live events.
+
 ## 1.1.55 - 18 July 2026
 
 Complete arrival details at creation and clearer multilingual participant guidance before and after events.

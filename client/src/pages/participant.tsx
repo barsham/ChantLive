@@ -127,6 +127,21 @@ const getDefaultParticipantLanguage = (): ParticipantLanguage => {
 };
 const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
   en: {
+    everyoneRespondNow: "Everyone, respond now",
+    leaderSpeakingNow: "Leader is speaking now",
+    readBlueResponse: "Read the blue response together.",
+    listenOrangeCall: "Listen for the orange call.",
+    keepScreenOn: "Keep screen on",
+    screenStaysOn: "Screen stays on",
+    wakeLockActive: "Screen wake lock is active",
+    wakeLockDescription: "Prevent the screen from sleeping during this live chant",
+    wakeLockError: "This device could not keep the screen on. Check battery or browser settings.",
+    lowBandwidthDescription: "Low-bandwidth mode reduces animation and hides next-up previews.",
+    fullDisplayDescription: "Full display mode shows motion, timing, and next-up previews.",
+    chant: "Chant",
+    cycle: "cycle",
+    of: "of",
+    waitingForChantText: "Waiting for chant text.",
     help: "Help",
     helpOpen: "Help open",
     lowBandwidth: "Low bandwidth",
@@ -251,6 +266,21 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     feedbackFailed: "Could not send feedback. Please tell an organizer directly.",
   },
   es: {
+    everyoneRespondNow: "Todos responden ahora",
+    leaderSpeakingNow: "La persona guía habla ahora",
+    readBlueResponse: "Lean juntos la respuesta azul.",
+    listenOrangeCall: "Escucha la llamada naranja.",
+    keepScreenOn: "Mantener pantalla encendida",
+    screenStaysOn: "La pantalla permanece encendida",
+    wakeLockActive: "El bloqueo de pantalla está activo",
+    wakeLockDescription: "Evita que la pantalla se apague durante este canto en vivo",
+    wakeLockError: "Este dispositivo no pudo mantener la pantalla encendida. Revisa la batería o la configuración del navegador.",
+    lowBandwidthDescription: "El modo de bajo consumo reduce las animaciones y oculta las vistas previas.",
+    fullDisplayDescription: "El modo completo muestra movimiento, tiempos y vistas previas.",
+    chant: "Canto",
+    cycle: "ronda",
+    of: "de",
+    waitingForChantText: "Esperando el texto del canto.",
     help: "Ayuda",
     helpOpen: "Ayuda abierta",
     lowBandwidth: "Bajo consumo",
@@ -375,6 +405,21 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     feedbackFailed: "No se pudieron enviar los comentarios. Avísale directamente al organizador.",
   },
   fr: {
+    everyoneRespondNow: "Tout le monde répond maintenant",
+    leaderSpeakingNow: "Le meneur parle maintenant",
+    readBlueResponse: "Lisez ensemble la réponse bleue.",
+    listenOrangeCall: "Écoutez l'appel orange.",
+    keepScreenOn: "Garder l'écran allumé",
+    screenStaysOn: "L'écran reste allumé",
+    wakeLockActive: "Le maintien de l'écran est actif",
+    wakeLockDescription: "Empêche l'écran de s'éteindre pendant ce chant en direct",
+    wakeLockError: "Cet appareil n'a pas pu garder l'écran allumé. Vérifiez la batterie ou les réglages du navigateur.",
+    lowBandwidthDescription: "Le mode faible bande passante réduit les animations et masque les aperçus.",
+    fullDisplayDescription: "Le mode complet affiche les animations, le rythme et les aperçus.",
+    chant: "Chant",
+    cycle: "cycle",
+    of: "sur",
+    waitingForChantText: "En attente du texte du chant.",
     help: "Aide",
     helpOpen: "Aide ouverte",
     lowBandwidth: "Faible bande passante",
@@ -499,6 +544,21 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     feedbackFailed: "Impossible d'envoyer l'avis. Prévenez directement un organisateur.",
   },
   ar: {
+    everyoneRespondNow: "الجميع يرد الآن",
+    leaderSpeakingNow: "القائد يتحدث الآن",
+    readBlueResponse: "اقرؤوا الرد الأزرق معاً.",
+    listenOrangeCall: "استمعوا إلى النداء البرتقالي.",
+    keepScreenOn: "إبقاء الشاشة مضاءة",
+    screenStaysOn: "ستبقى الشاشة مضاءة",
+    wakeLockActive: "إبقاء الشاشة مفعّل",
+    wakeLockDescription: "يمنع الشاشة من السكون أثناء الهتاف المباشر",
+    wakeLockError: "تعذّر إبقاء الشاشة مضاءة على هذا الجهاز. تحقق من البطارية أو إعدادات المتصفح.",
+    lowBandwidthDescription: "يقلل وضع الاتصال الضعيف الحركة ويخفي معاينات الهتاف التالي.",
+    fullDisplayDescription: "يعرض الوضع الكامل الحركة والتوقيت ومعاينات الهتاف التالي.",
+    chant: "الهتاف",
+    cycle: "الدورة",
+    of: "من",
+    waitingForChantText: "بانتظار نص الهتاف.",
     help: "مساعدة",
     helpOpen: "المساعدة مفتوحة",
     lowBandwidth: "وضع الاتصال الضعيف",
@@ -623,6 +683,21 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     feedbackFailed: "تعذر إرسال الملاحظات. أخبر المنظم مباشرة.",
   },
   fa: {
+    everyoneRespondNow: "همه اکنون پاسخ دهند",
+    leaderSpeakingNow: "رهبر اکنون صحبت می‌کند",
+    readBlueResponse: "پاسخ آبی را با هم بخوانید.",
+    listenOrangeCall: "به ندای نارنجی گوش دهید.",
+    keepScreenOn: "روشن نگه داشتن صفحه",
+    screenStaysOn: "صفحه روشن می‌ماند",
+    wakeLockActive: "روشن ماندن صفحه فعال است",
+    wakeLockDescription: "از خاموش شدن صفحه هنگام شعار زنده جلوگیری می‌کند",
+    wakeLockError: "این دستگاه نتوانست صفحه را روشن نگه دارد. باتری یا تنظیمات مرورگر را بررسی کنید.",
+    lowBandwidthDescription: "حالت اینترنت ضعیف حرکت را کاهش می‌دهد و پیش‌نمایش شعار بعدی را پنهان می‌کند.",
+    fullDisplayDescription: "حالت کامل حرکت، زمان‌بندی و پیش‌نمایش شعار بعدی را نشان می‌دهد.",
+    chant: "شعار",
+    cycle: "دور",
+    of: "از",
+    waitingForChantText: "در انتظار متن شعار.",
     help: "کمک",
     helpOpen: "کمک باز است",
     lowBandwidth: "مصرف کم اینترنت",
@@ -759,12 +834,12 @@ const getAnnouncementAudienceLabel = (targetRole: OrganizerAnnouncement["targetR
   return labels[targetRole];
 };
 
-const getChantAnnouncement = (chantData: ChantData | null) => {
+const getChantAnnouncement = (chantData: ChantData | null, copy: Record<string, string>) => {
   if (!chantData || chantData.demoStatus !== "live") {
     return "";
   }
 
-  const phaseLabel = chantData.currentPhase === "people" ? "Everyone" : "Leader";
+  const phaseLabel = chantData.currentPhase === "people" ? copy.everyone : copy.leader;
   const activeText = chantData.currentPhase === "people"
     ? chantData.responseText
     : chantData.callText;
@@ -772,10 +847,10 @@ const getChantAnnouncement = (chantData: ChantData | null) => {
   const cycle = chantData.currentCycle ?? 1;
   const totalCycles = chantData.cycleCount ?? 1;
   const chantPosition = chantNumber
-    ? `Chant ${chantNumber} of ${chantData.totalChants}. `
+    ? `${copy.chant} ${chantNumber} ${copy.of} ${chantData.totalChants}. `
     : "";
 
-  return `${chantPosition}${phaseLabel}, cycle ${cycle} of ${totalCycles}. ${activeText ?? "Waiting for chant text."}`;
+  return `${chantPosition}${phaseLabel}, ${copy.cycle} ${cycle} ${copy.of} ${totalCycles}. ${activeText ?? copy.waitingForChantText}`;
 };
 
 export default function Participant() {
@@ -1012,24 +1087,24 @@ export default function Participant() {
   const activePhase = chantData?.currentPhase ?? "leader";
   const phaseGuidance = activePhase === "people"
     ? {
-      label: `${t.everyone} respond now`,
-      detail: "Read the blue response together.",
+      label: t.everyoneRespondNow,
+      detail: t.readBlueResponse,
       className: "border-sky-400/40 bg-sky-400/10 text-sky-200",
     }
     : {
-      label: `${t.leader} is speaking now`,
-      detail: "Listen for the orange call.",
+      label: t.leaderSpeakingNow,
+      detail: t.listenOrangeCall,
       className: "border-orange-500/40 bg-orange-500/10 text-orange-200",
     };
-  const chantAnnouncement = getChantAnnouncement(chantData);
+  const chantAnnouncement = getChantAnnouncement(chantData, t);
   const callColor = highContrast ? "#fde047" : "#f97316";
   const responseColor = highContrast ? "#ffffff" : "#38bdf8";
   const chantFontSize = largeText
     ? "clamp(2.35rem, 10vw, 6.5rem)"
     : "clamp(1.75rem, 7vw, 4.5rem)";
   const participantDisplayMode = lowBandwidth
-    ? "Low-bandwidth mode reduces animation and hides next-up previews."
-    : "Full display mode shows motion, timing, and next-up previews.";
+    ? t.lowBandwidthDescription
+    : t.fullDisplayDescription;
   const logisticsItems = [
     { label: t.when, value: formatParticipantSchedule(chantData?.scheduledAt) },
     { label: t.where, value: chantData?.locationName },
@@ -1095,7 +1170,7 @@ export default function Participant() {
       }, { once: true });
       return true;
     } catch {
-      setWakeLockError("This device could not keep the screen on. Check battery or browser settings.");
+      setWakeLockError(t.wakeLockError);
       return false;
     }
   };
@@ -1363,6 +1438,18 @@ export default function Participant() {
   }, [participantLanguage]);
 
   useEffect(() => {
+    const previousLanguage = document.documentElement.lang;
+    const previousDirection = document.documentElement.dir;
+    document.documentElement.lang = participantLanguage;
+    document.documentElement.dir = participantDirection;
+
+    return () => {
+      document.documentElement.lang = previousLanguage;
+      document.documentElement.dir = previousDirection;
+    };
+  }, [participantDirection, participantLanguage]);
+
+  useEffect(() => {
     if (!wakeLockSupported || !keepScreenAwake) return;
 
     const restoreWakeLock = () => {
@@ -1373,7 +1460,7 @@ export default function Participant() {
 
     document.addEventListener("visibilitychange", restoreWakeLock);
     return () => document.removeEventListener("visibilitychange", restoreWakeLock);
-  }, [keepScreenAwake, wakeLockSupported]);
+  }, [keepScreenAwake, wakeLockSupported, t.wakeLockError]);
 
   useEffect(() => () => {
     void wakeLockRef.current?.release();
@@ -2287,11 +2374,11 @@ export default function Participant() {
               keepScreenAwake ? "border-amber-300/80 bg-amber-300/15 text-amber-100" : "border-neutral-700 text-neutral-300"
             }`}
             aria-pressed={keepScreenAwake}
-            title={screenAwakeActive ? "Screen wake lock is active" : "Prevent the screen from sleeping during this live chant"}
+            title={screenAwakeActive ? t.wakeLockActive : t.wakeLockDescription}
             data-testid="button-toggle-screen-awake"
           >
             <Sun className="h-3.5 w-3.5" />
-            {keepScreenAwake ? "Screen stays on" : "Keep screen on"}
+            {keepScreenAwake ? t.screenStaysOn : t.keepScreenOn}
           </button>
         )}
         {renderParticipantLanguageSelect()}
