@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.57 - 19 July 2026
+
+Weekly blog guidance for helping more people join peaceful events without overwhelm.
+
+### Documentation
+
+- Low-friction participation guide: A new weekly blog post helps organizers reduce the first step, offer small roles, support late arrivals, and use ChantLive for predictable live participation.
+
 ## 1.1.56 - 19 July 2026
 
 Faster arrival preparation and multilingual live guidance for every participant.

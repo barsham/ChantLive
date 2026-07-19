@@ -1,6 +1,22 @@
 {
   "releases": [
     {
+      "version": "1.1.57",
+      "releasedAt": "2026-07-19",
+      "summary": "Weekly blog guidance for helping more people join peaceful events without overwhelm.",
+      "items": [
+        {
+          "id": "cl-2026-07-19-low-friction-participation-guide",
+          "title": "Low-friction participation guide",
+          "description": "A new weekly blog post helps organizers reduce the first step, offer small roles, support late arrivals, and use ChantLive for predictable live participation.",
+          "type": "docs",
+          "visibility": "public",
+          "dateAdded": "2026-07-19",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.56",
       "releasedAt": "2026-07-19",
       "summary": "Faster arrival preparation and multilingual live guidance for every participant.",

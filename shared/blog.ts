@@ -19,6 +19,104 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "low-friction-participation-peaceful-events",
+    title: "How to Make Participation Feel Easy at a Peaceful Event",
+    description:
+      "A practical guide to helping more people join peaceful demonstrations and community events without overwhelming them before, during, or after arrival.",
+    publishedAt: "2026-07-19",
+    category: "Participation",
+    readingMinutes: 7,
+    tags: ["participation", "organizing", "communication", "accessibility"],
+    disclaimer:
+      "This article is general event-planning information only. It is not legal, medical, security, or emergency-response advice. Follow local authority requirements, venue rules, and emergency services instructions for your event.",
+    sections: [
+      {
+        heading: "Reduce The First Step",
+        paragraphs: [
+          "People often want to support a community event but hesitate when the first step feels too large. A helpful invitation does not ask them to understand every detail immediately. It gives them one clear action they can take now.",
+          "Before you publish the event, write the participant path as a simple sentence: where to arrive, when to arrive, what to do first, and how to get updates if something changes.",
+        ],
+        bullets: [
+          "Use one main call to action such as 'arrive at the north entrance by 4:45'.",
+          "Keep optional background reading separate from arrival instructions.",
+          "Repeat the same first step in posts, messages, handouts, and volunteer scripts.",
+        ],
+      },
+      {
+        heading: "Offer Small Roles Before Big Commitments",
+        paragraphs: [
+          "Not everyone is ready to lead, speak, marshal, or stay for the whole event. Low-pressure roles make participation possible for people with limited time, confidence, mobility, or energy.",
+          "Small roles also help organizers learn who is reliable before asking for larger responsibilities later.",
+        ],
+        bullets: [
+          "Invite people to share the event link with three trusted contacts.",
+          "Ask for short, time-boxed help such as greeting arrivals for 15 minutes.",
+          "Create quiet roles like checking printed links, bringing spare signs, or noting post-event feedback.",
+        ],
+      },
+      {
+        heading: "Make The Event Understandable Before Arrival",
+        paragraphs: [
+          "A participant should not have to ask a private question to understand the basics. Publish the schedule, location, joining method, accessibility notes, and expected finish time in plain language.",
+          "This is especially important for people deciding whether the event is realistic for their transport, care responsibilities, disability access needs, or comfort level.",
+        ],
+        bullets: [
+          "Name the meeting point and any step-free route or entrance details you know.",
+          "Say what participants should bring and what they do not need to bring.",
+          "Share whether chants, signs, speeches, movement, or quiet presence are expected.",
+        ],
+      },
+      {
+        heading: "Use Reminders That Help Instead Of Pressure",
+        paragraphs: [
+          "Useful reminders make attendance easier. Pressure-heavy messages can make people feel guilty, crowded, or unsure whether they still belong if they arrive late.",
+          "Send reminders that answer practical questions: when to leave, where to gather, how to join the live page, and what to do if plans change.",
+        ],
+        bullets: [
+          "One week before: share purpose, time, location, and basic access notes.",
+          "One day before: repeat arrival details and the participant link.",
+          "On the day: send the simplest version of the plan and the fallback joining option.",
+        ],
+      },
+      {
+        heading: "Design For People Joining Late",
+        paragraphs: [
+          "Late arrivals are normal. Transport delays, work, care duties, and crowd movement all affect real events. If late joining feels awkward, people may give up before they participate.",
+          "Prepare one visible place or digital page where late arrivals can quickly find the current chant, next instruction, and support contact.",
+        ],
+        bullets: [
+          "Keep the QR code and short link visible after the event starts.",
+          "Assign one volunteer to help late arrivals without interrupting the main flow.",
+          "Use clear live status language such as waiting, live, paused, moved, or ended.",
+        ],
+      },
+      {
+        heading: "Keep The Live Experience Predictable",
+        paragraphs: [
+          "Participants stay engaged when they can understand the rhythm of the event. For chants, that means knowing who speaks first, when the crowd responds, and where to look if they miss a line.",
+          "ChantLive can support this by giving organizers one participant page, a QR code, a short link fallback, and live prompts that reduce guesswork during call-and-response moments.",
+        ],
+        bullets: [
+          "Use short chant lines that can be read at a glance.",
+          "Explain turn-taking before the first chant starts.",
+          "Invite a backup admin so live prompts can continue if the main organizer gets busy.",
+        ],
+      },
+      {
+        heading: "Invite Feedback While The Details Are Fresh",
+        paragraphs: [
+          "Participation improves when organizers ask what made joining easier or harder. Do this soon after the event, while people still remember the small barriers.",
+          "Look for patterns rather than defending the plan. If several people struggled with the same instruction, sign, meeting point, or joining path, that is useful design feedback for the next gathering.",
+        ],
+        bullets: [
+          "Ask what made the event easy to join.",
+          "Ask what almost stopped someone from participating.",
+          "Turn the answers into one improvement for the next invitation, arrival flow, or live communication plan.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "volunteer-roles-for-peaceful-events",
     title: "Volunteer Roles Every Peaceful Event Should Assign Before It Starts",
     description:
