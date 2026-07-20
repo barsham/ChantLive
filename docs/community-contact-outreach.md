@@ -87,3 +87,43 @@ Would this be appropriate for someone in your team or network to review?
 | 2026-07-05 | Disability Advocacy Network Australia | info@dana.org.au | Sent via Zoho SMTP |
 | 2026-07-05 | Australian Progress | info@australianprogress.org.au | Sent via Zoho SMTP |
 | 2026-07-05 | Australian Democracy Network | info@australiandemocracy.org.au | Sent via Zoho SMTP |
+| 2026-07-13 | Australian Privacy Foundation | enquiries@privacy.org.au | Sent via Zoho SMTP |
+| 2026-07-13 | Liberty Victoria | info@libertyvictoria.org.au | Sent via Zoho SMTP |
+| 2026-07-13 | Blind Citizens Australia | bca@bca.org.au | Sent via Zoho SMTP |
+| 2026-07-13 | Council for Intellectual Disability | info@cid.org.au | Sent via Zoho SMTP |
+| 2026-07-13 | Human Rights Law Centre | admin@hrlc.org.au | Sent via Zoho SMTP |
+| 2026-07-14 | OpenAustralia Foundation | contact@oaf.org.au | Sent via Zoho SMTP; official source: https://oaf.org.au/contact-us/ |
+| 2026-07-14 | Commons Social Change Library | librarian@commonslibrary.org | Sent via Zoho SMTP; official source: https://commonslibrary.org/about/ |
+| 2026-07-14 | Accessible Arts | info@aarts.net.au | Sent via Zoho SMTP; official source: https://aarts.net.au/contact-us/ |
+| 2026-07-14 | Australian Youth Climate Coalition | campaigns@aycc.org.au | Sent via Zoho SMTP; official source: https://www.aycc.org.au/contact |
+| 2026-07-14 | Australian Lawyers for Human Rights - Freedoms Committee | freedoms@alhr.org.au | Sent via Zoho SMTP; official source: https://alhr.org.au/contact-us/ |
+| 2026-07-15 | Women With Disabilities Australia | officeadmin@wwda.org.au | Sent via Zoho SMTP; official source: https://wwda.org.au/contact-us/ |
+| 2026-07-15 | Inclusion Australia | admin@inclusionaustralia.org.au | Sent via Zoho SMTP; official source: https://www.inclusionaustralia.org.au/contact-us/ |
+| 2026-07-15 | Deaf Australia | info@deafaustralia.org.au | Sent via Zoho SMTP; official source: https://www.deafaustralia.org.au/get-involved/member |
+| 2026-07-15 | First Peoples Disability Network Australia | enquiries@fpdn.org.au | Sent via Zoho SMTP; official source: https://fpdn.org.au/wp-content/uploads/2019/02/Policy-Platform-Federal-Election-2019_3.pdf |
+| 2026-07-15 | ActionAid Australia | info.au@actionaid.org | Sent via Zoho SMTP; official source: https://actionaid.org.au/contact-us/ |
+| 2026-07-16 | Democracy in Colour | info@democracyincolour.org | Sent via Zoho SMTP; official source: https://democracyincolour.org/ |
+| 2026-07-16 | Common Grace | info@commongrace.org.au | Sent via Zoho SMTP; official source: https://www.commongrace.org.au/contact |
+| 2026-07-16 | Rising Tide | info@risingtide.org.au | Sent via Zoho SMTP; official source: https://www.risingtide.org.au/join-a-group |
+| 2026-07-16 | Move Beyond Coal | info@movebeyondcoal.org.au | Sent via Zoho SMTP; official source: https://www.movebeyondcoal.com/contact |
+| 2026-07-16 | Queensland Council for Civil Liberties | president@qccl.org.au | Sent via Zoho SMTP; official source: https://qccl.org.au/contact |
+| 2026-07-17 | University of Newcastle i3Lab | i3lab@newcastle.edu.au | Sent via Zoho SMTP; University Lab Review experiment; official source: https://i3lab.newcastle.edu.au/ |
+| 2026-07-17 | ANU School of Cybernetics | cybernetics@anu.edu.au | Sent via Zoho SMTP; University Lab Review experiment; official source: https://cybernetics.anu.edu.au/index.html |
+| 2026-07-17 | Monash HumaniSE Lab | HumaniSE-Enquiries@monash.edu | Sent via Zoho SMTP; University Lab Review experiment; official source: https://www.monash.edu/it/hse-archive |
+| 2026-07-20 | Victorian Trades Hall Council | info@vthc.org.au | Sent via Zoho SMTP; Break ChantLive Challenge; official source: https://www.weareunion.org.au/contact |
+| 2026-07-20 | SA Unions | saunions@saunions.org | Sent via Zoho SMTP; Break ChantLive Challenge; official source: https://saunions.org.au/about/contact-us/ |
+| 2026-07-20 | Queensland Unions | info@qcu.asn.au | Sent via Zoho SMTP; Break ChantLive Challenge; official source: https://www.qldunions.com/contact |
+| 2026-07-20 | UnionsWA | admin@unionswa.com.au | Sent via Zoho SMTP; Break ChantLive Challenge; official source: https://www.unionswa.com.au/about-us/ |
+| 2026-07-20 | Unions Tasmania | admin@unionstas.com.au | Sent via Zoho SMTP; Break ChantLive Challenge; official source: https://unionstas.com.au/ |
+
+## Reply Log
+
+| Date | Organization | Contact | Action |
+| --- | --- | --- | --- |
+| 2026-07-13 | Blind Citizens Australia | Samantha via bca@bca.org.au | Confirmed that individual testers do not need a real event; Samantha forwarded the request to relevant contacts. |
+| 2026-07-15 | Blind Citizens Australia | Amila Dedovic, Communications Coordinator | Replied with testing priorities: NVDA on Windows and VoiceOver on iPhone, JAWS if convenient, covering organizer and direct-link participant flows. |
+| 2026-07-16 | First Peoples Disability Network Australia | Enquiries auto-reply | Receipt confirmed; team aims to respond within 3-5 business days. No action required. |
+| 2026-07-16 | Inclusion Australia | Administration auto-reply | Receipt confirmed; no substantive response or opt-out. No action required. |
+| 2026-07-16 | Women With Disabilities Australia | Office Admin auto-reply | Receipt confirmed; a full response may follow. No action required. |
+| 2026-07-17 | Common Grace | General enquiries auto-reply | Receipt confirmed; no substantive response or opt-out. No action required. |
+| 2026-07-17 | Queensland Council for Civil Liberties | President mailbox auto-reply | Receipt confirmed; no substantive response or opt-out. No action required. |
