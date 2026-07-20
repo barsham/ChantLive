@@ -165,6 +165,27 @@ const multilingualInviteTemplates = [
   },
 ];
 
+const announcementStarters: Array<{ id: string; label: string; message: string; targetRole: AnnouncementTargetRole }> = [
+  {
+    id: "route-change",
+    label: "Route change",
+    message: "The meeting point or route has changed. Follow organiser and marshal directions.",
+    targetRole: "all",
+  },
+  {
+    id: "pause",
+    label: "Pause and wait",
+    message: "Pause where you are if it is safe and wait for the next organiser update.",
+    targetRole: "all",
+  },
+  {
+    id: "accessibility",
+    label: "Accessibility check",
+    message: "Accessibility helpers, please check the participant help requests now.",
+    targetRole: "accessibility",
+  },
+];
+
 export default function CommandCenter() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
@@ -796,6 +817,32 @@ export default function CommandCenter() {
                   <p className="text-xs text-muted-foreground">
                     Role-targeted messages are shown to participants who checked in with that role.
                   </p>
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">Quick announcement starters</p>
+                  <div className="flex flex-wrap gap-2" aria-label="Quick announcement starters">
+                    {announcementStarters.map((starter) => {
+                      const selected = announcementMessage === starter.message && announcementTarget === starter.targetRole;
+                      return (
+                        <Button
+                          key={starter.id}
+                          type="button"
+                          size="sm"
+                          variant={selected ? "secondary" : "outline"}
+                          className="h-8 text-xs"
+                          onClick={() => {
+                            setAnnouncementMessage(starter.message);
+                            setAnnouncementTarget(starter.targetRole);
+                          }}
+                          aria-pressed={selected}
+                          data-testid={`button-announcement-starter-${starter.id}`}
+                        >
+                          {starter.label}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Starters fill the draft and audience only. Review the message before sending.</p>
                 </div>
                 <Textarea
                   value={announcementMessage}

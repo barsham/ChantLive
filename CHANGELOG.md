@@ -4,6 +4,18 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.58 - 20 July 2026
+
+Faster organiser announcements and clearer multilingual participant confirmations during live events.
+
+### Improved
+
+- Quick announcement starters: Organisers can draft route-change, pause, and accessibility updates with one tap, then review the audience and wording before sending. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Multilingual announcement context: Announcement audience labels and the dismiss action now follow each participant's selected language.
+- Multilingual support-action guidance: Organizer-provided action labels and new-tab guidance now appear in English, Spanish, French, Arabic, or Persian.
+- Multilingual poll confirmations: Vote counts and vote success or failure messages now follow the participant's language.
+- Multilingual participant action outcomes: Help, question, safety, and check-in confirmations and recovery messages now follow the participant's language.
+
 ## 1.1.57 - 19 July 2026
 
 Weekly blog guidance for helping more people join peaceful events without overwhelm.

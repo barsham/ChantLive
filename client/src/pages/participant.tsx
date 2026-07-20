@@ -127,6 +127,25 @@ const getDefaultParticipantLanguage = (): ParticipantLanguage => {
 };
 const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
   en: {
+    announcementEveryone: "Organizer update for everyone",
+    announcementParticipants: "Organizer update for participants",
+    announcementMarshals: "Organizer update for marshals",
+    announcementSpeakers: "Organizer update for speakers",
+    announcementAccessibility: "Organizer update for accessibility helpers",
+    dismiss: "Dismiss",
+    organizerAction: "Organizer action",
+    opensOrganizerPage: "Opens an organizer-provided page in a new tab.",
+    votes: "votes",
+    voteSent: "Vote sent.",
+    voteFailed: "Could not send vote. Try again or tell an organizer.",
+    assistanceFailed: "Could not notify the organizer. Please ask someone nearby for help.",
+    questionSent: "Question sent to the organizer.",
+    questionFailed: "Could not send question. Please ask an organizer directly.",
+    safetyResponseSent: "Safety response sent.",
+    safetyResponseFailed: "Could not send safety response. Tell a marshal or organizer directly.",
+    checkedIn: "Checked in",
+    checkedInAs: "Checked in as",
+    checkInFailed: "Could not check in. Please tell an organizer you are here.",
     everyoneRespondNow: "Everyone, respond now",
     leaderSpeakingNow: "Leader is speaking now",
     readBlueResponse: "Read the blue response together.",
@@ -266,6 +285,25 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     feedbackFailed: "Could not send feedback. Please tell an organizer directly.",
   },
   es: {
+    announcementEveryone: "Actualización del organizador para todos",
+    announcementParticipants: "Actualización del organizador para participantes",
+    announcementMarshals: "Actualización del organizador para responsables de seguridad",
+    announcementSpeakers: "Actualización del organizador para oradores",
+    announcementAccessibility: "Actualización para ayudantes de accesibilidad",
+    dismiss: "Descartar",
+    organizerAction: "Acción del organizador",
+    opensOrganizerPage: "Abre una página proporcionada por el organizador en una pestaña nueva.",
+    votes: "votos",
+    voteSent: "Voto enviado.",
+    voteFailed: "No se pudo enviar el voto. Inténtalo de nuevo o avisa al organizador.",
+    assistanceFailed: "No se pudo avisar al organizador. Pide ayuda a alguien cercano.",
+    questionSent: "Pregunta enviada al organizador.",
+    questionFailed: "No se pudo enviar la pregunta. Pregunta directamente al organizador.",
+    safetyResponseSent: "Respuesta de seguridad enviada.",
+    safetyResponseFailed: "No se pudo enviar la respuesta de seguridad. Avisa directamente a un responsable o al organizador.",
+    checkedIn: "Registrado",
+    checkedInAs: "Registrado como",
+    checkInFailed: "No se pudo registrar tu llegada. Dile al organizador que estás aquí.",
     everyoneRespondNow: "Todos responden ahora",
     leaderSpeakingNow: "La persona guía habla ahora",
     readBlueResponse: "Lean juntos la respuesta azul.",
@@ -405,6 +443,25 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     feedbackFailed: "No se pudieron enviar los comentarios. Avísale directamente al organizador.",
   },
   fr: {
+    announcementEveryone: "Message de l'organisateur pour tout le monde",
+    announcementParticipants: "Message de l'organisateur pour les participants",
+    announcementMarshals: "Message de l'organisateur pour les responsables de sécurité",
+    announcementSpeakers: "Message de l'organisateur pour les intervenants",
+    announcementAccessibility: "Message pour les aides à l'accessibilité",
+    dismiss: "Fermer",
+    organizerAction: "Action de l'organisateur",
+    opensOrganizerPage: "Ouvre une page fournie par l'organisateur dans un nouvel onglet.",
+    votes: "votes",
+    voteSent: "Vote envoyé.",
+    voteFailed: "Impossible d'envoyer le vote. Réessayez ou prévenez un organisateur.",
+    assistanceFailed: "Impossible de prévenir l'organisateur. Demandez de l'aide à une personne proche.",
+    questionSent: "Question envoyée à l'organisateur.",
+    questionFailed: "Impossible d'envoyer la question. Adressez-vous directement à un organisateur.",
+    safetyResponseSent: "Réponse de sécurité envoyée.",
+    safetyResponseFailed: "Impossible d'envoyer la réponse de sécurité. Prévenez directement un responsable ou un organisateur.",
+    checkedIn: "Présence confirmée",
+    checkedInAs: "Présence confirmée comme",
+    checkInFailed: "Impossible de confirmer votre présence. Dites à un organisateur que vous êtes là.",
     everyoneRespondNow: "Tout le monde répond maintenant",
     leaderSpeakingNow: "Le meneur parle maintenant",
     readBlueResponse: "Lisez ensemble la réponse bleue.",
@@ -544,6 +601,25 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     feedbackFailed: "Impossible d'envoyer l'avis. Prévenez directement un organisateur.",
   },
   ar: {
+    announcementEveryone: "تحديث من المنظم للجميع",
+    announcementParticipants: "تحديث من المنظم للمشاركين",
+    announcementMarshals: "تحديث من المنظم للمشرفين الميدانيين",
+    announcementSpeakers: "تحديث من المنظم للمتحدثين",
+    announcementAccessibility: "تحديث لمساعدي الوصول",
+    dismiss: "إغلاق",
+    organizerAction: "إجراء من المنظم",
+    opensOrganizerPage: "يفتح صفحة يوفرها المنظم في علامة تبويب جديدة.",
+    votes: "أصوات",
+    voteSent: "تم إرسال التصويت.",
+    voteFailed: "تعذر إرسال التصويت. حاول مرة أخرى أو أخبر المنظم.",
+    assistanceFailed: "تعذر إبلاغ المنظم. اطلب المساعدة من شخص قريب.",
+    questionSent: "تم إرسال السؤال إلى المنظم.",
+    questionFailed: "تعذر إرسال السؤال. اسأل المنظم مباشرة.",
+    safetyResponseSent: "تم إرسال رد السلامة.",
+    safetyResponseFailed: "تعذر إرسال رد السلامة. أخبر مشرفاً ميدانياً أو المنظم مباشرة.",
+    checkedIn: "تم تسجيل الحضور",
+    checkedInAs: "تم تسجيل الحضور بصفة",
+    checkInFailed: "تعذر تسجيل الحضور. أخبر المنظم أنك موجود.",
     everyoneRespondNow: "الجميع يرد الآن",
     leaderSpeakingNow: "القائد يتحدث الآن",
     readBlueResponse: "اقرؤوا الرد الأزرق معاً.",
@@ -683,6 +759,25 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     feedbackFailed: "تعذر إرسال الملاحظات. أخبر المنظم مباشرة.",
   },
   fa: {
+    announcementEveryone: "به‌روزرسانی برگزارکننده برای همه",
+    announcementParticipants: "به‌روزرسانی برگزارکننده برای شرکت‌کنندگان",
+    announcementMarshals: "به‌روزرسانی برگزارکننده برای مسئولان میدانی",
+    announcementSpeakers: "به‌روزرسانی برگزارکننده برای سخنرانان",
+    announcementAccessibility: "به‌روزرسانی برای کمک‌یاران دسترسی",
+    dismiss: "بستن",
+    organizerAction: "اقدام برگزارکننده",
+    opensOrganizerPage: "صفحه‌ای را که برگزارکننده ارائه کرده در برگه‌ای تازه باز می‌کند.",
+    votes: "رأی",
+    voteSent: "رأی ارسال شد.",
+    voteFailed: "رأی ارسال نشد. دوباره تلاش کنید یا به برگزارکننده بگویید.",
+    assistanceFailed: "برگزارکننده مطلع نشد. از فردی نزدیک کمک بخواهید.",
+    questionSent: "پرسش برای برگزارکننده ارسال شد.",
+    questionFailed: "پرسش ارسال نشد. مستقیماً از برگزارکننده بپرسید.",
+    safetyResponseSent: "پاسخ ایمنی ارسال شد.",
+    safetyResponseFailed: "پاسخ ایمنی ارسال نشد. مستقیماً به مسئول میدانی یا برگزارکننده بگویید.",
+    checkedIn: "حضور ثبت شد",
+    checkedInAs: "حضور ثبت شد به‌عنوان",
+    checkInFailed: "حضور ثبت نشد. به برگزارکننده بگویید که اینجا هستید.",
     everyoneRespondNow: "همه اکنون پاسخ دهند",
     leaderSpeakingNow: "رهبر اکنون صحبت می‌کند",
     readBlueResponse: "پاسخ آبی را با هم بخوانید.",
@@ -822,13 +917,13 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     feedbackFailed: "بازخورد ارسال نشد. مستقیماً به برگزارکننده اطلاع دهید.",
   },
 };
-const getAnnouncementAudienceLabel = (targetRole: OrganizerAnnouncement["targetRole"]) => {
+const getAnnouncementAudienceLabel = (targetRole: OrganizerAnnouncement["targetRole"], copy: Record<string, string>) => {
   const labels: Record<OrganizerAnnouncement["targetRole"], string> = {
-    all: "Organizer update for everyone",
-    participant: "Organizer update for participants",
-    marshal: "Organizer update for marshals",
-    speaker: "Organizer update for speakers",
-    accessibility: "Organizer update for accessibility helpers",
+    all: copy.announcementEveryone,
+    participant: copy.announcementParticipants,
+    marshal: copy.announcementMarshals,
+    speaker: copy.announcementSpeakers,
+    accessibility: copy.announcementAccessibility,
   };
 
   return labels[targetRole];
@@ -1271,7 +1366,7 @@ export default function Participant() {
       setAssistanceSent(type);
       setTimeout(() => setAssistanceSent(null), 3500);
     } catch {
-      setAssistanceError("Could not notify the organizer. Please ask someone nearby for help.");
+      setAssistanceError(t.assistanceFailed);
     }
   };
   const sendPulse = async (type: "too_fast" | "too_slow" | "cant_hear" | "all_good") => {
@@ -1305,10 +1400,10 @@ export default function Participant() {
       }
 
       setQuestionText("");
-      setQuestionStatus("Question sent to the organizer.");
+      setQuestionStatus(t.questionSent);
       setTimeout(() => setQuestionStatus(null), 3000);
     } catch {
-      setQuestionStatus("Could not send question. Please ask an organizer directly.");
+      setQuestionStatus(t.questionFailed);
     }
   };
   const upvoteQuestion = async (questionId: string) => {
@@ -1339,10 +1434,10 @@ export default function Participant() {
       localStorage.setItem("chant_poll_votes", JSON.stringify(nextVotes));
       setPollVotes(nextVotes);
       setActivePoll(poll);
-      setPollStatus("Vote sent.");
+      setPollStatus(t.voteSent);
       setTimeout(() => setPollStatus(null), 2500);
     } catch {
-      setPollStatus("Could not send vote. Try again or tell an organizer.");
+      setPollStatus(t.voteFailed);
     }
   };
   const submitSafetyResponse = async (checkId: string, responseType: "ok" | "need_help" | "leaving" | "not_sure") => {
@@ -1362,10 +1457,10 @@ export default function Participant() {
       localStorage.setItem("chant_safety_responses", JSON.stringify(nextResponses));
       setSafetyResponses(nextResponses);
       setActiveSafetyCheck(check);
-      setSafetyStatus(responseType === "need_help" ? "Organizer notified. Stay where you are if it is safe." : "Safety response sent.");
+      setSafetyStatus(responseType === "need_help" ? t.organizerNotified : t.safetyResponseSent);
       setTimeout(() => setSafetyStatus(null), 3500);
     } catch {
-      setSafetyStatus("Could not send safety response. Tell a marshal or organizer directly.");
+      setSafetyStatus(t.safetyResponseFailed);
     }
   };
   const submitCheckIn = async (role: CheckInRole) => {
@@ -1384,10 +1479,16 @@ export default function Participant() {
       localStorage.setItem("chant_checkin_role", role);
       localStorage.setItem("chant_checkin_name", displayName);
       setCheckedInRole(role);
-      setCheckInStatus(`Checked in as ${role === "accessibility" ? "accessibility helper" : role}.`);
+      const roleLabel = {
+        participant: t.participant,
+        marshal: t.marshal,
+        speaker: t.speaker,
+        accessibility: t.accessibilityHelper,
+      }[role];
+      setCheckInStatus(`${t.checkedInAs} ${roleLabel}.`);
       setTimeout(() => setCheckInStatus(null), 3000);
     } catch {
-      setCheckInStatus("Could not check in. Please tell an organizer you are here.");
+      setCheckInStatus(t.checkInFailed);
     }
   };
   const submitFeedback = async () => {
@@ -1795,7 +1896,7 @@ export default function Participant() {
       {announcement && (
         <div className="mx-4 mt-4 rounded-2xl border border-amber-300/40 bg-amber-300/15 p-4 text-center text-amber-50" role="status" data-testid="banner-organizer-announcement">
           <p className="text-xs font-mono uppercase tracking-widest text-amber-100/80">
-            {getAnnouncementAudienceLabel(announcement.targetRole)}
+            {getAnnouncementAudienceLabel(announcement.targetRole, t)}
           </p>
           <p className="mt-1 text-lg font-semibold">{announcement.message}</p>
           <button
@@ -1804,7 +1905,7 @@ export default function Participant() {
             className="mt-2 text-xs font-medium text-amber-100 underline"
             data-testid="button-dismiss-announcement"
           >
-            Dismiss
+            {t.dismiss}
           </button>
         </div>
       )}
@@ -1812,7 +1913,7 @@ export default function Participant() {
       {chantData.supportUrl && (
         <div className="mx-4 mt-4 rounded-2xl border border-emerald-300/40 bg-emerald-300/15 p-4 text-center text-emerald-50" data-testid="banner-participant-support-action">
           <p className="text-xs font-mono uppercase tracking-widest text-emerald-100/80">
-            Organizer action
+            {t.organizerAction}
           </p>
           <a
             href={chantData.supportUrl}
@@ -1825,7 +1926,7 @@ export default function Participant() {
             <ExternalLink className="h-4 w-4" />
           </a>
           <p className="mx-auto mt-2 max-w-md text-xs text-emerald-50/80">
-            Opens an organizer-provided page in a new tab.
+            {t.opensOrganizerPage}
           </p>
         </div>
       )}
@@ -2104,7 +2205,7 @@ export default function Participant() {
                         >
                           <span className="font-semibold">{option.label}</span>
                           <span className="mt-1 block text-xs text-sky-100/80">
-                            {option.votes} votes - {percent}%
+                            {option.votes} {t.votes} - {percent}%
                           </span>
                           <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-black/30">
                             <span className="block h-full rounded-full bg-sky-200" style={{ width: `${percent}%` }} />
@@ -2203,7 +2304,7 @@ export default function Participant() {
                     }`}
                     data-testid={`button-checkin-${role}`}
                   >
-                    {checkedInRole === role ? "Checked in: " : ""}
+                    {checkedInRole === role ? `${t.checkedIn}: ` : ""}
                     {label}
                   </button>
                 ))}

@@ -1,6 +1,63 @@
 {
   "releases": [
     {
+      "version": "1.1.58",
+      "releasedAt": "2026-07-20",
+      "summary": "Faster organiser announcements and clearer multilingual participant confirmations during live events.",
+      "items": [
+        {
+          "id": "cl-2026-07-20-announcement-starters",
+          "title": "Quick announcement starters",
+          "description": "Organisers can draft route-change, pause, and accessibility updates with one tap, then review the audience and wording before sending.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-20",
+          "links": [
+            {
+              "label": "GitHub issue #15",
+              "url": "https://github.com/barsham/ChantLive/issues/15"
+            }
+          ]
+        },
+        {
+          "id": "cl-2026-07-20-multilingual-announcement-context",
+          "title": "Multilingual announcement context",
+          "description": "Announcement audience labels and the dismiss action now follow each participant's selected language.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-20",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-20-multilingual-support-actions",
+          "title": "Multilingual support-action guidance",
+          "description": "Organizer-provided action labels and new-tab guidance now appear in English, Spanish, French, Arabic, or Persian.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-20",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-20-multilingual-poll-results",
+          "title": "Multilingual poll confirmations",
+          "description": "Vote counts and vote success or failure messages now follow the participant's language.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-20",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-20-multilingual-action-outcomes",
+          "title": "Multilingual participant action outcomes",
+          "description": "Help, question, safety, and check-in confirmations and recovery messages now follow the participant's language.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-20",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.57",
       "releasedAt": "2026-07-19",
       "summary": "Weekly blog guidance for helping more people join peaceful events without overwhelm.",
