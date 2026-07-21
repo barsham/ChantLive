@@ -100,6 +100,7 @@ type SafetyCheck = {
 };
 type CheckInRole = "participant" | "marshal" | "speaker" | "accessibility";
 type AnnouncementTargetRole = "all" | CheckInRole;
+type AnnouncementLanguage = "en" | "es" | "fr" | "ar" | "fa";
 type CheckInSummary = {
   total: number;
   roles: Record<CheckInRole, number>;
@@ -165,23 +166,54 @@ const multilingualInviteTemplates = [
   },
 ];
 
-const announcementStarters: Array<{ id: string; label: string; message: string; targetRole: AnnouncementTargetRole }> = [
+const announcementLanguageOptions: Array<{ code: AnnouncementLanguage; label: string }> = [
+  { code: "en", label: "English" },
+  { code: "es", label: "Español" },
+  { code: "fr", label: "Français" },
+  { code: "ar", label: "العربية" },
+  { code: "fa", label: "فارسی" },
+];
+
+const announcementStarters: Array<{
+  id: string;
+  labels: Record<AnnouncementLanguage, string>;
+  messages: Record<AnnouncementLanguage, string>;
+  targetRole: AnnouncementTargetRole;
+}> = [
   {
     id: "route-change",
-    label: "Route change",
-    message: "The meeting point or route has changed. Follow organiser and marshal directions.",
+    labels: { en: "Route change", es: "Cambio de ruta", fr: "Changement d’itinéraire", ar: "تغيير المسار", fa: "تغییر مسیر" },
+    messages: {
+      en: "The meeting point or route has changed. Follow organiser and marshal directions.",
+      es: "El punto de encuentro o la ruta ha cambiado. Sigue las indicaciones de la organización y del equipo de apoyo.",
+      fr: "Le point de rendez-vous ou l’itinéraire a changé. Suivez les consignes de l’organisation et des responsables.",
+      ar: "تغيّرت نقطة التجمع أو المسار. اتبع تعليمات المنظمين والمشرفين.",
+      fa: "محل تجمع یا مسیر تغییر کرده است. دستورهای برگزارکنندگان و مسئولان را دنبال کنید.",
+    },
     targetRole: "all",
   },
   {
     id: "pause",
-    label: "Pause and wait",
-    message: "Pause where you are if it is safe and wait for the next organiser update.",
+    labels: { en: "Pause and wait", es: "Pausa y espera", fr: "Pause et attente", ar: "توقف وانتظار", fa: "توقف و انتظار" },
+    messages: {
+      en: "Pause where you are if it is safe and wait for the next organiser update.",
+      es: "Detente donde estás si es seguro y espera la próxima actualización de la organización.",
+      fr: "Arrêtez-vous là où vous êtes si cela ne présente aucun danger et attendez la prochaine consigne de l’organisation.",
+      ar: "توقف في مكانك إذا كان ذلك آمناً وانتظر التحديث التالي من المنظمين.",
+      fa: "اگر امن است در جای خود توقف کنید و منتظر پیام بعدی برگزارکنندگان بمانید.",
+    },
     targetRole: "all",
   },
   {
     id: "accessibility",
-    label: "Accessibility check",
-    message: "Accessibility helpers, please check the participant help requests now.",
+    labels: { en: "Accessibility check", es: "Revisión de accesibilidad", fr: "Vérification d’accessibilité", ar: "فحص إمكانية الوصول", fa: "بررسی دسترس‌پذیری" },
+    messages: {
+      en: "Accessibility helpers, please check the participant help requests now.",
+      es: "Equipo de accesibilidad: revisen ahora las solicitudes de ayuda de participantes.",
+      fr: "Équipe d’accessibilité, veuillez vérifier maintenant les demandes d’aide des participants.",
+      ar: "فريق دعم إمكانية الوصول، يرجى مراجعة طلبات مساعدة المشاركين الآن.",
+      fa: "همیاران دسترس‌پذیری، لطفاً اکنون درخواست‌های کمک شرکت‌کنندگان را بررسی کنید.",
+    },
     targetRole: "accessibility",
   },
 ];
@@ -192,6 +224,7 @@ export default function CommandCenter() {
   const { toast } = useToast();
   const [announcementMessage, setAnnouncementMessage] = useState("");
   const [announcementTarget, setAnnouncementTarget] = useState<AnnouncementTargetRole>("all");
+  const [announcementLanguage, setAnnouncementLanguage] = useState<AnnouncementLanguage>("en");
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState(["Yes", "No", "Need more info"]);
   const [safetyCheckMessage, setSafetyCheckMessage] = useState("Safety check: please confirm whether you are okay.");
@@ -819,10 +852,27 @@ export default function CommandCenter() {
                   </p>
                 </div>
                 <div className="space-y-1.5">
-                  <p className="text-xs font-medium text-muted-foreground">Quick announcement starters</p>
+                  <div className="flex flex-wrap items-end justify-between gap-2">
+                    <p className="text-xs font-medium text-muted-foreground">Quick announcement starters</p>
+                    <label htmlFor="announcement-language" className="text-xs font-medium text-muted-foreground">
+                      Message language
+                      <select
+                        id="announcement-language"
+                        value={announcementLanguage}
+                        onChange={(event) => setAnnouncementLanguage(event.target.value as AnnouncementLanguage)}
+                        className="ml-2 rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground"
+                        data-testid="select-announcement-language"
+                      >
+                        {announcementLanguageOptions.map((option) => (
+                          <option key={option.code} value={option.code}>{option.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
                   <div className="flex flex-wrap gap-2" aria-label="Quick announcement starters">
                     {announcementStarters.map((starter) => {
-                      const selected = announcementMessage === starter.message && announcementTarget === starter.targetRole;
+                      const message = starter.messages[announcementLanguage];
+                      const selected = announcementMessage === message && announcementTarget === starter.targetRole;
                       return (
                         <Button
                           key={starter.id}
@@ -831,13 +881,13 @@ export default function CommandCenter() {
                           variant={selected ? "secondary" : "outline"}
                           className="h-8 text-xs"
                           onClick={() => {
-                            setAnnouncementMessage(starter.message);
+                            setAnnouncementMessage(message);
                             setAnnouncementTarget(starter.targetRole);
                           }}
                           aria-pressed={selected}
                           data-testid={`button-announcement-starter-${starter.id}`}
                         >
-                          {starter.label}
+                          {starter.labels[announcementLanguage]}
                         </Button>
                       );
                     })}

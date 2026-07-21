@@ -85,11 +85,18 @@ type ParticipantEngagement = {
 
 const clampProgress = (value: number) => Math.min(100, Math.max(0, value));
 const getFallbackPhaseDuration = (phase: "leader" | "people") => phase === "leader" ? 4000 : 3000;
-const formatParticipantSchedule = (value?: string | null) => {
+const participantLocales: Record<ParticipantLanguage, string> = {
+  en: "en",
+  es: "es",
+  fr: "fr",
+  ar: "ar",
+  fa: "fa",
+};
+const formatParticipantSchedule = (value: string | null | undefined, language: ParticipantLanguage) => {
   if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(participantLocales[language], {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
@@ -160,6 +167,8 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     chant: "Chant",
     cycle: "cycle",
     of: "of",
+    leaderChantProgress: "Leader chant progress",
+    everyoneChantProgress: "Everyone chant progress",
     waitingForChantText: "Waiting for chant text.",
     help: "Help",
     helpOpen: "Help open",
@@ -318,6 +327,8 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     chant: "Canto",
     cycle: "ronda",
     of: "de",
+    leaderChantProgress: "Progreso del canto de quien guía",
+    everyoneChantProgress: "Progreso del canto de todas las personas",
     waitingForChantText: "Esperando el texto del canto.",
     help: "Ayuda",
     helpOpen: "Ayuda abierta",
@@ -476,6 +487,8 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     chant: "Chant",
     cycle: "cycle",
     of: "sur",
+    leaderChantProgress: "Progression du chant du meneur",
+    everyoneChantProgress: "Progression du chant de tout le monde",
     waitingForChantText: "En attente du texte du chant.",
     help: "Aide",
     helpOpen: "Aide ouverte",
@@ -634,6 +647,8 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     chant: "الهتاف",
     cycle: "الدورة",
     of: "من",
+    leaderChantProgress: "تقدم هتاف القائد",
+    everyoneChantProgress: "تقدم هتاف الجميع",
     waitingForChantText: "بانتظار نص الهتاف.",
     help: "مساعدة",
     helpOpen: "المساعدة مفتوحة",
@@ -792,6 +807,8 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     chant: "شعار",
     cycle: "دور",
     of: "از",
+    leaderChantProgress: "پیشرفت شعار رهبر",
+    everyoneChantProgress: "پیشرفت شعار همه",
     waitingForChantText: "در انتظار متن شعار.",
     help: "کمک",
     helpOpen: "کمک باز است",
@@ -1201,7 +1218,7 @@ export default function Participant() {
     ? t.lowBandwidthDescription
     : t.fullDisplayDescription;
   const logisticsItems = [
-    { label: t.when, value: formatParticipantSchedule(chantData?.scheduledAt) },
+    { label: t.when, value: formatParticipantSchedule(chantData?.scheduledAt, participantLanguage) },
     { label: t.where, value: chantData?.locationName },
     { label: t.meet, value: chantData?.meetingPoint },
     { label: t.arrival, value: chantData?.arrivalNote },
@@ -1648,7 +1665,7 @@ export default function Participant() {
       <div
         className="mt-5 h-3 w-full overflow-hidden rounded-full bg-white/15 shadow-[0_0_18px_rgba(255,255,255,0.12)]"
         role="progressbar"
-        aria-label={`${phase === "leader" ? "Leader" : "Everyone"} chant progress`}
+        aria-label={phase === "leader" ? t.leaderChantProgress : t.everyoneChantProgress}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(phaseProgress)}
@@ -1658,7 +1675,7 @@ export default function Participant() {
           className={`h-full rounded-full ${barColor} shadow-[0_0_20px_currentColor]`}
           style={{
             transform: `scaleX(${phaseProgress / 100})`,
-            transformOrigin: "left center",
+            transformOrigin: participantDirection === "rtl" ? "right center" : "left center",
           }}
         />
       </div>
@@ -1954,7 +1971,7 @@ export default function Participant() {
         >
           {chantData.chantIndex !== null && (
             <p className="text-neutral-500 text-sm font-mono mb-6 tracking-wider" data-testid="text-chant-number">
-              {chantData.chantIndex + 1} / {chantData.totalChants} - Cycle {chantData.currentCycle ?? 1}/{chantData.cycleCount ?? 1}
+              {t.chant} {chantData.chantIndex + 1} {t.of} {chantData.totalChants} - {t.cycle} {chantData.currentCycle ?? 1} {t.of} {chantData.cycleCount ?? 1}
             </p>
           )}
           {hasChantContent ? (

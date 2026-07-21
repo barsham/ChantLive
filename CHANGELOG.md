@@ -4,6 +4,18 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.59 - 21 July 2026
+
+Faster multilingual organiser messages and clearer localized live-event timing for participants.
+
+### Improved
+
+- Multilingual announcement starters: Organisers can draft route-change, pause, and accessibility updates in English, Spanish, French, Arabic, or Persian before reviewing and sending. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Localized chant position: The visible chant and cycle position now follows the participant's selected language.
+- Localized event times: Participant event dates and times now use the selected language's familiar date format.
+- Translated progress announcements: Screen readers now describe leader and group chant progress in the participant's selected language.
+- Right-to-left live timing: Arabic and Persian chant progress bars now advance in the expected right-to-left reading direction.
+
 ## 1.1.58 - 20 July 2026
 
 Faster organiser announcements and clearer multilingual participant confirmations during live events.

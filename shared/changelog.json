@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.59",
+      "releasedAt": "2026-07-21",
+      "summary": "Faster multilingual organiser messages and clearer localized live-event timing for participants.",
+      "items": [
+        {
+          "id": "cl-2026-07-21-multilingual-announcement-starters",
+          "title": "Multilingual announcement starters",
+          "description": "Organisers can draft route-change, pause, and accessibility updates in English, Spanish, French, Arabic, or Persian before reviewing and sending.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-21",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-07-21-localized-chant-position",
+          "title": "Localized chant position",
+          "description": "The visible chant and cycle position now follows the participant's selected language.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-21",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-21-localized-event-time",
+          "title": "Localized event times",
+          "description": "Participant event dates and times now use the selected language's familiar date format.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-21",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-21-accessible-progress-label",
+          "title": "Translated progress announcements",
+          "description": "Screen readers now describe leader and group chant progress in the participant's selected language.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-21",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-21-rtl-progress-direction",
+          "title": "Right-to-left live timing",
+          "description": "Arabic and Persian chant progress bars now advance in the expected right-to-left reading direction.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-21",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.58",
       "releasedAt": "2026-07-20",
       "summary": "Faster organiser announcements and clearer multilingual participant confirmations during live events.",
