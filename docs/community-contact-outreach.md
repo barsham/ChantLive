@@ -115,6 +115,11 @@ Would this be appropriate for someone in your team or network to review?
 | 2026-07-20 | Queensland Unions | info@qcu.asn.au | Sent via Zoho SMTP; Break ChantLive Challenge; official source: https://www.qldunions.com/contact |
 | 2026-07-20 | UnionsWA | admin@unionswa.com.au | Sent via Zoho SMTP; Break ChantLive Challenge; official source: https://www.unionswa.com.au/about-us/ |
 | 2026-07-20 | Unions Tasmania | admin@unionstas.com.au | Sent via Zoho SMTP; Break ChantLive Challenge; official source: https://unionstas.com.au/ |
+| 2026-07-21 | Centre for Accessibility Australia | admin@accessibility.org.au | Sent via Zoho SMTP; QR-Free Challenge; official source: https://www.accessibility.org.au/about/ |
+| 2026-07-21 | Australian Federation of Disability Organisations | office@afdo.org.au | Sent via Zoho SMTP; QR-Free Challenge; official source: https://afdo.org.au/contact-us/ |
+| 2026-07-21 | Vision Australia | info@visionaustralia.org | Sent via Zoho SMTP; QR-Free Challenge; official source: https://www.visionaustralia.org/about-us/contact-us/locations |
+| 2026-07-21 | National Ethnic Disability Alliance | comms@neda.org.au | Sent via Zoho SMTP; QR-Free Challenge; official source: https://neda.org.au/ |
+| 2026-07-21 | Children and Young People with Disability Australia | info@cyda.org.au | Sent via Zoho SMTP; QR-Free Challenge; official source: https://cyda.org.au/about/what-we-do-at-cyda/ |
 
 ## Reply Log
 
