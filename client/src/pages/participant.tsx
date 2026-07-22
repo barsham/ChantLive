@@ -89,8 +89,8 @@ const participantLocales: Record<ParticipantLanguage, string> = {
   en: "en",
   es: "es",
   fr: "fr",
-  ar: "ar",
-  fa: "fa",
+  ar: "ar-u-nu-arab",
+  fa: "fa-u-nu-arabext",
 };
 const formatParticipantSchedule = (value: string | null | undefined, language: ParticipantLanguage) => {
   if (!value) return null;
@@ -101,6 +101,8 @@ const formatParticipantSchedule = (value: string | null | undefined, language: P
     timeStyle: "short",
   }).format(date);
 };
+const formatParticipantNumber = (value: number, language: ParticipantLanguage) =>
+  new Intl.NumberFormat(participantLocales[language]).format(value);
 const getStoredPollVotes = (): Record<string, string> => {
   try {
     return JSON.parse(localStorage.getItem("chant_poll_votes") ?? "{}") as Record<string, string>;
@@ -178,6 +180,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     largeTextOn: "Large text on",
     highContrast: "High contrast",
     highContrastOn: "High contrast on",
+    helpPanelLabel: "Participant help and safety panel",
     viewingNow: "Viewing now",
     connected: "Connected to live updates",
     reconnecting: "Reconnecting - updates resume automatically",
@@ -338,6 +341,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     largeTextOn: "Texto grande activo",
     highContrast: "Alto contraste",
     highContrastOn: "Alto contraste activo",
+    helpPanelLabel: "Panel de ayuda y seguridad para participantes",
     viewingNow: "Viendo ahora",
     connected: "Conectado a actualizaciones en vivo",
     reconnecting: "Reconectando - las actualizaciones volverán automáticamente",
@@ -498,6 +502,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     largeTextOn: "Grand texte activé",
     highContrast: "Contraste élevé",
     highContrastOn: "Contraste élevé activé",
+    helpPanelLabel: "Panneau d’aide et de sécurité des participants",
     viewingNow: "En ligne",
     connected: "Connecté aux mises à jour",
     reconnecting: "Reconnexion - les mises à jour reprendront",
@@ -658,6 +663,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     largeTextOn: "النص الكبير مفعل",
     highContrast: "تباين عال",
     highContrastOn: "التباين العالي مفعل",
+    helpPanelLabel: "لوحة مساعدة وسلامة المشاركين",
     viewingNow: "يشاهد الآن",
     connected: "متصل بالتحديثات المباشرة",
     reconnecting: "إعادة الاتصال - ستعود التحديثات تلقائياً",
@@ -818,6 +824,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     largeTextOn: "متن بزرگ روشن",
     highContrast: "کنتراست بالا",
     highContrastOn: "کنتراست بالا روشن",
+    helpPanelLabel: "پنل کمک و ایمنی شرکت‌کنندگان",
     viewingNow: "در حال مشاهده",
     connected: "به به‌روزرسانی زنده وصل است",
     reconnecting: "در حال اتصال دوباره - به‌روزرسانی‌ها خودکار برمی‌گردند",
@@ -946,7 +953,7 @@ const getAnnouncementAudienceLabel = (targetRole: OrganizerAnnouncement["targetR
   return labels[targetRole];
 };
 
-const getChantAnnouncement = (chantData: ChantData | null, copy: Record<string, string>) => {
+const getChantAnnouncement = (chantData: ChantData | null, copy: Record<string, string>, language: ParticipantLanguage) => {
   if (!chantData || chantData.demoStatus !== "live") {
     return "";
   }
@@ -959,10 +966,10 @@ const getChantAnnouncement = (chantData: ChantData | null, copy: Record<string, 
   const cycle = chantData.currentCycle ?? 1;
   const totalCycles = chantData.cycleCount ?? 1;
   const chantPosition = chantNumber
-    ? `${copy.chant} ${chantNumber} ${copy.of} ${chantData.totalChants}. `
+    ? `${copy.chant} ${formatParticipantNumber(chantNumber, language)} ${copy.of} ${formatParticipantNumber(chantData.totalChants, language)}. `
     : "";
 
-  return `${chantPosition}${phaseLabel}, ${copy.cycle} ${cycle} ${copy.of} ${totalCycles}. ${activeText ?? copy.waitingForChantText}`;
+  return `${chantPosition}${phaseLabel}, ${copy.cycle} ${formatParticipantNumber(cycle, language)} ${copy.of} ${formatParticipantNumber(totalCycles, language)}. ${activeText ?? copy.waitingForChantText}`;
 };
 
 export default function Participant() {
@@ -1208,7 +1215,7 @@ export default function Participant() {
       detail: t.listenOrangeCall,
       className: "border-orange-500/40 bg-orange-500/10 text-orange-200",
     };
-  const chantAnnouncement = getChantAnnouncement(chantData, t);
+  const chantAnnouncement = getChantAnnouncement(chantData, t, participantLanguage);
   const callColor = highContrast ? "#fde047" : "#f97316";
   const responseColor = highContrast ? "#ffffff" : "#38bdf8";
   const chantFontSize = largeText
@@ -1971,7 +1978,7 @@ export default function Participant() {
         >
           {chantData.chantIndex !== null && (
             <p className="text-neutral-500 text-sm font-mono mb-6 tracking-wider" data-testid="text-chant-number">
-              {t.chant} {chantData.chantIndex + 1} {t.of} {chantData.totalChants} - {t.cycle} {chantData.currentCycle ?? 1} {t.of} {chantData.cycleCount ?? 1}
+              {t.chant} {formatParticipantNumber(chantData.chantIndex + 1, participantLanguage)} {t.of} {formatParticipantNumber(chantData.totalChants, participantLanguage)} - {t.cycle} {formatParticipantNumber(chantData.currentCycle ?? 1, participantLanguage)} {t.of} {formatParticipantNumber(chantData.cycleCount ?? 1, participantLanguage)}
             </p>
           )}
           {hasChantContent ? (
@@ -2056,7 +2063,7 @@ export default function Participant() {
       {showHelp && (
         <section
           className="mx-4 mb-3 rounded-2xl border border-neutral-700 bg-neutral-950 p-4 text-sm text-neutral-300 shadow-2xl"
-          aria-label="Participant help and safety panel"
+          aria-label={t.helpPanelLabel}
           data-testid="panel-participant-help"
         >
           <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-4">
@@ -2188,7 +2195,7 @@ export default function Participant() {
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <span className="rounded-full border border-emerald-300/40 px-3 py-1 text-sm font-semibold text-emerald-50" data-testid="text-engagement-points">
-                  {engagement?.points ?? 0} {t.points}
+                  {formatParticipantNumber(engagement?.points ?? 0, participantLanguage)} {t.points}
                 </span>
                 {(engagement?.badges.length ?? 0) > 0 ? engagement?.badges.map((badge) => (
                   <span key={badge} className="rounded-full border border-emerald-300/30 bg-black/20 px-3 py-1 text-xs text-emerald-100">
@@ -2222,7 +2229,7 @@ export default function Participant() {
                         >
                           <span className="font-semibold">{option.label}</span>
                           <span className="mt-1 block text-xs text-sky-100/80">
-                            {option.votes} {t.votes} - {percent}%
+                            {formatParticipantNumber(option.votes, participantLanguage)} {t.votes} - {formatParticipantNumber(percent, participantLanguage)}%
                           </span>
                           <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-black/30">
                             <span className="block h-full rounded-full bg-sky-200" style={{ width: `${percent}%` }} />
@@ -2377,7 +2384,7 @@ export default function Participant() {
                         className="mt-2 rounded-full border border-neutral-700 px-2.5 py-1 text-xs text-neutral-300 hover:bg-neutral-900"
                         data-testid={`button-upvote-question-${question.id}`}
                       >
-                        {t.voteUp} ({question.votes})
+                        {t.voteUp} ({formatParticipantNumber(question.votes, participantLanguage)})
                       </button>
                     </div>
                   ))
@@ -2503,7 +2510,7 @@ export default function Participant() {
         <span className="inline-flex items-center gap-2">
           <Users className="w-4 h-4 text-neutral-500" />
           <span className="text-neutral-400 text-sm font-mono" data-testid="text-viewer-count">
-            {t.viewingNow}: {viewerCount}
+            {t.viewingNow}: {formatParticipantNumber(viewerCount, participantLanguage)}
           </span>
         </span>
         <span

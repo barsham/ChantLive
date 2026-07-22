@@ -174,6 +174,14 @@ const announcementLanguageOptions: Array<{ code: AnnouncementLanguage; label: st
   { code: "fa", label: "فارسی" },
 ];
 
+const announcementPlaceholders: Record<AnnouncementLanguage, string> = {
+  en: "Example: Move closer to the speaker, then keep this page open.",
+  es: "Ejemplo: Acércate al altavoz y mantén esta página abierta.",
+  fr: "Exemple : rapprochez-vous du haut-parleur et gardez cette page ouverte.",
+  ar: "مثال: اقترب من مكبر الصوت وأبقِ هذه الصفحة مفتوحة.",
+  fa: "نمونه: به بلندگو نزدیک‌تر شوید و این صفحه را باز نگه دارید.",
+};
+
 const announcementStarters: Array<{
   id: string;
   labels: Record<AnnouncementLanguage, string>;
@@ -228,6 +236,17 @@ export default function CommandCenter() {
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState(["Yes", "No", "Need more info"]);
   const [safetyCheckMessage, setSafetyCheckMessage] = useState("Safety check: please confirm whether you are okay.");
+  const announcementDirection = announcementLanguage === "ar" || announcementLanguage === "fa" ? "rtl" : "ltr";
+  const changeAnnouncementLanguage = (language: AnnouncementLanguage) => {
+    const selectedStarter = announcementStarters.find((starter) =>
+      starter.targetRole === announcementTarget && Object.values(starter.messages).includes(announcementMessage)
+    );
+
+    setAnnouncementLanguage(language);
+    if (selectedStarter) {
+      setAnnouncementMessage(selectedStarter.messages[language]);
+    }
+  };
 
   const { data, isLoading } = useQuery<DemoDetail>({
     queryKey: ["/api/demos", id],
@@ -859,7 +878,7 @@ export default function CommandCenter() {
                       <select
                         id="announcement-language"
                         value={announcementLanguage}
-                        onChange={(event) => setAnnouncementLanguage(event.target.value as AnnouncementLanguage)}
+                        onChange={(event) => changeAnnouncementLanguage(event.target.value as AnnouncementLanguage)}
                         className="ml-2 rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground"
                         data-testid="select-announcement-language"
                       >
@@ -869,7 +888,7 @@ export default function CommandCenter() {
                       </select>
                     </label>
                   </div>
-                  <div className="flex flex-wrap gap-2" aria-label="Quick announcement starters">
+                  <div className="flex flex-wrap gap-2" dir={announcementDirection} aria-label="Quick announcement starters">
                     {announcementStarters.map((starter) => {
                       const message = starter.messages[announcementLanguage];
                       const selected = announcementMessage === message && announcementTarget === starter.targetRole;
@@ -897,7 +916,8 @@ export default function CommandCenter() {
                 <Textarea
                   value={announcementMessage}
                   onChange={(event) => setAnnouncementMessage(event.target.value)}
-                  placeholder="Example: Move closer to the speaker, then keep this page open."
+                  placeholder={announcementPlaceholders[announcementLanguage]}
+                  dir={announcementDirection}
                   rows={3}
                   maxLength={180}
                   data-testid="input-announcement-message"

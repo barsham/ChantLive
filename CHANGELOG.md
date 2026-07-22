@@ -4,6 +4,18 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.60 - 22 July 2026
+
+Clearer QR-free joining and safer multilingual live-event communication.
+
+### Improved
+
+- QR-free joining made explicit: The landing page now presents plain links and event codes alongside optional QR access, including a clear no-camera-required message.
+- Safer announcement language switching: Changing the message language now translates the selected announcement starter instead of leaving an old-language draft behind. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Right-to-left announcement editing: Arabic and Persian announcement drafts now use right-to-left editing with a language-matched example.
+- Localized live-event numbers: Chant position, viewer, points, poll, and question numbers now follow the participant's selected language.
+- Translated help-panel navigation: Screen readers now announce the participant help and safety panel in the selected language.
+
 ## 1.1.59 - 21 July 2026
 
 Faster multilingual organiser messages and clearer localized live-event timing for participants.

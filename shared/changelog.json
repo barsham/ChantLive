@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.60",
+      "releasedAt": "2026-07-22",
+      "summary": "Clearer QR-free joining and safer multilingual live-event communication.",
+      "items": [
+        {
+          "id": "cl-2026-07-22-qr-free-joining",
+          "title": "QR-free joining made explicit",
+          "description": "The landing page now presents plain links and event codes alongside optional QR access, including a clear no-camera-required message.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-22",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-22-announcement-language-switching",
+          "title": "Safer announcement language switching",
+          "description": "Changing the message language now translates the selected announcement starter instead of leaving an old-language draft behind.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-22",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-07-22-rtl-announcement-editor",
+          "title": "Right-to-left announcement editing",
+          "description": "Arabic and Persian announcement drafts now use right-to-left editing with a language-matched example.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-22",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-22-localized-live-numbers",
+          "title": "Localized live-event numbers",
+          "description": "Chant position, viewer, points, poll, and question numbers now follow the participant's selected language.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-22",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-22-translated-help-panel-name",
+          "title": "Translated help-panel navigation",
+          "description": "Screen readers now announce the participant help and safety panel in the selected language.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-22",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.59",
       "releasedAt": "2026-07-21",
       "summary": "Faster multilingual organiser messages and clearer localized live-event timing for participants.",

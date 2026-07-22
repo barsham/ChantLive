@@ -155,7 +155,7 @@ export default function Landing() {
               <span className="text-primary"> live chants</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-8">
-              Create demonstrations, manage chants, share QR codes, and push live call-and-response updates to every participant&apos;s phone instantly. Hosted at <a href="https://chantlive.online/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">chantlive.online</a> and free to use by anyone.
+              Create demonstrations, manage chants, share a plain link, event code, or QR code, and push live call-and-response updates to every participant&apos;s phone instantly. Hosted at <a href="https://chantlive.online/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">chantlive.online</a> and free to use by anyone.
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
               {isAuthenticated ? (
@@ -210,6 +210,9 @@ export default function Landing() {
                     <h2 className="text-lg font-semibold">Joining an event?</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
                       Enter the code shared by your organiser, or paste the full participant link. No account is needed.
+                    </p>
+                    <p className="mt-2 text-xs font-medium text-primary" data-testid="text-qr-free-join">
+                      No camera or QR scanner required.
                     </p>
                     <form className="mt-4 flex flex-col gap-2 sm:flex-row" onSubmit={handleJoin} noValidate>
                       <div className="min-w-0 flex-1">
@@ -293,8 +296,8 @@ export default function Landing() {
                   <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center mb-4">
                     <Users className="w-5 h-5 text-primary" />
                   </div>
-                  <h3 className="font-semibold mb-2">Participants join via QR</h3>
-                  <p className="text-sm text-muted-foreground">Share a QR code. Participants see the live chant full-screen on their phones, no download needed.</p>
+                  <h3 className="font-semibold mb-2">Participants join by link, code, or QR</h3>
+                  <p className="text-sm text-muted-foreground">Share the option that works for the crowd. Participants see the live chant full-screen on their phones, with no account or download needed.</p>
                 </CardContent>
               </Card>
             </div>
@@ -318,7 +321,7 @@ export default function Landing() {
             <div className="mt-6 grid gap-3 sm:grid-cols-3 text-left">
               <div className="rounded-lg border bg-card p-4">
                 <p className="text-sm font-medium mb-1">No participant accounts</p>
-                <p className="text-xs text-muted-foreground">People can join from a link or QR code without creating a profile.</p>
+                <p className="text-xs text-muted-foreground">People can join from a plain link, event code, or optional QR code without creating a profile.</p>
               </div>
               <div className="rounded-lg border bg-card p-4">
                 <p className="text-sm font-medium mb-1">Mobile-first viewing</p>
@@ -345,9 +348,9 @@ export default function Landing() {
               <Card>
                 <CardContent className="pt-6">
                   <QrCode className="w-7 h-7 text-primary mb-3" />
-                  <h3 className="font-semibold mb-2">QR plus link fallback</h3>
+                  <h3 className="font-semibold mb-2">Plain link and event code included</h3>
                   <p className="text-sm text-muted-foreground">
-                    Share the QR code for speed, then copy the same participant link for messages, projection, or printed backup.
+                    Copy the participant link or short event code for messages, projection, spoken instructions, or printed backup. QR remains optional.
                   </p>
                 </CardContent>
               </Card>
@@ -381,7 +384,7 @@ export default function Landing() {
                 <CardContent className="pt-6">
                   <h3 className="font-semibold mb-2">Do participants need to install anything?</h3>
                   <p className="text-sm text-muted-foreground">
-                    No. Participants scan a QR code or open a link and immediately see the current chant in their mobile browser.
+                    No. Participants open a link, enter the event code, or optionally scan a QR code and immediately see the current chant in their mobile browser.
                   </p>
                 </CardContent>
               </Card>
