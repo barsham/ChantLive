@@ -174,6 +174,14 @@ const announcementLanguageOptions: Array<{ code: AnnouncementLanguage; label: st
   { code: "fa", label: "فارسی" },
 ];
 
+const announcementAudienceLabels: Record<AnnouncementTargetRole, string> = {
+  all: "Everyone",
+  participant: "Participants",
+  marshal: "Marshals",
+  speaker: "Speakers",
+  accessibility: "Accessibility helpers",
+};
+
 const announcementPlaceholders: Record<AnnouncementLanguage, string> = {
   en: "Example: Move closer to the speaker, then keep this page open.",
   es: "Ejemplo: Acércate al altavoz y mantén esta página abierta.",
@@ -860,14 +868,20 @@ export default function CommandCenter() {
                     className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     data-testid="select-announcement-target"
                   >
-                    <option value="all">Everyone</option>
-                    <option value="participant">Participants</option>
-                    <option value="marshal">Marshals</option>
-                    <option value="speaker">Speakers</option>
-                    <option value="accessibility">Accessibility helpers</option>
+                    {Object.entries(announcementAudienceLabels).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
                   </select>
                   <p className="text-xs text-muted-foreground">
                     Role-targeted messages are shown to participants who checked in with that role.
+                  </p>
+                  <p
+                    className="rounded-md border border-sky-500/20 bg-sky-500/5 px-3 py-2 text-xs text-foreground"
+                    role="status"
+                    aria-live="polite"
+                    data-testid="text-announcement-audience-preview"
+                  >
+                    Delivery preview: <strong>{announcementAudienceLabels[announcementTarget]}</strong> will see this update.
                   </p>
                 </div>
                 <div className="space-y-1.5">
@@ -924,14 +938,26 @@ export default function CommandCenter() {
                 />
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-xs text-muted-foreground">{announcementMessage.length}/180 characters</p>
-                  <Button
-                    size="sm"
-                    onClick={() => sendAnnouncement.mutate({ message: announcementMessage.trim(), targetRole: announcementTarget })}
-                    disabled={!announcementMessage.trim() || sendAnnouncement.isPending}
-                    data-testid="button-send-announcement"
-                  >
-                    Send update
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setAnnouncementMessage("")}
+                      disabled={!announcementMessage || sendAnnouncement.isPending}
+                      data-testid="button-clear-announcement"
+                    >
+                      Clear draft
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => sendAnnouncement.mutate({ message: announcementMessage.trim(), targetRole: announcementTarget })}
+                      disabled={!announcementMessage.trim() || sendAnnouncement.isPending}
+                      data-testid="button-send-announcement"
+                    >
+                      Send update
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

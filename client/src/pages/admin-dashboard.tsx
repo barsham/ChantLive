@@ -534,7 +534,7 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-sm font-medium">Quick start for a live event</p>
                 <p className="text-xs text-muted-foreground">
-                  Create a demonstration, add chants, test the participant page on a phone, then share the QR code before going live.
+                  Create a demonstration, add chants, test the participant page on a phone, then share the plain link and event code. Keep QR as an optional extra.
                 </p>
               </div>
               <Button size="sm" onClick={() => setDialogOpen(true)} data-testid="button-quick-start-create">

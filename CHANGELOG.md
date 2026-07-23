@@ -4,6 +4,18 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.61 - 23 July 2026
+
+Clearer organiser delivery controls and simpler QR-free participant sharing.
+
+### Improved
+
+- QR-free organiser quick start: The organiser dashboard now prioritises sharing the plain participant link and event code, with QR presented as an optional extra. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Announcement recipient preview: Organisers now see a live delivery preview naming the audience that will receive an announcement before it is sent. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- One-tap announcement draft clearing: A dedicated Clear draft control lets organisers safely discard stale announcement text without editing it away manually.
+- Explicit participant link copying: Participants can now copy the current event link directly, independently of the device's native share menu.
+- Localized access reassurance: The participant access panel now explains in five languages that no account or QR scanner is needed.
+
 ## 1.1.60 - 22 July 2026
 
 Clearer QR-free joining and safer multilingual live-event communication.

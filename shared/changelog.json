@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.61",
+      "releasedAt": "2026-07-23",
+      "summary": "Clearer organiser delivery controls and simpler QR-free participant sharing.",
+      "items": [
+        {
+          "id": "cl-2026-07-23-organiser-qr-free-quick-start",
+          "title": "QR-free organiser quick start",
+          "description": "The organiser dashboard now prioritises sharing the plain participant link and event code, with QR presented as an optional extra.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-23",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-07-23-announcement-recipient-preview",
+          "title": "Announcement recipient preview",
+          "description": "Organisers now see a live delivery preview naming the audience that will receive an announcement before it is sent.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-23",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-07-23-announcement-clear-draft",
+          "title": "One-tap announcement draft clearing",
+          "description": "A dedicated Clear draft control lets organisers safely discard stale announcement text without editing it away manually.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-23",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-23-copy-participant-link",
+          "title": "Explicit participant link copying",
+          "description": "Participants can now copy the current event link directly, independently of the device's native share menu.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-23",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-23-localized-access-reassurance",
+          "title": "Localized access reassurance",
+          "description": "The participant access panel now explains in five languages that no account or QR scanner is needed.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-23",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.60",
       "releasedAt": "2026-07-22",
       "summary": "Clearer QR-free joining and safer multilingual live-event communication.",

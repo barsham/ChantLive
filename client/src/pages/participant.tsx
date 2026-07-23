@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useParams } from "wouter";
 import { getSocket } from "@/lib/socket";
-import { CalendarPlus, Copy, ExternalLink, Eye, HelpCircle, Share2, ShieldCheck, Sun, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
+import { CalendarPlus, Copy, ExternalLink, Eye, HelpCircle, Link2, Share2, ShieldCheck, Sun, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
 import { buildGoogleCalendarUrl, buildOutlookCalendarUrl, downloadCalendarFile, type CalendarEventDetails } from "@/lib/calendar";
 import {
   DropdownMenu,
@@ -260,6 +260,9 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     copyCode: "Copy code",
     copyEventCode: "Copy event code",
     eventCodeCopied: "Event code copied.",
+    copyLink: "Copy link",
+    participantLinkCopied: "Participant link copied.",
+    noAccountOrScanner: "No account or QR scanner needed.",
     shareEvent: "Share event",
     eventShared: "Event shared.",
     eventInvitationCopied: "Event invitation copied.",
@@ -421,6 +424,9 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     copyCode: "Copiar código",
     copyEventCode: "Copiar código del evento",
     eventCodeCopied: "Código del evento copiado.",
+    copyLink: "Copiar enlace",
+    participantLinkCopied: "Enlace del evento copiado.",
+    noAccountOrScanner: "No necesitas una cuenta ni escanear un código QR.",
     shareEvent: "Compartir evento",
     eventShared: "Evento compartido.",
     eventInvitationCopied: "Invitación al evento copiada.",
@@ -582,6 +588,9 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     copyCode: "Copier le code",
     copyEventCode: "Copier le code de l'événement",
     eventCodeCopied: "Code de l'événement copié.",
+    copyLink: "Copier le lien",
+    participantLinkCopied: "Lien de l’événement copié.",
+    noAccountOrScanner: "Aucun compte ni scanner de code QR n’est nécessaire.",
     shareEvent: "Partager l'événement",
     eventShared: "Événement partagé.",
     eventInvitationCopied: "Invitation à l'événement copiée.",
@@ -743,6 +752,9 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     copyCode: "نسخ الرمز",
     copyEventCode: "نسخ رمز الفعالية",
     eventCodeCopied: "تم نسخ رمز الفعالية.",
+    copyLink: "نسخ الرابط",
+    participantLinkCopied: "تم نسخ رابط الفعالية.",
+    noAccountOrScanner: "لا تحتاج إلى حساب أو مسح رمز QR.",
     shareEvent: "مشاركة الفعالية",
     eventShared: "تمت مشاركة الفعالية.",
     eventInvitationCopied: "تم نسخ دعوة الفعالية.",
@@ -904,6 +916,9 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     copyCode: "کپی کد",
     copyEventCode: "کپی کد رویداد",
     eventCodeCopied: "کد رویداد کپی شد.",
+    copyLink: "کپی لینک",
+    participantLinkCopied: "لینک رویداد کپی شد.",
+    noAccountOrScanner: "به حساب کاربری یا اسکن کد QR نیاز ندارید.",
     shareEvent: "اشتراک‌گذاری رویداد",
     eventShared: "رویداد به اشتراک گذاشته شد.",
     eventInvitationCopied: "دعوت‌نامه رویداد کپی شد.",
@@ -1248,6 +1263,14 @@ export default function Participant() {
       setShareStatus(`${t.eventCode}: ${publicId}`);
     }
   };
+  const copyParticipantLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setShareStatus(t.participantLinkCopied);
+    } catch {
+      setShareStatus(window.location.href);
+    }
+  };
   const shareParticipantEvent = async () => {
     const title = chantData?.demoTitle ? `${t.join} ${chantData.demoTitle}` : t.joinThisEvent;
     const text = `${title} — ChantLive. ${t.eventCode}: ${publicId}`;
@@ -1357,6 +1380,16 @@ export default function Participant() {
           </button>
           <button
             type="button"
+            onClick={copyParticipantLink}
+            className={`inline-flex items-center gap-2 rounded-full border border-neutral-700 text-xs font-medium text-neutral-200 hover:bg-neutral-900 ${compact ? "px-2.5 py-1.5" : "px-3 py-2"}`}
+            aria-label={t.copyLink}
+            data-testid="button-copy-participant-link"
+          >
+            <Link2 className="h-3.5 w-3.5" />
+            {t.copyLink}
+          </button>
+          <button
+            type="button"
             onClick={shareParticipantEvent}
             className={`inline-flex items-center gap-2 rounded-full border border-orange-400/60 text-xs font-medium text-orange-100 hover:bg-orange-950/40 ${compact ? "px-2.5 py-1.5" : "px-3 py-2"}`}
             data-testid="button-share-participant-event"
@@ -1366,6 +1399,12 @@ export default function Participant() {
           </button>
         </div>
       </div>
+      {!compact && (
+        <p className="mt-3 flex items-center gap-2 text-xs text-neutral-400" data-testid="text-participant-access-reassurance">
+          <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-300" aria-hidden="true" />
+          {t.noAccountOrScanner}
+        </p>
+      )}
       {shareStatus && <p className="mt-2 text-xs text-emerald-300" role="status" data-testid="text-participant-share-status">{shareStatus}</p>}
       {calendarStatus && <p className="mt-2 text-xs text-sky-300" role="status" data-testid="text-participant-calendar-status">{calendarStatus}</p>}
     </div>
