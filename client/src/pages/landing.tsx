@@ -12,6 +12,11 @@ function getParticipantCode(value: string) {
   const trimmed = value.trim();
   if (!trimmed) return null;
 
+  const embeddedParticipantPath = trimmed.match(
+    /(?:https?:\/\/[^\s/]+)?\/d\/([A-Za-z0-9_-]{8})/i,
+  );
+  if (embeddedParticipantPath) return embeddedParticipantPath[1];
+
   let candidate = trimmed;
   const participantPath = trimmed.match(/^(?:(?:https?:\/\/)?[^/\s]+\.[^/\s]+)?\/?d\/([^/?#]+)\/?(?:[?#].*)?$/i);
   try {
@@ -36,7 +41,7 @@ export default function Landing() {
     event.preventDefault();
     const participantCode = getParticipantCode(joinValue);
     if (!participantCode) {
-      setJoinError("Enter the code from your organiser, or paste the full participant link.");
+      setJoinError("Enter the event code, participant link, or the full invitation message from your organiser.");
       return;
     }
 
@@ -240,6 +245,7 @@ export default function Landing() {
                       </Button>
                     </form>
                     <p id="participant-code-help" className="mt-2 text-xs text-muted-foreground">
+                      Paste the whole invitation message, the participant link, or the 6–12 character event code.
                       Your entry is used only to open the event on this device; participants join anonymously.
                     </p>
                     {joinError && (

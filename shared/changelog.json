@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.62",
+      "releasedAt": "2026-07-24",
+      "summary": "More forgiving participant joining and safer organiser event setup.",
+      "items": [
+        {
+          "id": "cl-2026-07-24-whole-invitation-joining",
+          "title": "Whole-invitation joining",
+          "description": "Participants can paste a complete ChantLive invitation message and the join tool will extract its participant link automatically.",
+          "type": "fix",
+          "visibility": "public",
+          "dateAdded": "2026-07-24",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-07-24-invitation-paste-guidance",
+          "title": "Clearer invitation-paste guidance",
+          "description": "The landing join form now explains that it accepts a whole invitation message, participant link, or short event code.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-24",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-24-future-schedule-protection",
+          "title": "Future-date protection",
+          "description": "Event creation now blocks past dates and explains how to correct the schedule before an organiser continues.",
+          "type": "fix",
+          "visibility": "public",
+          "dateAdded": "2026-07-24",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-07-24-qr-handout-event-code",
+          "title": "Readable event code on QR handouts",
+          "description": "The organiser QR panel now includes the short event code and link-first instructions so scanning remains optional.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-24",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-07-24-failed-code-troubleshooting",
+          "title": "Failed-code troubleshooting",
+          "description": "Participant recovery screens now show the event code that was checked, in every supported interface language.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-24",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.61",
       "releasedAt": "2026-07-23",
       "summary": "Clearer organiser delivery controls and simpler QR-free participant sharing.",

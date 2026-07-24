@@ -111,6 +111,11 @@ function formatCreationSchedule(value: string) {
   }).format(date)} (${timeZone})`;
 }
 
+function formatLocalDateTimeMinimum(date = new Date()) {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 export default function AdminDashboard() {
   const { user, isSuperAdmin } = useAuth();
   const [, navigate] = useLocation();
@@ -128,6 +133,11 @@ export default function AdminDashboard() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortOption, setSortOption] = useState<SortOption>("newest");
   const importInputRef = useRef<HTMLInputElement | null>(null);
+  const scheduleInPast = Boolean(
+    newScheduledAt &&
+    !Number.isNaN(new Date(newScheduledAt).getTime()) &&
+    new Date(newScheduledAt).getTime() < Date.now(),
+  );
 
   const { data: demos, isLoading } = useQuery<DashboardDemonstration[]>({
     queryKey: ["/api/demos"],
@@ -198,7 +208,7 @@ export default function AdminDashboard() {
   });
 
   const handleCreate = () => {
-    if (!newTitle.trim()) return;
+    if (!newTitle.trim() || scheduleInPast) return;
     createDemo.mutate({
       title: newTitle.trim(),
       scheduledAt: newScheduledAt ? new Date(newScheduledAt).toISOString() : "",
@@ -388,10 +398,18 @@ export default function AdminDashboard() {
                       <Input
                         id="new-demo-scheduled-at"
                         type="datetime-local"
+                        min={formatLocalDateTimeMinimum()}
                         value={newScheduledAt}
-                        onChange={(event) => setNewScheduledAt(event.target.value)}
+                        onInput={(event) => setNewScheduledAt(event.currentTarget.value)}
+                        aria-invalid={scheduleInPast || undefined}
+                        aria-describedby={scheduleInPast ? "new-demo-scheduled-at-error" : undefined}
                         data-testid="input-new-demo-scheduled-at"
                       />
+                      {scheduleInPast && (
+                        <p id="new-demo-scheduled-at-error" className="text-xs text-destructive" role="alert" data-testid="text-new-demo-schedule-error">
+                          Choose a current or future date and time.
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="new-demo-location" className="flex items-center gap-1.5">
@@ -517,7 +535,7 @@ export default function AdminDashboard() {
                   <Button
                     className="w-full"
                     onClick={handleCreate}
-                    disabled={!newTitle.trim() || createDemo.isPending}
+                    disabled={!newTitle.trim() || scheduleInPast || createDemo.isPending}
                     data-testid="button-confirm-create"
                   >
                     {createDemo.isPending ? "Creating..." : "Create Demonstration"}

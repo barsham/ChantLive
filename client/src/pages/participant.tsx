@@ -277,6 +277,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     notFound: "Demonstration not found",
     couldNotConnect: "We could not connect to this event",
     recoveryBody: "Check the participant link or try reconnecting.",
+    checkedEventCode: "Event code checked",
     tryAgain: "Try again",
     differentEventCode: "Enter a different event code",
     waitingToBegin: "Waiting to begin...",
@@ -441,6 +442,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     notFound: "No se encontró la demostración",
     couldNotConnect: "No pudimos conectar con este evento",
     recoveryBody: "Comprueba el enlace de participante o intenta conectarte de nuevo.",
+    checkedEventCode: "Código comprobado",
     tryAgain: "Intentar de nuevo",
     differentEventCode: "Introducir otro código de evento",
     waitingToBegin: "Esperando a que comience...",
@@ -605,6 +607,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     notFound: "Manifestation introuvable",
     couldNotConnect: "Impossible de se connecter à cet événement",
     recoveryBody: "Vérifiez le lien participant ou essayez de vous reconnecter.",
+    checkedEventCode: "Code vérifié",
     tryAgain: "Réessayer",
     differentEventCode: "Saisir un autre code d'événement",
     waitingToBegin: "En attente du début...",
@@ -769,6 +772,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     notFound: "لم يتم العثور على الفعالية",
     couldNotConnect: "تعذر الاتصال بهذه الفعالية",
     recoveryBody: "تحقق من رابط المشارك أو حاول الاتصال مرة أخرى.",
+    checkedEventCode: "رمز الفعالية الذي تم التحقق منه",
     tryAgain: "حاول مرة أخرى",
     differentEventCode: "أدخل رمز فعالية آخر",
     waitingToBegin: "في انتظار البدء...",
@@ -933,6 +937,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     notFound: "رویداد پیدا نشد",
     couldNotConnect: "اتصال به این رویداد ممکن نشد",
     recoveryBody: "لینک شرکت‌کننده را بررسی کنید یا دوباره متصل شوید.",
+    checkedEventCode: "کد رویداد بررسی‌شده",
     tryAgain: "تلاش دوباره",
     differentEventCode: "وارد کردن کد رویداد دیگر",
     waitingToBegin: "در انتظار شروع...",
@@ -1735,6 +1740,9 @@ export default function Participant() {
         <div className="text-center">
           <Megaphone className="w-16 h-16 text-neutral-500 mx-auto mb-4" />
           <p className="text-white text-xl mb-2" data-testid="text-error">{localizedError}</p>
+          <p className="mb-2 text-sm text-neutral-300" data-testid="text-failed-participant-code">
+            {t.checkedEventCode}: <bdi dir="ltr" className="font-mono font-semibold tracking-wider text-white">{publicId}</bdi>
+          </p>
           <p className="text-neutral-500 text-sm mb-5">{t.recoveryBody}</p>
           <button
             type="button"

@@ -811,11 +811,14 @@ export default function DemoEditor() {
                       <Skeleton className="h-48 w-48 sm:h-56 sm:w-56" />
                     )}
                     <p className="break-all text-xs text-muted-foreground">{publicUrl}</p>
+                    <p className="text-xs text-muted-foreground" data-testid="text-qr-event-code">
+                      Event code: <span className="font-mono text-sm font-bold tracking-widest text-foreground">{demo.publicId}</span>
+                    </p>
                     <p className="text-xs text-muted-foreground">Keep this page open during the event.</p>
                   </div>
                   <div className="w-full rounded-lg border bg-muted/40 p-2.5 text-xs text-muted-foreground">
                     <p className="font-medium text-foreground mb-1">Participant instructions</p>
-                    <p>Open your camera, scan the QR code, then keep the chant page open during the event.</p>
+                    <p>Open the participant link or enter event code {demo.publicId}. Scanning the QR code is optional.</p>
                   </div>
                   <div className="w-full rounded-lg border border-orange-200 bg-orange-50 p-2.5 text-xs text-orange-900">
                     <p className="font-medium mb-1">Accessible joining fallback</p>
