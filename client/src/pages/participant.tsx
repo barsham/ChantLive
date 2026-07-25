@@ -1086,6 +1086,10 @@ export default function Participant() {
   }, []);
 
   useEffect(() => {
+    setShareStatus(null);
+  }, [participantLanguage]);
+
+  useEffect(() => {
     const socket = socketRef.current;
 
     socket.on("connect", () => {
@@ -1743,6 +1747,21 @@ export default function Participant() {
           <p className="mb-2 text-sm text-neutral-300" data-testid="text-failed-participant-code">
             {t.checkedEventCode}: <bdi dir="ltr" className="font-mono font-semibold tracking-wider text-white">{publicId}</bdi>
           </p>
+          <button
+            type="button"
+            onClick={copyParticipantCode}
+            className="mb-3 inline-flex items-center gap-2 rounded-md border border-neutral-700 px-3 py-2 text-sm font-medium text-neutral-200 hover:bg-neutral-900"
+            aria-label={t.copyEventCode}
+            data-testid="button-copy-failed-participant-code"
+          >
+            <Copy className="h-4 w-4" />
+            {t.copyCode}
+          </button>
+          {shareStatus && (
+            <p className="mb-3 text-xs text-emerald-300" role="status" aria-live="polite" data-testid="text-failed-code-copy-status">
+              {shareStatus}
+            </p>
+          )}
           <p className="text-neutral-500 text-sm mb-5">{t.recoveryBody}</p>
           <button
             type="button"

@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -150,6 +151,11 @@ export default function AdminDashboard() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/demos"] });
+      try {
+        sessionStorage.setItem("chantlive-new-demonstration", data.id);
+      } catch {
+        // The editor still works when browser storage is unavailable.
+      }
       setDialogOpen(false);
       setNewTitle("");
       setNewScheduledAt("");
@@ -373,6 +379,9 @@ export default function AdminDashboard() {
               <DialogContent className="max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Create Demonstration</DialogTitle>
+                  <DialogDescription>
+                    Add the event details you know now. You can update them before sharing or going live.
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 pt-2">
                   <div className="space-y-2">

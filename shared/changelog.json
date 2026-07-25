@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.63",
+      "releasedAt": "2026-07-25",
+      "summary": "A clearer post-creation organiser handoff and more useful participant access recovery.",
+      "items": [
+        {
+          "id": "cl-2026-07-25-creation-success-confirmation",
+          "title": "Event creation confirmation",
+          "description": "Organisers now receive a clear saved confirmation immediately after creating a demonstration.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-25",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-07-25-new-event-next-steps",
+          "title": "New-event next steps",
+          "description": "A three-step guide leads organisers from adding a chant to testing the participant view and sharing access.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-25",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-07-25-immediate-participant-access",
+          "title": "Immediate participant access actions",
+          "description": "New events show their short code with direct add-chant, participant-preview, link-copy, and code-copy actions.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-25",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-07-25-participant-access-panel",
+          "title": "Link-and-code-first access panel",
+          "description": "The organiser access panel now presents QR as optional and provides dedicated controls for copying both the participant link and short code.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-25",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-07-25-failed-code-copy",
+          "title": "Copyable failed event code",
+          "description": "Participants can copy the exact event code shown on a failed-join screen to share it accurately with an organiser or helper.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-25",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.62",
       "releasedAt": "2026-07-24",
       "summary": "More forgiving participant joining and safer organiser event setup.",

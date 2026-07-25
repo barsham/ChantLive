@@ -4,6 +4,18 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.63 - 25 July 2026
+
+A clearer post-creation organiser handoff and more useful participant access recovery.
+
+### Improved
+
+- Event creation confirmation: Organisers now receive a clear saved confirmation immediately after creating a demonstration. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- New-event next steps: A three-step guide leads organisers from adding a chant to testing the participant view and sharing access. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Immediate participant access actions: New events show their short code with direct add-chant, participant-preview, link-copy, and code-copy actions. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Link-and-code-first access panel: The organiser access panel now presents QR as optional and provides dedicated controls for copying both the participant link and short code. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Copyable failed event code: Participants can copy the exact event code shown on a failed-join screen to share it accurately with an organiser or helper.
+
 ## 1.1.62 - 24 July 2026
 
 More forgiving participant joining and safer organiser event setup.

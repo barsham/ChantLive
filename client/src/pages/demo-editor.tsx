@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -137,6 +138,8 @@ export default function DemoEditor() {
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [showCreatedGuide, setShowCreatedGuide] = useState(false);
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingChant, setEditingChant] = useState<Chant | null>(null);
@@ -237,6 +240,19 @@ export default function DemoEditor() {
     setSupportUrl(demo.supportUrl ?? "");
     setSupportLabel(demo.supportLabel ?? "");
   }, [demo?.id, demo?.supportUrl, demo?.supportLabel]);
+
+  useEffect(() => {
+    if (!demo) return;
+
+    try {
+      if (sessionStorage.getItem("chantlive-new-demonstration") === demo.id) {
+        setShowCreatedGuide(true);
+        sessionStorage.removeItem("chantlive-new-demonstration");
+      }
+    } catch {
+      // Creation succeeds even when browser storage is unavailable.
+    }
+  }, [demo?.id]);
 
   useEffect(() => {
     if (!demo) return;
@@ -634,6 +650,13 @@ export default function DemoEditor() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const copyCode = () => {
+    if (!demo) return;
+    navigator.clipboard.writeText(demo.publicId);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
+  };
+
   const shareParticipantLink = async () => {
     if (!publicUrl) return;
 
@@ -794,12 +817,15 @@ export default function DemoEditor() {
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" data-testid="button-qr">
                   <QrCode className="w-4 h-4 mr-1" />
-                  QR Code
+                  Participant Access
                 </Button>
               </DialogTrigger>
               <DialogContent className="gap-3 p-4 sm:max-w-md sm:p-5" data-testid="dialog-qr-code">
                 <DialogHeader className="pr-6">
-                  <DialogTitle>Participant QR Code</DialogTitle>
+                  <DialogTitle>Participant Access</DialogTitle>
+                  <DialogDescription>
+                    Share the plain participant link or short code. The QR code is an optional shortcut.
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col items-center gap-3 py-1">
                   <div className="qr-print-handout flex w-full flex-col items-center gap-2 rounded-xl border bg-background p-3 text-center">
@@ -827,20 +853,35 @@ export default function DemoEditor() {
                       cannot scan the QR code, have older cameras, or need a screen-reader-friendly path.
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 w-full">
-                    <Input value={publicUrl} readOnly className="text-xs" data-testid="input-public-url" />
+                  <div className="grid w-full gap-2 sm:grid-cols-[1fr_auto_auto]">
+                    <Input value={publicUrl} readOnly className="text-xs" aria-label="Participant link" data-testid="input-public-url" />
                     <Button
                       variant="outline"
-                      size="icon"
+                      size="sm"
                       onClick={copyUrl}
                       aria-label={copied ? "Participant link copied" : "Copy participant link"}
                       data-testid="button-copy-url"
                     >
-                      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {copied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
+                      {copied ? "Link copied" : "Copy link"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={copyCode}
+                      aria-label={copiedCode ? "Event code copied" : "Copy event code"}
+                      data-testid="button-copy-event-code"
+                    >
+                      {copiedCode ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
+                      {copiedCode ? "Code copied" : "Copy code"}
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground" role="status" aria-live="polite" data-testid="text-copy-status">
-                    {copied ? "Participant link copied." : "Copy the participant link if people cannot scan the QR code."}
+                    {copied
+                      ? "Participant link copied."
+                      : copiedCode
+                        ? `Event code ${demo.publicId} copied.`
+                        : "Copy the participant link or event code if people cannot scan the QR code."}
                   </p>
                   <p className="text-xs text-muted-foreground text-center max-w-sm">
                     If the QR code is hard to scan in the crowd, copy this participant link and share it by message,
@@ -848,7 +889,7 @@ export default function DemoEditor() {
                   </p>
                   <div className="w-full rounded-lg border bg-card p-2.5 text-xs text-muted-foreground" data-testid="text-qr-handout-preview">
                     <p className="font-medium text-foreground mb-1">Handout checklist</p>
-                    <p>Print the QR code with the event name, participant link, and one sentence: scan or open the link, then keep the page open.</p>
+                    <p>Print the event name, participant link, short code, and one sentence: open the link or enter the code, then keep the page open. Add the QR code as an optional shortcut.</p>
                   </div>
                   <div className="grid w-full gap-2 sm:grid-cols-3">
                     <Button variant="outline" size="sm" asChild>
@@ -910,6 +951,76 @@ export default function DemoEditor() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
+        {showCreatedGuide && (
+          <Card className="mb-6 border-emerald-300 bg-emerald-50 text-emerald-950" data-testid="card-created-demonstration-guide">
+            <CardContent className="py-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="flex items-center gap-2 text-base font-semibold">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-700" aria-hidden="true" />
+                    Demonstration created
+                  </p>
+                  <p className="mt-1 text-sm text-emerald-900">
+                    Your event is saved. Add a chant, preview the participant page, then share the link or short code.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 text-emerald-900 hover:bg-emerald-100"
+                  onClick={() => setShowCreatedGuide(false)}
+                  aria-label="Dismiss creation guide"
+                  data-testid="button-dismiss-created-guide"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <ol className="mt-4 grid gap-2 text-sm sm:grid-cols-3" aria-label="New demonstration next steps">
+                <li className="rounded-lg border border-emerald-200 bg-white/70 p-3">
+                  <span className="font-semibold">1. Add a chant</span>
+                  <span className="mt-1 block text-xs text-emerald-800">Start with a template or write your own call and response.</span>
+                </li>
+                <li className="rounded-lg border border-emerald-200 bg-white/70 p-3">
+                  <span className="font-semibold">2. Preview on a phone</span>
+                  <span className="mt-1 block text-xs text-emerald-800">Check exactly what participants will see before you go live.</span>
+                </li>
+                <li className="rounded-lg border border-emerald-200 bg-white/70 p-3">
+                  <span className="font-semibold">3. Share access</span>
+                  <span className="mt-1 block text-xs text-emerald-800">Use the plain link or short code; QR is optional.</span>
+                </li>
+              </ol>
+              <div className="mt-4 rounded-lg border border-emerald-200 bg-white/80 p-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-emerald-800">Participant event code</p>
+                <p className="mt-1 font-mono text-xl font-bold tracking-[0.2em]" data-testid="text-created-event-code">{demo.publicId}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button size="sm" onClick={() => setAddDialogOpen(true)} data-testid="button-created-add-chant">
+                    <Plus className="mr-1 h-4 w-4" />
+                    Add first chant
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <a href={publicUrl} target="_blank" rel="noopener noreferrer" data-testid="link-created-preview-participant">
+                      <Smartphone className="mr-1 h-4 w-4" />
+                      Preview participant page
+                    </a>
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={copyUrl} data-testid="button-created-copy-link">
+                    {copied ? <Check className="mr-1 h-4 w-4" /> : <Copy className="mr-1 h-4 w-4" />}
+                    {copied ? "Link copied" : "Copy participant link"}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={copyCode} data-testid="button-created-copy-code">
+                    {copiedCode ? <Check className="mr-1 h-4 w-4" /> : <Copy className="mr-1 h-4 w-4" />}
+                    {copiedCode ? "Code copied" : "Copy event code"}
+                  </Button>
+                </div>
+                <p className="mt-2 text-xs text-emerald-800" role="status" aria-live="polite" data-testid="text-created-copy-status">
+                  {copied ? "Participant link copied." : copiedCode ? `Event code ${demo.publicId} copied.` : "No participant account or QR scanner is required."}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {!isLive && (
           <Card className="mb-6 border-primary/20 bg-primary/5">
             <CardContent className="py-4">
