@@ -1773,7 +1773,7 @@ export default function Participant() {
             {t.tryAgain}
           </button>
           <Link
-            href="/#join-event"
+            href={`/?code=${encodeURIComponent(publicId)}#join-event`}
             className="mt-3 block text-sm font-medium text-orange-300 underline underline-offset-4 hover:text-orange-200"
             data-testid="link-enter-different-code"
           >

@@ -139,6 +139,7 @@ export default function DemoEditor() {
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [copied, setCopied] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedInvitation, setCopiedInvitation] = useState(false);
   const [showCreatedGuide, setShowCreatedGuide] = useState(false);
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -643,6 +644,14 @@ export default function DemoEditor() {
   };
 
   const publicUrl = demo ? `${window.location.origin}/d/${demo.publicId}` : "";
+  const participantInvitation = demo
+    ? [
+        `Join ${demo.title} on ChantLive.`,
+        `Event code: ${demo.publicId}`,
+        publicUrl,
+        "No account or QR scanner is required.",
+      ].join("\n")
+    : "";
 
   const copyUrl = () => {
     navigator.clipboard.writeText(publicUrl);
@@ -655,6 +664,22 @@ export default function DemoEditor() {
     navigator.clipboard.writeText(demo.publicId);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
+  };
+
+  const copyInvitation = async () => {
+    if (!participantInvitation) return;
+
+    try {
+      await navigator.clipboard.writeText(participantInvitation);
+      setCopiedInvitation(true);
+      setTimeout(() => setCopiedInvitation(false), 2000);
+    } catch {
+      toast({
+        title: "Invitation copy unavailable",
+        description: "Copy the participant link and event code shown on this page instead.",
+        variant: "destructive",
+      });
+    }
   };
 
   const shareParticipantLink = async () => {
@@ -881,8 +906,20 @@ export default function DemoEditor() {
                       ? "Participant link copied."
                       : copiedCode
                         ? `Event code ${demo.publicId} copied.`
+                        : copiedInvitation
+                          ? "Complete participant invitation copied."
                         : "Copy the participant link or event code if people cannot scan the QR code."}
                   </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => void copyInvitation()}
+                    data-testid="button-copy-participant-invitation"
+                  >
+                    {copiedInvitation ? <Check className="w-4 h-4 mr-1" /> : <MessageSquare className="w-4 h-4 mr-1" />}
+                    {copiedInvitation ? "Invitation copied" : "Copy complete invitation"}
+                  </Button>
                   <p className="text-xs text-muted-foreground text-center max-w-sm">
                     If the QR code is hard to scan in the crowd, copy this participant link and share it by message,
                     projector, or printed fallback.
@@ -1012,9 +1049,19 @@ export default function DemoEditor() {
                     {copiedCode ? <Check className="mr-1 h-4 w-4" /> : <Copy className="mr-1 h-4 w-4" />}
                     {copiedCode ? "Code copied" : "Copy event code"}
                   </Button>
+                  <Button variant="outline" size="sm" onClick={() => void copyInvitation()} data-testid="button-created-copy-invitation">
+                    {copiedInvitation ? <Check className="mr-1 h-4 w-4" /> : <MessageSquare className="mr-1 h-4 w-4" />}
+                    {copiedInvitation ? "Invitation copied" : "Copy complete invitation"}
+                  </Button>
                 </div>
                 <p className="mt-2 text-xs text-emerald-800" role="status" aria-live="polite" data-testid="text-created-copy-status">
-                  {copied ? "Participant link copied." : copiedCode ? `Event code ${demo.publicId} copied.` : "No participant account or QR scanner is required."}
+                  {copied
+                    ? "Participant link copied."
+                    : copiedCode
+                      ? `Event code ${demo.publicId} copied.`
+                      : copiedInvitation
+                        ? "Complete participant invitation copied."
+                        : "No participant account or QR scanner is required."}
                 </p>
               </div>
             </CardContent>

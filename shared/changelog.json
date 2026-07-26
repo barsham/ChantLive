@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.64",
+      "releasedAt": "2026-07-26",
+      "summary": "More forgiving forwarded invitations and a faster failed-code recovery path.",
+      "items": [
+        {
+          "id": "cl-2026-07-26-labelled-event-code",
+          "title": "Labelled event-code joining",
+          "description": "Participants can paste forwarded text such as “Event code: ACCESS25” and join without extracting the code manually.",
+          "type": "fix",
+          "visibility": "public",
+          "dateAdded": "2026-07-26",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-07-26-punctuated-event-code",
+          "title": "Punctuation-tolerant event codes",
+          "description": "A valid event code copied with surrounding quotes or sentence punctuation is now accepted instead of showing a false validation error.",
+          "type": "fix",
+          "visibility": "public",
+          "dateAdded": "2026-07-26",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-26-recovery-code-prefill",
+          "title": "Failed-code correction",
+          "description": "Returning from a failed participant link now prefills the checked code so one-character mistakes are easier to correct.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-26",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-26-recovery-focus",
+          "title": "Focused join recovery",
+          "description": "The recovery path focuses and selects the join field, with clear guidance for keyboard and screen-reader users.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-26",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-26-complete-invitation-copy",
+          "title": "One-tap complete invitation",
+          "description": "Organisers can copy one ready-to-send invitation containing the event name, labelled short code, plain participant link, and no-account/no-scanner reassurance.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-26",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        }
+      ]
+    },
+    {
       "version": "1.1.63",
       "releasedAt": "2026-07-25",
       "summary": "A clearer post-creation organiser handoff and more useful participant access recovery.",

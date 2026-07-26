@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
 import { AppVersion } from "@/components/app-version";
 import { blogPosts } from "@shared/blog";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
 function getParticipantCode(value: string) {
   const trimmed = value.trim();
@@ -17,7 +17,12 @@ function getParticipantCode(value: string) {
   );
   if (embeddedParticipantPath) return embeddedParticipantPath[1];
 
-  let candidate = trimmed;
+  const labelledCode = trimmed.match(
+    /\b(?:event|participant)\s+(?:code|id)\s*[:#-]?\s*([A-Za-z0-9_-]{6,12})\b/i,
+  );
+  if (labelledCode) return labelledCode[1];
+
+  let candidate = trimmed.replace(/^[\s"'([{<]+|[\s"'.,!?;:)\]}>]+$/g, "");
   const participantPath = trimmed.match(/^(?:(?:https?:\/\/)?[^/\s]+\.[^/\s]+)?\/?d\/([^/?#]+)\/?(?:[?#].*)?$/i);
   try {
     if (participantPath) candidate = decodeURIComponent(participantPath[1]);
@@ -36,6 +41,33 @@ export default function Landing() {
   const [joinValue, setJoinValue] = useState("");
   const [joinError, setJoinError] = useState("");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [returningFromRecovery, setReturningFromRecovery] = useState(false);
+  const joinInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    const focusJoinInput = () => {
+      if (window.location.hash !== "#join-event") return;
+
+      const recoveryCode = new URLSearchParams(window.location.search).get("code");
+      const validRecoveryCode = recoveryCode && /^[A-Za-z0-9_-]{6,12}$/.test(recoveryCode)
+        ? recoveryCode
+        : null;
+
+      if (validRecoveryCode) {
+        setJoinValue(validRecoveryCode);
+        setReturningFromRecovery(true);
+      }
+
+      window.requestAnimationFrame(() => {
+        joinInputRef.current?.focus();
+        if (validRecoveryCode) joinInputRef.current?.select();
+      });
+    };
+
+    focusJoinInput();
+    window.addEventListener("hashchange", focusJoinInput);
+    return () => window.removeEventListener("hashchange", focusJoinInput);
+  }, []);
 
   const handleJoin = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -223,11 +255,13 @@ export default function Landing() {
                       <div className="min-w-0 flex-1">
                         <label htmlFor="participant-code" className="sr-only">Participant code or link</label>
                         <Input
+                          ref={joinInputRef}
                           id="participant-code"
                           value={joinValue}
                           onChange={(event) => {
                             setJoinValue(event.target.value);
                             if (joinError) setJoinError("");
+                            if (returningFromRecovery) setReturningFromRecovery(false);
                           }}
                           autoCapitalize="none"
                           autoCorrect="off"
@@ -245,9 +279,14 @@ export default function Landing() {
                       </Button>
                     </form>
                     <p id="participant-code-help" className="mt-2 text-xs text-muted-foreground">
-                      Paste the whole invitation message, the participant link, or the 6–12 character event code.
+                      Paste the whole invitation message, a labelled event code, the participant link, or the 6–12 character event code.
                       Your entry is used only to open the event on this device; participants join anonymously.
                     </p>
+                    {returningFromRecovery && (
+                      <p className="mt-2 text-sm text-primary" role="status" aria-live="polite" data-testid="text-participant-code-recovery">
+                        Review the selected event code, correct it if needed, then choose Join event.
+                      </p>
+                    )}
                     {joinError && (
                       <p id="participant-code-error" className="mt-2 text-sm text-destructive" role="alert" data-testid="text-participant-code-error">
                         {joinError}

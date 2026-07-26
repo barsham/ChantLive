@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.64 - 26 July 2026
+
+More forgiving forwarded invitations and a faster failed-code recovery path.
+
+### Fixed
+
+- Labelled event-code joining: Participants can paste forwarded text such as “Event code: ACCESS25” and join without extracting the code manually. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Punctuation-tolerant event codes: A valid event code copied with surrounding quotes or sentence punctuation is now accepted instead of showing a false validation error.
+
+### Improved
+
+- Failed-code correction: Returning from a failed participant link now prefills the checked code so one-character mistakes are easier to correct.
+- Focused join recovery: The recovery path focuses and selects the join field, with clear guidance for keyboard and screen-reader users.
+- One-tap complete invitation: Organisers can copy one ready-to-send invitation containing the event name, labelled short code, plain participant link, and no-account/no-scanner reassurance. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+
 ## 1.1.63 - 25 July 2026
 
 A clearer post-creation organiser handoff and more useful participant access recovery.
