@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.65 - 26 July 2026
+
+Weekly blog guidance for preparing permit questions before peaceful demonstrations.
+
+### Documentation
+
+- Permit preparation questions guide: A new weekly blog post helps organizers ask practical permit-preparation questions about location, timing, sound, routes, accessibility, and live communication before a peaceful demonstration.
+
 ## 1.1.64 - 26 July 2026
 
 More forgiving forwarded invitations and a faster failed-code recovery path.

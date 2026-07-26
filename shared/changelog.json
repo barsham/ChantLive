@@ -1,6 +1,22 @@
 {
   "releases": [
     {
+      "version": "1.1.65",
+      "releasedAt": "2026-07-26",
+      "summary": "Weekly blog guidance for preparing permit questions before peaceful demonstrations.",
+      "items": [
+        {
+          "id": "cl-2026-07-26-permit-preparation-questions-guide",
+          "title": "Permit preparation questions guide",
+          "description": "A new weekly blog post helps organizers ask practical permit-preparation questions about location, timing, sound, routes, accessibility, and live communication before a peaceful demonstration.",
+          "type": "docs",
+          "visibility": "public",
+          "dateAdded": "2026-07-26",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.64",
       "releasedAt": "2026-07-26",
       "summary": "More forgiving forwarded invitations and a faster failed-code recovery path.",

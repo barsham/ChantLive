@@ -19,6 +19,104 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "permit-preparation-questions-peaceful-demonstration",
+    title: "Permit Preparation Questions to Ask Before a Peaceful Demonstration",
+    description:
+      "A practical, non-legal checklist of permit preparation questions for peaceful demonstrations, covering location, timing, sound, routes, accessibility, and day-of communication.",
+    publishedAt: "2026-07-26",
+    category: "Planning",
+    readingMinutes: 7,
+    tags: ["permits", "planning", "accessibility", "communication"],
+    disclaimer:
+      "Permit and public-assembly rules vary by location, venue, event type, crowd size, sound use, and route. This article is general planning information only, not legal advice. Check current official local requirements or a qualified advisor before relying on permit guidance.",
+    sections: [
+      {
+        heading: "Start With The Event Shape",
+        paragraphs: [
+          "Permit research becomes easier when organizers can describe the event in plain operational terms. Before looking at forms, write down whether the gathering is stationary or moving, public or private, small or large, silent or amplified, and indoors or outdoors.",
+          "This helps you ask the right questions instead of searching for one universal rule that may not exist.",
+        ],
+        bullets: [
+          "Where will people gather, enter, move, and leave?",
+          "What date, start time, end time, and backup timing are you planning?",
+          "Will the event use signs, chants, speeches, music, tables, stages, vehicles, or amplified sound?",
+        ],
+      },
+      {
+        heading: "Ask Which Authority Owns The Space",
+        paragraphs: [
+          "A demonstration in a park, plaza, street, campus, private venue, or council-managed space may point to different rules and contacts. The first practical question is not only whether a permit is needed, but who has authority over the location.",
+          "If more than one authority is involved, organizers may need to coordinate information across venue staff, local government, transport, parks, or public-safety offices.",
+        ],
+        bullets: [
+          "Who manages the exact location and nearby paths?",
+          "Does the event affect roads, footpaths, parks, transit stops, or building entrances?",
+          "Is there a venue policy separate from any public permit process?",
+        ],
+      },
+      {
+        heading: "Check Timing And Submission Windows Early",
+        paragraphs: [
+          "Many official event processes ask for advance notice, especially when services, route review, road impacts, sound, sanitation, or accessibility planning are involved. Waiting until the final week can remove options even when the event itself is simple.",
+          "Treat deadlines as planning inputs. If the event is a rapid response to current events, record that context and check whether the authority explains any urgent or late-request process.",
+        ],
+        bullets: [
+          "What is the earliest date applications can be submitted?",
+          "What is the normal deadline, and is there a different process for short-notice events?",
+          "Which supporting materials are required before review can begin?",
+        ],
+      },
+      {
+        heading: "Separate Sound, Route, And Service Questions",
+        paragraphs: [
+          "Permit needs often depend on details that organizers think of as logistics: amplified sound, movement routes, road crossings, tables, power, waste, toilets, first aid, and other services. Put each detail in its own question so one missing item does not delay the whole plan.",
+          "This also helps volunteers understand which parts of the event are confirmed and which are still waiting on approval or coordination.",
+        ],
+        bullets: [
+          "Is amplified sound allowed, and are there time, location, or equipment limits?",
+          "Does any march route, crossing, or crowd movement require review?",
+          "Are maps, site plans, vendor details, sanitation plans, or service requests needed?",
+        ],
+      },
+      {
+        heading: "Include Accessibility In The First Draft",
+        paragraphs: [
+          "Accessibility should not be a late addition after the permit questions are answered. Official and institutional event guidance commonly asks organizers to plan for accessible locations, routes, communication, seating or rest areas, and accommodation requests.",
+          "Even when a form does not ask much about access, your participant plan should. People need to know whether they can arrive, navigate, understand updates, and leave without avoidable barriers.",
+        ],
+        bullets: [
+          "What accessible arrival route, entrance, and meeting point can you describe clearly?",
+          "How will participants request access information or accommodations before the event?",
+          "Will printed signs, QR codes, spoken updates, and live pages work for different access needs?",
+        ],
+      },
+      {
+        heading: "Prepare A Day-Of Information Pack",
+        paragraphs: [
+          "Once permit or venue information is gathered, turn it into a short day-of pack. The goal is not to make every volunteer read a long application. The goal is to give trusted helpers the details they need to keep instructions consistent.",
+          "Keep the pack practical: approved location, timing, contacts, route notes, sound limits, accessibility notes, and what to do if plans change.",
+        ],
+        bullets: [
+          "Save permit confirmations or venue emails where the event lead can access them.",
+          "Give volunteers the same wording for meeting point, timing, route, and fallback updates.",
+          "Mark any conditions that affect signs, sound, movement, tables, or participant support.",
+        ],
+      },
+      {
+        heading: "Connect The Permit Plan To Live Communication",
+        paragraphs: [
+          "Permit preparation only helps participants if the final details reach them clearly. Before publishing invitations, convert the confirmed plan into a short arrival note, a fallback update, and a volunteer script.",
+          "ChantLive can support this by giving organizers one participant page, a QR code, a short link, and live prompts that reflect the confirmed schedule or location. It works best alongside printed or spoken fallbacks for people who cannot scan or lose signal.",
+        ],
+        bullets: [
+          "Put the confirmed meeting point and arrival guidance on participant-facing materials.",
+          "Prepare one short message for a delayed start, route change, or moved meeting point.",
+          "Invite a backup admin before the event so live updates can continue if the main organizer is busy.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "low-friction-participation-peaceful-events",
     title: "How to Make Participation Feel Easy at a Peaceful Event",
     description:
