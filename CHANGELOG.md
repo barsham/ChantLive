@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.66 - 27 July 2026
+
+Faster participant return visits and complete, resilient organiser invitations.
+
+### Improved
+
+- Recent event shortcut: After successfully joining, participants can return from the landing page with one tap instead of finding the invitation again, with an option to forget the event on that device.
+- Keyboard-first joining: Keyboard and screen-reader users can skip directly to the participant join control from the start of the landing page.
+- Complete event-detail invitations: Organiser invitations now include saved date, time, venue, meeting point, and arrival guidance alongside the event code and participant link. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Mobile invitation sharing: The organiser share action now sends the complete participant invitation through the device share sheet, with copy fallback when native sharing is unavailable. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+
+### Fixed
+
+- Clipboard-blocked invitation fallback: Participant Access shows selectable complete invitation text and clear recovery guidance when browser clipboard access is blocked. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+
 ## 1.1.65 - 26 July 2026
 
 Weekly blog guidance for preparing permit questions before peaceful demonstrations.

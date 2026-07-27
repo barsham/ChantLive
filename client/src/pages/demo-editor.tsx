@@ -140,6 +140,7 @@ export default function DemoEditor() {
   const [copied, setCopied] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedInvitation, setCopiedInvitation] = useState(false);
+  const [invitationCopyError, setInvitationCopyError] = useState(false);
   const [showCreatedGuide, setShowCreatedGuide] = useState(false);
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -647,10 +648,14 @@ export default function DemoEditor() {
   const participantInvitation = demo
     ? [
         `Join ${demo.title} on ChantLive.`,
+        demo.scheduledAt ? `When: ${formatEventSchedule(demo.scheduledAt)}` : null,
+        demo.locationName ? `Where: ${demo.locationName}` : null,
+        demo.meetingPoint ? `Meeting point: ${demo.meetingPoint}` : null,
+        demo.arrivalNote ? `Arrival: ${demo.arrivalNote}` : null,
         `Event code: ${demo.publicId}`,
         publicUrl,
         "No account or QR scanner is required.",
-      ].join("\n")
+      ].filter((line): line is string => Boolean(line)).join("\n")
     : "";
 
   const copyUrl = () => {
@@ -671,34 +676,35 @@ export default function DemoEditor() {
 
     try {
       await navigator.clipboard.writeText(participantInvitation);
+      setInvitationCopyError(false);
       setCopiedInvitation(true);
       setTimeout(() => setCopiedInvitation(false), 2000);
     } catch {
+      setInvitationCopyError(true);
       toast({
         title: "Invitation copy unavailable",
-        description: "Copy the participant link and event code shown on this page instead.",
+        description: "Select the complete invitation text in Participant Access and copy it manually.",
         variant: "destructive",
       });
     }
   };
 
-  const shareParticipantLink = async () => {
-    if (!publicUrl) return;
+  const shareParticipantInvitation = async () => {
+    if (!participantInvitation) return;
 
     if (navigator.share) {
       try {
         await navigator.share({
           title: demo?.title ?? "ChantLive demonstration",
-          text: "Join the live ChantLive participant page.",
-          url: publicUrl,
+          text: participantInvitation,
         });
         return;
-      } catch {
-        // Fall back to copying if sharing is canceled or unavailable.
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
       }
     }
 
-    copyUrl();
+    await copyInvitation();
   };
 
   const printQrHandout = () => {
@@ -831,12 +837,12 @@ export default function DemoEditor() {
             <Button
               variant="outline"
               size="sm"
-              onClick={shareParticipantLink}
-              disabled={!publicUrl}
-              data-testid="button-share-participant-link"
+              onClick={() => void shareParticipantInvitation()}
+              disabled={!participantInvitation}
+              data-testid="button-share-participant-invitation"
             >
               <Share2 className="w-4 h-4 mr-1" />
-              Share Link
+              Share invitation
             </Button>
             <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
               <DialogTrigger asChild>
@@ -908,6 +914,8 @@ export default function DemoEditor() {
                         ? `Event code ${demo.publicId} copied.`
                         : copiedInvitation
                           ? "Complete participant invitation copied."
+                        : invitationCopyError
+                          ? "Copy is unavailable. Select the invitation text below and copy it manually."
                         : "Copy the participant link or event code if people cannot scan the QR code."}
                   </p>
                   <Button
@@ -920,6 +928,22 @@ export default function DemoEditor() {
                     {copiedInvitation ? <Check className="w-4 h-4 mr-1" /> : <MessageSquare className="w-4 h-4 mr-1" />}
                     {copiedInvitation ? "Invitation copied" : "Copy complete invitation"}
                   </Button>
+                  <div className="w-full">
+                    <Label htmlFor="complete-participant-invitation" className="text-xs font-medium">
+                      Complete participant invitation
+                    </Label>
+                    <Textarea
+                      id="complete-participant-invitation"
+                      value={participantInvitation}
+                      readOnly
+                      className="mt-1 min-h-32 resize-y text-xs"
+                      aria-describedby="complete-participant-invitation-help"
+                      data-testid="textarea-participant-invitation"
+                    />
+                    <p id="complete-participant-invitation-help" className="mt-1 text-xs text-muted-foreground">
+                      Select this text to copy manually if your browser blocks clipboard access.
+                    </p>
+                  </div>
                   <p className="text-xs text-muted-foreground text-center max-w-sm">
                     If the QR code is hard to scan in the crowd, copy this participant link and share it by message,
                     projector, or printed fallback.

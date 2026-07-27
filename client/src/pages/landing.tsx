@@ -1,12 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Accessibility, QrCode, Shield, Zap, Users, ArrowRight, Megaphone, Wifi, LogIn, Menu, X } from "lucide-react";
+import { Accessibility, QrCode, Shield, Zap, Users, ArrowRight, Megaphone, Wifi, LogIn, Menu, X, History } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
 import { AppVersion } from "@/components/app-version";
 import { blogPosts } from "@shared/blog";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  forgetRecentParticipantEvent,
+  readRecentParticipantEvent,
+} from "@/lib/participant-history";
 
 function getParticipantCode(value: string) {
   const trimmed = value.trim();
@@ -42,6 +46,7 @@ export default function Landing() {
   const [joinError, setJoinError] = useState("");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [returningFromRecovery, setReturningFromRecovery] = useState(false);
+  const [recentEvent, setRecentEvent] = useState(readRecentParticipantEvent);
   const joinInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -83,6 +88,14 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background">
+      <a
+        href="#join-event"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-foreground focus:shadow-lg focus:ring-2 focus:ring-primary"
+        onClick={() => window.requestAnimationFrame(() => joinInputRef.current?.focus())}
+        data-testid="link-skip-to-join"
+      >
+        Skip to event joining
+      </a>
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
@@ -251,6 +264,39 @@ export default function Landing() {
                     <p className="mt-2 text-xs font-medium text-primary" data-testid="text-qr-free-join">
                       No camera or QR scanner required.
                     </p>
+                    {recentEvent && (
+                      <div className="mt-4 rounded-lg border border-primary/20 bg-background p-3" data-testid="panel-recent-participant-event">
+                        <div className="flex items-start gap-2">
+                          <History className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Recently joined on this device</p>
+                            <p className="mt-1 truncate text-sm font-semibold">{recentEvent.title}</p>
+                            <p className="font-mono text-xs text-muted-foreground">Event code: {recentEvent.publicId}</p>
+                          </div>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <Button size="sm" asChild data-testid="link-rejoin-recent-event">
+                            <Link href={`/d/${recentEvent.publicId}`}>
+                              Rejoin event
+                              <ArrowRight className="ml-1 h-4 w-4" />
+                            </Link>
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              forgetRecentParticipantEvent();
+                              setRecentEvent(null);
+                            }}
+                            data-testid="button-forget-recent-event"
+                          >
+                            Forget on this device
+                          </Button>
+                        </div>
+                        <p className="mt-2 text-xs text-muted-foreground">Saved only in this browser so you can return quickly.</p>
+                      </div>
+                    )}
                     <form className="mt-4 flex flex-col gap-2 sm:flex-row" onSubmit={handleJoin} noValidate>
                       <div className="min-w-0 flex-1">
                         <label htmlFor="participant-code" className="sr-only">Participant code or link</label>

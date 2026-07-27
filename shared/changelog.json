@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.66",
+      "releasedAt": "2026-07-27",
+      "summary": "Faster participant return visits and complete, resilient organiser invitations.",
+      "items": [
+        {
+          "id": "cl-2026-07-27-recent-participant-event",
+          "title": "Recent event shortcut",
+          "description": "After successfully joining, participants can return from the landing page with one tap instead of finding the invitation again, with an option to forget the event on that device.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-27",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-27-skip-to-join",
+          "title": "Keyboard-first joining",
+          "description": "Keyboard and screen-reader users can skip directly to the participant join control from the start of the landing page.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-27",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-27-invitation-logistics",
+          "title": "Complete event-detail invitations",
+          "description": "Organiser invitations now include saved date, time, venue, meeting point, and arrival guidance alongside the event code and participant link.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-27",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-07-27-mobile-invitation-share",
+          "title": "Mobile invitation sharing",
+          "description": "The organiser share action now sends the complete participant invitation through the device share sheet, with copy fallback when native sharing is unavailable.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-27",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-07-27-manual-invitation-copy",
+          "title": "Clipboard-blocked invitation fallback",
+          "description": "Participant Access shows selectable complete invitation text and clear recovery guidance when browser clipboard access is blocked.",
+          "type": "fix",
+          "visibility": "public",
+          "dateAdded": "2026-07-27",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        }
+      ]
+    },
+    {
       "version": "1.1.65",
       "releasedAt": "2026-07-26",
       "summary": "Weekly blog guidance for preparing permit questions before peaceful demonstrations.",

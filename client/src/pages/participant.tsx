@@ -3,6 +3,7 @@ import { Link, useParams } from "wouter";
 import { getSocket } from "@/lib/socket";
 import { CalendarPlus, Copy, ExternalLink, Eye, HelpCircle, Link2, Share2, ShieldCheck, Sun, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
 import { buildGoogleCalendarUrl, buildOutlookCalendarUrl, downloadCalendarFile, type CalendarEventDetails } from "@/lib/calendar";
+import { rememberParticipantEvent } from "@/lib/participant-history";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1088,6 +1089,11 @@ export default function Participant() {
   useEffect(() => {
     setShareStatus(null);
   }, [participantLanguage]);
+
+  useEffect(() => {
+    if (!chantData?.demoTitle) return;
+    rememberParticipantEvent(publicId, chantData.demoTitle);
+  }, [chantData?.demoTitle, publicId]);
 
   useEffect(() => {
     const socket = socketRef.current;
