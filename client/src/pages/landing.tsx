@@ -8,6 +8,7 @@ import { AppVersion } from "@/components/app-version";
 import { blogPosts } from "@shared/blog";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
+  describeParticipantEventRecency,
   forgetRecentParticipantEvent,
   readRecentParticipantEvent,
 } from "@/lib/participant-history";
@@ -47,6 +48,9 @@ export default function Landing() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [returningFromRecovery, setReturningFromRecovery] = useState(false);
   const [recentEvent, setRecentEvent] = useState(readRecentParticipantEvent);
+  const recentEventRecency = recentEvent
+    ? describeParticipantEventRecency(recentEvent.visitedAt)
+    : null;
   const joinInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -272,6 +276,14 @@ export default function Landing() {
                             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Recently joined on this device</p>
                             <p className="mt-1 truncate text-sm font-semibold">{recentEvent.title}</p>
                             <p className="font-mono text-xs text-muted-foreground">Event code: {recentEvent.publicId}</p>
+                            {recentEventRecency && (
+                              <p
+                                className={`mt-1 text-xs font-medium ${recentEventRecency.isStale ? "text-orange-600 dark:text-orange-300" : "text-primary"}`}
+                                data-testid="text-recent-event-recency"
+                              >
+                                {recentEventRecency.label}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="mt-3 flex flex-wrap gap-2">
@@ -294,7 +306,11 @@ export default function Landing() {
                             Forget on this device
                           </Button>
                         </div>
-                        <p className="mt-2 text-xs text-muted-foreground">Saved only in this browser so you can return quickly.</p>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          {recentEventRecency?.isStale
+                            ? "This is an older shortcut. Confirm the event is still current before rejoining."
+                            : "Saved only in this browser so you can return quickly."}
+                        </p>
                       </div>
                     )}
                     <form className="mt-4 flex flex-col gap-2 sm:flex-row" onSubmit={handleJoin} noValidate>

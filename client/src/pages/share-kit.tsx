@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowLeft, CalendarPlus, Check, Copy, ExternalLink, Hash, Link2, MessageSquare, Printer } from "lucide-react";
+import { ArrowLeft, CalendarPlus, Check, Copy, ExternalLink, Hash, Link2, MessageSquare, Printer, Search, Share2 } from "lucide-react";
 import { downloadCalendarFile } from "@/lib/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Chant, DemoState, Demonstration } from "@shared/schema";
 
@@ -238,6 +239,8 @@ export default function ShareKit() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [templateSearch, setTemplateSearch] = useState("");
+  const [actionStatus, setActionStatus] = useState<{ tone: "success" | "error"; text: string } | null>(null);
 
   const { data, isLoading } = useQuery<DemoDetail>({
     queryKey: ["/api/demos", id],
@@ -254,25 +257,79 @@ export default function ShareKit() {
   const runOfShowUrl = id ? `${origin}/admin/demos/${id}/run-of-show` : "";
   const safetyUrl = id ? `${origin}/admin/demos/${id}/safety` : "";
   const templates = data ? buildTemplates(data, publicUrl, handoutUrl, planUrl, recoveryUrl, reportUrl, commandUrl, briefingUrl, runOfShowUrl, safetyUrl) : [];
+  const normalizedSearch = templateSearch.trim().toLowerCase();
+  const filteredTemplates = normalizedSearch
+    ? templates.filter((template) =>
+        `${template.title} ${template.audience} ${template.body}`.toLowerCase().includes(normalizedSearch),
+      )
+    : templates;
+
+  const showActionStatus = (tone: "success" | "error", text: string) => {
+    setActionStatus({ tone, text });
+    window.setTimeout(() => setActionStatus(null), 4000);
+  };
 
   const copyMessage = async (template: MessageTemplate) => {
-    await navigator.clipboard.writeText(template.body);
-    setCopiedId(template.id);
-    setTimeout(() => setCopiedId(null), 1800);
+    try {
+      await navigator.clipboard.writeText(template.body);
+      setCopiedId(template.id);
+      showActionStatus("success", `${template.title} copied and ready to send.`);
+      window.setTimeout(() => setCopiedId(null), 1800);
+    } catch {
+      showActionStatus("error", `Could not copy ${template.title}. Select the visible message text and copy it manually.`);
+    }
   };
 
   const copyAll = async () => {
-    await navigator.clipboard.writeText(templates.map((template) => `${template.title}\n${template.body}`).join("\n\n---\n\n"));
-    setCopiedId("all");
-    setTimeout(() => setCopiedId(null), 1800);
+    try {
+      await navigator.clipboard.writeText(templates.map((template) => `${template.title}\n${template.body}`).join("\n\n---\n\n"));
+      setCopiedId("all");
+      showActionStatus("success", `Copied all ${templates.length} share-kit messages.`);
+      window.setTimeout(() => setCopiedId(null), 1800);
+    } catch {
+      showActionStatus("error", "Could not copy the share kit. Copy individual messages from their visible text instead.");
+    }
   };
 
   const copyParticipantAccess = async (kind: "link" | "code") => {
     const value = kind === "link" ? publicUrl : data?.demo.publicId;
     if (!value) return;
-    await navigator.clipboard.writeText(value);
-    setCopiedId(`participant-${kind}`);
-    setTimeout(() => setCopiedId(null), 1800);
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedId(`participant-${kind}`);
+      showActionStatus("success", `Participant ${kind} copied.`);
+      window.setTimeout(() => setCopiedId(null), 1800);
+    } catch {
+      showActionStatus("error", `Could not copy the participant ${kind}. Select it from the quick access card instead.`);
+    }
+  };
+
+  const shareMessage = async (template: MessageTemplate) => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${data?.demo.title}: ${template.title}`,
+          text: template.body,
+        });
+        setCopiedId(`shared-${template.id}`);
+        showActionStatus("success", `${template.title} shared.`);
+      } else {
+        await navigator.clipboard.writeText(template.body);
+        setCopiedId(`shared-${template.id}`);
+        showActionStatus("success", "This browser does not offer a share sheet, so the message was copied instead.");
+      }
+      window.setTimeout(() => setCopiedId(null), 1800);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      try {
+        await navigator.clipboard.writeText(template.body);
+        setCopiedId(`shared-${template.id}`);
+        showActionStatus("success", "The share sheet was unavailable, so the message was copied instead.");
+        window.setTimeout(() => setCopiedId(null), 1800);
+      } catch {
+        showActionStatus("error", `Could not share ${template.title}. Use Copy message or select the visible text manually.`);
+      }
+    }
   };
 
   const downloadCalendarInvite = () => {
@@ -395,9 +452,46 @@ export default function ShareKit() {
             </div>
           </div>
 
+          {actionStatus && (
+            <p
+              className={`mt-4 rounded-lg border px-4 py-3 text-sm ${
+                actionStatus.tone === "error"
+                  ? "border-destructive/40 bg-destructive/10 text-destructive"
+                  : "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+              }`}
+              role={actionStatus.tone === "error" ? "alert" : "status"}
+              aria-live="polite"
+              data-testid="text-share-kit-action-status"
+            >
+              {actionStatus.text}
+            </p>
+          )}
+
+          <div className="mt-6 rounded-xl border bg-muted/20 p-4" data-testid="card-share-template-search">
+            <label htmlFor="share-template-search" className="text-sm font-semibold">Find a message</label>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Search by purpose or audience, such as participant, volunteer, safety, recovery, or social.
+            </p>
+            <div className="relative mt-3">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+              <Input
+                id="share-template-search"
+                value={templateSearch}
+                onChange={(event) => setTemplateSearch(event.target.value)}
+                className="pl-9"
+                placeholder="Search share-kit messages"
+                type="search"
+                data-testid="input-share-template-search"
+              />
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground" role="status" data-testid="text-share-template-count">
+              Showing {filteredTemplates.length} of {templates.length} messages
+            </p>
+          </div>
+
           <div className="mt-6 grid gap-4 md:grid-cols-2">
-            {templates.map((template) => (
-              <Card key={template.id} data-testid={`card-share-template-${template.id}`}>
+            {filteredTemplates.map((template) => (
+              <Card key={template.id} className="min-w-0" data-testid={`card-share-template-${template.id}`}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <MessageSquare className="h-5 w-5 text-primary" />
@@ -406,16 +500,33 @@ export default function ShareKit() {
                   <p className="text-xs text-muted-foreground">{template.audience}</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <pre className="whitespace-pre-wrap rounded-lg border bg-muted/40 p-3 text-sm leading-relaxed text-foreground">
+                  <pre className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] rounded-lg border bg-muted/40 p-3 text-sm leading-relaxed text-foreground">
                     {template.body}
                   </pre>
-                  <Button variant="outline" size="sm" onClick={() => copyMessage(template)} data-testid={`button-copy-share-template-${template.id}`}>
-                    {copiedId === template.id ? <Check className="mr-1 h-4 w-4" /> : <Copy className="mr-1 h-4 w-4" />}
-                    {copiedId === template.id ? "Copied" : "Copy message"}
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" onClick={() => copyMessage(template)} data-testid={`button-copy-share-template-${template.id}`}>
+                      {copiedId === template.id ? <Check className="mr-1 h-4 w-4" /> : <Copy className="mr-1 h-4 w-4" />}
+                      {copiedId === template.id ? "Copied" : "Copy message"}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => shareMessage(template)} data-testid={`button-share-template-${template.id}`}>
+                      {copiedId === `shared-${template.id}` ? <Check className="mr-1 h-4 w-4" /> : <Share2 className="mr-1 h-4 w-4" />}
+                      {copiedId === `shared-${template.id}` ? "Shared" : "Share"}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
+            {filteredTemplates.length === 0 && (
+              <Card className="md:col-span-2" data-testid="card-share-template-empty">
+                <CardContent className="p-6 text-center">
+                  <p className="font-semibold">No matching messages</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Try a broader term or clear the search to see every template.</p>
+                  <Button className="mt-4" variant="outline" size="sm" onClick={() => setTemplateSearch("")}>
+                    Clear search
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </section>
       </main>

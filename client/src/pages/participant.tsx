@@ -3,7 +3,7 @@ import { Link, useParams } from "wouter";
 import { getSocket } from "@/lib/socket";
 import { CalendarPlus, Copy, ExternalLink, Eye, HelpCircle, Link2, Share2, ShieldCheck, Sun, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
 import { buildGoogleCalendarUrl, buildOutlookCalendarUrl, downloadCalendarFile, type CalendarEventDetails } from "@/lib/calendar";
-import { rememberParticipantEvent } from "@/lib/participant-history";
+import { forgetRecentParticipantEvent, rememberParticipantEvent } from "@/lib/participant-history";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -281,6 +281,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     checkedEventCode: "Event code checked",
     tryAgain: "Try again",
     differentEventCode: "Enter a different event code",
+    savedShortcutRemoved: "The unavailable event was removed from your recent shortcut on this device.",
     waitingToBegin: "Waiting to begin...",
     eventDetails: "Event details",
     when: "When",
@@ -446,6 +447,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     checkedEventCode: "Código comprobado",
     tryAgain: "Intentar de nuevo",
     differentEventCode: "Introducir otro código de evento",
+    savedShortcutRemoved: "El evento no disponible se eliminó del acceso reciente de este dispositivo.",
     waitingToBegin: "Esperando a que comience...",
     eventDetails: "Detalles del evento",
     when: "Cuándo",
@@ -611,6 +613,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     checkedEventCode: "Code vérifié",
     tryAgain: "Réessayer",
     differentEventCode: "Saisir un autre code d'événement",
+    savedShortcutRemoved: "L’événement indisponible a été retiré du raccourci récent sur cet appareil.",
     waitingToBegin: "En attente du début...",
     eventDetails: "Détails de l'événement",
     when: "Quand",
@@ -776,6 +779,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     checkedEventCode: "رمز الفعالية الذي تم التحقق منه",
     tryAgain: "حاول مرة أخرى",
     differentEventCode: "أدخل رمز فعالية آخر",
+    savedShortcutRemoved: "تمت إزالة الفعالية غير المتاحة من الاختصار الأخير على هذا الجهاز.",
     waitingToBegin: "في انتظار البدء...",
     eventDetails: "تفاصيل الفعالية",
     when: "الوقت",
@@ -941,6 +945,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     checkedEventCode: "کد رویداد بررسی‌شده",
     tryAgain: "تلاش دوباره",
     differentEventCode: "وارد کردن کد رویداد دیگر",
+    savedShortcutRemoved: "رویداد در دسترس نبود و از میان‌بر اخیر این دستگاه حذف شد.",
     waitingToBegin: "در انتظار شروع...",
     eventDetails: "جزئیات رویداد",
     when: "زمان",
@@ -1034,6 +1039,7 @@ export default function Participant() {
   const [keepScreenAwake, setKeepScreenAwake] = useState(false);
   const [screenAwakeActive, setScreenAwakeActive] = useState(false);
   const [wakeLockError, setWakeLockError] = useState<string | null>(null);
+  const [savedShortcutRemoved, setSavedShortcutRemoved] = useState(false);
   const localPhaseStartRef = useRef(Date.now());
   const lowBandwidthRef = useRef(lowBandwidth);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
@@ -1094,6 +1100,11 @@ export default function Participant() {
     if (!chantData?.demoTitle) return;
     rememberParticipantEvent(publicId, chantData.demoTitle);
   }, [chantData?.demoTitle, publicId]);
+
+  useEffect(() => {
+    if (!error?.toLowerCase().includes("not found")) return;
+    setSavedShortcutRemoved(forgetRecentParticipantEvent(publicId));
+  }, [error, publicId]);
 
   useEffect(() => {
     const socket = socketRef.current;
@@ -1769,6 +1780,11 @@ export default function Participant() {
             </p>
           )}
           <p className="text-neutral-500 text-sm mb-5">{t.recoveryBody}</p>
+          {savedShortcutRemoved && (
+            <p className="mb-5 text-sm text-emerald-300" role="status" data-testid="text-saved-shortcut-removed">
+              {t.savedShortcutRemoved}
+            </p>
+          )}
           <button
             type="button"
             onClick={retryConnection}

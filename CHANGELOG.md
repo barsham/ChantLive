@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.67 - 28 July 2026
+
+Safer participant return visits and faster mobile sharing for organisers.
+
+### Improved
+
+- Larger core touch targets: Primary actions, compact controls, and icon buttons now meet a more dependable mobile tap size across participant and organiser journeys.
+- Recent event age guidance: Returning participants can see when they last joined a saved event and receive a warning before using an older shortcut.
+- Searchable organiser share kit: Organisers can filter copy-ready messages by purpose, audience, or content to find participant, safety, volunteer, and recovery scripts quickly. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Resilient share-kit sending: Every organiser message has a one-tap Share action with copy fallback and clear recovery guidance when device sharing or clipboard access is unavailable. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+
+### Fixed
+
+- Unavailable shortcut recovery: A confirmed missing event is removed from the saved recent-event shortcut, preventing participants from returning to the same dead link.
+
 ## 1.1.66 - 27 July 2026
 
 Faster participant return visits and complete, resilient organiser invitations.

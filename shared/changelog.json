@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.67",
+      "releasedAt": "2026-07-28",
+      "summary": "Safer participant return visits and faster mobile sharing for organisers.",
+      "items": [
+        {
+          "id": "cl-2026-07-28-accessible-touch-targets",
+          "title": "Larger core touch targets",
+          "description": "Primary actions, compact controls, and icon buttons now meet a more dependable mobile tap size across participant and organiser journeys.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-28",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-28-recent-event-recency",
+          "title": "Recent event age guidance",
+          "description": "Returning participants can see when they last joined a saved event and receive a warning before using an older shortcut.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-28",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-28-remove-unavailable-shortcut",
+          "title": "Unavailable shortcut recovery",
+          "description": "A confirmed missing event is removed from the saved recent-event shortcut, preventing participants from returning to the same dead link.",
+          "type": "fix",
+          "visibility": "public",
+          "dateAdded": "2026-07-28",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-28-searchable-share-kit",
+          "title": "Searchable organiser share kit",
+          "description": "Organisers can filter copy-ready messages by purpose, audience, or content to find participant, safety, volunteer, and recovery scripts quickly.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-28",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-07-28-share-kit-mobile-sharing",
+          "title": "Resilient share-kit sending",
+          "description": "Every organiser message has a one-tap Share action with copy fallback and clear recovery guidance when device sharing or clipboard access is unavailable.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-28",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        }
+      ]
+    },
+    {
       "version": "1.1.66",
       "releasedAt": "2026-07-27",
       "summary": "Faster participant return visits and complete, resilient organiser invitations.",
