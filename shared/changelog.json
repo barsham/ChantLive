@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.68",
+      "releasedAt": "2026-07-29",
+      "summary": "More accessible participant logistics and faster organiser invitations.",
+      "items": [
+        {
+          "id": "cl-2026-07-29-touch-friendly-participant-controls",
+          "title": "Touch-friendly participant controls",
+          "description": "Join fields, language controls, sharing actions, and connection-recovery controls now provide dependable 44px-or-larger tap targets.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-29",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-29-complete-participant-sharing",
+          "title": "Complete participant sharing",
+          "description": "Participant sharing now includes the selected-language event time, venue, meeting point, and arrival guidance alongside the link and code.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-29",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-29-participant-directions",
+          "title": "One-tap event directions",
+          "description": "Participants can open directions from waiting, live, and ended event-detail panels without retyping the venue or meeting point.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-29",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-29-keyboard-event-cards",
+          "title": "Keyboard-operable event cards",
+          "description": "Organisers can focus a dashboard event card and open its setup with Enter or Space, with a clear focus indicator and accessible name.",
+          "type": "fix",
+          "visibility": "public",
+          "dateAdded": "2026-07-29",
+          "links": []
+        },
+        {
+          "id": "cl-2026-07-29-dashboard-complete-invitations",
+          "title": "Dashboard complete invitations",
+          "description": "Each organiser event card can copy a ready-to-send invitation containing the participant link, short code, saved logistics, and no-account reassurance.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-07-29",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        }
+      ]
+    },
+    {
       "version": "1.1.67",
       "releasedAt": "2026-07-28",
       "summary": "Safer participant return visits and faster mobile sharing for organisers.",

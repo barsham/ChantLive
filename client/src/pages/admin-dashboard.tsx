@@ -32,7 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload, Search, X, ClipboardList, Share2, CalendarClock, MapPin, Copy, Hash } from "lucide-react";
+import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload, Search, X, ClipboardList, Share2, CalendarClock, MapPin, Copy, Hash, MessageSquare } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppVersion } from "@/components/app-version";
@@ -253,6 +253,35 @@ export default function AdminDashboard() {
       toast({
         title: "Could not copy participant access",
         description: "Open the event and copy the participant link from its sharing panel.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const copyParticipantInvitation = async (demo: DashboardDemonstration) => {
+    const participantUrl = `${window.location.origin}/d/${demo.publicId}`;
+    const invitation = [
+      `Join ${demo.title} on ChantLive:`,
+      participantUrl,
+      `Event code: ${demo.publicId} (enter it at ${window.location.host})`,
+      demo.scheduledAt ? `When: ${formatDashboardSchedule(demo.scheduledAt)}` : null,
+      demo.locationName ? `Where: ${demo.locationName}` : null,
+      demo.meetingPoint ? `Meeting point: ${demo.meetingPoint}` : null,
+      demo.arrivalNote ? `Arrival guidance: ${demo.arrivalNote}` : null,
+      "",
+      "No participant account or QR scanner is required.",
+    ].filter((line) => line !== null).join("\n");
+
+    try {
+      await navigator.clipboard.writeText(invitation);
+      toast({
+        title: "Complete invitation copied",
+        description: "The event link, code, and saved logistics are ready to send.",
+      });
+    } catch {
+      toast({
+        title: "Could not copy the invitation",
+        description: "Open the Share kit to select and copy the participant invitation manually.",
         variant: "destructive",
       });
     }
@@ -684,7 +713,20 @@ export default function AdminDashboard() {
           filteredDemos.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredDemos.map((demo) => (
-              <Card key={demo.id} className="hover-elevate cursor-pointer" onClick={() => navigate(`/admin/demos/${demo.id}`)} data-testid={`card-demo-${demo.id}`}>
+              <Card
+                key={demo.id}
+                className="hover-elevate cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                role="link"
+                tabIndex={0}
+                aria-label={`Open ${demo.title} event setup`}
+                onClick={() => navigate(`/admin/demos/${demo.id}`)}
+                onKeyDown={(event) => {
+                  if (event.currentTarget !== event.target || (event.key !== "Enter" && event.key !== " ")) return;
+                  event.preventDefault();
+                  navigate(`/admin/demos/${demo.id}`);
+                }}
+                data-testid={`card-demo-${demo.id}`}
+              >
                 <CardHeader className="pb-3 flex flex-row items-start justify-between gap-2">
                   <CardTitle className="text-base font-semibold leading-snug">{demo.title}</CardTitle>
                   <Badge variant={statusVariant(demo.status)} className="shrink-0">
@@ -728,6 +770,10 @@ export default function AdminDashboard() {
                     <Button className="w-full justify-center" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/demos/${demo.id}/share-kit`); }} data-testid={`button-share-kit-demo-${demo.id}`}>
                       <Share2 className="w-3.5 h-3.5 mr-1" />
                       Share
+                    </Button>
+                    <Button className="col-span-2 w-full justify-center" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); void copyParticipantInvitation(demo); }} data-testid={`button-copy-invite-demo-${demo.id}`}>
+                      <MessageSquare className="w-3.5 h-3.5 mr-1" />
+                      Copy complete invitation
                     </Button>
                     <Button className="w-full justify-center" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); void copyParticipantAccess(demo, "link"); }} data-testid={`button-copy-link-demo-${demo.id}`}>
                       <Copy className="w-3.5 h-3.5 mr-1" />

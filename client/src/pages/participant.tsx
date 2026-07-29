@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useParams } from "wouter";
 import { getSocket } from "@/lib/socket";
-import { CalendarPlus, Copy, ExternalLink, Eye, HelpCircle, Link2, Share2, ShieldCheck, Sun, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
+import { CalendarPlus, Copy, ExternalLink, Eye, HelpCircle, Link2, MapPin, Share2, ShieldCheck, Sun, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
 import { buildGoogleCalendarUrl, buildOutlookCalendarUrl, downloadCalendarFile, type CalendarEventDetails } from "@/lib/calendar";
 import { forgetRecentParticipantEvent, rememberParticipantEvent } from "@/lib/participant-history";
 import {
@@ -288,6 +288,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     where: "Where",
     meet: "Meet",
     arrival: "Arrival",
+    openDirections: "Open directions",
     waitingBody: "Keep this page open. Chants will appear automatically when an organiser starts the demonstration.",
     waitingOfflineStatus: "Offline - reconnect to receive chants",
     waitingConnectedStatus: "Connected and waiting for the organizer",
@@ -454,6 +455,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     where: "Dónde",
     meet: "Punto de encuentro",
     arrival: "Llegada",
+    openDirections: "Abrir indicaciones",
     waitingBody: "Mantén esta página abierta. Los cánticos aparecerán automáticamente cuando el organizador inicie la demostración.",
     waitingOfflineStatus: "Sin conexión - reconéctate para recibir los cánticos",
     waitingConnectedStatus: "Conectado y esperando al organizador",
@@ -620,6 +622,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     where: "Où",
     meet: "Point de rendez-vous",
     arrival: "Arrivée",
+    openDirections: "Ouvrir l’itinéraire",
     waitingBody: "Gardez cette page ouverte. Les chants apparaîtront automatiquement lorsque l'organisateur lancera la manifestation.",
     waitingOfflineStatus: "Hors ligne - reconnectez-vous pour recevoir les chants",
     waitingConnectedStatus: "Connecté et en attente de l'organisateur",
@@ -786,6 +789,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     where: "المكان",
     meet: "نقطة التجمع",
     arrival: "الوصول",
+    openDirections: "فتح الاتجاهات",
     waitingBody: "أبقِ هذه الصفحة مفتوحة. ستظهر الهتافات تلقائيًا عندما يبدأ المنظم الفعالية.",
     waitingOfflineStatus: "غير متصل - أعد الاتصال لتلقي الهتافات",
     waitingConnectedStatus: "متصل وفي انتظار المنظم",
@@ -952,6 +956,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     where: "مکان",
     meet: "محل دیدار",
     arrival: "راهنمای ورود",
+    openDirections: "باز کردن مسیر",
     waitingBody: "این صفحه را باز نگه دارید. با شروع رویداد توسط برگزارکننده، شعارها خودکار ظاهر می‌شوند.",
     waitingOfflineStatus: "آفلاین - برای دریافت شعارها دوباره وصل شوید",
     waitingConnectedStatus: "متصل و در انتظار برگزارکننده",
@@ -1049,7 +1054,7 @@ export default function Participant() {
 
   const renderParticipantLanguageSelect = (className = "") => (
     <label
-      className={`inline-flex items-center gap-2 rounded-full border border-neutral-700 px-3 py-1 text-xs font-medium text-neutral-300 ${className}`}
+      className={`inline-flex min-h-11 items-center gap-2 rounded-full border border-neutral-700 px-3 py-2 text-xs font-medium text-neutral-300 ${className}`}
       dir={participantDirection}
       data-testid="select-participant-language-label"
     >
@@ -1271,6 +1276,12 @@ export default function Participant() {
     { label: t.meet, value: chantData?.meetingPoint },
     { label: t.arrival, value: chantData?.arrivalNote },
   ].filter((item) => item.value);
+  const directionsQuery = [chantData?.locationName, chantData?.meetingPoint]
+    .filter(Boolean)
+    .join(", ");
+  const directionsUrl = directionsQuery
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(directionsQuery)}`
+    : null;
   const participantCalendarDetails: CalendarEventDetails | null = chantData?.scheduledAt ? {
     title: chantData.demoTitle,
     scheduledAt: chantData.scheduledAt,
@@ -1299,7 +1310,14 @@ export default function Participant() {
   };
   const shareParticipantEvent = async () => {
     const title = chantData?.demoTitle ? `${t.join} ${chantData.demoTitle}` : t.joinThisEvent;
-    const text = `${title} — ChantLive. ${t.eventCode}: ${publicId}`;
+    const text = [
+      `${title} — ChantLive.`,
+      `${t.eventCode}: ${publicId}`,
+      chantData?.scheduledAt ? `${t.when}: ${formatParticipantSchedule(chantData.scheduledAt, participantLanguage)}` : null,
+      chantData?.locationName ? `${t.where}: ${chantData.locationName}` : null,
+      chantData?.meetingPoint ? `${t.meet}: ${chantData.meetingPoint}` : null,
+      chantData?.arrivalNote ? `${t.arrival}: ${chantData.arrivalNote}` : null,
+    ].filter(Boolean).join("\n");
     const url = window.location.href;
 
     try {
@@ -1366,7 +1384,7 @@ export default function Participant() {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className={`inline-flex items-center gap-2 rounded-full border border-sky-400/60 text-xs font-medium text-sky-100 hover:bg-sky-950/40 ${compact ? "px-2.5 py-1.5" : "px-3 py-2"}`}
+                  className={`inline-flex min-h-11 items-center gap-2 rounded-full border border-sky-400/60 text-xs font-medium text-sky-100 hover:bg-sky-950/40 ${compact ? "px-2.5 py-2" : "px-3 py-2"}`}
                   data-testid="button-add-participant-calendar"
                 >
                   <CalendarPlus className="h-3.5 w-3.5" />
@@ -1397,7 +1415,7 @@ export default function Participant() {
           <button
             type="button"
             onClick={copyParticipantCode}
-            className={`inline-flex items-center gap-2 rounded-full border border-neutral-700 text-xs font-medium text-neutral-200 hover:bg-neutral-900 ${compact ? "px-2.5 py-1.5" : "px-3 py-2"}`}
+            className={`inline-flex min-h-11 items-center gap-2 rounded-full border border-neutral-700 text-xs font-medium text-neutral-200 hover:bg-neutral-900 ${compact ? "px-2.5 py-2" : "px-3 py-2"}`}
             aria-label={t.copyEventCode}
             data-testid="button-copy-participant-code"
           >
@@ -1407,7 +1425,7 @@ export default function Participant() {
           <button
             type="button"
             onClick={copyParticipantLink}
-            className={`inline-flex items-center gap-2 rounded-full border border-neutral-700 text-xs font-medium text-neutral-200 hover:bg-neutral-900 ${compact ? "px-2.5 py-1.5" : "px-3 py-2"}`}
+            className={`inline-flex min-h-11 items-center gap-2 rounded-full border border-neutral-700 text-xs font-medium text-neutral-200 hover:bg-neutral-900 ${compact ? "px-2.5 py-2" : "px-3 py-2"}`}
             aria-label={t.copyLink}
             data-testid="button-copy-participant-link"
           >
@@ -1417,7 +1435,7 @@ export default function Participant() {
           <button
             type="button"
             onClick={shareParticipantEvent}
-            className={`inline-flex items-center gap-2 rounded-full border border-orange-400/60 text-xs font-medium text-orange-100 hover:bg-orange-950/40 ${compact ? "px-2.5 py-1.5" : "px-3 py-2"}`}
+            className={`inline-flex min-h-11 items-center gap-2 rounded-full border border-orange-400/60 text-xs font-medium text-orange-100 hover:bg-orange-950/40 ${compact ? "px-2.5 py-2" : "px-3 py-2"}`}
             data-testid="button-share-participant-event"
           >
             <Share2 className="h-3.5 w-3.5" />
@@ -1434,6 +1452,18 @@ export default function Participant() {
       {shareStatus && <p className="mt-2 text-xs text-emerald-300" role="status" data-testid="text-participant-share-status">{shareStatus}</p>}
       {calendarStatus && <p className="mt-2 text-xs text-sky-300" role="status" data-testid="text-participant-calendar-status">{calendarStatus}</p>}
     </div>
+  );
+  const renderDirectionsLink = () => directionsUrl && (
+    <a
+      href={directionsUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full border border-sky-400/50 px-4 py-2 text-sm font-semibold text-sky-100 hover:bg-sky-950/40"
+      data-testid="link-participant-directions"
+    >
+      <MapPin className="h-4 w-4" aria-hidden="true" />
+      {t.openDirections}
+    </a>
   );
   const retryConnection = () => {
     setError(null);
@@ -1767,7 +1797,7 @@ export default function Participant() {
           <button
             type="button"
             onClick={copyParticipantCode}
-            className="mb-3 inline-flex items-center gap-2 rounded-md border border-neutral-700 px-3 py-2 text-sm font-medium text-neutral-200 hover:bg-neutral-900"
+            className="mb-3 inline-flex min-h-11 items-center gap-2 rounded-md border border-neutral-700 px-3 py-2 text-sm font-medium text-neutral-200 hover:bg-neutral-900"
             aria-label={t.copyEventCode}
             data-testid="button-copy-failed-participant-code"
           >
@@ -1788,7 +1818,7 @@ export default function Participant() {
           <button
             type="button"
             onClick={retryConnection}
-            className="inline-flex items-center gap-2 rounded-md border border-neutral-700 px-4 py-2 text-sm font-medium text-neutral-200 hover:bg-neutral-900"
+            className="inline-flex min-h-11 items-center gap-2 rounded-md border border-neutral-700 px-4 py-2 text-sm font-medium text-neutral-200 hover:bg-neutral-900"
             data-testid="button-retry-participant"
           >
             <RefreshCw className="h-4 w-4" />
@@ -1796,7 +1826,7 @@ export default function Participant() {
           </button>
           <Link
             href={`/?code=${encodeURIComponent(publicId)}#join-event`}
-            className="mt-3 block text-sm font-medium text-orange-300 underline underline-offset-4 hover:text-orange-200"
+            className="mt-3 inline-flex min-h-11 items-center justify-center px-3 py-2 text-sm font-medium text-orange-300 underline underline-offset-4 hover:text-orange-200"
             data-testid="link-enter-different-code"
           >
             {t.differentEventCode}
@@ -1821,7 +1851,7 @@ export default function Participant() {
           <button
             type="button"
             onClick={retryConnection}
-            className="inline-flex items-center gap-2 rounded-md border border-neutral-800 px-4 py-2 text-xs font-medium text-neutral-300 hover:bg-neutral-900"
+            className="inline-flex min-h-11 items-center gap-2 rounded-md border border-neutral-800 px-4 py-2 text-xs font-medium text-neutral-300 hover:bg-neutral-900"
             data-testid="button-retry-loading"
           >
             <RefreshCw className="h-3.5 w-3.5" />
@@ -1858,6 +1888,7 @@ export default function Participant() {
                   </div>
                 ))}
               </dl>
+              {renderDirectionsLink()}
             </div>
           )}
           {chantData.supportUrl && (
@@ -1944,6 +1975,7 @@ export default function Participant() {
                   </div>
                 ))}
               </dl>
+              {renderDirectionsLink()}
             </div>
           )}
           <p className="text-neutral-500 text-sm mt-4 max-w-xs mx-auto">
@@ -1989,7 +2021,7 @@ export default function Participant() {
           <button
             type="button"
             onClick={retryConnection}
-            className="mt-5 inline-flex items-center gap-2 rounded-md border border-neutral-800 px-4 py-2 text-xs font-medium text-neutral-300 hover:bg-neutral-900"
+            className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-md border border-neutral-800 px-4 py-2 text-xs font-medium text-neutral-300 hover:bg-neutral-900"
             data-testid="button-retry-waiting"
           >
             <RefreshCw className="h-3.5 w-3.5" />
@@ -2053,6 +2085,7 @@ export default function Participant() {
               </div>
             ))}
           </dl>
+          {renderDirectionsLink()}
         </div>
       )}
       <div className="flex-1 flex items-center justify-center p-6">
