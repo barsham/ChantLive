@@ -267,6 +267,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     shareEvent: "Share event",
     eventShared: "Event shared.",
     eventInvitationCopied: "Event invitation copied.",
+    manualShareCopy: "Sharing and copying are unavailable. Select and copy the complete invitation below.",
     shareEventCode: "Share event code",
     join: "Join",
     joinThisEvent: "Join this ChantLive event",
@@ -434,6 +435,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     shareEvent: "Compartir evento",
     eventShared: "Evento compartido.",
     eventInvitationCopied: "Invitación al evento copiada.",
+    manualShareCopy: "No se puede compartir ni copiar. Selecciona y copia la invitación completa a continuación.",
     shareEventCode: "Comparte el código del evento",
     join: "Únete a",
     joinThisEvent: "Únete a este evento de ChantLive",
@@ -601,6 +603,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     shareEvent: "Partager l'événement",
     eventShared: "Événement partagé.",
     eventInvitationCopied: "Invitation à l'événement copiée.",
+    manualShareCopy: "Le partage et la copie sont indisponibles. Sélectionnez et copiez l’invitation complète ci-dessous.",
     shareEventCode: "Partagez le code de l'événement",
     join: "Rejoindre",
     joinThisEvent: "Rejoindre cet événement ChantLive",
@@ -768,6 +771,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     shareEvent: "مشاركة الفعالية",
     eventShared: "تمت مشاركة الفعالية.",
     eventInvitationCopied: "تم نسخ دعوة الفعالية.",
+    manualShareCopy: "المشاركة والنسخ غير متاحين. حدّد دعوة الفعالية الكاملة أدناه وانسخها.",
     shareEventCode: "شارك رمز الفعالية",
     join: "انضم إلى",
     joinThisEvent: "انضم إلى فعالية ChantLive هذه",
@@ -935,6 +939,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     shareEvent: "اشتراک‌گذاری رویداد",
     eventShared: "رویداد به اشتراک گذاشته شد.",
     eventInvitationCopied: "دعوت‌نامه رویداد کپی شد.",
+    manualShareCopy: "اشتراک‌گذاری و کپی در دسترس نیست. دعوت‌نامه کامل زیر را انتخاب و کپی کنید.",
     shareEventCode: "کد رویداد را به اشتراک بگذارید",
     join: "پیوستن به",
     joinThisEvent: "پیوستن به این رویداد ChantLive",
@@ -1040,6 +1045,7 @@ export default function Participant() {
   const [feedbackStatus, setFeedbackStatus] = useState<string | null>(null);
   const [engagement, setEngagement] = useState<ParticipantEngagement | null>(null);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
+  const [shareFallbackText, setShareFallbackText] = useState<string | null>(null);
   const [calendarStatus, setCalendarStatus] = useState<string | null>(null);
   const [keepScreenAwake, setKeepScreenAwake] = useState(false);
   const [screenAwakeActive, setScreenAwakeActive] = useState(false);
@@ -1099,6 +1105,7 @@ export default function Participant() {
 
   useEffect(() => {
     setShareStatus(null);
+    setShareFallbackText(null);
   }, [participantLanguage]);
 
   useEffect(() => {
@@ -1293,6 +1300,7 @@ export default function Participant() {
   const googleCalendarUrl = participantCalendarDetails ? buildGoogleCalendarUrl(participantCalendarDetails) : null;
   const outlookCalendarUrl = participantCalendarDetails ? buildOutlookCalendarUrl(participantCalendarDetails) : null;
   const copyParticipantCode = async () => {
+    setShareFallbackText(null);
     try {
       await navigator.clipboard.writeText(publicId);
       setShareStatus(t.eventCodeCopied);
@@ -1301,6 +1309,7 @@ export default function Participant() {
     }
   };
   const copyParticipantLink = async () => {
+    setShareFallbackText(null);
     try {
       await navigator.clipboard.writeText(window.location.href);
       setShareStatus(t.participantLinkCopied);
@@ -1317,8 +1326,13 @@ export default function Participant() {
       chantData?.locationName ? `${t.where}: ${chantData.locationName}` : null,
       chantData?.meetingPoint ? `${t.meet}: ${chantData.meetingPoint}` : null,
       chantData?.arrivalNote ? `${t.arrival}: ${chantData.arrivalNote}` : null,
-    ].filter(Boolean).join("\n");
+      directionsUrl ? `${t.openDirections}: ${directionsUrl}` : null,
+      "",
+      t.noAccountOrScanner,
+    ].filter((line) => line !== null).join("\n");
     const url = window.location.href;
+    const completeInvitation = `${text}\n${url}`;
+    setShareFallbackText(null);
 
     try {
       if (navigator.share) {
@@ -1327,15 +1341,16 @@ export default function Participant() {
         return;
       }
 
-      await navigator.clipboard.writeText(`${text}\n${url}`);
+      await navigator.clipboard.writeText(completeInvitation);
       setShareStatus(t.eventInvitationCopied);
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       try {
-        await navigator.clipboard.writeText(`${text}\n${url}`);
+        await navigator.clipboard.writeText(completeInvitation);
         setShareStatus(t.eventInvitationCopied);
       } catch {
-        setShareStatus(`${t.shareEventCode} ${publicId}.`);
+        setShareFallbackText(completeInvitation);
+        setShareStatus(t.manualShareCopy);
       }
     }
   };
@@ -1450,6 +1465,17 @@ export default function Participant() {
         </p>
       )}
       {shareStatus && <p className="mt-2 text-xs text-emerald-300" role="status" data-testid="text-participant-share-status">{shareStatus}</p>}
+      {shareFallbackText && (
+        <textarea
+          readOnly
+          value={shareFallbackText}
+          onFocus={(event) => event.currentTarget.select()}
+          className="mt-3 min-h-40 w-full resize-y rounded-lg border border-orange-400/50 bg-black p-3 text-xs leading-relaxed text-neutral-100"
+          dir={participantDirection}
+          aria-label={t.manualShareCopy}
+          data-testid="textarea-participant-share-fallback"
+        />
+      )}
       {calendarStatus && <p className="mt-2 text-xs text-sky-300" role="status" data-testid="text-participant-calendar-status">{calendarStatus}</p>}
     </div>
   );

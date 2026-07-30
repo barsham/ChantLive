@@ -32,7 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload, Search, X, ClipboardList, Share2, CalendarClock, MapPin, Copy, Hash, MessageSquare } from "lucide-react";
+import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload, Search, X, ClipboardList, Share2, CalendarClock, MapPin, Copy, Hash, MessageSquare, ExternalLink } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppVersion } from "@/components/app-version";
@@ -130,6 +130,7 @@ export default function AdminDashboard() {
   const [selectedSetupTemplate, setSelectedSetupTemplate] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Demonstration | null>(null);
+  const [invitationFallback, setInvitationFallback] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortOption, setSortOption] = useState<SortOption>("newest");
@@ -274,14 +275,16 @@ export default function AdminDashboard() {
 
     try {
       await navigator.clipboard.writeText(invitation);
+      setInvitationFallback(null);
       toast({
         title: "Complete invitation copied",
         description: "The event link, code, and saved logistics are ready to send.",
       });
     } catch {
+      setInvitationFallback(invitation);
       toast({
         title: "Could not copy the invitation",
-        description: "Open the Share kit to select and copy the participant invitation manually.",
+        description: "Select the complete invitation in the open dialog and copy it manually.",
         variant: "destructive",
       });
     }
@@ -771,6 +774,12 @@ export default function AdminDashboard() {
                       <Share2 className="w-3.5 h-3.5 mr-1" />
                       Share
                     </Button>
+                    <Button className="w-full justify-center" variant="outline" size="sm" asChild>
+                      <a href={`/d/${demo.publicId}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} data-testid={`link-preview-participant-demo-${demo.id}`}>
+                        <ExternalLink className="w-3.5 h-3.5 mr-1" />
+                        Preview
+                      </a>
+                    </Button>
                     <Button className="col-span-2 w-full justify-center" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); void copyParticipantInvitation(demo); }} data-testid={`button-copy-invite-demo-${demo.id}`}>
                       <MessageSquare className="w-3.5 h-3.5 mr-1" />
                       Copy complete invitation
@@ -818,6 +827,25 @@ export default function AdminDashboard() {
           </Card>
         )}
       </main>
+
+      <Dialog open={Boolean(invitationFallback)} onOpenChange={(open) => { if (!open) setInvitationFallback(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Copy complete invitation manually</DialogTitle>
+            <DialogDescription>
+              Your browser blocked clipboard access. Select the invitation below and use your device's copy action.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            readOnly
+            value={invitationFallback ?? ""}
+            onFocus={(event) => event.currentTarget.select()}
+            className="min-h-52 resize-y font-mono text-sm"
+            aria-label="Complete participant invitation"
+            data-testid="textarea-dashboard-invitation-fallback"
+          />
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <AlertDialogContent>

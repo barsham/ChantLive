@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.69 - 30 July 2026
+
+More resilient mobile sharing and faster organiser event checks.
+
+### Improved
+
+- Touch-friendly dropdown choices: Calendar, sorting, and other dropdown choices now provide dependable 44px-or-larger tap targets across participant and organiser workflows.
+- Dashboard participant preview: Organisers can open the participant view directly from an event card to check the attendee experience before sharing. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Arrival-ready participant invitations: Participant sharing now includes one-tap directions and selected-language reassurance that no account or QR scanner is required. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+
+### Fixed
+
+- Clipboard-blocked organiser fallback: If dashboard invitation copying is blocked, organisers now receive the complete invitation in a selectable dialog instead of a dead end. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Manual participant sharing fallback: When both device sharing and clipboard access are unavailable, participants can select and copy the complete localized invitation without losing event details.
+
 ## 1.1.68 - 29 July 2026
 
 More accessible participant logistics and faster organiser invitations.
