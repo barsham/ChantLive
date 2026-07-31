@@ -279,6 +279,13 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     notFound: "Demonstration not found",
     couldNotConnect: "We could not connect to this event",
     recoveryBody: "Check the participant link or try reconnecting.",
+    recoveryStepsTitle: "What to check",
+    recoveryCheckCode: "Compare this code with the organiser's message.",
+    recoveryOpenLink: "If you received a full link, open it again from the original message.",
+    recoveryAskOrganizer: "Ask the organiser whether the event is still available.",
+    copyRecoveryDetails: "Copy details for organiser",
+    recoveryDetailsCopied: "Details copied. Send them to the organiser.",
+    recoveryDetailsManual: "Copy failed. Select and copy the details below.",
     checkedEventCode: "Event code checked",
     tryAgain: "Try again",
     differentEventCode: "Enter a different event code",
@@ -447,6 +454,13 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     notFound: "No se encontró la demostración",
     couldNotConnect: "No pudimos conectar con este evento",
     recoveryBody: "Comprueba el enlace de participante o intenta conectarte de nuevo.",
+    recoveryStepsTitle: "Qué comprobar",
+    recoveryCheckCode: "Compara este código con el mensaje del organizador.",
+    recoveryOpenLink: "Si recibiste un enlace completo, ábrelo de nuevo desde el mensaje original.",
+    recoveryAskOrganizer: "Pregunta al organizador si el evento sigue disponible.",
+    copyRecoveryDetails: "Copiar detalles para el organizador",
+    recoveryDetailsCopied: "Detalles copiados. Envíalos al organizador.",
+    recoveryDetailsManual: "No se pudo copiar. Selecciona y copia los detalles a continuación.",
     checkedEventCode: "Código comprobado",
     tryAgain: "Intentar de nuevo",
     differentEventCode: "Introducir otro código de evento",
@@ -615,6 +629,13 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     notFound: "Manifestation introuvable",
     couldNotConnect: "Impossible de se connecter à cet événement",
     recoveryBody: "Vérifiez le lien participant ou essayez de vous reconnecter.",
+    recoveryStepsTitle: "Points à vérifier",
+    recoveryCheckCode: "Comparez ce code avec le message de l’organisateur.",
+    recoveryOpenLink: "Si vous avez reçu un lien complet, ouvrez-le à nouveau depuis le message d’origine.",
+    recoveryAskOrganizer: "Demandez à l’organisateur si l’événement est toujours disponible.",
+    copyRecoveryDetails: "Copier les détails pour l’organisateur",
+    recoveryDetailsCopied: "Détails copiés. Envoyez-les à l’organisateur.",
+    recoveryDetailsManual: "La copie a échoué. Sélectionnez et copiez les détails ci-dessous.",
     checkedEventCode: "Code vérifié",
     tryAgain: "Réessayer",
     differentEventCode: "Saisir un autre code d'événement",
@@ -783,6 +804,13 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     notFound: "لم يتم العثور على الفعالية",
     couldNotConnect: "تعذر الاتصال بهذه الفعالية",
     recoveryBody: "تحقق من رابط المشارك أو حاول الاتصال مرة أخرى.",
+    recoveryStepsTitle: "ما يجب التحقق منه",
+    recoveryCheckCode: "قارن هذا الرمز برسالة المنظم.",
+    recoveryOpenLink: "إذا تلقيت رابطًا كاملاً، فافتحه مرة أخرى من الرسالة الأصلية.",
+    recoveryAskOrganizer: "اسأل المنظم عما إذا كانت الفعالية ما زالت متاحة.",
+    copyRecoveryDetails: "نسخ التفاصيل للمنظم",
+    recoveryDetailsCopied: "تم نسخ التفاصيل. أرسلها إلى المنظم.",
+    recoveryDetailsManual: "تعذر النسخ. حدّد التفاصيل أدناه وانسخها.",
     checkedEventCode: "رمز الفعالية الذي تم التحقق منه",
     tryAgain: "حاول مرة أخرى",
     differentEventCode: "أدخل رمز فعالية آخر",
@@ -951,6 +979,13 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     notFound: "رویداد پیدا نشد",
     couldNotConnect: "اتصال به این رویداد ممکن نشد",
     recoveryBody: "لینک شرکت‌کننده را بررسی کنید یا دوباره متصل شوید.",
+    recoveryStepsTitle: "مواردی که باید بررسی شوند",
+    recoveryCheckCode: "این کد را با پیام برگزارکننده مقایسه کنید.",
+    recoveryOpenLink: "اگر لینک کامل دریافت کرده‌اید، آن را دوباره از پیام اصلی باز کنید.",
+    recoveryAskOrganizer: "از برگزارکننده بپرسید آیا رویداد هنوز در دسترس است.",
+    copyRecoveryDetails: "کپی جزئیات برای برگزارکننده",
+    recoveryDetailsCopied: "جزئیات کپی شد. آن را برای برگزارکننده بفرستید.",
+    recoveryDetailsManual: "کپی انجام نشد. جزئیات زیر را انتخاب و کپی کنید.",
     checkedEventCode: "کد رویداد بررسی‌شده",
     tryAgain: "تلاش دوباره",
     differentEventCode: "وارد کردن کد رویداد دیگر",
@@ -1046,6 +1081,7 @@ export default function Participant() {
   const [engagement, setEngagement] = useState<ParticipantEngagement | null>(null);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const [shareFallbackText, setShareFallbackText] = useState<string | null>(null);
+  const [recoveryFallbackText, setRecoveryFallbackText] = useState<string | null>(null);
   const [calendarStatus, setCalendarStatus] = useState<string | null>(null);
   const [keepScreenAwake, setKeepScreenAwake] = useState(false);
   const [screenAwakeActive, setScreenAwakeActive] = useState(false);
@@ -1106,6 +1142,7 @@ export default function Participant() {
   useEffect(() => {
     setShareStatus(null);
     setShareFallbackText(null);
+    setRecoveryFallbackText(null);
   }, [participantLanguage]);
 
   useEffect(() => {
@@ -1293,19 +1330,45 @@ export default function Participant() {
     title: chantData.demoTitle,
     scheduledAt: chantData.scheduledAt,
     durationMinutes: chantData.eventDurationMinutes,
-    location: chantData.locationName,
-    description: `ChantLive participant link: ${window.location.href}\nEvent code: ${publicId}`,
+    location: [chantData.locationName, chantData.meetingPoint].filter(Boolean).join(", ") || null,
+    description: [
+      `${t.joinThisEvent}: ${window.location.href}`,
+      `${t.eventCode}: ${publicId}`,
+      chantData.meetingPoint ? `${t.meet}: ${chantData.meetingPoint}` : null,
+      chantData.arrivalNote ? `${t.arrival}: ${chantData.arrivalNote}` : null,
+      directionsUrl ? `${t.openDirections}: ${directionsUrl}` : null,
+      "",
+      t.noAccountOrScanner,
+    ].filter((line) => line !== null).join("\n"),
     uid: `chantlive-${publicId}@chantlive.online`,
   } : null;
   const googleCalendarUrl = participantCalendarDetails ? buildGoogleCalendarUrl(participantCalendarDetails) : null;
   const outlookCalendarUrl = participantCalendarDetails ? buildOutlookCalendarUrl(participantCalendarDetails) : null;
   const copyParticipantCode = async () => {
     setShareFallbackText(null);
+    setRecoveryFallbackText(null);
     try {
       await navigator.clipboard.writeText(publicId);
       setShareStatus(t.eventCodeCopied);
     } catch {
       setShareStatus(`${t.eventCode}: ${publicId}`);
+    }
+  };
+  const copyRecoveryDetails = async () => {
+    const localizedError = error?.toLowerCase().includes("not found") ? t.notFound : t.couldNotConnect;
+    const details = [
+      localizedError,
+      `${t.checkedEventCode}: ${publicId}`,
+      window.location.href,
+    ].join("\n");
+
+    try {
+      await navigator.clipboard.writeText(details);
+      setRecoveryFallbackText(null);
+      setShareStatus(t.recoveryDetailsCopied);
+    } catch {
+      setRecoveryFallbackText(details);
+      setShareStatus(t.recoveryDetailsManual);
     }
   };
   const copyParticipantLink = async () => {
@@ -1820,22 +1883,52 @@ export default function Participant() {
           <p className="mb-2 text-sm text-neutral-300" data-testid="text-failed-participant-code">
             {t.checkedEventCode}: <bdi dir="ltr" className="font-mono font-semibold tracking-wider text-white">{publicId}</bdi>
           </p>
-          <button
-            type="button"
-            onClick={copyParticipantCode}
-            className="mb-3 inline-flex min-h-11 items-center gap-2 rounded-md border border-neutral-700 px-3 py-2 text-sm font-medium text-neutral-200 hover:bg-neutral-900"
-            aria-label={t.copyEventCode}
-            data-testid="button-copy-failed-participant-code"
-          >
-            <Copy className="h-4 w-4" />
-            {t.copyCode}
-          </button>
+          <div className="mb-3 flex flex-wrap justify-center gap-2">
+            <button
+              type="button"
+              onClick={copyParticipantCode}
+              className="inline-flex min-h-11 items-center gap-2 rounded-md border border-neutral-700 px-3 py-2 text-sm font-medium text-neutral-200 hover:bg-neutral-900"
+              aria-label={t.copyEventCode}
+              data-testid="button-copy-failed-participant-code"
+            >
+              <Copy className="h-4 w-4" />
+              {t.copyCode}
+            </button>
+            <button
+              type="button"
+              onClick={() => void copyRecoveryDetails()}
+              className="inline-flex min-h-11 items-center gap-2 rounded-md border border-orange-400/60 px-3 py-2 text-sm font-medium text-orange-100 hover:bg-orange-500/10"
+              data-testid="button-copy-recovery-details"
+            >
+              <Copy className="h-4 w-4" />
+              {t.copyRecoveryDetails}
+            </button>
+          </div>
           {shareStatus && (
             <p className="mb-3 text-xs text-emerald-300" role="status" aria-live="polite" data-testid="text-failed-code-copy-status">
               {shareStatus}
             </p>
           )}
-          <p className="text-neutral-500 text-sm mb-5">{t.recoveryBody}</p>
+          {recoveryFallbackText && (
+            <textarea
+              readOnly
+              value={recoveryFallbackText}
+              onFocus={(event) => event.currentTarget.select()}
+              className="mb-4 min-h-32 w-full resize-y rounded-lg border border-orange-400/50 bg-black p-3 text-start text-xs leading-relaxed text-neutral-100"
+              dir={participantDirection}
+              aria-label={t.recoveryDetailsManual}
+              data-testid="textarea-recovery-details-fallback"
+            />
+          )}
+          <p className="text-neutral-400 text-sm mb-4">{t.recoveryBody}</p>
+          <div className="mx-auto mb-5 max-w-md rounded-lg border border-neutral-800 bg-neutral-950/80 p-4 text-start" data-testid="list-participant-recovery-steps">
+            <p className="mb-2 text-sm font-semibold text-white">{t.recoveryStepsTitle}</p>
+            <ul className="list-disc space-y-1.5 ps-5 text-sm leading-relaxed text-neutral-300">
+              <li>{t.recoveryCheckCode}</li>
+              <li>{t.recoveryOpenLink}</li>
+              <li>{t.recoveryAskOrganizer}</li>
+            </ul>
+          </div>
           {savedShortcutRemoved && (
             <p className="mb-5 text-sm text-emerald-300" role="status" data-testid="text-saved-shortcut-removed">
               {t.savedShortcutRemoved}

@@ -32,7 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload, Search, X, ClipboardList, Share2, CalendarClock, MapPin, Copy, Hash, MessageSquare, ExternalLink } from "lucide-react";
+import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload, Search, X, ClipboardList, Share2, CalendarClock, MapPin, Copy, Hash, MessageSquare, ExternalLink, Navigation } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppVersion } from "@/components/app-version";
@@ -745,7 +745,7 @@ export default function AdminDashboard() {
                     Created by: <span className="font-medium text-foreground">{demo.creator?.name ?? "Unknown user"}</span>
                     {demo.creator?.email ? <span> ({demo.creator.email})</span> : null}
                   </p>
-                  {(demo.scheduledAt || demo.locationName) && (
+                  {(demo.scheduledAt || demo.locationName || demo.meetingPoint || demo.arrivalNote) && (
                     <div className="mt-3 space-y-1 rounded-lg border bg-muted/30 p-2 text-xs text-muted-foreground" data-testid={`text-demo-logistics-${demo.id}`}>
                       {demo.scheduledAt && (
                         <p className="flex items-center gap-1.5">
@@ -758,6 +758,29 @@ export default function AdminDashboard() {
                           <MapPin className="h-3.5 w-3.5" />
                           <span>{demo.locationName}</span>
                         </p>
+                      )}
+                      {demo.meetingPoint && (
+                        <p>
+                          <span className="font-medium text-foreground">Meeting point:</span> {demo.meetingPoint}
+                        </p>
+                      )}
+                      {demo.arrivalNote && (
+                        <p>
+                          <span className="font-medium text-foreground">Arrival:</span> {demo.arrivalNote}
+                        </p>
+                      )}
+                      {(demo.locationName || demo.meetingPoint) && (
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([demo.locationName, demo.meetingPoint].filter(Boolean).join(", "))}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 py-2 font-medium text-primary underline-offset-4 hover:underline"
+                          onClick={(event) => event.stopPropagation()}
+                          data-testid={`link-directions-demo-${demo.id}`}
+                        >
+                          <Navigation className="h-3.5 w-3.5" aria-hidden="true" />
+                          Open directions
+                        </a>
                       )}
                     </div>
                   )}
