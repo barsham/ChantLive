@@ -57,6 +57,83 @@ const statusFilters = ["all", "live", "draft", "ended"] as const;
 type StatusFilter = (typeof statusFilters)[number];
 const sortOptions = ["newest", "oldest", "title"] as const;
 type SortOption = (typeof sortOptions)[number];
+type InvitationLanguage = "en" | "es" | "fr" | "ar" | "fa";
+type InvitationFallback = { text: string; direction: "ltr" | "rtl" };
+const invitationLanguageOptions: Array<{ code: InvitationLanguage; label: string }> = [
+  { code: "en", label: "English" },
+  { code: "es", label: "Español" },
+  { code: "fr", label: "Français" },
+  { code: "ar", label: "العربية" },
+  { code: "fa", label: "فارسی" },
+];
+const invitationLocales: Record<InvitationLanguage, string> = {
+  en: "en",
+  es: "es",
+  fr: "fr",
+  ar: "ar-u-nu-arab",
+  fa: "fa-u-nu-arabext",
+};
+const invitationCopy: Record<InvitationLanguage, {
+  join: (title: string) => string;
+  eventCode: string;
+  enterAt: string;
+  when: string;
+  where: string;
+  meetingPoint: string;
+  arrival: string;
+  noAccount: string;
+}> = {
+  en: {
+    join: (title) => `Join ${title} on ChantLive:`,
+    eventCode: "Event code",
+    enterAt: "enter it at",
+    when: "When",
+    where: "Where",
+    meetingPoint: "Meeting point",
+    arrival: "Arrival guidance",
+    noAccount: "No participant account or QR scanner is required.",
+  },
+  es: {
+    join: (title) => `Únete a ${title} en ChantLive:`,
+    eventCode: "Código del evento",
+    enterAt: "introdúcelo en",
+    when: "Cuándo",
+    where: "Dónde",
+    meetingPoint: "Punto de encuentro",
+    arrival: "Indicaciones de llegada",
+    noAccount: "No se necesita una cuenta de participante ni un escáner de códigos QR.",
+  },
+  fr: {
+    join: (title) => `Rejoignez ${title} sur ChantLive :`,
+    eventCode: "Code de l’événement",
+    enterAt: "saisissez-le sur",
+    when: "Quand",
+    where: "Où",
+    meetingPoint: "Point de rendez-vous",
+    arrival: "Consignes d’arrivée",
+    noAccount: "Aucun compte participant ni lecteur de code QR n’est nécessaire.",
+  },
+  ar: {
+    join: (title) => `انضم إلى ${title} على ChantLive:`,
+    eventCode: "رمز الفعالية",
+    enterAt: "أدخله في",
+    when: "الوقت",
+    where: "المكان",
+    meetingPoint: "نقطة التجمع",
+    arrival: "إرشادات الوصول",
+    noAccount: "لا يلزم حساب مشارك أو ماسح رمز QR.",
+  },
+  fa: {
+    join: (title) => `در ${title} در ChantLive شرکت کنید:`,
+    eventCode: "کد رویداد",
+    enterAt: "آن را در این نشانی وارد کنید",
+    when: "زمان",
+    where: "مکان",
+    meetingPoint: "محل دیدار",
+    arrival: "راهنمای ورود",
+    noAccount: "به حساب شرکت‌کننده یا اسکنر کد QR نیازی نیست.",
+  },
+};
 type DashboardDemonstration = Demonstration & {
   creator?: {
     id: string;
@@ -91,11 +168,11 @@ function statusIcon(status: string) {
   }
 }
 
-function formatDashboardSchedule(value: Date | string | null | undefined) {
+function formatDashboardSchedule(value: Date | string | null | undefined, locale?: string) {
   if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
@@ -130,7 +207,8 @@ export default function AdminDashboard() {
   const [selectedSetupTemplate, setSelectedSetupTemplate] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Demonstration | null>(null);
-  const [invitationFallback, setInvitationFallback] = useState<string | null>(null);
+  const [invitationFallback, setInvitationFallback] = useState<InvitationFallback | null>(null);
+  const [invitationLanguage, setInvitationLanguage] = useState<InvitationLanguage>("en");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortOption, setSortOption] = useState<SortOption>("newest");
@@ -259,19 +337,24 @@ export default function AdminDashboard() {
     }
   };
 
-  const copyParticipantInvitation = async (demo: DashboardDemonstration) => {
+  const buildParticipantInvitation = (demo: DashboardDemonstration) => {
     const participantUrl = `${window.location.origin}/d/${demo.publicId}`;
-    const invitation = [
-      `Join ${demo.title} on ChantLive:`,
+    const copy = invitationCopy[invitationLanguage];
+    return [
+      copy.join(demo.title),
       participantUrl,
-      `Event code: ${demo.publicId} (enter it at ${window.location.host})`,
-      demo.scheduledAt ? `When: ${formatDashboardSchedule(demo.scheduledAt)}` : null,
-      demo.locationName ? `Where: ${demo.locationName}` : null,
-      demo.meetingPoint ? `Meeting point: ${demo.meetingPoint}` : null,
-      demo.arrivalNote ? `Arrival guidance: ${demo.arrivalNote}` : null,
+      `${copy.eventCode}: ${demo.publicId} (${copy.enterAt} ${window.location.host})`,
+      demo.scheduledAt ? `${copy.when}: ${formatDashboardSchedule(demo.scheduledAt, invitationLocales[invitationLanguage])}` : null,
+      demo.locationName ? `${copy.where}: ${demo.locationName}` : null,
+      demo.meetingPoint ? `${copy.meetingPoint}: ${demo.meetingPoint}` : null,
+      demo.arrivalNote ? `${copy.arrival}: ${demo.arrivalNote}` : null,
       "",
-      "No participant account or QR scanner is required.",
+      copy.noAccount,
     ].filter((line) => line !== null).join("\n");
+  };
+
+  const copyParticipantInvitation = async (demo: DashboardDemonstration) => {
+    const invitation = buildParticipantInvitation(demo);
 
     try {
       await navigator.clipboard.writeText(invitation);
@@ -281,13 +364,35 @@ export default function AdminDashboard() {
         description: "The event link, code, and saved logistics are ready to send.",
       });
     } catch {
-      setInvitationFallback(invitation);
+      setInvitationFallback({
+        text: invitation,
+        direction: invitationLanguage === "ar" || invitationLanguage === "fa" ? "rtl" : "ltr",
+      });
       toast({
         title: "Could not copy the invitation",
         description: "Select the complete invitation in the open dialog and copy it manually.",
         variant: "destructive",
       });
     }
+  };
+
+  const shareParticipantInvitation = async (demo: DashboardDemonstration) => {
+    const invitation = buildParticipantInvitation(demo);
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `${demo.title} — ChantLive`, text: invitation });
+        setInvitationFallback(null);
+        toast({
+          title: "Invitation shared",
+          description: `The complete ${invitationLanguageOptions.find((option) => option.code === invitationLanguage)?.label ?? "selected"} invitation was sent to your device share sheet.`,
+        });
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      }
+    }
+
+    await copyParticipantInvitation(demo);
   };
 
   const demoStats = {
@@ -678,18 +783,34 @@ export default function AdminDashboard() {
                     </Button>
                   )}
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" data-testid="button-sort-demos">
-                      Sort: {sortLabel}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setSortOption("newest")}>Newest first</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortOption("oldest")}>Oldest first</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortOption("title")}>Title A-Z</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="inline-flex min-h-11 items-center gap-2 rounded-md border bg-background px-3 py-2 text-xs font-medium text-muted-foreground">
+                    Invitation language
+                    <select
+                      value={invitationLanguage}
+                      onChange={(event) => setInvitationLanguage(event.target.value as InvitationLanguage)}
+                      className="bg-background text-foreground outline-none"
+                      aria-label="Invitation language"
+                      data-testid="select-dashboard-invitation-language"
+                    >
+                      {invitationLanguageOptions.map((option) => (
+                        <option key={option.code} value={option.code}>{option.label}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" data-testid="button-sort-demos">
+                        Sort: {sortLabel}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setSortOption("newest")}>Newest first</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setSortOption("oldest")}>Oldest first</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setSortOption("title")}>Title A-Z</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
               <p className="text-xs text-muted-foreground" role="status" aria-live="polite" data-testid="text-demo-result-count">
                 Showing {filteredDemos.length} of {demoStats.total} demonstrations
@@ -803,9 +924,13 @@ export default function AdminDashboard() {
                         Preview
                       </a>
                     </Button>
-                    <Button className="col-span-2 w-full justify-center" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); void copyParticipantInvitation(demo); }} data-testid={`button-copy-invite-demo-${demo.id}`}>
+                    <Button className="min-h-11 w-full justify-center" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); void copyParticipantInvitation(demo); }} data-testid={`button-copy-invite-demo-${demo.id}`}>
                       <MessageSquare className="w-3.5 h-3.5 mr-1" />
-                      Copy complete invitation
+                      Copy invitation
+                    </Button>
+                    <Button className="min-h-11 w-full justify-center" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); void shareParticipantInvitation(demo); }} data-testid={`button-share-invite-demo-${demo.id}`}>
+                      <Share2 className="w-3.5 h-3.5 mr-1" />
+                      Share invitation
                     </Button>
                     <Button className="w-full justify-center" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); void copyParticipantAccess(demo, "link"); }} data-testid={`button-copy-link-demo-${demo.id}`}>
                       <Copy className="w-3.5 h-3.5 mr-1" />
@@ -861,9 +986,10 @@ export default function AdminDashboard() {
           </DialogHeader>
           <Textarea
             readOnly
-            value={invitationFallback ?? ""}
+            value={invitationFallback?.text ?? ""}
             onFocus={(event) => event.currentTarget.select()}
             className="min-h-52 resize-y font-mono text-sm"
+            dir={invitationFallback?.direction ?? "ltr"}
             aria-label="Complete participant invitation"
             data-testid="textarea-dashboard-invitation-fallback"
           />

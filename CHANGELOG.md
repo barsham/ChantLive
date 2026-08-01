@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.71 - 1 August 2026
+
+Localized organiser invitations and clearer live connection recovery.
+
+### Improved
+
+- Invitation language selector: Organisers can prepare complete participant invitations in English, Spanish, French, Arabic, or Persian directly from the dashboard. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Mobile dashboard invitation sharing: Dashboard event cards can send the selected-language invitation through the device share sheet, with clipboard and selectable-text fallbacks. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- One-tap live reconnection: The live connection warning includes a 44px-or-larger translated reconnect action so participants can recover without opening the Help panel.
+- Join another event after ending: Ended participant screens now provide a translated one-tap route back to event joining instead of leaving people at a dead end.
+
+### Fixed
+
+- Last-received chant guidance: If a live connection drops, participants now see a prominent translated warning that the words on screen are the last update received.
+
 ## 1.1.70 - 31 July 2026
 
 Clearer event-day logistics and more useful participant recovery.

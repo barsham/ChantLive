@@ -186,6 +186,9 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     connected: "Connected to live updates",
     reconnecting: "Reconnecting - updates resume automatically",
     offline: "Offline - reconnect to receive updates",
+    connectionLostTitle: "Live updates paused",
+    connectionLostBody: "The chant on screen is the last update received. Reconnect before following new instructions.",
+    reconnectNow: "Reconnect now",
     leader: "Leader",
     everyone: "Everyone",
     next: "Coming Up Next",
@@ -308,6 +311,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     waitingOfflineBody: "You are offline. Reconnect before the demonstration starts so live chants can appear.",
     eventEnded: "This demonstration has ended",
     endedNextStep: "Thanks for joining. You can close this page or ask an organizer for the next participant link.",
+    joinAnotherEvent: "Join another event",
     feedbackSent: "Feedback sent. Thank you.",
     feedbackFailed: "Could not send feedback. Please tell an organizer directly.",
   },
@@ -361,6 +365,9 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     connected: "Conectado a actualizaciones en vivo",
     reconnecting: "Reconectando - las actualizaciones volverán automáticamente",
     offline: "Sin conexión - reconecta para recibir actualizaciones",
+    connectionLostTitle: "Actualizaciones en vivo pausadas",
+    connectionLostBody: "El cántico en pantalla es la última actualización recibida. Reconéctate antes de seguir nuevas instrucciones.",
+    reconnectNow: "Reconectar ahora",
     leader: "Guía",
     everyone: "Todos",
     next: "A continuación",
@@ -483,6 +490,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     waitingOfflineBody: "Estás sin conexión. Reconéctate antes de que comience la demostración para recibir los cánticos en vivo.",
     eventEnded: "La demostración ha terminado",
     endedNextStep: "Gracias por participar. Puedes cerrar esta página o pedir al organizador el siguiente enlace de participante.",
+    joinAnotherEvent: "Unirse a otro evento",
     feedbackSent: "Comentarios enviados. Gracias.",
     feedbackFailed: "No se pudieron enviar los comentarios. Avísale directamente al organizador.",
   },
@@ -536,6 +544,9 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     connected: "Connecté aux mises à jour",
     reconnecting: "Reconnexion - les mises à jour reprendront",
     offline: "Hors ligne - reconnectez-vous",
+    connectionLostTitle: "Mises à jour en direct interrompues",
+    connectionLostBody: "Le chant affiché est la dernière mise à jour reçue. Reconnectez-vous avant de suivre de nouvelles consignes.",
+    reconnectNow: "Se reconnecter",
     leader: "Meneur",
     everyone: "Tout le monde",
     next: "À suivre",
@@ -658,6 +669,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     waitingOfflineBody: "Vous êtes hors ligne. Reconnectez-vous avant le début pour recevoir les chants en direct.",
     eventEnded: "La manifestation est terminée",
     endedNextStep: "Merci d'avoir participé. Vous pouvez fermer cette page ou demander à l'organisateur le prochain lien participant.",
+    joinAnotherEvent: "Rejoindre un autre événement",
     feedbackSent: "Avis envoyé. Merci.",
     feedbackFailed: "Impossible d'envoyer l'avis. Prévenez directement un organisateur.",
   },
@@ -711,6 +723,9 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     connected: "متصل بالتحديثات المباشرة",
     reconnecting: "إعادة الاتصال - ستعود التحديثات تلقائياً",
     offline: "غير متصل - أعد الاتصال للتحديثات",
+    connectionLostTitle: "توقفت التحديثات المباشرة مؤقتًا",
+    connectionLostBody: "الهتاف الظاهر هو آخر تحديث تم استلامه. أعد الاتصال قبل اتباع تعليمات جديدة.",
+    reconnectNow: "إعادة الاتصال الآن",
     leader: "القائد",
     everyone: "الجميع",
     next: "التالي",
@@ -833,6 +848,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     waitingOfflineBody: "أنت غير متصل. أعد الاتصال قبل بدء الفعالية لتظهر الهتافات المباشرة.",
     eventEnded: "انتهت الفعالية",
     endedNextStep: "شكرًا لمشاركتك. يمكنك إغلاق الصفحة أو طلب رابط المشارك التالي من المنظم.",
+    joinAnotherEvent: "الانضمام إلى فعالية أخرى",
     feedbackSent: "تم إرسال الملاحظات. شكرًا لك.",
     feedbackFailed: "تعذر إرسال الملاحظات. أخبر المنظم مباشرة.",
   },
@@ -886,6 +902,9 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     connected: "به به‌روزرسانی زنده وصل است",
     reconnecting: "در حال اتصال دوباره - به‌روزرسانی‌ها خودکار برمی‌گردند",
     offline: "آفلاین - برای دریافت به‌روزرسانی دوباره وصل شوید",
+    connectionLostTitle: "به‌روزرسانی زنده متوقف شده است",
+    connectionLostBody: "شعار روی صفحه آخرین به‌روزرسانی دریافت‌شده است. پیش از دنبال کردن دستورهای جدید دوباره وصل شوید.",
+    reconnectNow: "اتصال دوباره",
     leader: "رهبر",
     everyone: "همه",
     next: "بعدی",
@@ -1008,6 +1027,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     waitingOfflineBody: "آفلاین هستید. پیش از شروع رویداد دوباره وصل شوید تا شعارهای زنده نمایش داده شوند.",
     eventEnded: "رویداد پایان یافته است",
     endedNextStep: "از همراهی شما سپاسگزاریم. می‌توانید صفحه را ببندید یا لینک بعدی را از برگزارکننده بخواهید.",
+    joinAnotherEvent: "پیوستن به رویداد دیگر",
     feedbackSent: "بازخورد ارسال شد. سپاسگزاریم.",
     feedbackFailed: "بازخورد ارسال نشد. مستقیماً به برگزارکننده اطلاع دهید.",
   },
@@ -1994,6 +2014,14 @@ export default function Participant() {
           <p className="text-neutral-500 text-sm mt-4 max-w-xs mx-auto" data-testid="text-ended-next-step">
             {t.endedNextStep}
           </p>
+          <Link
+            href="/#join-event"
+            className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-sky-400/60 px-5 py-2 text-sm font-semibold text-sky-100 hover:bg-sky-950/40"
+            data-testid="link-ended-join-another-event"
+          >
+            <Link2 className="h-4 w-4" aria-hidden="true" />
+            {t.joinAnotherEvent}
+          </Link>
           {renderParticipantAccess("mt-5")}
           <div className="mt-4">{renderParticipantLanguageSelect()}</div>
           {logisticsItems.length > 0 && (
@@ -2173,6 +2201,30 @@ export default function Participant() {
         </div>
       )}
       {renderParticipantAccess("mx-4 mt-3", true)}
+      {(!connected || isOffline) && (
+        <div
+          className="mx-4 mt-4 rounded-2xl border border-red-400/50 bg-red-500/15 p-4 text-center text-red-50"
+          role="alert"
+          data-testid="banner-live-connection-recovery"
+        >
+          <p className="flex items-center justify-center gap-2 text-sm font-semibold">
+            <WifiOff className="h-4 w-4" aria-hidden="true" />
+            {t.connectionLostTitle}
+          </p>
+          <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-red-100/90">
+            {t.connectionLostBody}
+          </p>
+          <button
+            type="button"
+            onClick={retryConnection}
+            className="mt-3 inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-red-200/70 bg-black/30 px-5 py-2 text-sm font-semibold text-white hover:bg-black/50"
+            data-testid="button-live-reconnect-now"
+          >
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
+            {t.reconnectNow}
+          </button>
+        </div>
+      )}
       {chantData.supportUrl && (
         <div className="mx-4 mt-4 rounded-2xl border border-emerald-300/40 bg-emerald-300/15 p-4 text-center text-emerald-50" data-testid="banner-participant-support-action">
           <p className="text-xs font-mono uppercase tracking-widest text-emerald-100/80">
