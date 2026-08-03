@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.72",
+      "releasedAt": "2026-08-03",
+      "summary": "A consistent multilingual invitation workflow across organiser tools.",
+      "items": [
+        {
+          "id": "cl-2026-08-03-remembered-invitation-language",
+          "title": "Remembered invitation language",
+          "description": "The selected participant-message language now follows organisers between the dashboard, event editor, and Share Kit on the same device.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-08-03",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-08-03-editor-invitation-language",
+          "title": "Multilingual editor invitations",
+          "description": "Participant Access in the event editor can prepare, share, copy, and manually display complete invitations in English, Spanish, French, Arabic, or Persian.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-08-03",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-08-03-share-kit-language",
+          "title": "Share Kit language control",
+          "description": "Organisers can switch all participant-facing Share Kit messages together from one clearly labelled language control.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-08-03",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-08-03-localized-arrival-calendar",
+          "title": "Localized arrival and calendar messages",
+          "description": "Arrival details and calendar reminders now use the selected language with locale-aware dates and numerals for participants.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-08-03",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-08-03-localized-access-fallback",
+          "title": "Readable multilingual access fallback",
+          "description": "The no-QR joining fallback is translated, while Arabic and Persian message previews use right-to-left reading order and language metadata.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-08-03",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        }
+      ]
+    },
+    {
       "version": "1.1.71",
       "releasedAt": "2026-08-01",
       "summary": "Localized organiser invitations and clearer live connection recovery.",

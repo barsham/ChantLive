@@ -72,6 +72,14 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import {
+  buildParticipantInvitation,
+  getStoredInvitationLanguage,
+  invitationDirections,
+  invitationLanguageOptions,
+  storeInvitationLanguage,
+  type InvitationLanguage,
+} from "@/lib/invitations";
 import { useToast } from "@/hooks/use-toast";
 import type { Demonstration, Chant, DemoState } from "@shared/schema";
 import { useState, useEffect, useCallback } from "react";
@@ -141,6 +149,7 @@ export default function DemoEditor() {
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedInvitation, setCopiedInvitation] = useState(false);
   const [invitationCopyError, setInvitationCopyError] = useState(false);
+  const [invitationLanguage, setInvitationLanguage] = useState<InvitationLanguage>(getStoredInvitationLanguage);
   const [showCreatedGuide, setShowCreatedGuide] = useState(false);
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -646,16 +655,7 @@ export default function DemoEditor() {
 
   const publicUrl = demo ? `${window.location.origin}/d/${demo.publicId}` : "";
   const participantInvitation = demo
-    ? [
-        `Join ${demo.title} on ChantLive.`,
-        demo.scheduledAt ? `When: ${formatEventSchedule(demo.scheduledAt)}` : null,
-        demo.locationName ? `Where: ${demo.locationName}` : null,
-        demo.meetingPoint ? `Meeting point: ${demo.meetingPoint}` : null,
-        demo.arrivalNote ? `Arrival: ${demo.arrivalNote}` : null,
-        `Event code: ${demo.publicId}`,
-        publicUrl,
-        "No account or QR scanner is required.",
-      ].filter((line): line is string => Boolean(line)).join("\n")
+    ? buildParticipantInvitation(demo, window.location.origin, invitationLanguage)
     : "";
 
   const copyUrl = () => {
@@ -858,6 +858,27 @@ export default function DemoEditor() {
                     Share the plain participant link or short code. The QR code is an optional shortcut.
                   </DialogDescription>
                 </DialogHeader>
+                <label className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border bg-muted/30 px-3 py-2 text-sm font-medium">
+                  Invitation language
+                  <select
+                    value={invitationLanguage}
+                    onChange={(event) => {
+                      const language = event.target.value as InvitationLanguage;
+                      setInvitationLanguage(language);
+                      storeInvitationLanguage(language);
+                    }}
+                    className="min-h-11 rounded-md border bg-background px-3 text-foreground"
+                    aria-label="Participant invitation language"
+                    data-testid="select-editor-invitation-language"
+                  >
+                    {invitationLanguageOptions.map((option) => (
+                      <option key={option.code} value={option.code}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  This choice is remembered on this device and also used in the dashboard and Share Kit.
+                </p>
                 <div className="flex flex-col items-center gap-3 py-1">
                   <div className="qr-print-handout flex w-full flex-col items-center gap-2 rounded-xl border bg-background p-3 text-center">
                     <p className="text-base font-semibold text-foreground">{demo.title}</p>
@@ -937,6 +958,8 @@ export default function DemoEditor() {
                       value={participantInvitation}
                       readOnly
                       className="mt-1 min-h-32 resize-y text-xs"
+                      dir={invitationDirections[invitationLanguage]}
+                      lang={invitationLanguage}
                       aria-describedby="complete-participant-invitation-help"
                       data-testid="textarea-participant-invitation"
                     />

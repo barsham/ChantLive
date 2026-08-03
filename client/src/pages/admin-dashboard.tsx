@@ -36,6 +36,14 @@ import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload, Se
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppVersion } from "@/components/app-version";
+import {
+  buildParticipantInvitation,
+  getStoredInvitationLanguage,
+  invitationDirections,
+  invitationLanguageOptions,
+  storeInvitationLanguage,
+  type InvitationLanguage,
+} from "@/lib/invitations";
 import type { Demonstration } from "@shared/schema";
 import type { ChangeEvent } from "react";
 import { useRef, useState } from "react";
@@ -57,83 +65,7 @@ const statusFilters = ["all", "live", "draft", "ended"] as const;
 type StatusFilter = (typeof statusFilters)[number];
 const sortOptions = ["newest", "oldest", "title"] as const;
 type SortOption = (typeof sortOptions)[number];
-type InvitationLanguage = "en" | "es" | "fr" | "ar" | "fa";
 type InvitationFallback = { text: string; direction: "ltr" | "rtl" };
-const invitationLanguageOptions: Array<{ code: InvitationLanguage; label: string }> = [
-  { code: "en", label: "English" },
-  { code: "es", label: "Español" },
-  { code: "fr", label: "Français" },
-  { code: "ar", label: "العربية" },
-  { code: "fa", label: "فارسی" },
-];
-const invitationLocales: Record<InvitationLanguage, string> = {
-  en: "en",
-  es: "es",
-  fr: "fr",
-  ar: "ar-u-nu-arab",
-  fa: "fa-u-nu-arabext",
-};
-const invitationCopy: Record<InvitationLanguage, {
-  join: (title: string) => string;
-  eventCode: string;
-  enterAt: string;
-  when: string;
-  where: string;
-  meetingPoint: string;
-  arrival: string;
-  noAccount: string;
-}> = {
-  en: {
-    join: (title) => `Join ${title} on ChantLive:`,
-    eventCode: "Event code",
-    enterAt: "enter it at",
-    when: "When",
-    where: "Where",
-    meetingPoint: "Meeting point",
-    arrival: "Arrival guidance",
-    noAccount: "No participant account or QR scanner is required.",
-  },
-  es: {
-    join: (title) => `Únete a ${title} en ChantLive:`,
-    eventCode: "Código del evento",
-    enterAt: "introdúcelo en",
-    when: "Cuándo",
-    where: "Dónde",
-    meetingPoint: "Punto de encuentro",
-    arrival: "Indicaciones de llegada",
-    noAccount: "No se necesita una cuenta de participante ni un escáner de códigos QR.",
-  },
-  fr: {
-    join: (title) => `Rejoignez ${title} sur ChantLive :`,
-    eventCode: "Code de l’événement",
-    enterAt: "saisissez-le sur",
-    when: "Quand",
-    where: "Où",
-    meetingPoint: "Point de rendez-vous",
-    arrival: "Consignes d’arrivée",
-    noAccount: "Aucun compte participant ni lecteur de code QR n’est nécessaire.",
-  },
-  ar: {
-    join: (title) => `انضم إلى ${title} على ChantLive:`,
-    eventCode: "رمز الفعالية",
-    enterAt: "أدخله في",
-    when: "الوقت",
-    where: "المكان",
-    meetingPoint: "نقطة التجمع",
-    arrival: "إرشادات الوصول",
-    noAccount: "لا يلزم حساب مشارك أو ماسح رمز QR.",
-  },
-  fa: {
-    join: (title) => `در ${title} در ChantLive شرکت کنید:`,
-    eventCode: "کد رویداد",
-    enterAt: "آن را در این نشانی وارد کنید",
-    when: "زمان",
-    where: "مکان",
-    meetingPoint: "محل دیدار",
-    arrival: "راهنمای ورود",
-    noAccount: "به حساب شرکت‌کننده یا اسکنر کد QR نیازی نیست.",
-  },
-};
 type DashboardDemonstration = Demonstration & {
   creator?: {
     id: string;
@@ -168,11 +100,11 @@ function statusIcon(status: string) {
   }
 }
 
-function formatDashboardSchedule(value: Date | string | null | undefined, locale?: string) {
+function formatDashboardSchedule(value: Date | string | null | undefined) {
   if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat(locale, {
+  return new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
@@ -208,7 +140,7 @@ export default function AdminDashboard() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Demonstration | null>(null);
   const [invitationFallback, setInvitationFallback] = useState<InvitationFallback | null>(null);
-  const [invitationLanguage, setInvitationLanguage] = useState<InvitationLanguage>("en");
+  const [invitationLanguage, setInvitationLanguage] = useState<InvitationLanguage>(getStoredInvitationLanguage);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortOption, setSortOption] = useState<SortOption>("newest");
@@ -337,24 +269,8 @@ export default function AdminDashboard() {
     }
   };
 
-  const buildParticipantInvitation = (demo: DashboardDemonstration) => {
-    const participantUrl = `${window.location.origin}/d/${demo.publicId}`;
-    const copy = invitationCopy[invitationLanguage];
-    return [
-      copy.join(demo.title),
-      participantUrl,
-      `${copy.eventCode}: ${demo.publicId} (${copy.enterAt} ${window.location.host})`,
-      demo.scheduledAt ? `${copy.when}: ${formatDashboardSchedule(demo.scheduledAt, invitationLocales[invitationLanguage])}` : null,
-      demo.locationName ? `${copy.where}: ${demo.locationName}` : null,
-      demo.meetingPoint ? `${copy.meetingPoint}: ${demo.meetingPoint}` : null,
-      demo.arrivalNote ? `${copy.arrival}: ${demo.arrivalNote}` : null,
-      "",
-      copy.noAccount,
-    ].filter((line) => line !== null).join("\n");
-  };
-
   const copyParticipantInvitation = async (demo: DashboardDemonstration) => {
-    const invitation = buildParticipantInvitation(demo);
+    const invitation = buildParticipantInvitation(demo, window.location.origin, invitationLanguage);
 
     try {
       await navigator.clipboard.writeText(invitation);
@@ -366,7 +282,7 @@ export default function AdminDashboard() {
     } catch {
       setInvitationFallback({
         text: invitation,
-        direction: invitationLanguage === "ar" || invitationLanguage === "fa" ? "rtl" : "ltr",
+        direction: invitationDirections[invitationLanguage],
       });
       toast({
         title: "Could not copy the invitation",
@@ -377,7 +293,7 @@ export default function AdminDashboard() {
   };
 
   const shareParticipantInvitation = async (demo: DashboardDemonstration) => {
-    const invitation = buildParticipantInvitation(demo);
+    const invitation = buildParticipantInvitation(demo, window.location.origin, invitationLanguage);
     if (navigator.share) {
       try {
         await navigator.share({ title: `${demo.title} — ChantLive`, text: invitation });
@@ -788,7 +704,11 @@ export default function AdminDashboard() {
                     Invitation language
                     <select
                       value={invitationLanguage}
-                      onChange={(event) => setInvitationLanguage(event.target.value as InvitationLanguage)}
+                      onChange={(event) => {
+                        const language = event.target.value as InvitationLanguage;
+                        setInvitationLanguage(language);
+                        storeInvitationLanguage(language);
+                      }}
                       className="bg-background text-foreground outline-none"
                       aria-label="Invitation language"
                       data-testid="select-dashboard-invitation-language"

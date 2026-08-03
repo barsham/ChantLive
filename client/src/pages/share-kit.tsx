@@ -8,6 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  buildParticipantInvitation,
+  formatInvitationSchedule,
+  getStoredInvitationLanguage,
+  invitationDirections,
+  invitationLanguageOptions,
+  storeInvitationLanguage,
+  type InvitationLanguage,
+} from "@/lib/invitations";
 import type { Chant, DemoState, Demonstration } from "@shared/schema";
 
 type AdminInfo = {
@@ -30,20 +39,107 @@ type MessageTemplate = {
   title: string;
   audience: string;
   body: string;
+  participantFacing?: boolean;
 };
 
-function formatShareSchedule(value: Date | string | null | undefined) {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-}
+const participantTemplateCopy: Record<InvitationLanguage, {
+  participantInvite: string;
+  participantAudience: string;
+  arrivalDetails: string;
+  arrivalAudience: string;
+  saveDate: string;
+  calendarAudience: string;
+  accessibleFallback: string;
+  accessibleAudience: string;
+  when: string;
+  where: string;
+  meetingPoint: string;
+  arrivalNote: string;
+  participantLink: string;
+  eventCode: string;
+  keepOpen: string;
+  keepHandy: string;
+  addCalendar: (url: string) => string;
+  noQr: (title: string) => string;
+  openLink: string;
+  orVisit: (host: string) => string;
+  askForHelp: string;
+}> = {
+  en: {
+    participantInvite: "Participant invite", participantAudience: "Send before the event",
+    arrivalDetails: "Arrival details", arrivalAudience: "Send before people travel",
+    saveDate: "Save the date", calendarAudience: "Send to participants before the event",
+    accessibleFallback: "Accessible joining fallback", accessibleAudience: "Read aloud or print",
+    when: "When", where: "Where", meetingPoint: "Meeting point", arrivalNote: "Arrival note",
+    participantLink: "Participant link", eventCode: "Event code",
+    keepOpen: "Open this link before the event starts and keep the page open. The current chant will update automatically.",
+    keepHandy: "Keep this message handy and ask a volunteer if the meeting point changes.",
+    addCalendar: (url) => `Open the participant page and choose Add to calendar: ${url}`,
+    noQr: (title) => `For ${title}, you can join without scanning a QR code.`,
+    openLink: "Open this link", orVisit: (host) => `Or go to ${host} and enter the code`,
+    askForHelp: "Ask an organiser if you need large text, high contrast, a quieter place, or help reconnecting.",
+  },
+  es: {
+    participantInvite: "Invitación para participantes", participantAudience: "Enviar antes del evento",
+    arrivalDetails: "Detalles de llegada", arrivalAudience: "Enviar antes del viaje",
+    saveDate: "Guardar la fecha", calendarAudience: "Enviar a participantes antes del evento",
+    accessibleFallback: "Alternativa accesible para unirse", accessibleAudience: "Leer en voz alta o imprimir",
+    when: "Cuándo", where: "Dónde", meetingPoint: "Punto de encuentro", arrivalNote: "Indicaciones de llegada",
+    participantLink: "Enlace para participantes", eventCode: "Código del evento",
+    keepOpen: "Abre este enlace antes de que empiece el evento y mantén la página abierta. El canto actual se actualizará automáticamente.",
+    keepHandy: "Guarda este mensaje y pregunta a una persona voluntaria si cambia el punto de encuentro.",
+    addCalendar: (url) => `Abre la página del participante y elige Añadir al calendario: ${url}`,
+    noQr: (title) => `Para ${title}, puedes unirte sin escanear un código QR.`,
+    openLink: "Abre este enlace", orVisit: (host) => `O visita ${host} e introduce el código`,
+    askForHelp: "Pide ayuda a la organización si necesitas texto grande, alto contraste, un lugar más tranquilo o ayuda para reconectar.",
+  },
+  fr: {
+    participantInvite: "Invitation des participants", participantAudience: "À envoyer avant l’événement",
+    arrivalDetails: "Informations d’arrivée", arrivalAudience: "À envoyer avant le déplacement",
+    saveDate: "Réserver la date", calendarAudience: "À envoyer aux participants avant l’événement",
+    accessibleFallback: "Solution d’accès sans QR", accessibleAudience: "À lire à voix haute ou à imprimer",
+    when: "Quand", where: "Où", meetingPoint: "Point de rendez-vous", arrivalNote: "Consignes d’arrivée",
+    participantLink: "Lien participant", eventCode: "Code de l’événement",
+    keepOpen: "Ouvrez ce lien avant le début de l’événement et gardez la page ouverte. Le chant affiché se mettra à jour automatiquement.",
+    keepHandy: "Gardez ce message et demandez à un bénévole si le point de rendez-vous change.",
+    addCalendar: (url) => `Ouvrez la page participant et choisissez Ajouter au calendrier : ${url}`,
+    noQr: (title) => `Pour ${title}, vous pouvez participer sans scanner de code QR.`,
+    openLink: "Ouvrez ce lien", orVisit: (host) => `Ou rendez-vous sur ${host} et saisissez le code`,
+    askForHelp: "Demandez à l’organisation si vous avez besoin de grands caractères, d’un contraste élevé, d’un endroit plus calme ou d’aide pour vous reconnecter.",
+  },
+  ar: {
+    participantInvite: "دعوة المشاركين", participantAudience: "أرسلها قبل الفعالية",
+    arrivalDetails: "تفاصيل الوصول", arrivalAudience: "أرسلها قبل توجه المشاركين",
+    saveDate: "احفظ الموعد", calendarAudience: "أرسلها للمشاركين قبل الفعالية",
+    accessibleFallback: "طريقة انضمام ميسّرة", accessibleAudience: "اقرأها بصوت عالٍ أو اطبعها",
+    when: "الوقت", where: "المكان", meetingPoint: "نقطة التجمع", arrivalNote: "إرشادات الوصول",
+    participantLink: "رابط المشاركين", eventCode: "رمز الفعالية",
+    keepOpen: "افتح هذا الرابط قبل بدء الفعالية واترك الصفحة مفتوحة. سيُحدَّث الهتاف الحالي تلقائياً.",
+    keepHandy: "احتفظ بهذه الرسالة واسأل أحد المتطوعين إذا تغيرت نقطة التجمع.",
+    addCalendar: (url) => `افتح صفحة المشاركين واختر الإضافة إلى التقويم: ${url}`,
+    noQr: (title) => `يمكنك الانضمام إلى ${title} من دون مسح رمز QR.`,
+    openLink: "افتح هذا الرابط", orVisit: (host) => `أو انتقل إلى ${host} وأدخل الرمز`,
+    askForHelp: "اطلب من المنظم المساعدة إذا احتجت إلى نص كبير أو تباين عالٍ أو مكان أكثر هدوءاً أو مساعدة في إعادة الاتصال.",
+  },
+  fa: {
+    participantInvite: "دعوت‌نامه شرکت‌کنندگان", participantAudience: "پیش از رویداد ارسال کنید",
+    arrivalDetails: "جزئیات ورود", arrivalAudience: "پیش از حرکت افراد ارسال کنید",
+    saveDate: "ذخیره زمان", calendarAudience: "پیش از رویداد برای شرکت‌کنندگان بفرستید",
+    accessibleFallback: "روش دسترس‌پذیر پیوستن", accessibleAudience: "بلند بخوانید یا چاپ کنید",
+    when: "زمان", where: "مکان", meetingPoint: "محل دیدار", arrivalNote: "راهنمای ورود",
+    participantLink: "پیوند شرکت‌کنندگان", eventCode: "کد رویداد",
+    keepOpen: "این پیوند را پیش از شروع رویداد باز کنید و صفحه را باز نگه دارید. شعار جاری به‌طور خودکار به‌روزرسانی می‌شود.",
+    keepHandy: "این پیام را نگه دارید و اگر محل دیدار تغییر کرد از یک داوطلب بپرسید.",
+    addCalendar: (url) => `صفحه شرکت‌کنندگان را باز کنید و افزودن به تقویم را انتخاب کنید: ${url}`,
+    noQr: (title) => `برای پیوستن به ${title} نیازی به اسکن کد QR نیست.`,
+    openLink: "این پیوند را باز کنید", orVisit: (host) => `یا به ${host} بروید و کد را وارد کنید`,
+    askForHelp: "اگر به نوشته بزرگ، کنتراست بالا، جای آرام‌تر یا کمک برای اتصال دوباره نیاز دارید از برگزارکننده کمک بخواهید.",
+  },
+};
 
 function buildTemplates(
   data: DemoDetail,
+  language: InvitationLanguage,
   publicUrl: string,
   handoutUrl: string,
   planUrl: string,
@@ -55,15 +151,16 @@ function buildTemplates(
   safetyUrl: string,
 ): MessageTemplate[] {
   const title = data.demo.title;
+  const copy = participantTemplateCopy[language];
   const participantCode = data.demo.publicId;
   const chantCount = data.chants.length;
   const duration = data.state?.eventDurationMinutes ?? 300;
-  const schedule = formatShareSchedule(data.demo.scheduledAt);
+  const schedule = formatInvitationSchedule(data.demo.scheduledAt, language);
   const logisticsLines = [
-    schedule ? `When: ${schedule}` : null,
-    data.demo.locationName ? `Where: ${data.demo.locationName}` : null,
-    data.demo.meetingPoint ? `Meeting point: ${data.demo.meetingPoint}` : null,
-    data.demo.arrivalNote ? `Arrival note: ${data.demo.arrivalNote}` : null,
+    schedule ? `${copy.when}: ${schedule}` : null,
+    data.demo.locationName ? `${copy.where}: ${data.demo.locationName}` : null,
+    data.demo.meetingPoint ? `${copy.meetingPoint}: ${data.demo.meetingPoint}` : null,
+    data.demo.arrivalNote ? `${copy.arrivalNote}: ${data.demo.arrivalNote}` : null,
   ].filter(Boolean) as string[];
   const backupAdminLine = data.admins.length > 1
     ? `Backup admins are set: ${data.admins.map((admin) => admin.name).join(", ")}.`
@@ -72,41 +169,40 @@ function buildTemplates(
   return [
     {
       id: "participant-invite",
-      title: "Participant invite",
-      audience: "Send before the event",
+      title: copy.participantInvite,
+      audience: copy.participantAudience,
+      participantFacing: true,
       body: [
-        `Join ${title} on ChantLive:`,
-        publicUrl,
-        `Short code: ${participantCode} (enter it at ${new URL(publicUrl).host})`,
-        ...(logisticsLines.length ? ["", ...logisticsLines] : []),
+        buildParticipantInvitation(data.demo, new URL(publicUrl).origin, language),
         "",
-        "Open this link before the event starts and keep the page open. The current chant will update automatically.",
-        "If QR scanning does not work, enter the short code on the ChantLive home page.",
+        copy.keepOpen,
       ].join("\n"),
     },
     ...(logisticsLines.length ? [{
       id: "arrival-details",
-      title: "Arrival details",
-      audience: "Send before people travel",
+      title: copy.arrivalDetails,
+      audience: copy.arrivalAudience,
+      participantFacing: true,
       body: [
-        `Arrival details for ${title}:`,
+        `${copy.arrivalDetails}: ${title}`,
         ...logisticsLines,
         "",
-        `Participant link: ${publicUrl}`,
-        "Keep this message handy and ask a volunteer if the meeting point changes.",
+        `${copy.participantLink}: ${publicUrl}`,
+        copy.keepHandy,
       ].join("\n"),
     }] : []),
     ...(schedule ? [{
       id: "calendar-reminder",
-      title: "Save the date",
-      audience: "Send to participants before the event",
+      title: copy.saveDate,
+      audience: copy.calendarAudience,
+      participantFacing: true,
       body: [
-        `Save ${title} in your calendar:`,
-        `When: ${schedule}`,
-        ...(data.demo.locationName ? [`Where: ${data.demo.locationName}`] : []),
+        `${copy.saveDate}: ${title}`,
+        `${copy.when}: ${schedule}`,
+        ...(data.demo.locationName ? [`${copy.where}: ${data.demo.locationName}`] : []),
         "",
-        `Open the participant page and choose Add to calendar: ${publicUrl}`,
-        `Event code: ${participantCode}`,
+        copy.addCalendar(publicUrl),
+        `${copy.eventCode}: ${participantCode}`,
       ].join("\n"),
     }] : []),
     ...(data.demo.supportUrl ? [{
@@ -122,14 +218,15 @@ function buildTemplates(
     }] : []),
     {
       id: "accessibility-fallback",
-      title: "Accessible joining fallback",
-      audience: "Read aloud or print",
+      title: copy.accessibleFallback,
+      audience: copy.accessibleAudience,
+      participantFacing: true,
       body: [
-        `For ${title}, you can join without scanning a QR code.`,
-        `Open this link: ${publicUrl}`,
-        `Or go to ${new URL(publicUrl).host} and enter code: ${participantCode}`,
+        copy.noQr(title),
+        `${copy.openLink}: ${publicUrl}`,
+        `${copy.orVisit(new URL(publicUrl).host)}: ${participantCode}`,
         "",
-        "Ask an organiser if you need large text, high contrast, a quieter place, or help reconnecting.",
+        copy.askForHelp,
       ].join("\n"),
     },
     {
@@ -240,6 +337,7 @@ export default function ShareKit() {
   const [, navigate] = useLocation();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [templateSearch, setTemplateSearch] = useState("");
+  const [invitationLanguage, setInvitationLanguage] = useState<InvitationLanguage>(getStoredInvitationLanguage);
   const [actionStatus, setActionStatus] = useState<{ tone: "success" | "error"; text: string } | null>(null);
 
   const { data, isLoading } = useQuery<DemoDetail>({
@@ -256,7 +354,7 @@ export default function ShareKit() {
   const briefingUrl = id ? `${origin}/admin/demos/${id}/briefing` : "";
   const runOfShowUrl = id ? `${origin}/admin/demos/${id}/run-of-show` : "";
   const safetyUrl = id ? `${origin}/admin/demos/${id}/safety` : "";
-  const templates = data ? buildTemplates(data, publicUrl, handoutUrl, planUrl, recoveryUrl, reportUrl, commandUrl, briefingUrl, runOfShowUrl, safetyUrl) : [];
+  const templates = data ? buildTemplates(data, invitationLanguage, publicUrl, handoutUrl, planUrl, recoveryUrl, reportUrl, commandUrl, briefingUrl, runOfShowUrl, safetyUrl) : [];
   const normalizedSearch = templateSearch.trim().toLowerCase();
   const filteredTemplates = normalizedSearch
     ? templates.filter((template) =>
@@ -425,6 +523,39 @@ export default function ShareKit() {
             </div>
           </div>
 
+          <div className="mt-6 rounded-xl border bg-muted/20 p-4" data-testid="card-share-kit-language">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold">Participant message language</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Updates the participant invitation, arrival details, calendar reminder, and accessible joining fallback.
+                </p>
+              </div>
+              <label className="flex min-h-11 items-center gap-2 rounded-lg border bg-background px-3 py-2 text-sm font-medium">
+                Language
+                <select
+                  value={invitationLanguage}
+                  onChange={(event) => {
+                    const language = event.target.value as InvitationLanguage;
+                    setInvitationLanguage(language);
+                    storeInvitationLanguage(language);
+                  }}
+                  className="min-h-11 rounded-md border bg-background px-3 text-foreground"
+                  aria-label="Share Kit participant message language"
+                  data-testid="select-share-kit-language"
+                >
+                  {invitationLanguageOptions.map((option) => (
+                    <option key={option.code} value={option.code}>{option.label}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground" role="status" aria-live="polite" data-testid="text-share-kit-language-status">
+              Participant-facing messages are ready in {invitationLanguageOptions.find((option) => option.code === invitationLanguage)?.label}.
+              This choice is remembered in the dashboard and event editor on this device.
+            </p>
+          </div>
+
           <div className="mt-6 rounded-xl border border-primary/30 bg-primary/5 p-4" data-testid="card-share-participant-access">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -491,7 +622,13 @@ export default function ShareKit() {
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             {filteredTemplates.map((template) => (
-              <Card key={template.id} className="min-w-0" data-testid={`card-share-template-${template.id}`}>
+              <Card
+                key={template.id}
+                className="min-w-0"
+                dir={template.participantFacing ? invitationDirections[invitationLanguage] : "ltr"}
+                lang={template.participantFacing ? invitationLanguage : "en"}
+                data-testid={`card-share-template-${template.id}`}
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <MessageSquare className="h-5 w-5 text-primary" />
@@ -500,7 +637,11 @@ export default function ShareKit() {
                   <p className="text-xs text-muted-foreground">{template.audience}</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <pre className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] rounded-lg border bg-muted/40 p-3 text-sm leading-relaxed text-foreground">
+                  <pre
+                    className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] rounded-lg border bg-muted/40 p-3 text-sm leading-relaxed text-foreground"
+                    dir={template.participantFacing ? invitationDirections[invitationLanguage] : "ltr"}
+                    lang={template.participantFacing ? invitationLanguage : "en"}
+                  >
                     {template.body}
                   </pre>
                   <div className="flex flex-wrap gap-2">

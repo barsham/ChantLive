@@ -4,6 +4,18 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.72 - 3 August 2026
+
+A consistent multilingual invitation workflow across organiser tools.
+
+### Improved
+
+- Remembered invitation language: The selected participant-message language now follows organisers between the dashboard, event editor, and Share Kit on the same device. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Multilingual editor invitations: Participant Access in the event editor can prepare, share, copy, and manually display complete invitations in English, Spanish, French, Arabic, or Persian. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Share Kit language control: Organisers can switch all participant-facing Share Kit messages together from one clearly labelled language control. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Localized arrival and calendar messages: Arrival details and calendar reminders now use the selected language with locale-aware dates and numerals for participants. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Readable multilingual access fallback: The no-QR joining fallback is translated, while Arabic and Persian message previews use right-to-left reading order and language metadata. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+
 ## 1.1.71 - 1 August 2026
 
 Localized organiser invitations and clearer live connection recovery.
