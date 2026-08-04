@@ -672,6 +672,51 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/demos/:id/repeat", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const source = await getDemoByIdentifier(req.params.id);
+      if (!source) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, source.id))) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const title = typeof req.body?.title === "string" ? req.body.title.trim() : "";
+      if (!title) return res.status(400).json({ message: "A title is required for the repeated event" });
+      if (title.length > 120) return res.status(400).json({ message: "The title must be 120 characters or fewer" });
+
+      let scheduledAt: Date | null = null;
+      if (req.body?.scheduledAt) {
+        scheduledAt = new Date(req.body.scheduledAt);
+        if (Number.isNaN(scheduledAt.getTime())) {
+          return res.status(400).json({ message: "Choose a valid date and time" });
+        }
+        if (scheduledAt.getTime() < Date.now() - 60_000) {
+          return res.status(400).json({ message: "The repeated event cannot be scheduled in the past" });
+        }
+      }
+
+      const repeated = await storage.repeatDemonstration(source.id, user.id, {
+        title,
+        scheduledAt,
+        copyChants: req.body?.copyChants !== false,
+        copyLogistics: req.body?.copyLogistics !== false,
+        copySupport: req.body?.copySupport === true,
+      });
+
+      res.status(201).json({
+        ...repeated,
+        source: { id: source.id, title: source.title, publicId: source.publicId },
+      });
+    } catch (err) {
+      if (err instanceof Error && err.message === "SOURCE_DEMONSTRATION_NOT_FOUND") {
+        return res.status(404).json({ message: "Demonstration not found" });
+      }
+      console.error("Repeat demonstration error:", err);
+      res.status(500).json({ message: "Failed to repeat demonstration" });
+    }
+  });
+
   app.get("/api/demos/:id/assistance", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;

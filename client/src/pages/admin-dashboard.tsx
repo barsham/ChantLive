@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -32,7 +33,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload, Search, X, ClipboardList, Share2, CalendarClock, MapPin, Copy, Hash, MessageSquare, ExternalLink, Navigation } from "lucide-react";
+import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload, Search, X, ClipboardList, Share2, CalendarClock, MapPin, Copy, Hash, MessageSquare, ExternalLink, Navigation, Repeat2, ShieldCheck } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppVersion } from "@/components/app-version";
@@ -66,6 +67,14 @@ type StatusFilter = (typeof statusFilters)[number];
 const sortOptions = ["newest", "oldest", "title"] as const;
 type SortOption = (typeof sortOptions)[number];
 type InvitationFallback = { text: string; direction: "ltr" | "rtl" };
+type RepeatResult = {
+  demo: Demonstration;
+  copiedChants: number;
+  copiedLogistics: boolean;
+  copiedSupport: boolean;
+  eventDurationMinutes: number;
+  source: { id: string; title: string; publicId: string };
+};
 type DashboardDemonstration = Demonstration & {
   creator?: {
     id: string;
@@ -126,6 +135,16 @@ function formatLocalDateTimeMinimum(date = new Date()) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+function readableApiError(error: Error, fallback: string) {
+  const body = error.message.replace(/^\d+:\s*/, "");
+  try {
+    const parsed = JSON.parse(body) as { message?: unknown };
+    return typeof parsed.message === "string" && parsed.message.trim() ? parsed.message : fallback;
+  } catch {
+    return body.trim() || fallback;
+  }
+}
+
 export default function AdminDashboard() {
   const { user, isSuperAdmin } = useAuth();
   const [, navigate] = useLocation();
@@ -140,6 +159,13 @@ export default function AdminDashboard() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Demonstration | null>(null);
   const [invitationFallback, setInvitationFallback] = useState<InvitationFallback | null>(null);
+  const [repeatTarget, setRepeatTarget] = useState<DashboardDemonstration | null>(null);
+  const [repeatTitle, setRepeatTitle] = useState("");
+  const [repeatScheduledAt, setRepeatScheduledAt] = useState("");
+  const [repeatCopyChants, setRepeatCopyChants] = useState(true);
+  const [repeatCopyLogistics, setRepeatCopyLogistics] = useState(true);
+  const [repeatCopySupport, setRepeatCopySupport] = useState(false);
+  const [repeatError, setRepeatError] = useState("");
   const [invitationLanguage, setInvitationLanguage] = useState<InvitationLanguage>(getStoredInvitationLanguage);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -149,6 +175,11 @@ export default function AdminDashboard() {
     newScheduledAt &&
     !Number.isNaN(new Date(newScheduledAt).getTime()) &&
     new Date(newScheduledAt).getTime() < Date.now(),
+  );
+  const repeatScheduleInPast = Boolean(
+    repeatScheduledAt &&
+    !Number.isNaN(new Date(repeatScheduledAt).getTime()) &&
+    new Date(repeatScheduledAt).getTime() < Date.now(),
   );
 
   const { data: demos, isLoading } = useQuery<DashboardDemonstration[]>({
@@ -181,6 +212,48 @@ export default function AdminDashboard() {
       toast({ title: "Error creating demonstration", description: err.message, variant: "destructive" });
     },
   });
+
+  const repeatDemo = useMutation({
+    mutationFn: async (payload: { sourceId: string; title: string; scheduledAt: string; copyChants: boolean; copyLogistics: boolean; copySupport: boolean }) => {
+      const res = await apiRequest("POST", `/api/demos/${payload.sourceId}/repeat`, {
+        title: payload.title,
+        scheduledAt: payload.scheduledAt || null,
+        copyChants: payload.copyChants,
+        copyLogistics: payload.copyLogistics,
+        copySupport: payload.copySupport,
+      });
+      return res.json() as Promise<RepeatResult>;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos"] });
+      try {
+        sessionStorage.setItem("chantlive-repeated-demonstration", JSON.stringify({
+          id: data.demo.id,
+          sourceTitle: data.source.title,
+          copiedChants: data.copiedChants,
+          copiedLogistics: data.copiedLogistics,
+          copiedSupport: data.copiedSupport,
+          eventDurationMinutes: data.eventDurationMinutes,
+        }));
+      } catch {
+        // The repeated event remains available when browser storage is unavailable.
+      }
+      setRepeatTarget(null);
+      setRepeatError("");
+      navigate(`/admin/demos/${data.demo.id}`);
+    },
+    onError: (err: Error) => setRepeatError(readableApiError(err, "The repeated event could not be created. Your original event is unchanged; please try again.")),
+  });
+
+  const openRepeatDialog = (demo: DashboardDemonstration) => {
+    setRepeatTarget(demo);
+    setRepeatTitle(`${demo.title} — next event`);
+    setRepeatScheduledAt("");
+    setRepeatCopyChants(true);
+    setRepeatCopyLogistics(true);
+    setRepeatCopySupport(false);
+    setRepeatError("");
+  };
 
   const deleteDemo = useMutation({
     mutationFn: async (id: string) => {
@@ -860,6 +933,10 @@ export default function AdminDashboard() {
                       <Hash className="w-3.5 h-3.5 mr-1" />
                       Copy code
                     </Button>
+                    <Button className="min-h-11 w-full justify-center" variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openRepeatDialog(demo); }} data-testid={`button-repeat-demo-${demo.id}`}>
+                      <Repeat2 className="w-3.5 h-3.5 mr-1" />
+                      Repeat event
+                    </Button>
                     <Button variant="outline" size="sm" className="w-full justify-center text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700" onClick={(e) => { e.stopPropagation(); setDeleteTarget(demo); }} data-testid={`button-delete-demo-${demo.id}`}>
                       <Trash2 className="w-3.5 h-3.5 mr-1" />
                       Delete
@@ -895,6 +972,95 @@ export default function AdminDashboard() {
           </Card>
         )}
       </main>
+
+      <Dialog
+        open={Boolean(repeatTarget)}
+        onOpenChange={(open) => {
+          if (!open && !repeatDemo.isPending) {
+            setRepeatTarget(null);
+            setRepeatError("");
+          }
+        }}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl" data-testid="dialog-repeat-event">
+          <DialogHeader>
+            <DialogTitle>Repeat this event</DialogTitle>
+            <DialogDescription>
+              Create a fresh draft from {repeatTarget?.title}. The original event will not change.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            className="space-y-5"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (!repeatTarget || !repeatTitle.trim() || repeatScheduleInPast) return;
+              setRepeatError("");
+              repeatDemo.mutate({
+                sourceId: repeatTarget.id,
+                title: repeatTitle.trim(),
+                scheduledAt: repeatScheduledAt,
+                copyChants: repeatCopyChants,
+                copyLogistics: repeatCopyLogistics,
+                copySupport: repeatCopySupport,
+              });
+            }}
+          >
+            <div className="space-y-2">
+              <Label htmlFor="repeat-title">New event title</Label>
+              <Input
+                id="repeat-title"
+                value={repeatTitle}
+                onChange={(event) => setRepeatTitle(event.target.value)}
+                maxLength={120}
+                autoFocus
+                required
+                data-testid="input-repeat-title"
+              />
+              <p className="text-xs text-muted-foreground">Use a title participants will recognise as the new event.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="repeat-scheduled-at">New date and time <span className="font-normal text-muted-foreground">(optional)</span></Label>
+              <Input
+                id="repeat-scheduled-at"
+                type="datetime-local"
+                value={repeatScheduledAt}
+                min={formatLocalDateTimeMinimum()}
+                onChange={(event) => setRepeatScheduledAt(event.target.value)}
+                aria-describedby={repeatScheduleInPast ? "repeat-schedule-error" : undefined}
+                aria-invalid={repeatScheduleInPast}
+                data-testid="input-repeat-scheduled-at"
+              />
+              {repeatScheduleInPast && <p id="repeat-schedule-error" className="text-sm text-destructive" role="alert">Choose a future date and time.</p>}
+            </div>
+            <fieldset className="space-y-3">
+              <legend className="text-sm font-medium">Bring into the new draft</legend>
+              <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border p-3">
+                <Checkbox checked={repeatCopyChants} onCheckedChange={(checked) => setRepeatCopyChants(checked === true)} data-testid="checkbox-repeat-chants" />
+                <span><span className="block text-sm font-medium">Chants and timing</span><span className="block text-xs text-muted-foreground">Reuse the call-and-response order, cycles, and pacing.</span></span>
+              </label>
+              <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border p-3">
+                <Checkbox checked={repeatCopyLogistics} onCheckedChange={(checked) => setRepeatCopyLogistics(checked === true)} data-testid="checkbox-repeat-logistics" />
+                <span><span className="block text-sm font-medium">Location and arrival guidance</span><span className="block text-xs text-muted-foreground">Reuse the venue, meeting point, and accessibility or arrival notes.</span></span>
+              </label>
+              <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border p-3">
+                <Checkbox checked={repeatCopySupport} onCheckedChange={(checked) => setRepeatCopySupport(checked === true)} data-testid="checkbox-repeat-support" />
+                <span><span className="block text-sm font-medium">Support link</span><span className="block text-xs text-muted-foreground">Reuse the source event's optional donation or support destination.</span></span>
+              </label>
+            </fieldset>
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-950" data-testid="text-repeat-safety">
+              <p className="flex items-center gap-2 font-semibold"><ShieldCheck className="h-4 w-4" aria-hidden="true" />A clean, private starting point</p>
+              <p className="mt-1 text-xs">The new event gets a different participant code and starts as a draft. Live status, current chant, participant activity, questions, polls, safety reports, feedback, and other admins are never copied.</p>
+            </div>
+            {repeatError && <p className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive" role="alert" data-testid="text-repeat-error">{repeatError}</p>}
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button type="button" variant="outline" className="min-h-11" onClick={() => setRepeatTarget(null)} disabled={repeatDemo.isPending}>Cancel</Button>
+              <Button type="submit" className="min-h-11" disabled={!repeatTitle.trim() || repeatScheduleInPast || repeatDemo.isPending} data-testid="button-confirm-repeat">
+                {repeatDemo.isPending ? "Creating fresh draft…" : "Create repeated event"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={Boolean(invitationFallback)} onOpenChange={(open) => { if (!open) setInvitationFallback(null); }}>
         <DialogContent>

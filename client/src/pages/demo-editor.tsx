@@ -99,6 +99,15 @@ type DemoDetail = {
   admins: AdminInfo[];
 };
 
+type RepeatGuide = {
+  id: string;
+  sourceTitle: string;
+  copiedChants: number;
+  copiedLogistics: boolean;
+  copiedSupport: boolean;
+  eventDurationMinutes: number;
+};
+
 const clampProgress = (value: number) => Math.min(100, Math.max(0, value));
 
 const getPhaseDurationMs = (chant: Chant | undefined, phase: "leader" | "people") => {
@@ -151,6 +160,7 @@ export default function DemoEditor() {
   const [invitationCopyError, setInvitationCopyError] = useState(false);
   const [invitationLanguage, setInvitationLanguage] = useState<InvitationLanguage>(getStoredInvitationLanguage);
   const [showCreatedGuide, setShowCreatedGuide] = useState(false);
+  const [repeatGuide, setRepeatGuide] = useState<RepeatGuide | null>(null);
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingChant, setEditingChant] = useState<Chant | null>(null);
@@ -262,6 +272,22 @@ export default function DemoEditor() {
       }
     } catch {
       // Creation succeeds even when browser storage is unavailable.
+    }
+  }, [demo?.id]);
+
+  useEffect(() => {
+    if (!demo) return;
+
+    try {
+      const stored = sessionStorage.getItem("chantlive-repeated-demonstration");
+      if (!stored) return;
+      const parsed = JSON.parse(stored) as RepeatGuide;
+      if (parsed.id === demo.id) {
+        setRepeatGuide(parsed);
+        sessionStorage.removeItem("chantlive-repeated-demonstration");
+      }
+    } catch {
+      // Repeating succeeds even when browser storage is unavailable or malformed.
     }
   }, [demo?.id]);
 
@@ -1035,6 +1061,73 @@ export default function DemoEditor() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
+        {repeatGuide && (
+          <Card className="mb-6 border-emerald-300 bg-emerald-50 text-emerald-950" data-testid="card-repeated-demonstration-guide">
+            <CardContent className="py-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="flex items-center gap-2 text-base font-semibold">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-700" aria-hidden="true" />
+                    Fresh draft created from {repeatGuide.sourceTitle}
+                  </p>
+                  <p className="mt-1 text-sm text-emerald-900">
+                    Review the copied plan, rehearse it on a participant device, then share this event's new access code.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-11 w-11 shrink-0 text-emerald-900 hover:bg-emerald-100"
+                  onClick={() => setRepeatGuide(null)}
+                  aria-label="Dismiss repeated event guide"
+                  data-testid="button-dismiss-repeat-guide"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-emerald-200 bg-white/80 p-3">
+                  <p className="text-xs font-medium uppercase tracking-wide text-emerald-800">Copied into this draft</p>
+                  <ul className="mt-2 space-y-1 text-sm" data-testid="list-repeat-copied-content">
+                    <li>{repeatGuide.copiedChants} {repeatGuide.copiedChants === 1 ? "chant" : "chants"} with pacing</li>
+                    <li>{repeatGuide.eventDurationMinutes}-minute event duration</li>
+                    <li>{repeatGuide.copiedLogistics ? "Location and arrival guidance" : "No location or arrival guidance"}</li>
+                    <li>{repeatGuide.copiedSupport ? "Support link" : "No support link"}</li>
+                  </ul>
+                </div>
+                <div className="rounded-lg border border-emerald-200 bg-white/80 p-3">
+                  <p className="flex items-center gap-2 text-sm font-semibold"><ShieldCheck className="h-4 w-4" aria-hidden="true" />Safe reset confirmed</p>
+                  <p className="mt-2 text-xs text-emerald-800">Draft status, no active chant, stopped automation, no participant history, and only you as an admin.</p>
+                  <p className="mt-3 text-xs font-medium uppercase tracking-wide text-emerald-800">New participant code</p>
+                  <p className="mt-1 font-mono text-xl font-bold tracking-[0.2em]" data-testid="text-repeat-event-code">{demo.publicId}</p>
+                </div>
+              </div>
+              <ol className="mt-4 grid gap-2 text-sm sm:grid-cols-3" aria-label="Repeated event next steps">
+                <li className="rounded-lg border border-emerald-200 bg-white/70 p-3"><span className="font-semibold">1. Review</span><span className="mt-1 block text-xs text-emerald-800">Check chants, date, venue, and support details.</span></li>
+                <li className="rounded-lg border border-emerald-200 bg-white/70 p-3"><span className="font-semibold">2. Rehearse</span><span className="mt-1 block text-xs text-emerald-800">Preview the participant experience before going live.</span></li>
+                <li className="rounded-lg border border-emerald-200 bg-white/70 p-3"><span className="font-semibold">3. Invite</span><span className="mt-1 block text-xs text-emerald-800">Share only this new link or event code.</span></li>
+              </ol>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button className="min-h-11" onClick={() => navigate(`/admin/demos/${demo.id}/plan`)} data-testid="button-repeat-review-plan">
+                  <ClipboardList className="mr-1 h-4 w-4" />
+                  Review event plan
+                </Button>
+                <Button variant="outline" className="min-h-11" asChild>
+                  <a href={publicUrl} target="_blank" rel="noopener noreferrer" data-testid="link-repeat-preview-participant">
+                    <Smartphone className="mr-1 h-4 w-4" />
+                    Rehearse participant view
+                  </a>
+                </Button>
+                <Button variant="outline" className="min-h-11" onClick={copyCode} data-testid="button-repeat-copy-code">
+                  {copiedCode ? <Check className="mr-1 h-4 w-4" /> : <Copy className="mr-1 h-4 w-4" />}
+                  {copiedCode ? "Code copied" : "Copy new event code"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {showCreatedGuide && (
           <Card className="mb-6 border-emerald-300 bg-emerald-50 text-emerald-950" data-testid="card-created-demonstration-guide">
             <CardContent className="py-5">

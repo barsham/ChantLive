@@ -27,6 +27,22 @@ export type UserDemoStats = {
 
 export type UserSummary = Pick<User, "id" | "email" | "name">;
 
+export type RepeatDemonstrationOptions = {
+  title: string;
+  scheduledAt: Date | null;
+  copyChants: boolean;
+  copyLogistics: boolean;
+  copySupport: boolean;
+};
+
+export type RepeatDemonstrationResult = {
+  demo: Demonstration;
+  copiedChants: number;
+  copiedLogistics: boolean;
+  copiedSupport: boolean;
+  eventDurationMinutes: number;
+};
+
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
@@ -43,6 +59,7 @@ export interface IStorage {
   getUserCount(): Promise<number>;
 
   createDemonstration(data: InsertDemonstration): Promise<Demonstration>;
+  repeatDemonstration(sourceId: string, createdBy: string, options: RepeatDemonstrationOptions): Promise<RepeatDemonstrationResult>;
   getDemonstration(id: string): Promise<Demonstration | undefined>;
   getDemonstrationByPublicId(publicId: string): Promise<Demonstration | undefined>;
   getDemonstrations(userId: string, role: string): Promise<Demonstration[]>;
@@ -202,6 +219,75 @@ export class DatabaseStorage implements IStorage {
   async updateDemoTitle(id: string, title: string): Promise<Demonstration | undefined> {
     const [demo] = await db.update(demonstrations).set({ title }).where(eq(demonstrations.id, id)).returning();
     return demo;
+  }
+
+  async repeatDemonstration(
+    sourceId: string,
+    createdBy: string,
+    options: RepeatDemonstrationOptions,
+  ): Promise<RepeatDemonstrationResult> {
+    return db.transaction(async (tx) => {
+      const [source] = await tx.select().from(demonstrations).where(eq(demonstrations.id, sourceId));
+      if (!source) {
+        throw new Error("SOURCE_DEMONSTRATION_NOT_FOUND");
+      }
+
+      const sourceChants = options.copyChants
+        ? await tx.select().from(chants).where(eq(chants.demonstrationId, sourceId)).orderBy(asc(chants.orderIndex))
+        : [];
+      const [sourceState] = await tx.select().from(demoState).where(eq(demoState.demonstrationId, sourceId));
+      const publicId = nanoid(8);
+      const [demo] = await tx.insert(demonstrations).values({
+        publicId,
+        title: options.title,
+        status: "draft",
+        createdBy,
+        scheduledAt: options.scheduledAt,
+        locationName: options.copyLogistics ? source.locationName : null,
+        meetingPoint: options.copyLogistics ? source.meetingPoint : null,
+        arrivalNote: options.copyLogistics ? source.arrivalNote : null,
+        supportUrl: options.copySupport ? source.supportUrl : null,
+        supportLabel: options.copySupport ? source.supportLabel : null,
+      }).returning();
+
+      await tx.insert(demoAdmins).values({ demonstrationId: demo.id, userId: createdBy });
+
+      if (sourceChants.length > 0) {
+        await tx.insert(chants).values(sourceChants.map((chant) => ({
+          demonstrationId: demo.id,
+          orderIndex: chant.orderIndex,
+          callText: chant.callText,
+          responseText: chant.responseText,
+          cycles: chant.cycles,
+          leaderDuration: chant.leaderDuration,
+          peopleDuration: chant.peopleDuration,
+        })));
+      }
+
+      const eventDurationMinutes = sourceState?.eventDurationMinutes ?? 300;
+      await tx.insert(demoState).values({
+        demonstrationId: demo.id,
+        currentChantId: null,
+        autoRotate: false,
+        rotationInterval: options.copyChants ? (sourceState?.rotationInterval ?? 60) : 60,
+        cycleCount: options.copyChants ? (sourceState?.cycleCount ?? 1) : 1,
+        leaderDuration: options.copyChants ? (sourceState?.leaderDuration ?? 4) : 4,
+        peopleDuration: options.copyChants ? (sourceState?.peopleDuration ?? 3) : 3,
+        currentPhase: "leader",
+        currentCycle: 1,
+        cycleDelay: options.copyChants ? (sourceState?.cycleDelay ?? 500) : 500,
+        eventDurationMinutes,
+        liveStartedAt: null,
+      });
+
+      return {
+        demo,
+        copiedChants: sourceChants.length,
+        copiedLogistics: options.copyLogistics,
+        copiedSupport: options.copySupport && Boolean(source.supportUrl),
+        eventDurationMinutes,
+      };
+    });
   }
 
   async updateDemoSupport(id: string, data: { supportUrl: string | null; supportLabel: string | null }): Promise<Demonstration | undefined> {

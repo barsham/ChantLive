@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.73",
+      "releasedAt": "2026-08-04",
+      "summary": "A safe end-to-end workflow for turning a proven event into a fresh future draft.",
+      "items": [
+        {
+          "id": "cl-2026-08-04-repeat-event-action",
+          "title": "Repeat any event from the dashboard",
+          "description": "Organisers can start a new edition from any draft, live, or ended event without exporting, importing, or rebuilding it by hand.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-04",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-08-04-repeat-event-choices",
+          "title": "Clear repeat-event choices",
+          "description": "A focused dialog validates the new title and schedule while letting organisers choose whether to bring chants, logistics, and the support link forward.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-04",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-08-04-transactional-event-copy",
+          "title": "All-or-nothing event copying",
+          "description": "Selected event content and timing are copied together in one server transaction so organisers never land in a half-built repeated event.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-04",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-08-04-safe-event-reset",
+          "title": "Fresh participant access and live state",
+          "description": "Every repeated event gets a new participant code and resets live status, the current chant, automation, participant activity, feedback, questions, polls, safety reports, and admin access.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-04",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-08-04-repeat-event-handoff",
+          "title": "Review, rehearse, and invite handoff",
+          "description": "The new event opens with a safety summary, copied-content receipt, fresh code, and direct next steps to review the plan and rehearse the participant view.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-04",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        }
+      ]
+    },
+    {
       "version": "1.1.72",
       "releasedAt": "2026-08-03",
       "summary": "A consistent multilingual invitation workflow across organiser tools.",
