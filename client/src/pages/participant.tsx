@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useParams } from "wouter";
 import { getSocket } from "@/lib/socket";
-import { CalendarPlus, Copy, ExternalLink, Eye, HelpCircle, Link2, MapPin, Share2, ShieldCheck, Sun, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
+import { CalendarPlus, Copy, Download, ExternalLink, Eye, HelpCircle, Link2, MapPin, Share2, ShieldCheck, Sun, Trash2, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
 import { buildGoogleCalendarUrl, buildOutlookCalendarUrl, downloadCalendarFile, type CalendarEventDetails } from "@/lib/calendar";
 import { forgetRecentParticipantEvent, rememberParticipantEvent } from "@/lib/participant-history";
+import { forgetOfflineEvent, loadOfflineEvent, saveOfflineEvent, updateOfflineEventIfPrepared, type OfflineChantData, type OfflineEventSnapshot } from "@/lib/offline-event";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,29 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type ChantData = {
-  callText: string | null;
-  responseText: string | null;
-  nextCallText?: string | null;
-  nextResponseText?: string | null;
-  chantIndex: number | null;
-  totalChants: number;
-  demoTitle: string;
-  demoStatus: string;
-  currentPhase?: "leader" | "people";
-  currentCycle?: number;
-  cycleCount?: number;
-  phaseStartedAt?: string;
-  phaseDurationMs?: number;
-  serverNow?: string;
-  supportUrl?: string | null;
-  supportLabel?: string | null;
-  scheduledAt?: string | null;
-  locationName?: string | null;
-  meetingPoint?: string | null;
-  arrivalNote?: string | null;
-  eventDurationMinutes?: number;
-};
+type ChantData = OfflineChantData;
 type OrganizerAnnouncement = {
   id: string;
   message: string;
@@ -189,6 +168,17 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     connectionLostTitle: "Live updates paused",
     connectionLostBody: "The chant on screen is the last update received. Reconnect before following new instructions.",
     reconnectNow: "Reconnect now",
+    offlinePrepTitle: "Prepare this event for weak signal",
+    offlinePrepBody: "Save this event while online. This device will keep the latest verified chant available if the page must reopen without a connection.",
+    offlineSave: "Save for weak signal",
+    offlineSaved: "Offline copy ready on this device.",
+    offlineSaveFailed: "This browser could not save the offline copy. Check private-browsing or storage settings.",
+    offlineCopyTitle: "Showing a saved offline copy",
+    offlineCopyBody: "This information may be out of date. Do not follow new movement or safety instructions until live updates reconnect.",
+    offlineStoredAt: "Last verified",
+    offlineForget: "Forget saved event",
+    offlineForgotten: "Saved offline event removed from this device.",
+    offlinePrivacy: "Stored only on this device. ChantLive does not save participant messages, check-ins, votes, or feedback in this offline copy.",
     leader: "Leader",
     everyone: "Everyone",
     next: "Coming Up Next",
@@ -368,6 +358,17 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     connectionLostTitle: "Actualizaciones en vivo pausadas",
     connectionLostBody: "El cántico en pantalla es la última actualización recibida. Reconéctate antes de seguir nuevas instrucciones.",
     reconnectNow: "Reconectar ahora",
+    offlinePrepTitle: "Prepara este evento para una señal débil",
+    offlinePrepBody: "Guarda este evento mientras tengas conexión. Este dispositivo conservará el último cántico verificado si debes reabrir la página sin conexión.",
+    offlineSave: "Guardar para señal débil",
+    offlineSaved: "La copia sin conexión está lista en este dispositivo.",
+    offlineSaveFailed: "Este navegador no pudo guardar la copia. Revisa la navegación privada o la configuración de almacenamiento.",
+    offlineCopyTitle: "Mostrando una copia guardada sin conexión",
+    offlineCopyBody: "Esta información puede estar desactualizada. No sigas nuevas instrucciones de movimiento o seguridad hasta recuperar las actualizaciones en vivo.",
+    offlineStoredAt: "Última verificación",
+    offlineForget: "Olvidar evento guardado",
+    offlineForgotten: "El evento guardado se eliminó de este dispositivo.",
+    offlinePrivacy: "Se guarda solo en este dispositivo. La copia no incluye mensajes, registros, votos ni comentarios del participante.",
     leader: "Guía",
     everyone: "Todos",
     next: "A continuación",
@@ -547,6 +548,17 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     connectionLostTitle: "Mises à jour en direct interrompues",
     connectionLostBody: "Le chant affiché est la dernière mise à jour reçue. Reconnectez-vous avant de suivre de nouvelles consignes.",
     reconnectNow: "Se reconnecter",
+    offlinePrepTitle: "Préparer cet événement pour un signal faible",
+    offlinePrepBody: "Enregistrez cet événement pendant que vous êtes connecté. Cet appareil conservera le dernier chant vérifié si la page doit être rouverte hors ligne.",
+    offlineSave: "Enregistrer pour signal faible",
+    offlineSaved: "La copie hors ligne est prête sur cet appareil.",
+    offlineSaveFailed: "Ce navigateur n’a pas pu enregistrer la copie. Vérifiez la navigation privée ou les réglages de stockage.",
+    offlineCopyTitle: "Affichage d’une copie hors ligne enregistrée",
+    offlineCopyBody: "Ces informations peuvent être anciennes. Ne suivez aucune nouvelle consigne de déplacement ou de sécurité avant le retour des mises à jour en direct.",
+    offlineStoredAt: "Dernière vérification",
+    offlineForget: "Oublier l’événement enregistré",
+    offlineForgotten: "L’événement hors ligne a été supprimé de cet appareil.",
+    offlinePrivacy: "Stocké uniquement sur cet appareil. La copie n’inclut pas les messages, présences, votes ou avis du participant.",
     leader: "Meneur",
     everyone: "Tout le monde",
     next: "À suivre",
@@ -726,6 +738,17 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     connectionLostTitle: "توقفت التحديثات المباشرة مؤقتًا",
     connectionLostBody: "الهتاف الظاهر هو آخر تحديث تم استلامه. أعد الاتصال قبل اتباع تعليمات جديدة.",
     reconnectNow: "إعادة الاتصال الآن",
+    offlinePrepTitle: "جهّز هذه الفعالية لضعف الإشارة",
+    offlinePrepBody: "احفظ الفعالية أثناء الاتصال. سيحتفظ هذا الجهاز بآخر هتاف تم التحقق منه إذا احتجت إلى إعادة فتح الصفحة دون اتصال.",
+    offlineSave: "حفظ عند ضعف الإشارة",
+    offlineSaved: "النسخة غير المتصلة جاهزة على هذا الجهاز.",
+    offlineSaveFailed: "تعذر على هذا المتصفح حفظ النسخة. تحقق من التصفح الخاص أو إعدادات التخزين.",
+    offlineCopyTitle: "يتم عرض نسخة محفوظة غير متصلة",
+    offlineCopyBody: "قد تكون هذه المعلومات قديمة. لا تتبع تعليمات حركة أو سلامة جديدة حتى تعود التحديثات المباشرة.",
+    offlineStoredAt: "آخر تحقق",
+    offlineForget: "حذف الفعالية المحفوظة",
+    offlineForgotten: "تم حذف الفعالية المحفوظة من هذا الجهاز.",
+    offlinePrivacy: "محفوظة على هذا الجهاز فقط. لا تتضمن النسخة رسائل المشاركين أو تسجيل الحضور أو التصويت أو الملاحظات.",
     leader: "القائد",
     everyone: "الجميع",
     next: "التالي",
@@ -905,6 +928,17 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     connectionLostTitle: "به‌روزرسانی زنده متوقف شده است",
     connectionLostBody: "شعار روی صفحه آخرین به‌روزرسانی دریافت‌شده است. پیش از دنبال کردن دستورهای جدید دوباره وصل شوید.",
     reconnectNow: "اتصال دوباره",
+    offlinePrepTitle: "این رویداد را برای آنتن ضعیف آماده کنید",
+    offlinePrepBody: "رویداد را هنگام اتصال ذخیره کنید. اگر صفحه بدون اینترنت دوباره باز شود، این دستگاه آخرین شعار تأییدشده را نگه می‌دارد.",
+    offlineSave: "ذخیره برای آنتن ضعیف",
+    offlineSaved: "نسخه آفلاین روی این دستگاه آماده است.",
+    offlineSaveFailed: "مرورگر نتوانست نسخه آفلاین را ذخیره کند. تنظیمات مرور خصوصی یا فضای ذخیره‌سازی را بررسی کنید.",
+    offlineCopyTitle: "نمایش نسخه آفلاین ذخیره‌شده",
+    offlineCopyBody: "ممکن است این اطلاعات قدیمی باشد. تا اتصال دوباره، دستور حرکت یا ایمنی جدیدی را دنبال نکنید.",
+    offlineStoredAt: "آخرین تأیید",
+    offlineForget: "حذف رویداد ذخیره‌شده",
+    offlineForgotten: "رویداد آفلاین از این دستگاه حذف شد.",
+    offlinePrivacy: "فقط روی این دستگاه ذخیره می‌شود. پیام‌ها، حضور، رأی‌ها یا بازخورد شرکت‌کننده در این نسخه ذخیره نمی‌شود.",
     leader: "رهبر",
     everyone: "همه",
     next: "بعدی",
@@ -1065,7 +1099,9 @@ const getChantAnnouncement = (chantData: ChantData | null, copy: Record<string, 
 
 export default function Participant() {
   const { publicId } = useParams<{ publicId: string }>();
-  const [chantData, setChantData] = useState<ChantData | null>(null);
+  const initialOfflineSnapshot = useRef<OfflineEventSnapshot | null>(loadOfflineEvent(publicId));
+  const initiallyOffline = typeof navigator !== "undefined" && !navigator.onLine;
+  const [chantData, setChantData] = useState<ChantData | null>(() => initiallyOffline ? initialOfflineSnapshot.current?.chantData ?? null : null);
   const [viewerCount, setViewerCount] = useState(0);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1107,12 +1143,17 @@ export default function Participant() {
   const [screenAwakeActive, setScreenAwakeActive] = useState(false);
   const [wakeLockError, setWakeLockError] = useState<string | null>(null);
   const [savedShortcutRemoved, setSavedShortcutRemoved] = useState(false);
+  const [offlineSnapshot, setOfflineSnapshot] = useState<OfflineEventSnapshot | null>(initialOfflineSnapshot.current);
+  const [usingOfflineSnapshot, setUsingOfflineSnapshot] = useState(() => initiallyOffline && Boolean(initialOfflineSnapshot.current));
+  const [offlineStatus, setOfflineStatus] = useState<string | null>(null);
+  const [offlineStatusError, setOfflineStatusError] = useState(false);
   const localPhaseStartRef = useRef(Date.now());
   const lowBandwidthRef = useRef(lowBandwidth);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const t = participantCopy[participantLanguage];
   const wakeLockSupported = typeof navigator !== "undefined" && "wakeLock" in navigator;
   const participantDirection = participantLanguage === "ar" || participantLanguage === "fa" ? "rtl" : "ltr";
+  const offlinePreparationMode = new URLSearchParams(window.location.search).get("offline") === "1";
 
   const renderParticipantLanguageSelect = (className = "") => (
     <label
@@ -1160,6 +1201,24 @@ export default function Participant() {
   }, []);
 
   useEffect(() => {
+    const stored = loadOfflineEvent(publicId);
+    setOfflineSnapshot(stored);
+    setOfflineStatus(null);
+    if (!navigator.onLine && stored) {
+      setChantData(stored.chantData);
+      setUsingOfflineSnapshot(true);
+      setError(null);
+    }
+  }, [publicId]);
+
+  useEffect(() => {
+    if (!isOffline || !offlineSnapshot) return;
+    setChantData(offlineSnapshot.chantData);
+    setUsingOfflineSnapshot(true);
+    setError(null);
+  }, [isOffline, offlineSnapshot]);
+
+  useEffect(() => {
     setShareStatus(null);
     setShareFallbackText(null);
     setRecoveryFallbackText(null);
@@ -1173,6 +1232,9 @@ export default function Participant() {
   useEffect(() => {
     if (!error?.toLowerCase().includes("not found")) return;
     setSavedShortcutRemoved(forgetRecentParticipantEvent(publicId));
+    forgetOfflineEvent(publicId);
+    setOfflineSnapshot(null);
+    setUsingOfflineSnapshot(false);
   }, [error, publicId]);
 
   useEffect(() => {
@@ -1188,6 +1250,9 @@ export default function Participant() {
     });
 
     socket.on("chant_update", (data: ChantData) => {
+      const refreshedOfflineSnapshot = updateOfflineEventIfPrepared(publicId, data);
+      if (refreshedOfflineSnapshot) setOfflineSnapshot(refreshedOfflineSnapshot);
+      setUsingOfflineSnapshot(false);
       if (lowBandwidthRef.current) {
         localPhaseStartRef.current = Date.now();
         setChantData(data);
@@ -1208,9 +1273,13 @@ export default function Participant() {
     });
 
     socket.on("demo_ended", () => {
-      setChantData((prev) =>
-        prev ? { ...prev, demoStatus: "ended", callText: null, responseText: null } : null
-      );
+      setChantData((prev) => {
+        if (!prev) return null;
+        const ended = { ...prev, demoStatus: "ended", callText: null, responseText: null };
+        const refreshedOfflineSnapshot = updateOfflineEventIfPrepared(publicId, ended);
+        if (refreshedOfflineSnapshot) setOfflineSnapshot(refreshedOfflineSnapshot);
+        return ended;
+      });
     });
 
     socket.on("demo_error", (msg: string) => {
@@ -1306,10 +1375,20 @@ export default function Participant() {
 
   useEffect(() => {
     if (chantData || error || isOffline) return;
-    const timeout = window.setTimeout(() => {
-      setError("We could not connect to this event");
+    const savedFallback = window.setTimeout(() => {
+      const stored = loadOfflineEvent(publicId);
+      if (!stored) return;
+      setOfflineSnapshot(stored);
+      setChantData(stored.chantData);
+      setUsingOfflineSnapshot(true);
+    }, 4_000);
+    const connectionFailure = window.setTimeout(() => {
+      if (!loadOfflineEvent(publicId)) setError("We could not connect to this event");
     }, 12_000);
-    return () => window.clearTimeout(timeout);
+    return () => {
+      window.clearTimeout(savedFallback);
+      window.clearTimeout(connectionFailure);
+    };
   }, [chantData, error, isOffline, publicId]);
 
   const hasChantContent = chantData?.callText || chantData?.responseText;
@@ -1469,6 +1548,86 @@ export default function Participant() {
 
     if (await requestScreenWakeLock()) setKeepScreenAwake(true);
   };
+  const prepareOfflineEvent = () => {
+    if (!chantData) return;
+    const saved = saveOfflineEvent(publicId, chantData);
+    if (!saved) {
+      setOfflineStatus(t.offlineSaveFailed);
+      setOfflineStatusError(true);
+      return;
+    }
+    setOfflineSnapshot(saved);
+    setOfflineStatus(t.offlineSaved);
+    setOfflineStatusError(false);
+  };
+  const removeOfflineEvent = () => {
+    forgetOfflineEvent(publicId);
+    setOfflineSnapshot(null);
+    setOfflineStatus(t.offlineForgotten);
+    setOfflineStatusError(false);
+    if (usingOfflineSnapshot) {
+      setUsingOfflineSnapshot(false);
+      setChantData(null);
+    }
+  };
+  const offlineSavedLabel = offlineSnapshot
+    ? new Intl.DateTimeFormat(participantLocales[participantLanguage], { dateStyle: "medium", timeStyle: "short" }).format(new Date(offlineSnapshot.savedAt))
+    : null;
+  const renderOfflinePreparation = () => (
+    <div className="mt-4 rounded-xl border border-sky-400/40 bg-sky-950/30 p-3" data-testid="panel-offline-preparation">
+      <p className="flex items-center gap-2 text-sm font-semibold text-sky-100">
+        <Download className="h-4 w-4" aria-hidden="true" />
+        {t.offlinePrepTitle}
+      </p>
+      <p className="mt-1 text-xs leading-relaxed text-sky-100/80">{t.offlinePrepBody}</p>
+      <p className="mt-2 text-xs text-neutral-400">{t.offlinePrivacy}</p>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {!offlineSnapshot && (
+          <button
+            type="button"
+            onClick={prepareOfflineEvent}
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-sky-300/70 bg-sky-300/10 px-4 py-2 text-xs font-semibold text-sky-50 hover:bg-sky-300/20"
+            data-testid="button-save-offline-event"
+          >
+            <Download className="h-3.5 w-3.5" aria-hidden="true" />
+            {t.offlineSave}
+          </button>
+        )}
+        {offlineSnapshot && (
+          <>
+            <span className="text-xs font-medium text-emerald-300" data-testid="text-offline-ready">
+              {t.offlineSaved} {offlineSavedLabel ? `${t.offlineStoredAt}: ${offlineSavedLabel}` : ""}
+            </span>
+            <button
+              type="button"
+              onClick={removeOfflineEvent}
+              className="inline-flex min-h-11 items-center gap-2 rounded-full border border-neutral-700 px-4 py-2 text-xs font-medium text-neutral-300 hover:bg-neutral-900"
+              data-testid="button-forget-offline-event"
+            >
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+              {t.offlineForget}
+            </button>
+          </>
+        )}
+      </div>
+      {offlineStatus && <p className={`mt-2 text-xs ${offlineStatusError ? "text-red-300" : "text-emerald-300"}`} role={offlineStatusError ? "alert" : "status"} aria-live="polite" data-testid="text-offline-save-status">{offlineStatus}</p>}
+    </div>
+  );
+  const renderOfflineWarning = () => usingOfflineSnapshot && offlineSnapshot ? (
+    <div className="mx-auto mb-5 mt-4 max-w-2xl rounded-2xl border border-amber-300/60 bg-amber-300/15 p-4 text-start text-amber-50" role="alert" data-testid="banner-offline-snapshot">
+      <p className="flex items-center gap-2 text-sm font-semibold"><WifiOff className="h-4 w-4" aria-hidden="true" />{t.offlineCopyTitle}</p>
+      <p className="mt-2 text-sm leading-relaxed text-amber-50/90">{t.offlineCopyBody}</p>
+      <p className="mt-2 text-xs text-amber-100/80">{t.offlineStoredAt}: {offlineSavedLabel}</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button type="button" onClick={retryConnection} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-amber-100/70 px-4 py-2 text-xs font-semibold" data-testid="button-offline-reconnect">
+          <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />{t.reconnectNow}
+        </button>
+        <button type="button" onClick={removeOfflineEvent} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-amber-100/40 px-4 py-2 text-xs font-medium" data-testid="button-offline-forget">
+          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />{t.offlineForget}
+        </button>
+      </div>
+    </div>
+  ) : null;
   const renderParticipantAccess = (className = "", compact = false) => (
     <div className={`rounded-2xl border border-neutral-800 bg-neutral-950/90 text-start ${compact ? "p-2.5" : "p-4"} ${className}`} data-testid="panel-participant-access">
       <div className={`flex gap-3 ${compact ? "items-center justify-between" : "flex-col sm:flex-row sm:items-center sm:justify-between"}`}>
@@ -1560,6 +1719,7 @@ export default function Participant() {
         />
       )}
       {calendarStatus && <p className="mt-2 text-xs text-sky-300" role="status" data-testid="text-participant-calendar-status">{calendarStatus}</p>}
+      {(!compact || offlinePreparationMode) && renderOfflinePreparation()}
     </div>
   );
   const renderDirectionsLink = () => directionsUrl && (
@@ -2006,6 +2166,7 @@ export default function Participant() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4" dir={participantDirection}>
         <div className="w-full max-w-2xl text-center">
+          {renderOfflineWarning()}
           <Megaphone className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
           <p className="text-neutral-300 text-2xl font-semibold mb-2" data-testid="text-ended">
             {t.eventEnded}
@@ -2104,6 +2265,7 @@ export default function Participant() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4" dir={participantDirection}>
         <div className="text-center">
+          {renderOfflineWarning()}
           <Megaphone className="w-16 h-16 text-neutral-600 mx-auto mb-6" />
           <p className="text-neutral-300 text-2xl font-semibold mb-2" data-testid="text-waiting">
             {t.waitingToBegin}
@@ -2201,6 +2363,7 @@ export default function Participant() {
         </div>
       )}
       {renderParticipantAccess("mx-4 mt-3", true)}
+      {renderOfflineWarning()}
       {(!connected || isOffline) && (
         <div
           className="mx-4 mt-4 rounded-2xl border border-red-400/50 bg-red-500/15 p-4 text-center text-red-50"

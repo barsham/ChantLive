@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.74",
+      "releasedAt": "2026-08-05",
+      "summary": "Opt-in offline participation for events where mobile signal cannot be trusted.",
+      "items": [
+        {
+          "id": "cl-2026-08-05-offline-app-shell",
+          "title": "Offline-capable participant app",
+          "description": "A prepared ChantLive page can reopen its production app shell without a network connection, while API, authentication, and live Socket.IO responses are never cached.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-05",
+          "links": []
+        },
+        {
+          "id": "cl-2026-08-05-save-for-weak-signal",
+          "title": "Save an event for weak signal",
+          "description": "Participants can explicitly save the event currently on screen to their own device before entering a low-signal area.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-05",
+          "links": []
+        },
+        {
+          "id": "cl-2026-08-05-offline-event-restore",
+          "title": "Latest verified chant after an offline reload",
+          "description": "Prepared devices restore the most recently received event and chant when the live connection cannot be reached, and keep the saved copy current while online updates arrive.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-05",
+          "links": []
+        },
+        {
+          "id": "cl-2026-08-05-stale-state-safety",
+          "title": "Clear offline safety and privacy controls",
+          "description": "A prominent timestamped warning distinguishes saved information from live instructions, with reconnect and forget actions plus a clear device-only privacy explanation in every supported language.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-05",
+          "links": []
+        },
+        {
+          "id": "cl-2026-08-05-organiser-low-signal-rehearsal",
+          "title": "Organiser low-signal rehearsal workflow",
+          "description": "The Command Center now provides a preparation link and three-step device rehearsal so organisers can verify their crowd fallback before the gathering starts.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-05",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.73",
       "releasedAt": "2026-08-04",
       "summary": "A safe end-to-end workflow for turning a proven event into a fresh future draft.",

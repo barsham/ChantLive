@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowLeft, CalendarPlus, CheckCircle2, ClipboardList, Copy, Download, ExternalLink, FileText, LifeBuoy, Megaphone, QrCode, Route, Share2, ShieldCheck, Users } from "lucide-react";
+import { ArrowLeft, CalendarPlus, CheckCircle2, ClipboardList, Copy, Download, ExternalLink, FileText, LifeBuoy, Megaphone, QrCode, Route, Share2, ShieldCheck, Users, WifiOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -244,6 +244,7 @@ export default function CommandCenter() {
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState(["Yes", "No", "Need more info"]);
   const [safetyCheckMessage, setSafetyCheckMessage] = useState("Safety check: please confirm whether you are okay.");
+  const [offlineLinkStatus, setOfflineLinkStatus] = useState<string | null>(null);
   const announcementDirection = announcementLanguage === "ar" || announcementLanguage === "fa" ? "rtl" : "ltr";
   const changeAnnouncementLanguage = (language: AnnouncementLanguage) => {
     const selectedStarter = announcementStarters.find((starter) =>
@@ -417,6 +418,7 @@ export default function CommandCenter() {
   }
 
   const publicUrl = `${window.location.origin}/d/${data.demo.publicId}`;
+  const offlinePreparationUrl = `${publicUrl}?offline=1`;
   const calendarDetails: CalendarEventDetails | null = data.demo.scheduledAt ? {
     title: data.demo.title,
     scheduledAt: data.demo.scheduledAt,
@@ -450,6 +452,16 @@ export default function CommandCenter() {
       toast({ title: `${label} copied`, description: "Ready to share with participants." });
     } catch {
       toast({ title: `Could not copy ${label.toLowerCase()}`, description: "Select the value from the participant access card instead.", variant: "destructive" });
+    }
+  };
+  const copyOfflinePreparationLink = async () => {
+    try {
+      await navigator.clipboard.writeText(offlinePreparationUrl);
+      setOfflineLinkStatus("Preparation link copied. Send it before participants enter the low-signal area.");
+      toast({ title: "Preparation link copied", description: "Ready to share before the event." });
+    } catch {
+      setOfflineLinkStatus("Copy is unavailable here. Select the preparation URL shown in this card and use your device's copy action.");
+      toast({ title: "Could not copy preparation link", description: "Select the URL shown in this card instead.", variant: "destructive" });
     }
   };
   const openAssistance = assistance.filter((request) => request.status === "open");
@@ -536,6 +548,49 @@ export default function CommandCenter() {
                   </Button>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6 border-sky-500/30 bg-sky-500/5" data-testid="card-command-low-signal-readiness">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <WifiOff className="h-5 w-5 text-sky-600" aria-hidden="true" />
+                Low-signal participant readiness
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Give participants this preparation link while they are online. It opens the event with a “Save for weak signal” action, keeps the latest verified chant on that device, and clearly marks offline information as potentially stale.
+                  </p>
+                  <ol className="mt-3 grid gap-2 text-sm sm:grid-cols-3" aria-label="Low-signal rehearsal steps">
+                    <li className="rounded-lg border bg-background p-3"><span className="font-semibold">1. Open online</span><span className="mt-1 block text-xs text-muted-foreground">Open the preparation link on each participant device.</span></li>
+                    <li className="rounded-lg border bg-background p-3"><span className="font-semibold">2. Save locally</span><span className="mt-1 block text-xs text-muted-foreground">Tap Save for weak signal after the event details appear.</span></li>
+                    <li className="rounded-lg border bg-background p-3"><span className="font-semibold">3. Rehearse</span><span className="mt-1 block text-xs text-muted-foreground">Briefly disable signal, reload, and confirm the stale-copy warning appears.</span></li>
+                  </ol>
+                  <p className="mt-3 break-all rounded-md border bg-background p-3 font-mono text-xs" data-testid="text-command-offline-preparation-url">{offlinePreparationUrl}</p>
+                </div>
+                <div className="flex flex-wrap gap-2 lg:flex-col">
+                  <Button className="min-h-11" variant="outline" onClick={copyOfflinePreparationLink} data-testid="button-command-copy-offline-link">
+                    <Copy className="mr-1 h-4 w-4" />
+                    Copy preparation link
+                  </Button>
+                  <Button className="min-h-11" asChild>
+                    <a href={offlinePreparationUrl} target="_blank" rel="noopener noreferrer" data-testid="link-command-rehearse-offline">
+                      Open rehearsal page
+                    </a>
+                  </Button>
+                </div>
+              </div>
+              {offlineLinkStatus && (
+                <p className="mt-3 text-sm text-muted-foreground" role="status" aria-live="polite" data-testid="text-command-offline-copy-status">
+                  {offlineLinkStatus}
+                </p>
+              )}
+              <p className="mt-4 text-xs text-muted-foreground">
+                Privacy: the offline copy stays on that participant’s device and excludes messages, check-ins, questions, votes, safety responses, and feedback. Live instructions always replace it after reconnection.
+              </p>
             </CardContent>
           </Card>
 
