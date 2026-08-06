@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.75",
+      "releasedAt": "2026-08-06",
+      "summary": "A complete organiser-to-participant incident response and all-clear workflow for live disruptions.",
+      "items": [
+        {
+          "id": "cl-2026-08-06-incident-starters",
+          "title": "Field-ready incident starters",
+          "description": "Organisers can activate editable route-change, group-separation, weather, accessibility, or general-disruption notices with clear immediate instructions.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-06",
+          "links": []
+        },
+        {
+          "id": "cl-2026-08-06-structured-incident-state",
+          "title": "Structured live incident state",
+          "description": "The live channel now carries an incident type, headline, action instruction, response totals, resolution message, and current state across reconnections.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-06",
+          "links": []
+        },
+        {
+          "id": "cl-2026-08-06-participant-incident-banner",
+          "title": "Prominent participant incident response",
+          "description": "Connected participants immediately see an accessible multilingual incident banner on the main event screen and can report OK, need help, leaving, or uncertainty without opening Help.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-06",
+          "links": []
+        },
+        {
+          "id": "cl-2026-08-06-organiser-incident-dashboard",
+          "title": "Real-time incident accountability",
+          "description": "The Command Center shows response totals, checked-in people still awaiting a response, attention notes, and automatically routed safety-help requests.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-06",
+          "links": []
+        },
+        {
+          "id": "cl-2026-08-06-all-clear-recovery",
+          "title": "Visible all-clear and reconnection recovery",
+          "description": "Organisers can send a dedicated all-clear that participants see with a resolution time, can dismiss locally, and receive again when reconnecting during the recovery window.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-06",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.74",
       "releasedAt": "2026-08-05",
       "summary": "Opt-in offline participation for events where mobile signal cannot be trusted.",

@@ -77,6 +77,7 @@ type LivePoll = {
 };
 type SafetyCheckStatus = "open" | "closed";
 type SafetyCheckResponseType = "ok" | "need_help" | "leaving" | "not_sure";
+type SafetyCheckKind = "route_change" | "separation" | "weather" | "accessibility" | "general";
 type SafetyCheckResponse = {
   sessionId: string;
   response: SafetyCheckResponseType;
@@ -86,9 +87,12 @@ type SafetyCheckResponse = {
 type SafetyCheck = {
   id: string;
   demoId: string;
+  kind: SafetyCheckKind;
   message: string;
+  instruction: string;
   status: SafetyCheckStatus;
   responses: SafetyCheckResponse[];
+  resolutionMessage: string | null;
   createdAt: string;
   closedAt: string | null;
 };
@@ -221,6 +225,13 @@ function getActiveSafetyCheck(demoId: string) {
   return getSafetyChecks(demoId).find((check) => check.status === "open") ?? null;
 }
 
+function getCurrentSafetyCheck(demoId: string) {
+  const latest = getSafetyChecks(demoId)[0] ?? null;
+  if (!latest || latest.status === "open") return latest;
+  if (!latest.closedAt) return null;
+  return Date.now() - new Date(latest.closedAt).getTime() <= 30 * 60 * 1000 ? latest : null;
+}
+
 function serializeSafetyCheck(check: SafetyCheck) {
   const counts: Record<SafetyCheckResponseType, number> = {
     ok: 0,
@@ -235,7 +246,9 @@ function serializeSafetyCheck(check: SafetyCheck) {
 
   return {
     id: check.id,
+    kind: check.kind,
     message: check.message,
+    instruction: check.instruction,
     status: check.status,
     counts,
     totalResponses: check.responses.length,
@@ -249,6 +262,7 @@ function serializeSafetyCheck(check: SafetyCheck) {
         participantLabel: `Participant ${response.sessionId.slice(-4).toUpperCase()}`,
       })),
     createdAt: check.createdAt,
+    resolutionMessage: check.resolutionMessage,
     closedAt: check.closedAt,
   };
 }
@@ -969,18 +983,33 @@ export async function registerRoutes(
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
+      const rawKind = typeof req.body?.kind === "string" ? req.body.kind : "general";
+      const kind: SafetyCheckKind = ["route_change", "separation", "weather", "accessibility", "general"].includes(rawKind)
+        ? rawKind as SafetyCheckKind
+        : "general";
       const message = typeof req.body?.message === "string" && req.body.message.trim()
-        ? req.body.message.trim().slice(0, 180)
+        ? req.body.message.trim().slice(0, 120)
         : "Safety check: please confirm whether you are okay.";
+      const instruction = typeof req.body?.instruction === "string" && req.body.instruction.trim()
+        ? req.body.instruction.trim().slice(0, 240)
+        : "Pause where you are, look for an organiser, and respond below.";
       const checks = getSafetyChecks(demo.id).map((check) => (
-        check.status === "open" ? { ...check, status: "closed" as SafetyCheckStatus, closedAt: new Date().toISOString() } : check
+        check.status === "open" ? {
+          ...check,
+          status: "closed" as SafetyCheckStatus,
+          resolutionMessage: "This notice was replaced by a newer organiser update.",
+          closedAt: new Date().toISOString(),
+        } : check
       ));
       const check: SafetyCheck = {
         id: crypto.randomUUID(),
         demoId: demo.id,
+        kind,
         message,
+        instruction,
         status: "open",
         responses: [],
+        resolutionMessage: null,
         createdAt: new Date().toISOString(),
         closedAt: null,
       };
@@ -1006,9 +1035,12 @@ export async function registerRoutes(
       if (!check) return res.status(404).json({ message: "Safety check not found" });
 
       check.status = "closed";
+      check.resolutionMessage = typeof req.body?.resolutionMessage === "string" && req.body.resolutionMessage.trim()
+        ? req.body.resolutionMessage.trim().slice(0, 180)
+        : "The safety check is complete. Continue following current organiser instructions.";
       check.closedAt = new Date().toISOString();
       const serializedCheck = serializeSafetyCheck(check);
-      io.to(`demo:${demo.publicId}`).emit("safety_check_update", null);
+      io.to(`demo:${demo.publicId}`).emit("safety_check_update", serializedCheck);
       io.to(`demo:${demo.publicId}`).emit("safety_check_results_update", serializedCheck);
       res.json(serializedCheck);
     } catch (err) {
@@ -1184,6 +1216,18 @@ export async function registerRoutes(
       res.json(activeCheck ? serializeSafetyCheck(activeCheck) : null);
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch active safety check" });
+    }
+  });
+
+  app.get("/api/public/demos/:publicId/safety-checks/current", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+
+      const currentCheck = getCurrentSafetyCheck(demo.id);
+      res.json(currentCheck ? serializeSafetyCheck(currentCheck) : null);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch current safety check" });
     }
   });
 
@@ -2210,6 +2254,9 @@ export async function registerRoutes(
           arrivalNote: demo.arrivalNote ?? null,
           eventDurationMinutes: state?.eventDurationMinutes ?? 120,
         });
+
+        const currentSafetyCheck = getCurrentSafetyCheck(demo.id);
+        socket.emit("safety_check_update", currentSafetyCheck ? serializeSafetyCheck(currentSafetyCheck) : null);
 
         const count = getViewerCount(demo.id);
         io.to(`demo:${publicId}`).emit("viewer_count", count);

@@ -42,7 +42,9 @@ type LivePoll = {
 };
 type SafetyCheck = {
   id: string;
+  kind: "route_change" | "separation" | "weather" | "accessibility" | "general";
   message: string;
+  instruction: string;
   status: "open" | "closed";
   counts: {
     ok: number;
@@ -51,6 +53,7 @@ type SafetyCheck = {
     not_sure: number;
   };
   totalResponses: number;
+  resolutionMessage: string | null;
   createdAt: string;
   closedAt: string | null;
 };
@@ -213,6 +216,18 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     voteCounted: "Your latest vote is counted. You can change it while the poll is open.",
     safetyCheck: "Safety check",
     noSafetyCheck: "No safety check is active. If organisers need a quick roll call, it will appear here.",
+    incidentActive: "Live organiser incident notice",
+    incidentRoute: "Route change",
+    incidentSeparation: "Group separation",
+    incidentWeather: "Weather or site conditions",
+    incidentAccessibility: "Accessibility disruption",
+    incidentGeneral: "General disruption",
+    incidentInstruction: "What to do now",
+    incidentRespond: "Send one response so organisers can account for the group.",
+    incidentAllClear: "Organiser all-clear",
+    incidentResolvedAt: "Resolved",
+    incidentDismiss: "Dismiss all-clear",
+    incidentResponseRecorded: "Your latest response is recorded.",
     optionalSafetyNote: "Optional note, meeting point, or support needed...",
     imOk: "I'm OK",
     needHelp: "Need help",
@@ -403,6 +418,18 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     voteCounted: "Tu último voto fue contado. Puedes cambiarlo mientras la encuesta esté abierta.",
     safetyCheck: "Chequeo de seguridad",
     noSafetyCheck: "No hay chequeo de seguridad activo. Si hace falta pasar lista, aparecerá aquí.",
+    incidentActive: "Aviso de incidente del organizador",
+    incidentRoute: "Cambio de ruta",
+    incidentSeparation: "Separación del grupo",
+    incidentWeather: "Clima o condiciones del lugar",
+    incidentAccessibility: "Interrupción de accesibilidad",
+    incidentGeneral: "Interrupción general",
+    incidentInstruction: "Qué hacer ahora",
+    incidentRespond: "Envía una respuesta para que los organizadores puedan contar al grupo.",
+    incidentAllClear: "Aviso de normalidad del organizador",
+    incidentResolvedAt: "Resuelto",
+    incidentDismiss: "Cerrar aviso",
+    incidentResponseRecorded: "Tu última respuesta quedó registrada.",
     optionalSafetyNote: "Nota opcional, punto de encuentro o apoyo necesario...",
     imOk: "Estoy bien",
     needHelp: "Necesito ayuda",
@@ -593,6 +620,18 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     voteCounted: "Votre vote est compté. Vous pouvez le changer tant que le sondage est ouvert.",
     safetyCheck: "Contrôle de sécurité",
     noSafetyCheck: "Aucun contrôle de sécurité actif. Il apparaîtra ici si nécessaire.",
+    incidentActive: "Alerte d’incident de l’organisateur",
+    incidentRoute: "Changement d’itinéraire",
+    incidentSeparation: "Séparation du groupe",
+    incidentWeather: "Météo ou conditions du site",
+    incidentAccessibility: "Perturbation d’accessibilité",
+    incidentGeneral: "Perturbation générale",
+    incidentInstruction: "À faire maintenant",
+    incidentRespond: "Envoyez une réponse pour aider les organisateurs à comptabiliser le groupe.",
+    incidentAllClear: "Fin d’alerte de l’organisateur",
+    incidentResolvedAt: "Résolu",
+    incidentDismiss: "Fermer la fin d’alerte",
+    incidentResponseRecorded: "Votre dernière réponse est enregistrée.",
     optionalSafetyNote: "Note facultative, lieu de rendez-vous ou aide nécessaire...",
     imOk: "Je vais bien",
     needHelp: "Besoin d'aide",
@@ -783,6 +822,18 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     voteCounted: "تم احتساب صوتك. يمكنك تغييره ما دام التصويت مفتوحاً.",
     safetyCheck: "فحص السلامة",
     noSafetyCheck: "لا يوجد فحص سلامة نشط. سيظهر هنا عند الحاجة.",
+    incidentActive: "تنبيه مباشر من المنظم",
+    incidentRoute: "تغيير المسار",
+    incidentSeparation: "انفصال المجموعة",
+    incidentWeather: "الطقس أو ظروف الموقع",
+    incidentAccessibility: "تعطّل إمكانية الوصول",
+    incidentGeneral: "اضطراب عام",
+    incidentInstruction: "ما يجب فعله الآن",
+    incidentRespond: "أرسل ردًا واحدًا ليتمكن المنظمون من الاطمئنان على المجموعة.",
+    incidentAllClear: "إعلان انتهاء التنبيه من المنظم",
+    incidentResolvedAt: "تم الحل",
+    incidentDismiss: "إغلاق إعلان انتهاء التنبيه",
+    incidentResponseRecorded: "تم تسجيل أحدث رد لك.",
     optionalSafetyNote: "ملاحظة اختيارية أو نقطة لقاء أو دعم مطلوب...",
     imOk: "أنا بخير",
     needHelp: "أحتاج مساعدة",
@@ -973,6 +1024,18 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     voteCounted: "آخرین رأی شما ثبت شد. تا وقتی باز است می‌توانید تغییر دهید.",
     safetyCheck: "بررسی ایمنی",
     noSafetyCheck: "بررسی ایمنی فعال نیست. اگر لازم شود اینجا نمایش داده می‌شود.",
+    incidentActive: "هشدار زنده برگزارکننده",
+    incidentRoute: "تغییر مسیر",
+    incidentSeparation: "جدا شدن گروه",
+    incidentWeather: "آب‌وهوا یا شرایط محل",
+    incidentAccessibility: "اختلال دسترس‌پذیری",
+    incidentGeneral: "اختلال عمومی",
+    incidentInstruction: "اکنون چه کاری انجام دهید",
+    incidentRespond: "یک پاسخ بفرستید تا برگزارکنندگان بتوانند وضعیت گروه را بررسی کنند.",
+    incidentAllClear: "پایان هشدار برگزارکننده",
+    incidentResolvedAt: "برطرف شد",
+    incidentDismiss: "بستن پیام پایان هشدار",
+    incidentResponseRecorded: "آخرین پاسخ شما ثبت شد.",
     optionalSafetyNote: "یادداشت اختیاری، محل دیدار یا کمک موردنیاز...",
     imOk: "من خوبم",
     needHelp: "کمک لازم دارم",
@@ -1123,6 +1186,7 @@ export default function Participant() {
   const [pollVotes, setPollVotes] = useState<Record<string, string>>(getStoredPollVotes);
   const [pollStatus, setPollStatus] = useState<string | null>(null);
   const [activeSafetyCheck, setActiveSafetyCheck] = useState<SafetyCheck | null>(null);
+  const [dismissedIncidentId, setDismissedIncidentId] = useState<string | null>(() => localStorage.getItem("chant_dismissed_incident"));
   const [safetyResponses, setSafetyResponses] = useState<Record<string, string>>(getStoredSafetyResponses);
   const [safetyNote, setSafetyNote] = useState("");
   const [safetyStatus, setSafetyStatus] = useState<string | null>(null);
@@ -1311,7 +1375,7 @@ export default function Participant() {
     });
 
     socket.on("safety_check_results_update", (check: SafetyCheck) => {
-      setActiveSafetyCheck((current) => current?.id === check.id ? check : current);
+      setActiveSafetyCheck((current) => current?.id === check.id || check.status === "closed" ? check : current);
     });
 
     socket.on("engagement_update", () => {
@@ -1362,7 +1426,7 @@ export default function Participant() {
       .then((poll: LivePoll | null) => setActivePoll(poll))
       .catch(() => setActivePoll(null));
 
-    fetch(`/api/public/demos/${publicId}/safety-checks/active`)
+    fetch(`/api/public/demos/${publicId}/safety-checks/current`)
       .then((response) => response.ok ? response.json() : null)
       .then((check: SafetyCheck | null) => setActiveSafetyCheck(check))
       .catch(() => setActiveSafetyCheck(null));
@@ -1851,6 +1915,93 @@ export default function Participant() {
       setSafetyStatus(t.safetyResponseFailed);
     }
   };
+  const dismissIncidentNotice = (checkId: string) => {
+    localStorage.setItem("chant_dismissed_incident", checkId);
+    setDismissedIncidentId(checkId);
+  };
+  const renderIncidentNotice = () => {
+    if (!activeSafetyCheck || (activeSafetyCheck.status === "closed" && dismissedIncidentId === activeSafetyCheck.id)) return null;
+    const isOpen = activeSafetyCheck.status === "open";
+    const incidentKindLabels = {
+      route_change: t.incidentRoute,
+      separation: t.incidentSeparation,
+      weather: t.incidentWeather,
+      accessibility: t.incidentAccessibility,
+      general: t.incidentGeneral,
+    };
+    const responseOptions: Array<["ok" | "need_help" | "leaving" | "not_sure", string]> = [
+      ["ok", t.imOk],
+      ["need_help", t.needHelp],
+      ["leaving", t.leaving],
+      ["not_sure", t.notSure],
+    ];
+
+    return (
+      <section
+        className={`mx-4 mt-4 rounded-2xl border p-4 text-start shadow-lg ${isOpen ? "border-red-300/70 bg-red-950 text-red-50" : "border-emerald-300/60 bg-emerald-950 text-emerald-50"}`}
+        role={isOpen ? "alert" : "status"}
+        aria-live={isOpen ? "assertive" : "polite"}
+        aria-labelledby={`incident-title-${activeSafetyCheck.id}`}
+        data-testid={isOpen ? "banner-active-incident" : "banner-incident-all-clear"}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p id={`incident-title-${activeSafetyCheck.id}`} className="text-sm font-bold uppercase tracking-wide">
+            {isOpen ? t.incidentActive : t.incidentAllClear}
+          </p>
+          <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${isOpen ? "border-red-200/50" : "border-emerald-200/50"}`}>
+            {incidentKindLabels[activeSafetyCheck.kind]}
+          </span>
+        </div>
+        <p className="mt-3 text-xl font-bold" data-testid="text-incident-message">{activeSafetyCheck.message}</p>
+        {isOpen ? (
+          <>
+            <div className="mt-3 rounded-xl border border-red-200/30 bg-black/20 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-red-100/80">{t.incidentInstruction}</p>
+              <p className="mt-1 text-sm leading-relaxed" data-testid="text-incident-instruction">{activeSafetyCheck.instruction}</p>
+            </div>
+            <p className="mt-3 text-sm text-red-100/90">{t.incidentRespond}</p>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label={t.safetyCheck}>
+              {responseOptions.map(([value, label]) => {
+                const selected = safetyResponses[activeSafetyCheck.id] === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => submitSafetyResponse(activeSafetyCheck.id, value)}
+                    aria-pressed={selected}
+                    className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold ${selected ? "border-white bg-white/20" : "border-red-200/40 hover:bg-white/10"}`}
+                    data-testid={`button-incident-${value}`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            {safetyResponses[activeSafetyCheck.id] && <p className="mt-2 text-xs text-red-100" role="status">{t.incidentResponseRecorded}</p>}
+          </>
+        ) : (
+          <>
+            <p className="mt-3 text-base leading-relaxed" data-testid="text-incident-resolution">
+              {activeSafetyCheck.resolutionMessage || activeSafetyCheck.instruction}
+            </p>
+            {activeSafetyCheck.closedAt && (
+              <p className="mt-2 text-xs text-emerald-100/80">
+                {t.incidentResolvedAt}: {new Intl.DateTimeFormat(participantLocales[participantLanguage], { timeStyle: "short" }).format(new Date(activeSafetyCheck.closedAt))}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={() => dismissIncidentNotice(activeSafetyCheck.id)}
+              className="mt-3 min-h-11 rounded-full border border-emerald-100/50 px-4 py-2 text-sm font-semibold hover:bg-white/10"
+              data-testid="button-dismiss-incident"
+            >
+              {t.incidentDismiss}
+            </button>
+          </>
+        )}
+      </section>
+    );
+  };
   const submitCheckIn = async (role: CheckInRole) => {
     try {
       const displayName = checkInName.trim();
@@ -2166,6 +2317,7 @@ export default function Participant() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4" dir={participantDirection}>
         <div className="w-full max-w-2xl text-center">
+          {renderIncidentNotice()}
           {renderOfflineWarning()}
           <Megaphone className="w-16 h-16 text-neutral-600 mx-auto mb-4" />
           <p className="text-neutral-300 text-2xl font-semibold mb-2" data-testid="text-ended">
@@ -2265,6 +2417,7 @@ export default function Participant() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4" dir={participantDirection}>
         <div className="text-center">
+          {renderIncidentNotice()}
           {renderOfflineWarning()}
           <Megaphone className="w-16 h-16 text-neutral-600 mx-auto mb-6" />
           <p className="text-neutral-300 text-2xl font-semibold mb-2" data-testid="text-waiting">
@@ -2363,6 +2516,7 @@ export default function Participant() {
         </div>
       )}
       {renderParticipantAccess("mx-4 mt-3", true)}
+      {renderIncidentNotice()}
       {renderOfflineWarning()}
       {(!connected || isOffline) && (
         <div
@@ -2706,7 +2860,7 @@ export default function Participant() {
             </div>
             <div className="rounded-xl border border-red-400/30 bg-red-400/10 p-4 md:col-span-2" data-testid="card-participant-safety-check">
               <p className="font-semibold text-red-50">{t.safetyCheck}</p>
-              {activeSafetyCheck ? (
+              {activeSafetyCheck?.status === "open" ? (
                 <div>
                   <p className="mt-1 text-sm text-red-100">{activeSafetyCheck.message}</p>
                   <textarea

@@ -78,9 +78,12 @@ type LivePoll = {
   createdAt: string;
   closedAt: string | null;
 };
+type SafetyCheckKind = "route_change" | "separation" | "weather" | "accessibility" | "general";
 type SafetyCheck = {
   id: string;
+  kind: SafetyCheckKind;
   message: string;
+  instruction: string;
   status: "open" | "closed";
   counts: {
     ok: number;
@@ -95,6 +98,7 @@ type SafetyCheck = {
     updatedAt: string;
     participantLabel: string;
   }>;
+  resolutionMessage: string | null;
   createdAt: string;
   closedAt: string | null;
 };
@@ -234,6 +238,50 @@ const announcementStarters: Array<{
   },
 ];
 
+const incidentPresets: Array<{
+  kind: SafetyCheckKind;
+  label: string;
+  message: string;
+  instruction: string;
+  allClear: string;
+}> = [
+  {
+    kind: "route_change",
+    label: "Route changed",
+    message: "The planned route has changed.",
+    instruction: "Pause where you are and wait for a marshal or organiser to confirm the next movement.",
+    allClear: "The updated route is confirmed. Follow the latest organiser and marshal directions.",
+  },
+  {
+    kind: "separation",
+    label: "Group separated",
+    message: "Parts of the group have become separated.",
+    instruction: "Stay with the people around you and move only to the agreed meeting point when it is safe to do so.",
+    allClear: "The group check is complete. Continue from the confirmed meeting point or current organiser instruction.",
+  },
+  {
+    kind: "weather",
+    label: "Weather or site",
+    message: "Conditions at the event site have changed.",
+    instruction: "Pause activity, move away from immediate hazards, and wait for the next organiser instruction.",
+    allClear: "Conditions have been reassessed. Follow the current organiser instruction before resuming activity.",
+  },
+  {
+    kind: "accessibility",
+    label: "Access disruption",
+    message: "The planned accessible route or support point is unavailable.",
+    instruction: "Stay where you are if safe and ask an accessibility helper or organiser for the confirmed alternative.",
+    allClear: "An accessible alternative is confirmed. Follow the latest accessibility helper or organiser direction.",
+  },
+  {
+    kind: "general",
+    label: "General disruption",
+    message: "The event is temporarily paused for a safety check.",
+    instruction: "Pause where you are, look for an organiser, and respond below so the team can account for the group.",
+    allClear: "The safety check is complete. Continue following current organiser instructions.",
+  },
+];
+
 export default function CommandCenter() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
@@ -243,8 +291,19 @@ export default function CommandCenter() {
   const [announcementLanguage, setAnnouncementLanguage] = useState<AnnouncementLanguage>("en");
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState(["Yes", "No", "Need more info"]);
-  const [safetyCheckMessage, setSafetyCheckMessage] = useState("Safety check: please confirm whether you are okay.");
+  const [safetyCheckKind, setSafetyCheckKind] = useState<SafetyCheckKind>("general");
+  const [safetyCheckMessage, setSafetyCheckMessage] = useState(incidentPresets[4].message);
+  const [safetyCheckInstruction, setSafetyCheckInstruction] = useState(incidentPresets[4].instruction);
+  const [incidentAllClear, setIncidentAllClear] = useState(incidentPresets[4].allClear);
+  const [incidentError, setIncidentError] = useState<string | null>(null);
   const [offlineLinkStatus, setOfflineLinkStatus] = useState<string | null>(null);
+  const applyIncidentPreset = (preset: (typeof incidentPresets)[number]) => {
+    setSafetyCheckKind(preset.kind);
+    setSafetyCheckMessage(preset.message);
+    setSafetyCheckInstruction(preset.instruction);
+    setIncidentAllClear(preset.allClear);
+    setIncidentError(null);
+  };
   const announcementDirection = announcementLanguage === "ar" || announcementLanguage === "fa" ? "rtl" : "ltr";
   const changeAnnouncementLanguage = (language: AnnouncementLanguage) => {
     const selectedStarter = announcementStarters.find((starter) =>
@@ -363,28 +422,32 @@ export default function CommandCenter() {
     },
   });
   const startSafetyCheck = useMutation({
-    mutationFn: async (message: string) => {
-      await apiRequest("POST", `/api/demos/${id}/safety-checks`, { message });
+    mutationFn: async ({ kind, message, instruction }: { kind: SafetyCheckKind; message: string; instruction: string }) => {
+      await apiRequest("POST", `/api/demos/${id}/safety-checks`, { kind, message, instruction });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "safety-checks"] });
       queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "assistance"] });
-      toast({ title: "Safety check started", description: "Participants can respond from the Help panel." });
+      setIncidentError(null);
+      toast({ title: "Incident notice activated", description: "It is now prominent on every connected participant screen." });
     },
     onError: (err: Error) => {
-      toast({ title: "Could not start safety check", description: err.message, variant: "destructive" });
+      setIncidentError("The incident notice was not activated. Check the connection and try again; participants have not received this draft.");
+      toast({ title: "Could not activate incident notice", description: err.message, variant: "destructive" });
     },
   });
   const closeSafetyCheck = useMutation({
-    mutationFn: async (checkId: string) => {
-      await apiRequest("PATCH", `/api/demos/${id}/safety-checks/${checkId}`, { status: "closed" });
+    mutationFn: async ({ checkId, resolutionMessage }: { checkId: string; resolutionMessage: string }) => {
+      await apiRequest("PATCH", `/api/demos/${id}/safety-checks/${checkId}`, { status: "closed", resolutionMessage });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "safety-checks"] });
-      toast({ title: "Safety check closed" });
+      setIncidentError(null);
+      toast({ title: "All-clear sent", description: "Participants can see the resolution message now." });
     },
     onError: (err: Error) => {
-      toast({ title: "Could not close safety check", description: err.message, variant: "destructive" });
+      setIncidentError("The all-clear was not sent. Keep the incident open, check the connection, and try again.");
+      toast({ title: "Could not send all-clear", description: err.message, variant: "destructive" });
     },
   });
 
@@ -470,6 +533,10 @@ export default function CommandCenter() {
     .sort((a, b) => b.votes - a.votes || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   const activePoll = livePolls.find((poll) => poll.status === "open") ?? null;
   const activeSafetyCheck = safetyChecks.find((check) => check.status === "open") ?? null;
+  const activeIncidentLabel = activeSafetyCheck
+    ? incidentPresets.find((preset) => preset.kind === activeSafetyCheck.kind)?.label ?? "General disruption"
+    : null;
+  const awaitingIncidentResponse = activeSafetyCheck ? Math.max((checkIns?.total ?? 0) - activeSafetyCheck.totalResponses, 0) : 0;
   const readiness = [
     { label: "Chants", ready: data.chants.length > 0, detail: `${data.chants.length} prepared` },
     { label: "Backup admin", ready: data.admins.length > 1, detail: `${data.admins.length} admin${data.admins.length === 1 ? "" : "s"}` },
@@ -481,7 +548,7 @@ export default function CommandCenter() {
     { label: "Feedback", ready: (feedback?.total ?? 0) > 0, detail: `${feedback?.total ?? 0} responses` },
     { label: "Engagement", ready: (engagement?.totalParticipants ?? 0) > 0, detail: `${engagement?.totalPoints ?? 0} points` },
     { label: "Live poll", ready: Boolean(activePoll), detail: activePoll ? `${activePoll.totalVotes} votes` : "None open" },
-    { label: "Safety check", ready: !activeSafetyCheck || activeSafetyCheck.counts.need_help === 0, detail: activeSafetyCheck ? `${activeSafetyCheck.totalResponses} responses` : "None open" },
+    { label: "Incident response", ready: !activeSafetyCheck || activeSafetyCheck.counts.need_help === 0, detail: activeSafetyCheck ? `${activeSafetyCheck.totalResponses} responses` : "None active" },
     { label: "Help requests", ready: openAssistance.length === 0, detail: `${openAssistance.length} open` },
     { label: "Questions", ready: openQuestions.length === 0, detail: `${openQuestions.length} open` },
   ];
@@ -1128,75 +1195,102 @@ export default function CommandCenter() {
             </CardContent>
           </Card>
 
-          <Card className="mt-6 border-red-500/20 bg-red-500/5" data-testid="card-safety-check">
+          <Card className="mt-6 border-red-500/30 bg-red-500/5" data-testid="card-incident-response">
             <CardHeader>
               <CardTitle className="flex items-center justify-between gap-3 text-base">
                 <span className="flex items-center gap-2">
                   <ShieldCheck className="h-5 w-5 text-red-600" />
-                  Live safety check
+                  Live incident response
                 </span>
                 <Badge variant={activeSafetyCheck ? "default" : "secondary"}>
-                  {activeSafetyCheck ? `${activeSafetyCheck.totalResponses} responses` : "No active check"}
+                  {activeSafetyCheck ? `${activeSafetyCheck.totalResponses} responses` : "No active incident"}
                 </Badge>
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-5 lg:grid-cols-[1fr_1.2fr]">
+            <CardContent className="grid gap-5 lg:grid-cols-[1.05fr_1.2fr]">
               <div className="space-y-3">
                 <div>
+                  <p className="text-xs font-medium text-muted-foreground">Incident starter</p>
+                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3" role="group" aria-label="Incident starters">
+                    {incidentPresets.map((preset) => (
+                      <Button
+                        key={preset.kind}
+                        type="button"
+                        variant={safetyCheckKind === preset.kind ? "default" : "outline"}
+                        size="sm"
+                        className="min-h-11 whitespace-normal text-start"
+                        onClick={() => applyIncidentPreset(preset)}
+                        disabled={Boolean(activeSafetyCheck)}
+                        aria-pressed={safetyCheckKind === preset.kind}
+                        data-testid={`button-incident-preset-${preset.kind}`}
+                      >
+                        {preset.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <div>
                   <label htmlFor="safety-check-message" className="text-xs font-medium text-muted-foreground">
-                    Participant prompt
+                    Participant headline
                   </label>
                   <Textarea
                     id="safety-check-message"
                     value={safetyCheckMessage}
                     onChange={(event) => setSafetyCheckMessage(event.target.value)}
-                    rows={3}
-                    maxLength={180}
+                    rows={2}
+                    maxLength={120}
+                    disabled={Boolean(activeSafetyCheck)}
                     data-testid="input-safety-check-message"
                   />
+                  <p className="mt-1 text-xs text-muted-foreground">{safetyCheckMessage.length}/120</p>
+                </div>
+                <div>
+                  <label htmlFor="safety-check-instruction" className="text-xs font-medium text-muted-foreground">
+                    What participants should do now
+                  </label>
+                  <Textarea
+                    id="safety-check-instruction"
+                    value={safetyCheckInstruction}
+                    onChange={(event) => setSafetyCheckInstruction(event.target.value)}
+                    rows={3}
+                    maxLength={240}
+                    disabled={Boolean(activeSafetyCheck)}
+                    data-testid="input-incident-instruction"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">{safetyCheckInstruction.length}/240</p>
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-xs text-muted-foreground">
-                    Use this after a route change, disruption, separation, or accessibility/safety concern.
-                  </p>
+                  <p className="text-xs text-muted-foreground">Activating this places an assertive notice directly on participant screens. It does not contact emergency services.</p>
                   <Button
-                    size="sm"
-                    onClick={() => startSafetyCheck.mutate(safetyCheckMessage.trim())}
-                    disabled={!safetyCheckMessage.trim() || startSafetyCheck.isPending}
-                    data-testid="button-start-safety-check"
+                    onClick={() => startSafetyCheck.mutate({ kind: safetyCheckKind, message: safetyCheckMessage.trim(), instruction: safetyCheckInstruction.trim() })}
+                    disabled={!safetyCheckMessage.trim() || !safetyCheckInstruction.trim() || startSafetyCheck.isPending || Boolean(activeSafetyCheck)}
+                    data-testid="button-activate-incident"
                   >
-                    Start safety check
+                    Activate incident notice
                   </Button>
                 </div>
+                {incidentError && <p className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive" role="alert" data-testid="text-incident-error">{incidentError}</p>}
               </div>
               <div className="rounded-xl border bg-background p-4">
                 {activeSafetyCheck ? (
-                  <div data-testid="panel-active-safety-check">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <p className="text-sm font-semibold">{activeSafetyCheck.message}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Started {new Date(activeSafetyCheck.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        </p>
+                  <div data-testid="panel-active-incident">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="destructive">{activeIncidentLabel}</Badge>
+                        <span className="text-xs text-muted-foreground">Started {new Date(activeSafetyCheck.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => closeSafetyCheck.mutate(activeSafetyCheck.id)}
-                        disabled={closeSafetyCheck.isPending}
-                        data-testid="button-close-safety-check"
-                      >
-                        Close check
-                      </Button>
+                      <p className="mt-3 text-base font-semibold">{activeSafetyCheck.message}</p>
+                      <p className="mt-2 rounded-lg border bg-card p-3 text-sm" data-testid="text-command-incident-instruction">{activeSafetyCheck.instruction}</p>
                     </div>
-                    <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+                    <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-5">
                       {[
                         ["OK", activeSafetyCheck.counts.ok],
                         ["Need help", activeSafetyCheck.counts.need_help],
                         ["Leaving", activeSafetyCheck.counts.leaving],
                         ["Not sure", activeSafetyCheck.counts.not_sure],
+                        ["No response", awaitingIncidentResponse],
                       ].map(([label, count]) => (
-                        <div key={label} className="rounded-lg border bg-card p-3">
+                        <div key={label} className="rounded-lg border bg-card p-3" data-testid={`metric-incident-${String(label).toLowerCase().replace(" ", "-")}`}>
                           <p className="text-xs text-muted-foreground">{label}</p>
                           <p className="mt-1 text-2xl font-bold">{count}</p>
                         </div>
@@ -1213,17 +1307,40 @@ export default function CommandCenter() {
                         ))}
                       </div>
                     )}
+                    <div className="mt-5 border-t pt-4">
+                      <label htmlFor="incident-all-clear" className="text-xs font-medium text-muted-foreground">All-clear message</label>
+                      <Textarea
+                        id="incident-all-clear"
+                        value={incidentAllClear}
+                        onChange={(event) => setIncidentAllClear(event.target.value)}
+                        rows={3}
+                        maxLength={180}
+                        data-testid="input-incident-all-clear"
+                      />
+                      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-xs text-muted-foreground">{incidentAllClear.length}/180 · Participants see this immediately and after reconnecting.</p>
+                        <Button
+                          variant="outline"
+                          onClick={() => closeSafetyCheck.mutate({ checkId: activeSafetyCheck.id, resolutionMessage: incidentAllClear.trim() })}
+                          disabled={!incidentAllClear.trim() || closeSafetyCheck.isPending}
+                          data-testid="button-send-incident-all-clear"
+                        >
+                          Send all-clear
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 ) : (
-                  <div data-testid="text-no-safety-check">
-                    <p className="text-sm font-medium">No safety check is active.</p>
+                  <div data-testid="text-no-active-incident">
+                    <p className="text-sm font-medium">No incident notice is active.</p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      Start one when organisers need a quick roll call without collecting participant accounts.
+                      Choose a starter, review both fields, and activate only when participants need an immediate interruption and roll call.
                     </p>
                     {safetyChecks[0] && (
-                      <p className="mt-3 text-xs text-muted-foreground">
-                        Last check: {safetyChecks[0].totalResponses} responses, {safetyChecks[0].counts.need_help} needed help.
-                      </p>
+                      <div className="mt-3 rounded-lg border bg-card p-3 text-sm" data-testid="text-last-incident-result">
+                        <p className="font-medium">Last incident: {safetyChecks[0].totalResponses} responses, {safetyChecks[0].counts.need_help} needed help.</p>
+                        {safetyChecks[0].resolutionMessage && <p className="mt-1 text-xs text-muted-foreground">All-clear: {safetyChecks[0].resolutionMessage}</p>}
+                      </div>
                     )}
                   </div>
                 )}

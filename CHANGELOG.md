@@ -4,6 +4,18 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.75 - 6 August 2026
+
+A complete organiser-to-participant incident response and all-clear workflow for live disruptions.
+
+### Added
+
+- Field-ready incident starters: Organisers can activate editable route-change, group-separation, weather, accessibility, or general-disruption notices with clear immediate instructions.
+- Structured live incident state: The live channel now carries an incident type, headline, action instruction, response totals, resolution message, and current state across reconnections.
+- Prominent participant incident response: Connected participants immediately see an accessible multilingual incident banner on the main event screen and can report OK, need help, leaving, or uncertainty without opening Help.
+- Real-time incident accountability: The Command Center shows response totals, checked-in people still awaiting a response, attention notes, and automatically routed safety-help requests.
+- Visible all-clear and reconnection recovery: Organisers can send a dedicated all-clear that participants see with a resolution time, can dismiss locally, and receive again when reconnecting during the recovery window.
+
 ## 1.1.74 - 5 August 2026
 
 Opt-in offline participation for events where mobile signal cannot be trusted.
