@@ -99,5 +99,51 @@ export async function ensureDemoColumnsAndTables(): Promise<void> {
     ADD COLUMN IF NOT EXISTS current_phase text NOT NULL DEFAULT 'leader',
     ADD COLUMN IF NOT EXISTS current_cycle integer NOT NULL DEFAULT 1,
     ADD COLUMN IF NOT EXISTS updated_at timestamp NOT NULL DEFAULT now();
+
+    CREATE TABLE IF NOT EXISTS safety_checks (
+      id varchar(255) PRIMARY KEY,
+      demonstration_id varchar(255) NOT NULL REFERENCES demonstrations(id) ON DELETE CASCADE,
+      kind text NOT NULL,
+      message text NOT NULL,
+      instruction text NOT NULL,
+      status text NOT NULL DEFAULT 'open',
+      resolution_message text,
+      created_at timestamp NOT NULL DEFAULT now(),
+      closed_at timestamp
+    );
+
+    CREATE INDEX IF NOT EXISTS safety_checks_demo_created_idx
+    ON safety_checks (demonstration_id, created_at DESC);
+
+    CREATE UNIQUE INDEX IF NOT EXISTS safety_checks_one_open_per_demo_idx
+    ON safety_checks (demonstration_id)
+    WHERE status = 'open';
+
+    CREATE TABLE IF NOT EXISTS safety_check_responses (
+      safety_check_id varchar(255) NOT NULL REFERENCES safety_checks(id) ON DELETE CASCADE,
+      session_id text NOT NULL,
+      response text NOT NULL,
+      note text,
+      updated_at timestamp NOT NULL DEFAULT now(),
+      PRIMARY KEY (safety_check_id, session_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS assistance_requests (
+      id varchar(255) PRIMARY KEY,
+      demonstration_id varchar(255) NOT NULL REFERENCES demonstrations(id) ON DELETE CASCADE,
+      type text NOT NULL,
+      message text NOT NULL,
+      session_id text NOT NULL,
+      status text NOT NULL DEFAULT 'open',
+      created_at timestamp NOT NULL DEFAULT now(),
+      resolved_at timestamp
+    );
+
+    CREATE INDEX IF NOT EXISTS assistance_requests_demo_created_idx
+    ON assistance_requests (demonstration_id, created_at DESC);
+
+    CREATE UNIQUE INDEX IF NOT EXISTS assistance_requests_one_open_per_type_idx
+    ON assistance_requests (demonstration_id, session_id, type)
+    WHERE status = 'open';
   `);
 }

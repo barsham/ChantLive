@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowLeft, CalendarPlus, CheckCircle2, ClipboardList, Copy, Download, ExternalLink, FileText, LifeBuoy, Megaphone, QrCode, Route, Share2, ShieldCheck, Users, WifiOff } from "lucide-react";
+import { ArrowLeft, CalendarPlus, CheckCircle2, ClipboardList, Copy, Database, Download, ExternalLink, FileText, History, LifeBuoy, Megaphone, QrCode, Route, Share2, ShieldCheck, Users, WifiOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -101,6 +101,7 @@ type SafetyCheck = {
   resolutionMessage: string | null;
   createdAt: string;
   closedAt: string | null;
+  storage: "shared";
 };
 type CheckInRole = "participant" | "marshal" | "speaker" | "accessibility";
 type AnnouncementTargetRole = "all" | CheckInRole;
@@ -1274,6 +1275,13 @@ export default function CommandCenter() {
               <div className="rounded-xl border bg-background p-4">
                 {activeSafetyCheck ? (
                   <div data-testid="panel-active-incident">
+                    <div className="mb-4 flex items-start gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm" role="status" data-testid="status-incident-continuity">
+                      <Database className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" aria-hidden="true" />
+                      <div>
+                        <p className="font-medium text-emerald-900 dark:text-emerald-100">Continuity protected</p>
+                        <p className="mt-1 text-xs text-muted-foreground">This notice, participant responses, and help requests are saved on the server and recover after a restart.</p>
+                      </div>
+                    </div>
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge variant="destructive">{activeIncidentLabel}</Badge>
@@ -1345,6 +1353,34 @@ export default function CommandCenter() {
                   </div>
                 )}
               </div>
+              <section className="border-t pt-4 lg:col-span-2" aria-labelledby="incident-history-title" data-testid="panel-incident-history">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 id="incident-history-title" className="flex items-center gap-2 text-sm font-semibold">
+                    <History className="h-4 w-4 text-red-600" aria-hidden="true" />
+                    Server-saved incident history
+                  </h3>
+                  <span className="text-xs text-muted-foreground">Latest {Math.min(safetyChecks.length, 5)} of {safetyChecks.length}</span>
+                </div>
+                {safetyChecks.length === 0 ? (
+                  <p className="mt-2 text-sm text-muted-foreground">No incident history yet. Activated notices and all-clears will be retained here through deployments and restarts.</p>
+                ) : (
+                  <ol className="mt-3 grid gap-3 md:grid-cols-2">
+                    {safetyChecks.slice(0, 5).map((check) => (
+                      <li key={check.id} className="rounded-lg border bg-background p-3" data-testid={`history-incident-${check.id}`}>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="text-sm font-medium">{incidentPresets.find((preset) => preset.kind === check.kind)?.label ?? "General disruption"}</span>
+                          <Badge variant={check.status === "open" ? "destructive" : "secondary"}>{check.status === "open" ? "Active" : "All-clear sent"}</Badge>
+                        </div>
+                        <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{check.message}</p>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          {check.totalResponses} responses · {check.counts.need_help} needed help · Started {new Date(check.createdAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}
+                        </p>
+                        {check.closedAt && <p className="mt-1 text-xs text-muted-foreground">Resolved {new Date(check.closedAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</p>}
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </section>
             </CardContent>
           </Card>
 
@@ -1362,9 +1398,10 @@ export default function CommandCenter() {
             </CardHeader>
             <CardContent>
               {openAssistance.length === 0 ? (
-                <p className="text-sm text-muted-foreground" data-testid="text-no-assistance-requests">
-                  No active participant help requests. When someone asks for accessibility, connection, or safety help, it appears here.
-                </p>
+                <div data-testid="text-no-assistance-requests">
+                  <p className="text-sm text-muted-foreground">No active participant help requests. When someone asks for accessibility, connection, or safety help, it appears here.</p>
+                  <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground"><Database className="h-3.5 w-3.5" aria-hidden="true" /> Help requests are server-saved until an organiser resolves them.</p>
+                </div>
               ) : (
                 <div className="space-y-3">
                   {openAssistance.map((request) => (

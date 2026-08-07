@@ -4,6 +4,18 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.76 - 7 August 2026
+
+Restart-safe live incident continuity for organisers and participants during deployments and outages.
+
+### Added
+
+- Durable shared incident ledger: Active notices, all-clears, and response records now live in shared database storage instead of disappearing with a server process. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+- Atomic incident lifecycle: Activating, replacing, responding to, and resolving an incident now produces one consistent server-saved state with idempotent participant responses. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+- Restart-safe participant help queue: Safety, accessibility, connection, and organiser-help requests remain in the Command Center until an organiser resolves them, even across restarts. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+- Organiser continuity and incident history: The Command Center identifies server-protected active state and shows a timestamped five-incident history with response and help totals. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+- Private participant response recovery: After reload or reconnection, each participant privately recovers their own recorded incident response with accessible confirmation in every supported language. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+
 ## 1.1.75 - 6 August 2026
 
 A complete organiser-to-participant incident response and all-clear workflow for live disruptions.

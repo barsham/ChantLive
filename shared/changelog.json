@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.76",
+      "releasedAt": "2026-08-07",
+      "summary": "Restart-safe live incident continuity for organisers and participants during deployments and outages.",
+      "items": [
+        {
+          "id": "cl-2026-08-07-durable-incident-ledger",
+          "title": "Durable shared incident ledger",
+          "description": "Active notices, all-clears, and response records now live in shared database storage instead of disappearing with a server process.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-07",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-07-atomic-incident-lifecycle",
+          "title": "Atomic incident lifecycle",
+          "description": "Activating, replacing, responding to, and resolving an incident now produces one consistent server-saved state with idempotent participant responses.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-07",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-07-durable-help-queue",
+          "title": "Restart-safe participant help queue",
+          "description": "Safety, accessibility, connection, and organiser-help requests remain in the Command Center until an organiser resolves them, even across restarts.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-07",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-07-organiser-continuity-history",
+          "title": "Organiser continuity and incident history",
+          "description": "The Command Center identifies server-protected active state and shows a timestamped five-incident history with response and help totals.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-07",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-07-participant-response-recovery",
+          "title": "Private participant response recovery",
+          "description": "After reload or reconnection, each participant privately recovers their own recorded incident response with accessible confirmation in every supported language.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-07",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        }
+      ]
+    },
+    {
       "version": "1.1.75",
       "releasedAt": "2026-08-06",
       "summary": "A complete organiser-to-participant incident response and all-clear workflow for live disruptions.",

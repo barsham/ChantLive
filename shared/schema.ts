@@ -76,6 +76,39 @@ export const viewSessions = pgTable("view_sessions", {
   lastSeenAt: timestamp("last_seen_at").defaultNow().notNull(),
 });
 
+export const safetyChecks = pgTable("safety_checks", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  demonstrationId: varchar("demonstration_id", { length: 255 }).notNull().references(() => demonstrations.id, { onDelete: "cascade" }),
+  kind: text("kind").notNull(),
+  message: text("message").notNull(),
+  instruction: text("instruction").notNull(),
+  status: text("status").notNull().default("open"),
+  resolutionMessage: text("resolution_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  closedAt: timestamp("closed_at"),
+});
+
+export const safetyCheckResponses = pgTable("safety_check_responses", {
+  safetyCheckId: varchar("safety_check_id", { length: 255 }).notNull().references(() => safetyChecks.id, { onDelete: "cascade" }),
+  sessionId: text("session_id").notNull(),
+  response: text("response").notNull(),
+  note: text("note"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.safetyCheckId, table.sessionId] }),
+}));
+
+export const assistanceRequests = pgTable("assistance_requests", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  demonstrationId: varchar("demonstration_id", { length: 255 }).notNull().references(() => demonstrations.id, { onDelete: "cascade" }),
+  type: text("type").notNull(),
+  message: text("message").notNull(),
+  sessionId: text("session_id").notNull(),
+  status: text("status").notNull().default("open"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  resolvedAt: timestamp("resolved_at"),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, lastActivityAt: true });
 export const insertDemonstrationSchema = createInsertSchema(demonstrations).omit({ id: true, createdAt: true, publicId: true });
 export const insertChantSchema = createInsertSchema(chants).omit({ id: true });
@@ -90,3 +123,6 @@ export type InsertChant = z.infer<typeof insertChantSchema>;
 export type DemoAdmin = typeof demoAdmins.$inferSelect;
 export type DemoState = typeof demoState.$inferSelect;
 export type ViewSession = typeof viewSessions.$inferSelect;
+export type StoredSafetyCheck = typeof safetyChecks.$inferSelect;
+export type StoredSafetyCheckResponse = typeof safetyCheckResponses.$inferSelect;
+export type StoredAssistanceRequest = typeof assistanceRequests.$inferSelect;

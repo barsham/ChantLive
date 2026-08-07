@@ -4,6 +4,7 @@ import {
   type Chant, type InsertChant,
   type DemoState, type DemoAdmin,
   users, demonstrations, chants, demoAdmins, demoState, viewSessions,
+  safetyChecks, safetyCheckResponses, assistanceRequests,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, asc, desc, inArray, sql } from "drizzle-orm";
@@ -41,6 +42,41 @@ export type RepeatDemonstrationResult = {
   copiedLogistics: boolean;
   copiedSupport: boolean;
   eventDurationMinutes: number;
+};
+
+export type SafetyCheckKind = "route_change" | "separation" | "weather" | "accessibility" | "general";
+export type SafetyCheckResponseType = "ok" | "need_help" | "leaving" | "not_sure";
+export type AssistanceType = "accessibility" | "connection" | "safety" | "organizer";
+
+export type StoredSafetyCheckResponse = {
+  sessionId: string;
+  response: SafetyCheckResponseType;
+  note: string | null;
+  updatedAt: Date;
+};
+
+export type StoredSafetyCheck = {
+  id: string;
+  demoId: string;
+  kind: SafetyCheckKind;
+  message: string;
+  instruction: string;
+  status: "open" | "closed";
+  responses: StoredSafetyCheckResponse[];
+  resolutionMessage: string | null;
+  createdAt: Date;
+  closedAt: Date | null;
+};
+
+export type StoredAssistanceRequest = {
+  id: string;
+  demoId: string;
+  type: AssistanceType;
+  message: string;
+  sessionId: string;
+  status: "open" | "resolved";
+  createdAt: Date;
+  resolvedAt: Date | null;
 };
 
 export interface IStorage {
@@ -89,6 +125,14 @@ export interface IStorage {
   removeDemoAdmin(demonstrationId: string, userId: string): Promise<void>;
   getDemoAdmins(demonstrationId: string): Promise<DemoAdmin[]>;
   isDemoAdmin(demonstrationId: string, userId: string): Promise<boolean>;
+
+  getSafetyChecks(demonstrationId: string): Promise<StoredSafetyCheck[]>;
+  createSafetyCheck(demonstrationId: string, data: { kind: SafetyCheckKind; message: string; instruction: string }): Promise<StoredSafetyCheck>;
+  closeSafetyCheck(demonstrationId: string, safetyCheckId: string, resolutionMessage: string): Promise<StoredSafetyCheck | undefined>;
+  upsertSafetyCheckResponse(demonstrationId: string, safetyCheckId: string, data: { sessionId: string; response: SafetyCheckResponseType; note: string | null }): Promise<{ check: StoredSafetyCheck; created: boolean } | undefined>;
+  getAssistanceRequests(demonstrationId: string): Promise<StoredAssistanceRequest[]>;
+  createAssistanceRequest(demonstrationId: string, data: { type: AssistanceType; message: string; sessionId: string }): Promise<{ request: StoredAssistanceRequest; created: boolean }>;
+  resolveAssistanceRequest(demonstrationId: string, requestId: string): Promise<StoredAssistanceRequest | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -442,6 +486,171 @@ export class DatabaseStorage implements IStorage {
     const [result] = await db.select().from(demoAdmins)
       .where(and(eq(demoAdmins.demonstrationId, demonstrationId), eq(demoAdmins.userId, userId)));
     return !!result;
+  }
+
+  async getSafetyChecks(demonstrationId: string): Promise<StoredSafetyCheck[]> {
+    const checks = await db.select().from(safetyChecks)
+      .where(eq(safetyChecks.demonstrationId, demonstrationId))
+      .orderBy(desc(safetyChecks.createdAt))
+      .limit(12);
+    if (checks.length === 0) return [];
+
+    const responses = await db.select().from(safetyCheckResponses)
+      .where(inArray(safetyCheckResponses.safetyCheckId, checks.map((check) => check.id)))
+      .orderBy(desc(safetyCheckResponses.updatedAt));
+    const responsesByCheck = new Map<string, StoredSafetyCheckResponse[]>();
+    for (const response of responses) {
+      const list = responsesByCheck.get(response.safetyCheckId) ?? [];
+      list.push({
+        sessionId: response.sessionId,
+        response: response.response as SafetyCheckResponseType,
+        note: response.note,
+        updatedAt: response.updatedAt,
+      });
+      responsesByCheck.set(response.safetyCheckId, list);
+    }
+
+    return checks.map((check) => ({
+      id: check.id,
+      demoId: check.demonstrationId,
+      kind: check.kind as SafetyCheckKind,
+      message: check.message,
+      instruction: check.instruction,
+      status: check.status as "open" | "closed",
+      responses: responsesByCheck.get(check.id) ?? [],
+      resolutionMessage: check.resolutionMessage,
+      createdAt: check.createdAt,
+      closedAt: check.closedAt,
+    }));
+  }
+
+  async createSafetyCheck(demonstrationId: string, data: { kind: SafetyCheckKind; message: string; instruction: string }): Promise<StoredSafetyCheck> {
+    const id = crypto.randomUUID();
+    const now = new Date();
+    await db.transaction(async (tx) => {
+      await tx.update(safetyChecks).set({
+        status: "closed",
+        resolutionMessage: "This notice was replaced by a newer organiser update.",
+        closedAt: now,
+      }).where(and(
+        eq(safetyChecks.demonstrationId, demonstrationId),
+        eq(safetyChecks.status, "open"),
+      ));
+      await tx.insert(safetyChecks).values({
+        id,
+        demonstrationId,
+        kind: data.kind,
+        message: data.message,
+        instruction: data.instruction,
+        status: "open",
+        createdAt: now,
+      });
+
+      const expired = await tx.select({ id: safetyChecks.id }).from(safetyChecks)
+        .where(eq(safetyChecks.demonstrationId, demonstrationId))
+        .orderBy(desc(safetyChecks.createdAt))
+        .offset(12);
+      if (expired.length > 0) {
+        await tx.delete(safetyChecks).where(inArray(safetyChecks.id, expired.map((check) => check.id)));
+      }
+    });
+
+    const check = (await this.getSafetyChecks(demonstrationId)).find((item) => item.id === id);
+    if (!check) throw new Error("SAFETY_CHECK_NOT_CREATED");
+    return check;
+  }
+
+  async closeSafetyCheck(demonstrationId: string, safetyCheckId: string, resolutionMessage: string): Promise<StoredSafetyCheck | undefined> {
+    const existing = (await this.getSafetyChecks(demonstrationId)).find((item) => item.id === safetyCheckId);
+    if (!existing || existing.status === "closed") return existing;
+    const [updated] = await db.update(safetyChecks).set({
+      status: "closed",
+      resolutionMessage,
+      closedAt: new Date(),
+    }).where(and(
+      eq(safetyChecks.id, safetyCheckId),
+      eq(safetyChecks.demonstrationId, demonstrationId),
+    )).returning({ id: safetyChecks.id });
+    if (!updated) return (await this.getSafetyChecks(demonstrationId)).find((item) => item.id === safetyCheckId);
+    return (await this.getSafetyChecks(demonstrationId)).find((item) => item.id === safetyCheckId);
+  }
+
+  async upsertSafetyCheckResponse(demonstrationId: string, safetyCheckId: string, data: { sessionId: string; response: SafetyCheckResponseType; note: string | null }): Promise<{ check: StoredSafetyCheck; created: boolean } | undefined> {
+    const created = await db.transaction(async (tx) => {
+      const [check] = await tx.select({ id: safetyChecks.id }).from(safetyChecks).where(and(
+        eq(safetyChecks.id, safetyCheckId),
+        eq(safetyChecks.demonstrationId, demonstrationId),
+        eq(safetyChecks.status, "open"),
+      ));
+      if (!check) return undefined;
+
+      const [existing] = await tx.select({ sessionId: safetyCheckResponses.sessionId }).from(safetyCheckResponses).where(and(
+        eq(safetyCheckResponses.safetyCheckId, safetyCheckId),
+        eq(safetyCheckResponses.sessionId, data.sessionId),
+      ));
+      await tx.insert(safetyCheckResponses).values({
+        safetyCheckId,
+        sessionId: data.sessionId,
+        response: data.response,
+        note: data.note,
+        updatedAt: new Date(),
+      }).onConflictDoUpdate({
+        target: [safetyCheckResponses.safetyCheckId, safetyCheckResponses.sessionId],
+        set: { response: data.response, note: data.note, updatedAt: new Date() },
+      });
+      return !existing;
+    });
+    if (created === undefined) return undefined;
+    const check = (await this.getSafetyChecks(demonstrationId)).find((item) => item.id === safetyCheckId);
+    return check ? { check, created } : undefined;
+  }
+
+  async getAssistanceRequests(demonstrationId: string): Promise<StoredAssistanceRequest[]> {
+    const requests = await db.select().from(assistanceRequests)
+      .where(eq(assistanceRequests.demonstrationId, demonstrationId))
+      .orderBy(desc(assistanceRequests.createdAt))
+      .limit(50);
+    return requests.map((request) => ({
+      id: request.id,
+      demoId: request.demonstrationId,
+      type: request.type as AssistanceType,
+      message: request.message,
+      sessionId: request.sessionId,
+      status: request.status as "open" | "resolved",
+      createdAt: request.createdAt,
+      resolvedAt: request.resolvedAt,
+    }));
+  }
+
+  async createAssistanceRequest(demonstrationId: string, data: { type: AssistanceType; message: string; sessionId: string }): Promise<{ request: StoredAssistanceRequest; created: boolean }> {
+    const id = crypto.randomUUID();
+    const inserted = await db.insert(assistanceRequests).values({
+      id,
+      demonstrationId,
+      type: data.type,
+      message: data.message,
+      sessionId: data.sessionId,
+      status: "open",
+      createdAt: new Date(),
+    }).onConflictDoNothing().returning({ id: assistanceRequests.id });
+    const requests = await this.getAssistanceRequests(demonstrationId);
+    const request = requests.find((item) => item.id === id) ?? requests.find((item) => (
+      item.sessionId === data.sessionId && item.type === data.type && item.status === "open"
+    ));
+    if (!request) throw new Error("ASSISTANCE_REQUEST_NOT_CREATED");
+    return { request, created: inserted.length > 0 };
+  }
+
+  async resolveAssistanceRequest(demonstrationId: string, requestId: string): Promise<StoredAssistanceRequest | undefined> {
+    const [updated] = await db.update(assistanceRequests).set({
+      status: "resolved",
+      resolvedAt: new Date(),
+    }).where(and(
+      eq(assistanceRequests.id, requestId),
+      eq(assistanceRequests.demonstrationId, demonstrationId),
+    )).returning({ id: assistanceRequests.id });
+    if (!updated) return undefined;
+    return (await this.getAssistanceRequests(demonstrationId)).find((item) => item.id === requestId);
   }
 }
 

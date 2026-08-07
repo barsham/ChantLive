@@ -56,6 +56,8 @@ type SafetyCheck = {
   resolutionMessage: string | null;
   createdAt: string;
   closedAt: string | null;
+  participantResponse: "ok" | "need_help" | "leaving" | "not_sure" | null;
+  storage: "shared";
 };
 type CheckInRole = "participant" | "marshal" | "speaker" | "accessibility";
 type ParticipantLanguage = "en" | "es" | "fr" | "ar" | "fa";
@@ -228,6 +230,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     incidentResolvedAt: "Resolved",
     incidentDismiss: "Dismiss all-clear",
     incidentResponseRecorded: "Your latest response is recorded.",
+    incidentResponseRecovered: "Your earlier response was restored from the server after reconnecting.",
     optionalSafetyNote: "Optional note, meeting point, or support needed...",
     imOk: "I'm OK",
     needHelp: "Need help",
@@ -430,6 +433,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     incidentResolvedAt: "Resuelto",
     incidentDismiss: "Cerrar aviso",
     incidentResponseRecorded: "Tu última respuesta quedó registrada.",
+    incidentResponseRecovered: "Tu respuesta anterior se recuperó del servidor después de volver a conectar.",
     optionalSafetyNote: "Nota opcional, punto de encuentro o apoyo necesario...",
     imOk: "Estoy bien",
     needHelp: "Necesito ayuda",
@@ -632,6 +636,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     incidentResolvedAt: "Résolu",
     incidentDismiss: "Fermer la fin d’alerte",
     incidentResponseRecorded: "Votre dernière réponse est enregistrée.",
+    incidentResponseRecovered: "Votre réponse précédente a été restaurée depuis le serveur après la reconnexion.",
     optionalSafetyNote: "Note facultative, lieu de rendez-vous ou aide nécessaire...",
     imOk: "Je vais bien",
     needHelp: "Besoin d'aide",
@@ -834,6 +839,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     incidentResolvedAt: "تم الحل",
     incidentDismiss: "إغلاق إعلان انتهاء التنبيه",
     incidentResponseRecorded: "تم تسجيل أحدث رد لك.",
+    incidentResponseRecovered: "تمت استعادة ردك السابق من الخادم بعد إعادة الاتصال.",
     optionalSafetyNote: "ملاحظة اختيارية أو نقطة لقاء أو دعم مطلوب...",
     imOk: "أنا بخير",
     needHelp: "أحتاج مساعدة",
@@ -1036,6 +1042,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     incidentResolvedAt: "برطرف شد",
     incidentDismiss: "بستن پیام پایان هشدار",
     incidentResponseRecorded: "آخرین پاسخ شما ثبت شد.",
+    incidentResponseRecovered: "پاسخ قبلی شما پس از اتصال دوباره از سرور بازیابی شد.",
     optionalSafetyNote: "یادداشت اختیاری، محل دیدار یا کمک موردنیاز...",
     imOk: "من خوبم",
     needHelp: "کمک لازم دارم",
@@ -1188,6 +1195,7 @@ export default function Participant() {
   const [activeSafetyCheck, setActiveSafetyCheck] = useState<SafetyCheck | null>(null);
   const [dismissedIncidentId, setDismissedIncidentId] = useState<string | null>(() => localStorage.getItem("chant_dismissed_incident"));
   const [safetyResponses, setSafetyResponses] = useState<Record<string, string>>(getStoredSafetyResponses);
+  const [recoveredSafetyResponseId, setRecoveredSafetyResponseId] = useState<string | null>(null);
   const [safetyNote, setSafetyNote] = useState("");
   const [safetyStatus, setSafetyStatus] = useState<string | null>(null);
   const [questionText, setQuestionText] = useState("");
@@ -1215,6 +1223,15 @@ export default function Participant() {
   const lowBandwidthRef = useRef(lowBandwidth);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const t = participantCopy[participantLanguage];
+  const restoreSafetyResponse = (check: SafetyCheck | null) => {
+    if (!check?.participantResponse) return;
+    setSafetyResponses((current) => {
+      const nextResponses = { ...current, [check.id]: check.participantResponse! };
+      localStorage.setItem("chant_safety_responses", JSON.stringify(nextResponses));
+      return nextResponses;
+    });
+    setRecoveredSafetyResponseId(check.id);
+  };
   const wakeLockSupported = typeof navigator !== "undefined" && "wakeLock" in navigator;
   const participantDirection = participantLanguage === "ar" || participantLanguage === "fa" ? "rtl" : "ltr";
   const offlinePreparationMode = new URLSearchParams(window.location.search).get("offline") === "1";
@@ -1370,6 +1387,7 @@ export default function Participant() {
     });
 
     socket.on("safety_check_update", (check: SafetyCheck | null) => {
+      restoreSafetyResponse(check);
       setActiveSafetyCheck(check);
       setSafetyStatus(null);
     });
@@ -1426,9 +1444,12 @@ export default function Participant() {
       .then((poll: LivePoll | null) => setActivePoll(poll))
       .catch(() => setActivePoll(null));
 
-    fetch(`/api/public/demos/${publicId}/safety-checks/current`)
+    fetch(`/api/public/demos/${publicId}/safety-checks/current?sessionId=${encodeURIComponent(getSessionId())}`)
       .then((response) => response.ok ? response.json() : null)
-      .then((check: SafetyCheck | null) => setActiveSafetyCheck(check))
+      .then((check: SafetyCheck | null) => {
+        restoreSafetyResponse(check);
+        setActiveSafetyCheck(check);
+      })
       .catch(() => setActiveSafetyCheck(null));
 
     fetch(`/api/public/demos/${publicId}/engagement/${getSessionId()}`)
@@ -1908,6 +1929,7 @@ export default function Participant() {
       const nextResponses = { ...safetyResponses, [checkId]: responseType };
       localStorage.setItem("chant_safety_responses", JSON.stringify(nextResponses));
       setSafetyResponses(nextResponses);
+      setRecoveredSafetyResponseId(null);
       setActiveSafetyCheck(check);
       setSafetyStatus(responseType === "need_help" ? t.organizerNotified : t.safetyResponseSent);
       setTimeout(() => setSafetyStatus(null), 3500);
@@ -1977,7 +1999,11 @@ export default function Participant() {
                 );
               })}
             </div>
-            {safetyResponses[activeSafetyCheck.id] && <p className="mt-2 text-xs text-red-100" role="status">{t.incidentResponseRecorded}</p>}
+            {safetyResponses[activeSafetyCheck.id] && (
+              <p className="mt-2 text-xs text-red-100" role="status" data-testid="status-incident-response">
+                {recoveredSafetyResponseId === activeSafetyCheck.id ? t.incidentResponseRecovered : t.incidentResponseRecorded}
+              </p>
+            )}
           </>
         ) : (
           <>

@@ -1,7 +1,14 @@
 import type { Express } from "express";
 import { type Server } from "http";
 import { Server as SocketIOServer } from "socket.io";
-import { storage } from "./storage";
+import {
+  storage,
+  type AssistanceType,
+  type SafetyCheckKind,
+  type SafetyCheckResponseType,
+  type StoredAssistanceRequest as AssistanceRequest,
+  type StoredSafetyCheck as SafetyCheck,
+} from "./storage";
 import { ensureDemoColumnsAndTables, ensureUserAuthColumns } from "./db";
 import { setupAuth, requireAuth, requireSuperAdmin } from "./auth";
 import QRCode from "qrcode";
@@ -26,17 +33,6 @@ const demoViewers = new Map<string, Set<string>>();
 const autoRotateTimers = new Map<string, NodeJS.Timeout>();
 const autoRotateProgress = new Map<string, { phase: "leader" | "people"; cycle: number }>();
 type ChantPhase = "leader" | "people";
-type AssistanceType = "accessibility" | "connection" | "safety" | "organizer";
-type AssistanceRequest = {
-  id: string;
-  demoId: string;
-  type: AssistanceType;
-  message: string;
-  sessionId: string;
-  status: "open" | "resolved";
-  createdAt: string;
-  resolvedAt: string | null;
-};
 type CrowdPulseType = "too_fast" | "too_slow" | "cant_hear" | "all_good";
 type CrowdPulse = {
   sessionId: string;
@@ -75,27 +71,6 @@ type LivePoll = {
   createdAt: string;
   closedAt: string | null;
 };
-type SafetyCheckStatus = "open" | "closed";
-type SafetyCheckResponseType = "ok" | "need_help" | "leaving" | "not_sure";
-type SafetyCheckKind = "route_change" | "separation" | "weather" | "accessibility" | "general";
-type SafetyCheckResponse = {
-  sessionId: string;
-  response: SafetyCheckResponseType;
-  note: string | null;
-  updatedAt: string;
-};
-type SafetyCheck = {
-  id: string;
-  demoId: string;
-  kind: SafetyCheckKind;
-  message: string;
-  instruction: string;
-  status: SafetyCheckStatus;
-  responses: SafetyCheckResponse[];
-  resolutionMessage: string | null;
-  createdAt: string;
-  closedAt: string | null;
-};
 type ParticipantCheckInRole = "participant" | "marshal" | "speaker" | "accessibility";
 type ParticipantCheckIn = {
   sessionId: string;
@@ -121,12 +96,10 @@ type ParticipantEngagement = {
   updatedAt: string;
 };
 
-const assistanceRequests = new Map<string, AssistanceRequest[]>();
 const crowdPulses = new Map<string, Map<string, CrowdPulse>>();
 const organizerAnnouncements = new Map<string, OrganizerAnnouncement[]>();
 const audienceQuestions = new Map<string, AudienceQuestion[]>();
 const livePolls = new Map<string, LivePoll[]>();
-const safetyChecks = new Map<string, SafetyCheck[]>();
 const participantCheckIns = new Map<string, Map<string, ParticipantCheckIn>>();
 const participantFeedback = new Map<string, Map<string, ParticipantFeedback>>();
 const participantEngagement = new Map<string, Map<string, ParticipantEngagement>>();
@@ -139,18 +112,14 @@ function getViewerCount(demoId: string): number {
   return demoViewers.get(demoId)?.size ?? 0;
 }
 
-function getAssistanceRequests(demoId: string) {
-  return assistanceRequests.get(demoId) ?? [];
-}
-
 function serializeAssistanceRequest(request: AssistanceRequest) {
   return {
     id: request.id,
     type: request.type,
     message: request.message,
     status: request.status,
-    createdAt: request.createdAt,
-    resolvedAt: request.resolvedAt,
+    createdAt: request.createdAt.toISOString(),
+    resolvedAt: request.resolvedAt?.toISOString() ?? null,
     participantLabel: `Participant ${request.sessionId.slice(-4).toUpperCase()}`,
   };
 }
@@ -217,22 +186,14 @@ function serializeLivePoll(poll: LivePoll) {
   };
 }
 
-function getSafetyChecks(demoId: string) {
-  return safetyChecks.get(demoId) ?? [];
-}
-
-function getActiveSafetyCheck(demoId: string) {
-  return getSafetyChecks(demoId).find((check) => check.status === "open") ?? null;
-}
-
-function getCurrentSafetyCheck(demoId: string) {
-  const latest = getSafetyChecks(demoId)[0] ?? null;
+function getCurrentSafetyCheck(checks: SafetyCheck[]) {
+  const latest = checks[0] ?? null;
   if (!latest || latest.status === "open") return latest;
   if (!latest.closedAt) return null;
-  return Date.now() - new Date(latest.closedAt).getTime() <= 30 * 60 * 1000 ? latest : null;
+  return Date.now() - latest.closedAt.getTime() <= 30 * 60 * 1000 ? latest : null;
 }
 
-function serializeSafetyCheck(check: SafetyCheck) {
+function serializeSafetyCheck(check: SafetyCheck, participantSessionId?: string) {
   const counts: Record<SafetyCheckResponseType, number> = {
     ok: 0,
     need_help: 0,
@@ -258,12 +219,16 @@ function serializeSafetyCheck(check: SafetyCheck) {
       .map((response) => ({
         response: response.response,
         note: response.note,
-        updatedAt: response.updatedAt,
+        updatedAt: response.updatedAt.toISOString(),
         participantLabel: `Participant ${response.sessionId.slice(-4).toUpperCase()}`,
       })),
-    createdAt: check.createdAt,
+    participantResponse: participantSessionId
+      ? check.responses.find((response) => response.sessionId === participantSessionId)?.response ?? null
+      : null,
+    storage: "shared" as const,
+    createdAt: check.createdAt.toISOString(),
     resolutionMessage: check.resolutionMessage,
-    closedAt: check.closedAt,
+    closedAt: check.closedAt?.toISOString() ?? null,
   };
 }
 
@@ -738,7 +703,8 @@ export async function registerRoutes(
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
-      res.json(getAssistanceRequests(demo.id).map(serializeAssistanceRequest));
+      const requests = await storage.getAssistanceRequests(demo.id);
+      res.json(requests.map(serializeAssistanceRequest));
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch assistance requests" });
     }
@@ -752,12 +718,10 @@ export async function registerRoutes(
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
       const requestId = getSingleParam(req.params.requestId);
-      const requests = getAssistanceRequests(demo.id);
-      const request = requests.find((item) => item.id === requestId);
+      const request = requestId ? await storage.resolveAssistanceRequest(demo.id, requestId) : undefined;
       if (!request) return res.status(404).json({ message: "Assistance request not found" });
 
-      request.status = "resolved";
-      request.resolvedAt = new Date().toISOString();
+      const requests = await storage.getAssistanceRequests(demo.id);
       io.to(`demo:${demo.publicId}`).emit("assistance_update", requests.map(serializeAssistanceRequest));
       res.json(serializeAssistanceRequest(request));
     } catch (err) {
@@ -970,7 +934,8 @@ export async function registerRoutes(
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
-      res.json(getSafetyChecks(demo.id).map(serializeSafetyCheck));
+      const checks = await storage.getSafetyChecks(demo.id);
+      res.json(checks.map((check) => serializeSafetyCheck(check)));
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch safety checks" });
     }
@@ -993,28 +958,7 @@ export async function registerRoutes(
       const instruction = typeof req.body?.instruction === "string" && req.body.instruction.trim()
         ? req.body.instruction.trim().slice(0, 240)
         : "Pause where you are, look for an organiser, and respond below.";
-      const checks = getSafetyChecks(demo.id).map((check) => (
-        check.status === "open" ? {
-          ...check,
-          status: "closed" as SafetyCheckStatus,
-          resolutionMessage: "This notice was replaced by a newer organiser update.",
-          closedAt: new Date().toISOString(),
-        } : check
-      ));
-      const check: SafetyCheck = {
-        id: crypto.randomUUID(),
-        demoId: demo.id,
-        kind,
-        message,
-        instruction,
-        status: "open",
-        responses: [],
-        resolutionMessage: null,
-        createdAt: new Date().toISOString(),
-        closedAt: null,
-      };
-
-      safetyChecks.set(demo.id, [check, ...checks].slice(0, 12));
+      const check = await storage.createSafetyCheck(demo.id, { kind, message, instruction });
       const serializedCheck = serializeSafetyCheck(check);
       io.to(`demo:${demo.publicId}`).emit("safety_check_update", serializedCheck);
       res.status(201).json(serializedCheck);
@@ -1031,14 +975,11 @@ export async function registerRoutes(
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
       const checkId = getSingleParam(req.params.checkId);
-      const check = getSafetyChecks(demo.id).find((item) => item.id === checkId);
-      if (!check) return res.status(404).json({ message: "Safety check not found" });
-
-      check.status = "closed";
-      check.resolutionMessage = typeof req.body?.resolutionMessage === "string" && req.body.resolutionMessage.trim()
+      const resolutionMessage = typeof req.body?.resolutionMessage === "string" && req.body.resolutionMessage.trim()
         ? req.body.resolutionMessage.trim().slice(0, 180)
         : "The safety check is complete. Continue following current organiser instructions.";
-      check.closedAt = new Date().toISOString();
+      const check = checkId ? await storage.closeSafetyCheck(demo.id, checkId, resolutionMessage) : undefined;
+      if (!check) return res.status(404).json({ message: "Safety check not found" });
       const serializedCheck = serializeSafetyCheck(check);
       io.to(`demo:${demo.publicId}`).emit("safety_check_update", serializedCheck);
       io.to(`demo:${demo.publicId}`).emit("safety_check_results_update", serializedCheck);
@@ -1063,29 +1004,15 @@ export async function registerRoutes(
       const message = typeof req.body?.message === "string" && req.body.message.trim()
         ? req.body.message.trim().slice(0, 240)
         : "Participant requested help.";
-      const requests = getAssistanceRequests(demo.id);
-      const existingOpen = requests.find((item) => item.sessionId === sessionId && item.type === type && item.status === "open");
-
-      if (existingOpen) {
-        return res.json(serializeAssistanceRequest(existingOpen));
-      }
-
-      const request: AssistanceRequest = {
-        id: crypto.randomUUID(),
-        demoId: demo.id,
+      const result = await storage.createAssistanceRequest(demo.id, {
         type,
         message,
         sessionId,
-        status: "open",
-        createdAt: new Date().toISOString(),
-        resolvedAt: null,
-      };
-
-      requests.unshift(request);
-      assistanceRequests.set(demo.id, requests.slice(0, 50));
-      awardEngagement(demo.id, demo.publicId, sessionId, "assistance", io);
-      io.to(`demo:${demo.publicId}`).emit("assistance_update", getAssistanceRequests(demo.id).map(serializeAssistanceRequest));
-      res.status(201).json(serializeAssistanceRequest(request));
+      });
+      if (result.created) awardEngagement(demo.id, demo.publicId, sessionId, "assistance", io);
+      const requests = await storage.getAssistanceRequests(demo.id);
+      io.to(`demo:${demo.publicId}`).emit("assistance_update", requests.map(serializeAssistanceRequest));
+      res.status(result.created ? 201 : 200).json(serializeAssistanceRequest(result.request));
     } catch (err) {
       res.status(500).json({ message: "Failed to submit assistance request" });
     }
@@ -1212,7 +1139,7 @@ export async function registerRoutes(
       const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
 
-      const activeCheck = getActiveSafetyCheck(demo.id);
+      const activeCheck = (await storage.getSafetyChecks(demo.id)).find((check) => check.status === "open") ?? null;
       res.json(activeCheck ? serializeSafetyCheck(activeCheck) : null);
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch active safety check" });
@@ -1224,8 +1151,9 @@ export async function registerRoutes(
       const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
 
-      const currentCheck = getCurrentSafetyCheck(demo.id);
-      res.json(currentCheck ? serializeSafetyCheck(currentCheck) : null);
+      const sessionId = typeof req.query.sessionId === "string" ? req.query.sessionId.trim().slice(0, 80) : undefined;
+      const currentCheck = getCurrentSafetyCheck(await storage.getSafetyChecks(demo.id));
+      res.json(currentCheck ? serializeSafetyCheck(currentCheck, sessionId) : null);
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch current safety check" });
     }
@@ -1247,47 +1175,25 @@ export async function registerRoutes(
       const note = typeof req.body?.note === "string" && req.body.note.trim()
         ? req.body.note.trim().slice(0, 160)
         : null;
-      const check = getSafetyChecks(demo.id).find((item) => item.id === checkId && item.status === "open");
-      if (!check) return res.status(404).json({ message: "Safety check not found" });
-
-      const existing = check.responses.find((item) => item.sessionId === sessionId);
-      if (existing) {
-        existing.response = response;
-        existing.note = note;
-        existing.updatedAt = new Date().toISOString();
-      } else {
-        check.responses.unshift({
-          sessionId,
-          response,
-          note,
-          updatedAt: new Date().toISOString(),
-        });
-        awardEngagement(demo.id, demo.publicId, sessionId, "safety_check", io);
-      }
+      if (!checkId) return res.status(404).json({ message: "Safety check not found" });
+      const responseResult = await storage.upsertSafetyCheckResponse(demo.id, checkId, { sessionId, response, note });
+      if (!responseResult) return res.status(404).json({ message: "Safety check not found" });
+      if (responseResult.created) awardEngagement(demo.id, demo.publicId, sessionId, "safety_check", io);
 
       if (response === "need_help") {
-        const requests = getAssistanceRequests(demo.id);
-        const existingOpen = requests.find((item) => item.sessionId === sessionId && item.type === "safety" && item.status === "open");
-        if (!existingOpen) {
-          const request: AssistanceRequest = {
-            id: crypto.randomUUID(),
-            demoId: demo.id,
+        const helpResult = await storage.createAssistanceRequest(demo.id, {
             type: "safety",
             message: note || "Participant marked need help during safety check.",
             sessionId,
-            status: "open",
-            createdAt: new Date().toISOString(),
-            resolvedAt: null,
-          };
-          requests.unshift(request);
-          assistanceRequests.set(demo.id, requests.slice(0, 50));
-          io.to(`demo:${demo.publicId}`).emit("assistance_update", getAssistanceRequests(demo.id).map(serializeAssistanceRequest));
-        }
+        });
+        if (helpResult.created) awardEngagement(demo.id, demo.publicId, sessionId, "assistance", io);
+        const requests = await storage.getAssistanceRequests(demo.id);
+        io.to(`demo:${demo.publicId}`).emit("assistance_update", requests.map(serializeAssistanceRequest));
       }
 
-      const serializedCheck = serializeSafetyCheck(check);
-      io.to(`demo:${demo.publicId}`).emit("safety_check_results_update", serializedCheck);
-      res.json(serializedCheck);
+      const sharedCheck = serializeSafetyCheck(responseResult.check);
+      io.to(`demo:${demo.publicId}`).emit("safety_check_results_update", sharedCheck);
+      res.json(serializeSafetyCheck(responseResult.check, sessionId));
     } catch (err) {
       res.status(500).json({ message: "Failed to submit safety check response" });
     }
@@ -2255,8 +2161,9 @@ export async function registerRoutes(
           eventDurationMinutes: state?.eventDurationMinutes ?? 120,
         });
 
-        const currentSafetyCheck = getCurrentSafetyCheck(demo.id);
-        socket.emit("safety_check_update", currentSafetyCheck ? serializeSafetyCheck(currentSafetyCheck) : null);
+        const participantSessionId = typeof sessionId === "string" ? sessionId.trim().slice(0, 80) : undefined;
+        const currentSafetyCheck = getCurrentSafetyCheck(await storage.getSafetyChecks(demo.id));
+        socket.emit("safety_check_update", currentSafetyCheck ? serializeSafetyCheck(currentSafetyCheck, participantSessionId) : null);
 
         const count = getViewerCount(demo.id);
         io.to(`demo:${publicId}`).emit("viewer_count", count);
