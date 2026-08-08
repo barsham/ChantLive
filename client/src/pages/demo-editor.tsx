@@ -70,6 +70,8 @@ import {
   MapPin,
   Share2,
   ShieldCheck,
+  LockKeyhole,
+  UserRoundCheck,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
@@ -89,6 +91,12 @@ type AdminInfo = {
   email: string;
   name: string;
   avatarUrl: string | null;
+  eventRole: "owner" | "admin";
+};
+
+type LiveControl = {
+  controller: Pick<AdminInfo, "id" | "name" | "avatarUrl"> | null;
+  claimedAt: string | null;
 };
 
 type DemoDetail = {
@@ -97,6 +105,7 @@ type DemoDetail = {
   state: DemoState | null;
   viewerCount: number;
   admins: AdminInfo[];
+  liveControl: LiveControl;
 };
 
 type RepeatGuide = {
@@ -203,6 +212,9 @@ export default function DemoEditor() {
   const isLive = demo?.status === "live";
   const isDraft = demo?.status === "draft";
   const isEnded = demo?.status === "ended";
+  const liveController = data?.liveControl.controller ?? null;
+  const isLiveController = Boolean(currentUser?.id && liveController?.id === currentUser.id);
+  const liveOperationLocked = Boolean(isLive && !isLiveController);
   const currentPhase = state?.currentPhase === "people" ? "people" : "leader";
   const currentChant = state?.currentChantId
     ? chantsList.find((chant) => chant.id === state.currentChantId)
@@ -455,7 +467,7 @@ export default function DemoEditor() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
       queryClient.invalidateQueries({ queryKey: ["/api/demos"] });
-      toast({ title: "Demonstration is now live!" });
+      toast({ title: "Demonstration is now live", description: "You have live control. Hand it over from the Command Center when another organiser takes the lead." });
     },
     onError: (err: Error) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -1035,7 +1047,7 @@ export default function DemoEditor() {
             {isLive && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="destructive" data-testid="button-end-demo">
+                  <Button variant="destructive" disabled={liveOperationLocked} data-testid="button-end-demo">
                     <Square className="w-4 h-4 mr-1" />
                     End Demo
                   </Button>
@@ -1061,6 +1073,28 @@ export default function DemoEditor() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
+        {isLive && (
+          <Card className={`mb-6 ${isLiveController ? "border-violet-500/30 bg-violet-500/5" : "border-amber-500/30 bg-amber-500/10"}`} data-testid="card-editor-live-control">
+            <CardContent className="py-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" role="status" aria-live="polite">
+                <div>
+                  <p className="flex items-center gap-2 text-sm font-semibold">
+                    {isLiveController ? <UserRoundCheck className="h-4 w-4 text-violet-700" aria-hidden="true" /> : <LockKeyhole className="h-4 w-4 text-amber-700" aria-hidden="true" />}
+                    {isLiveController ? "You have live control" : liveController ? `${liveController.name} has live control` : "Live control is unclaimed"}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {isLiveController
+                      ? "Your chant, timing, and end-event controls are active on this device."
+                      : "This editor is monitoring the event. Claim, transfer, or recover control in the Command Center."}
+                  </p>
+                </div>
+                <Button className="min-h-11" variant="outline" onClick={() => navigate(`/admin/demos/${id}/command`)} data-testid="button-open-live-control-desk">
+                  Open live control desk
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         {repeatGuide && (
           <Card className="mb-6 border-emerald-300 bg-emerald-50 text-emerald-950" data-testid="card-repeated-demonstration-guide">
             <CardContent className="py-5">
@@ -1497,6 +1531,7 @@ export default function DemoEditor() {
                             updateCycleDelay.mutate(val);
                           }
                         }}
+                        disabled={liveOperationLocked}
                         className="w-24 text-sm"
                         data-testid="input-cycle-delay"
                       />
@@ -1515,7 +1550,7 @@ export default function DemoEditor() {
                     variant={autoRotate ? "default" : "outline"}
                     size="sm"
                     onClick={() => toggleAutoRotate.mutate(!autoRotate)}
-                    disabled={toggleAutoRotate.isPending}
+                    disabled={liveOperationLocked || toggleAutoRotate.isPending}
                     className="w-full md:w-auto"
                     data-testid="button-toggle-auto-rotate"
                   >
@@ -2314,7 +2349,7 @@ export default function DemoEditor() {
                         <Button
                           size="sm"
                           onClick={() => setCurrentChant.mutate(chant.id)}
-                          disabled={setCurrentChant.isPending}
+                          disabled={liveOperationLocked || setCurrentChant.isPending}
                           data-testid={`button-push-live-${chant.id}`}
                         >
                           <Radio className="w-3.5 h-3.5 mr-1" />

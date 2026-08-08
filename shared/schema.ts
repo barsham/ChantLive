@@ -65,6 +65,8 @@ export const demoState = pgTable("demo_state", {
   cycleDelay: integer("cycle_delay").notNull().default(500),
   eventDurationMinutes: integer("event_duration_minutes").notNull().default(300),
   liveStartedAt: timestamp("live_started_at"),
+  liveControllerUserId: varchar("live_controller_user_id", { length: 255 }).references(() => users.id, { onDelete: "set null" }),
+  liveControlClaimedAt: timestamp("live_control_claimed_at"),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowLeft, CalendarPlus, CheckCircle2, ClipboardList, Copy, Database, Download, ExternalLink, FileText, History, LifeBuoy, Megaphone, QrCode, Route, Share2, ShieldCheck, Users, WifiOff } from "lucide-react";
+import { ArrowLeft, CalendarPlus, CheckCircle2, ClipboardList, Copy, Database, Download, ExternalLink, FileText, History, LifeBuoy, LockKeyhole, Megaphone, QrCode, Route, Share2, ShieldCheck, UserRoundCheck, Users, WifiOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/auth";
 import { buildGoogleCalendarUrl, buildOutlookCalendarUrl, downloadCalendarFile, type CalendarEventDetails } from "@/lib/calendar";
 import type { Chant, DemoState, Demonstration } from "@shared/schema";
 
@@ -17,6 +18,12 @@ type AdminInfo = {
   email: string;
   name: string;
   avatarUrl: string | null;
+  eventRole: "owner" | "admin";
+};
+
+type LiveControl = {
+  controller: Pick<AdminInfo, "id" | "name" | "avatarUrl"> | null;
+  claimedAt: string | null;
 };
 
 type DemoDetail = {
@@ -25,6 +32,7 @@ type DemoDetail = {
   state: DemoState | null;
   viewerCount: number;
   admins: AdminInfo[];
+  liveControl: LiveControl;
 };
 
 function formatCommandSchedule(value: Date | string | null | undefined) {
@@ -287,6 +295,7 @@ export default function CommandCenter() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
   const [announcementMessage, setAnnouncementMessage] = useState("");
   const [announcementTarget, setAnnouncementTarget] = useState<AnnouncementTargetRole>("all");
   const [announcementLanguage, setAnnouncementLanguage] = useState<AnnouncementLanguage>("en");
@@ -298,6 +307,7 @@ export default function CommandCenter() {
   const [incidentAllClear, setIncidentAllClear] = useState(incidentPresets[4].allClear);
   const [incidentError, setIncidentError] = useState<string | null>(null);
   const [offlineLinkStatus, setOfflineLinkStatus] = useState<string | null>(null);
+  const [handoffTargetUserId, setHandoffTargetUserId] = useState("");
   const applyIncidentPreset = (preset: (typeof incidentPresets)[number]) => {
     setSafetyCheckKind(preset.kind);
     setSafetyCheckMessage(preset.message);
@@ -320,6 +330,26 @@ export default function CommandCenter() {
   const { data, isLoading } = useQuery<DemoDetail>({
     queryKey: ["/api/demos", id],
     refetchInterval: 5000,
+  });
+  const updateLiveControl = useMutation({
+    mutationFn: async ({ action, targetUserId }: { action: "claim" | "release" | "transfer"; targetUserId?: string }) => {
+      await apiRequest("POST", `/api/demos/${id}/live-control`, { action, targetUserId });
+    },
+    onSuccess: (_result, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
+      setHandoffTargetUserId("");
+      toast({
+        title: variables.action === "transfer"
+          ? "Live control handed over"
+          : variables.action === "release"
+            ? "Live control released"
+            : "You now have live control",
+      });
+    },
+    onError: (err: Error) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id] });
+      toast({ title: "Live control did not change", description: err.message, variant: "destructive" });
+    },
   });
   const { data: assistance = [] } = useQuery<AssistanceRequest[]>({
     queryKey: ["/api/demos", id, "assistance"],
@@ -481,6 +511,12 @@ export default function CommandCenter() {
     );
   }
 
+  const liveController = data.liveControl.controller;
+  const isLiveController = Boolean(currentUser?.id && liveController?.id === currentUser.id);
+  const isEventOwner = Boolean(currentUser?.id && (data.demo.createdBy === currentUser.id || currentUser.role === "super_admin"));
+  const liveOperationLocked = data.demo.status === "live" && !isLiveController;
+  const handoffCandidates = data.admins.filter((admin) => admin.id !== currentUser?.id);
+
   const publicUrl = `${window.location.origin}/d/${data.demo.publicId}`;
   const offlinePreparationUrl = `${publicUrl}?offline=1`;
   const calendarDetails: CalendarEventDetails | null = data.demo.scheduledAt ? {
@@ -545,6 +581,7 @@ export default function CommandCenter() {
     { label: "Logistics", ready: Boolean(data.demo.scheduledAt || data.demo.locationName || data.demo.meetingPoint), detail: data.demo.locationName || "Optional" },
     { label: "Support action", ready: Boolean(data.demo.supportUrl), detail: data.demo.supportUrl ? "Configured" : "Optional" },
     { label: "Live state", ready: data.demo.status === "live", detail: data.demo.status },
+    { label: "Live operator", ready: data.demo.status !== "live" || Boolean(liveController), detail: liveController?.name ?? "Unclaimed" },
     { label: "Checked in", ready: (checkIns?.total ?? 0) > 0, detail: `${checkIns?.total ?? 0} people` },
     { label: "Feedback", ready: (feedback?.total ?? 0) > 0, detail: `${feedback?.total ?? 0} responses` },
     { label: "Engagement", ready: (engagement?.totalParticipants ?? 0) > 0, detail: `${engagement?.totalPoints ?? 0} points` },
@@ -587,6 +624,109 @@ export default function CommandCenter() {
             <h1 className="text-3xl font-bold tracking-tight">{data.demo.title}</h1>
             <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{statusTone(data.demo.status)}</p>
           </div>
+
+          <Card className="mt-6 border-violet-500/30 bg-violet-500/5" data-testid="card-live-control-desk">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                {isLiveController ? <UserRoundCheck className="h-5 w-5 text-violet-700" aria-hidden="true" /> : <LockKeyhole className="h-5 w-5 text-violet-700" aria-hidden="true" />}
+                Live control desk
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div role="status" aria-live="polite" data-testid="text-live-control-status">
+                {data.demo.status !== "live" ? (
+                  <p className="text-sm text-muted-foreground">Going live will automatically assign the launching organiser as the first operator.</p>
+                ) : liveController ? (
+                  <>
+                    <p className="text-sm font-semibold">{isLiveController ? "You have live control" : `${liveController.name} has live control`}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {isLiveController
+                        ? "Participant-facing chant, announcement, poll, help, and incident controls are enabled on this device."
+                        : "This device is in read-only collaborator mode so the crowd receives one consistent sequence of updates."}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-semibold">Live control is unclaimed</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Choose one operator before changing participant-facing state.</p>
+                  </>
+                )}
+              </div>
+
+              {data.demo.status === "live" && (
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                  <div className="grid flex-1 gap-2 sm:grid-cols-2 lg:max-w-2xl">
+                    {data.admins.map((admin) => {
+                      const isOperator = liveController?.id === admin.id;
+                      return (
+                        <div key={admin.id} className="rounded-lg border bg-background p-3" data-testid={`live-control-admin-${admin.id}`}>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium">{admin.name}</p>
+                              <p className="truncate text-xs text-muted-foreground">{admin.eventRole === "owner" ? "Event owner" : "Event admin"}</p>
+                            </div>
+                            <Badge variant={isOperator ? "default" : "outline"}>{isOperator ? "Operator" : "Monitor"}</Badge>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap lg:max-w-md lg:justify-end">
+                    {isLiveController && handoffCandidates.length > 0 && (
+                      <>
+                        <label className="sr-only" htmlFor="live-control-handoff-target">Hand live control to</label>
+                        <select
+                          id="live-control-handoff-target"
+                          value={handoffTargetUserId}
+                          onChange={(event) => setHandoffTargetUserId(event.target.value)}
+                          className="min-h-11 min-w-0 rounded-md border bg-background px-3 text-sm"
+                          data-testid="select-live-control-handoff-target"
+                        >
+                          <option value="">Choose next operator</option>
+                          {handoffCandidates.map((admin) => <option key={admin.id} value={admin.id}>{admin.name}</option>)}
+                        </select>
+                        <Button
+                          className="min-h-11"
+                          onClick={() => updateLiveControl.mutate({ action: "transfer", targetUserId: handoffTargetUserId })}
+                          disabled={!handoffTargetUserId || updateLiveControl.isPending}
+                          data-testid="button-transfer-live-control"
+                        >
+                          Hand over control
+                        </Button>
+                      </>
+                    )}
+                    {!isLiveController && (!liveController || isEventOwner) && (
+                      <Button
+                        className="min-h-11"
+                        onClick={() => updateLiveControl.mutate({ action: "claim" })}
+                        disabled={updateLiveControl.isPending}
+                        data-testid="button-claim-live-control"
+                      >
+                        {liveController ? "Owner takeover" : "Claim live control"}
+                      </Button>
+                    )}
+                    {isLiveController && (
+                      <Button
+                        className="min-h-11"
+                        variant="outline"
+                        onClick={() => updateLiveControl.mutate({ action: "release" })}
+                        disabled={updateLiveControl.isPending}
+                        data-testid="button-release-live-control"
+                      >
+                        Release control
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+              {liveOperationLocked && (
+                <p className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-950" data-testid="text-live-controls-locked">
+                  Live actions below are locked on this device. You can still monitor participant status, questions, responses, and event readiness.
+                </p>
+              )}
+            </CardContent>
+          </Card>
 
           <Card className="mt-6 border-primary/30 bg-primary/5" data-testid="card-command-participant-access">
             <CardContent className="p-5">
@@ -1075,7 +1215,7 @@ export default function CommandCenter() {
                     <Button
                       size="sm"
                       onClick={() => sendAnnouncement.mutate({ message: announcementMessage.trim(), targetRole: announcementTarget })}
-                      disabled={!announcementMessage.trim() || sendAnnouncement.isPending}
+                      disabled={liveOperationLocked || !announcementMessage.trim() || sendAnnouncement.isPending}
                       data-testid="button-send-announcement"
                     >
                       Send update
@@ -1135,7 +1275,7 @@ export default function CommandCenter() {
                   <Button
                     size="sm"
                     onClick={() => createPoll.mutate({ question: pollQuestion.trim(), options: pollOptions.map((option) => option.trim()).filter(Boolean) })}
-                    disabled={!pollQuestion.trim() || pollOptions.map((option) => option.trim()).filter(Boolean).length < 2 || createPoll.isPending}
+                    disabled={liveOperationLocked || !pollQuestion.trim() || pollOptions.map((option) => option.trim()).filter(Boolean).length < 2 || createPoll.isPending}
                     data-testid="button-open-live-poll"
                   >
                     Open live poll
@@ -1156,7 +1296,7 @@ export default function CommandCenter() {
                         variant="outline"
                         size="sm"
                         onClick={() => closePoll.mutate(activePoll.id)}
-                        disabled={closePoll.isPending}
+                        disabled={liveOperationLocked || closePoll.isPending}
                         data-testid="button-close-live-poll"
                       >
                         Close poll
@@ -1264,7 +1404,7 @@ export default function CommandCenter() {
                   <p className="text-xs text-muted-foreground">Activating this places an assertive notice directly on participant screens. It does not contact emergency services.</p>
                   <Button
                     onClick={() => startSafetyCheck.mutate({ kind: safetyCheckKind, message: safetyCheckMessage.trim(), instruction: safetyCheckInstruction.trim() })}
-                    disabled={!safetyCheckMessage.trim() || !safetyCheckInstruction.trim() || startSafetyCheck.isPending || Boolean(activeSafetyCheck)}
+                    disabled={liveOperationLocked || !safetyCheckMessage.trim() || !safetyCheckInstruction.trim() || startSafetyCheck.isPending || Boolean(activeSafetyCheck)}
                     data-testid="button-activate-incident"
                   >
                     Activate incident notice
@@ -1330,7 +1470,7 @@ export default function CommandCenter() {
                         <Button
                           variant="outline"
                           onClick={() => closeSafetyCheck.mutate({ checkId: activeSafetyCheck.id, resolutionMessage: incidentAllClear.trim() })}
-                          disabled={!incidentAllClear.trim() || closeSafetyCheck.isPending}
+                          disabled={liveOperationLocked || !incidentAllClear.trim() || closeSafetyCheck.isPending}
                           data-testid="button-send-incident-all-clear"
                         >
                           Send all-clear
@@ -1418,7 +1558,7 @@ export default function CommandCenter() {
                           variant="outline"
                           size="sm"
                           onClick={() => resolveAssistance.mutate(request.id)}
-                          disabled={resolveAssistance.isPending}
+                          disabled={liveOperationLocked || resolveAssistance.isPending}
                           data-testid={`button-resolve-assistance-${request.id}`}
                         >
                           <CheckCircle2 className="mr-1 h-4 w-4" />
@@ -1463,7 +1603,7 @@ export default function CommandCenter() {
                             variant="outline"
                             size="sm"
                             onClick={() => moderateQuestion.mutate({ questionId: question.id, status: "answered" })}
-                            disabled={moderateQuestion.isPending}
+                            disabled={liveOperationLocked || moderateQuestion.isPending}
                             data-testid={`button-answer-question-${question.id}`}
                           >
                             Answered
@@ -1472,7 +1612,7 @@ export default function CommandCenter() {
                             variant="outline"
                             size="sm"
                             onClick={() => moderateQuestion.mutate({ questionId: question.id, status: "dismissed" })}
-                            disabled={moderateQuestion.isPending}
+                            disabled={liveOperationLocked || moderateQuestion.isPending}
                             data-testid={`button-dismiss-question-${question.id}`}
                           >
                             Dismiss

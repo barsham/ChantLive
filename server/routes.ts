@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Response } from "express";
 import { type Server } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import {
@@ -12,7 +12,7 @@ import {
 import { ensureDemoColumnsAndTables, ensureUserAuthColumns } from "./db";
 import { setupAuth, requireAuth, requireSuperAdmin } from "./auth";
 import QRCode from "qrcode";
-import type { User } from "@shared/schema";
+import type { Demonstration, User } from "@shared/schema";
 import { demoTransferPackageSchema } from "@shared/demo-transfer";
 
 declare global {
@@ -388,6 +388,24 @@ function buildExportFilename(title: string): string {
   return `${slug}.chantlive.json`;
 }
 
+async function requireLiveController(user: User, demo: Demonstration, res: Response): Promise<boolean> {
+  if (demo.status !== "live") return true;
+  const state = await storage.getDemoState(demo.id);
+  if (state?.liveControllerUserId === user.id) return true;
+
+  const controller = state?.liveControllerUserId
+    ? await storage.getUser(state.liveControllerUserId)
+    : undefined;
+  res.status(409).json({
+    code: "LIVE_CONTROL_REQUIRED",
+    message: controller
+      ? `${controller.name} currently has live control. Ask them to hand it over, or use owner takeover from the Command Center.`
+      : "No organiser currently has live control. Claim it from the Command Center before changing participant-facing state.",
+    liveControllerUserId: state?.liveControllerUserId ?? null,
+  });
+  return false;
+}
+
 function getPhaseDurationMs(
   chant: { leaderDuration?: number | null; peopleDuration?: number | null } | null | undefined,
   phase: ChantPhase,
@@ -641,13 +659,89 @@ export async function registerRoutes(
       const admins = await Promise.all(
         adminLinks.map(async (a) => {
           const u = await storage.getUser(a.userId);
-          return u ? { id: u.id, email: u.email, name: u.name, avatarUrl: u.avatarUrl } : null;
+          return u ? {
+            id: u.id,
+            email: u.email,
+            name: u.name,
+            avatarUrl: u.avatarUrl,
+            eventRole: u.id === demo.createdBy ? "owner" : "admin",
+          } : null;
         })
       );
 
-      res.json({ demo, chants: chantsList, state, viewerCount, admins: admins.filter(Boolean) });
+      const liveController = state?.liveControllerUserId
+        ? await storage.getUser(state.liveControllerUserId)
+        : undefined;
+      res.json({
+        demo,
+        chants: chantsList,
+        state,
+        viewerCount,
+        admins: admins.filter(Boolean),
+        liveControl: {
+          controller: liveController ? {
+            id: liveController.id,
+            name: liveController.name,
+            avatarUrl: liveController.avatarUrl,
+          } : null,
+          claimedAt: state?.liveControlClaimedAt ?? null,
+        },
+      });
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch demonstration" });
+    }
+  });
+
+  app.post("/api/demos/:id/live-control", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      if (demo.status !== "live") {
+        return res.status(400).json({ message: "Live control is available only while the event is live" });
+      }
+
+      const action = req.body?.action;
+      const state = await storage.getDemoState(demo.id);
+      const isOwner = demo.createdBy === user.id || user.role === "super_admin";
+      let updatedState;
+
+      if (action === "claim") {
+        updatedState = await storage.claimLiveControl(demo.id, user.id, isOwner);
+      } else if (action === "release") {
+        updatedState = await storage.releaseLiveControl(demo.id, user.id, isOwner);
+      } else if (action === "transfer") {
+        const targetUserId = typeof req.body?.targetUserId === "string" ? req.body.targetUserId : "";
+        if (!targetUserId || !(await storage.isDemoAdmin(demo.id, targetUserId))) {
+          return res.status(400).json({ message: "Choose a verified admin for this event" });
+        }
+        updatedState = await storage.transferLiveControl(demo.id, user.id, targetUserId, isOwner);
+      } else {
+        return res.status(400).json({ message: "Choose claim, transfer, or release" });
+      }
+
+      if (!updatedState) {
+        const currentController = state?.liveControllerUserId
+          ? await storage.getUser(state.liveControllerUserId)
+          : undefined;
+        return res.status(409).json({
+          code: "LIVE_CONTROL_CONFLICT",
+          message: currentController
+            ? `${currentController.name} still has live control. Refresh the handoff desk and ask them to transfer it.`
+            : "Live control changed on another device. Refresh the handoff desk and try again.",
+        });
+      }
+
+      const controller = updatedState.liveControllerUserId
+        ? await storage.getUser(updatedState.liveControllerUserId)
+        : undefined;
+      res.json({
+        controller: controller ? { id: controller.id, name: controller.name, avatarUrl: controller.avatarUrl } : null,
+        claimedAt: updatedState.liveControlClaimedAt,
+      });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to update live control" });
     }
   });
 
@@ -716,6 +810,7 @@ export async function registerRoutes(
       const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      if (!(await requireLiveController(user, demo, res))) return;
 
       const requestId = getSingleParam(req.params.requestId);
       const request = requestId ? await storage.resolveAssistanceRequest(demo.id, requestId) : undefined;
@@ -748,6 +843,7 @@ export async function registerRoutes(
       const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      if (!(await requireLiveController(user, demo, res))) return;
 
       const message = typeof req.body?.message === "string" ? req.body.message.trim().slice(0, 180) : "";
       if (!message) return res.status(400).json({ message: "Announcement message is required" });
@@ -790,6 +886,7 @@ export async function registerRoutes(
       const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      if (!(await requireLiveController(user, demo, res))) return;
 
       const questionId = getSingleParam(req.params.questionId);
       const status = req.body?.status === "answered" ? "answered" : req.body?.status === "dismissed" ? "dismissed" : null;
@@ -866,6 +963,7 @@ export async function registerRoutes(
       const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      if (!(await requireLiveController(user, demo, res))) return;
 
       const question = typeof req.body?.question === "string" ? req.body.question.trim().slice(0, 160) : "";
       const optionLabels: string[] = Array.isArray(req.body?.options)
@@ -910,6 +1008,7 @@ export async function registerRoutes(
       const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      if (!(await requireLiveController(user, demo, res))) return;
 
       const pollId = getSingleParam(req.params.pollId);
       const polls = getLivePolls(demo.id);
@@ -947,6 +1046,7 @@ export async function registerRoutes(
       const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      if (!(await requireLiveController(user, demo, res))) return;
 
       const rawKind = typeof req.body?.kind === "string" ? req.body.kind : "general";
       const kind: SafetyCheckKind = ["route_change", "separation", "weather", "accessibility", "general"].includes(rawKind)
@@ -973,6 +1073,7 @@ export async function registerRoutes(
       const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      if (!(await requireLiveController(user, demo, res))) return;
 
       const checkId = getSingleParam(req.params.checkId);
       const resolutionMessage = typeof req.body?.resolutionMessage === "string" && req.body.resolutionMessage.trim()
@@ -1518,6 +1619,11 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Cannot remove the creator from the admin list" });
       }
 
+      const state = await storage.getDemoState(demo.id);
+      if (state?.liveControllerUserId === adminUserId) {
+        return res.status(409).json({ message: "Hand live control to another admin before removing this person" });
+      }
+
       await storage.removeDemoAdmin(demo.id, adminUserId);
       res.json({ success: true });
     } catch (err) {
@@ -1691,6 +1797,7 @@ export async function registerRoutes(
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
       if (demo.status !== "live") return res.status(400).json({ message: "Demo is not live" });
+      if (!(await requireLiveController(user, demo, res))) return;
 
       const { chantId } = req.body;
       if (!chantId) return res.status(400).json({ message: "chantId is required" });
@@ -1749,6 +1856,7 @@ export async function registerRoutes(
 
       await storage.updateDemoStatus(demo.id, "live");
       await storage.initDemoState(demo.id);
+      await storage.claimLiveControl(demo.id, user.id, true);
       await storage.setLiveStartedAt(demo.id, new Date());
 
       await storage.setCurrentChant(demo.id, chantsList[0].id);
@@ -1785,7 +1893,7 @@ export async function registerRoutes(
         await startAutoRotation(demo.id, demo.publicId);
       }
 
-      res.json({ success: true });
+      res.json({ success: true, liveControllerUserId: user.id });
     } catch (err) {
       res.status(500).json({ message: "Failed to go live" });
     }
@@ -1797,9 +1905,11 @@ export async function registerRoutes(
       const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      if (!(await requireLiveController(user, demo, res))) return;
 
       await storage.updateDemoStatus(demo.id, "ended");
       await storage.resetLiveStartedAt(demo.id);
+      await storage.releaseLiveControl(demo.id, user.id, true);
       stopAutoRotation(demo.id);
 
       io.to(`demo:${demo.publicId}`).emit("demo_ended");
@@ -1964,6 +2074,7 @@ export async function registerRoutes(
       const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      if (!(await requireLiveController(user, demo, res))) return;
 
       const { autoRotate, rotationInterval, cycleCount, leaderDuration, peopleDuration, cycleDelay } = req.body;
       if (typeof autoRotate !== "boolean") {
@@ -1996,6 +2107,7 @@ export async function registerRoutes(
       const demo = await getDemoByIdentifier(req.params.id);
       if (!demo) return res.status(404).json({ message: "Not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      if (!(await requireLiveController(user, demo, res))) return;
 
       const { eventDurationMinutes } = req.body;
       const duration = typeof eventDurationMinutes === "number" && eventDurationMinutes >= 1 && eventDurationMinutes <= 300 ? eventDurationMinutes : 60;

@@ -3080,7 +3080,7 @@ export default function Participant() {
         <button
           type="button"
           onClick={() => setShowHelp((value) => !value)}
-          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
+          className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
             showHelp ? "border-emerald-300/80 bg-emerald-300/15 text-emerald-100" : "border-neutral-700 text-neutral-300"
           }`}
           aria-expanded={showHelp}
@@ -3092,7 +3092,7 @@ export default function Participant() {
         <button
           type="button"
           onClick={() => setLowBandwidth((value) => !value)}
-          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
+          className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
             lowBandwidth ? "border-sky-300/80 bg-sky-300/15 text-sky-100" : "border-neutral-700 text-neutral-300"
           }`}
           aria-pressed={lowBandwidth}
@@ -3105,7 +3105,7 @@ export default function Participant() {
         <button
           type="button"
           onClick={() => setLargeText((value) => !value)}
-          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
+          className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
             largeText ? "border-white/60 bg-white/15 text-white" : "border-neutral-700 text-neutral-300"
           }`}
           aria-pressed={largeText}
@@ -3117,7 +3117,7 @@ export default function Participant() {
         <button
           type="button"
           onClick={() => setHighContrast((value) => !value)}
-          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
+          className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
             highContrast ? "border-yellow-300/80 bg-yellow-300/15 text-yellow-100" : "border-neutral-700 text-neutral-300"
           }`}
           aria-pressed={highContrast}
@@ -3130,7 +3130,7 @@ export default function Participant() {
           <button
             type="button"
             onClick={toggleScreenWakeLock}
-            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
+            className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
               keepScreenAwake ? "border-amber-300/80 bg-amber-300/15 text-amber-100" : "border-neutral-700 text-neutral-300"
             }`}
             aria-pressed={keepScreenAwake}

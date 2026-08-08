@@ -7,7 +7,7 @@ import {
   safetyChecks, safetyCheckResponses, assistanceRequests,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, asc, desc, inArray, sql } from "drizzle-orm";
+import { eq, and, asc, desc, inArray, isNull, or, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 type UserUpdate = Partial<InsertUser & {
@@ -119,6 +119,9 @@ export interface IStorage {
   updateEventDuration(demonstrationId: string, eventDurationMinutes: number): Promise<void>;
   setLiveStartedAt(demonstrationId: string, startTime: Date): Promise<void>;
   resetLiveStartedAt(demonstrationId: string): Promise<void>;
+  claimLiveControl(demonstrationId: string, userId: string, force?: boolean): Promise<DemoState | undefined>;
+  transferLiveControl(demonstrationId: string, actingUserId: string, targetUserId: string, force?: boolean): Promise<DemoState | undefined>;
+  releaseLiveControl(demonstrationId: string, actingUserId: string, force?: boolean): Promise<DemoState | undefined>;
   
   deleteDemonstration(id: string): Promise<void>;
   addDemoAdmin(demonstrationId: string, userId: string): Promise<void>;
@@ -466,6 +469,42 @@ export class DatabaseStorage implements IStorage {
         .set({ liveStartedAt: null, updatedAt: new Date() })
         .where(eq(demoState.demonstrationId, demonstrationId));
     }
+  }
+
+  async claimLiveControl(demonstrationId: string, userId: string, force = false): Promise<DemoState | undefined> {
+    await this.initDemoState(demonstrationId);
+    const [updated] = await db.update(demoState)
+      .set({ liveControllerUserId: userId, liveControlClaimedAt: new Date(), updatedAt: new Date() })
+      .where(and(
+        eq(demoState.demonstrationId, demonstrationId),
+        force
+          ? sql`true`
+          : or(isNull(demoState.liveControllerUserId), eq(demoState.liveControllerUserId, userId)),
+      ))
+      .returning();
+    return updated;
+  }
+
+  async transferLiveControl(demonstrationId: string, actingUserId: string, targetUserId: string, force = false): Promise<DemoState | undefined> {
+    const [updated] = await db.update(demoState)
+      .set({ liveControllerUserId: targetUserId, liveControlClaimedAt: new Date(), updatedAt: new Date() })
+      .where(and(
+        eq(demoState.demonstrationId, demonstrationId),
+        force ? sql`true` : eq(demoState.liveControllerUserId, actingUserId),
+      ))
+      .returning();
+    return updated;
+  }
+
+  async releaseLiveControl(demonstrationId: string, actingUserId: string, force = false): Promise<DemoState | undefined> {
+    const [updated] = await db.update(demoState)
+      .set({ liveControllerUserId: null, liveControlClaimedAt: null, updatedAt: new Date() })
+      .where(and(
+        eq(demoState.demonstrationId, demonstrationId),
+        force ? sql`true` : eq(demoState.liveControllerUserId, actingUserId),
+      ))
+      .returning();
+    return updated;
   }
 
   async addDemoAdmin(demonstrationId: string, userId: string): Promise<void> {

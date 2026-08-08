@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.77",
+      "releasedAt": "2026-08-08",
+      "summary": "One accountable live operator can safely hand event control between organiser devices without conflicting participant updates.",
+      "items": [
+        {
+          "id": "cl-2026-08-08-launch-ownership",
+          "title": "Automatic launch ownership",
+          "description": "Going live assigns the launching organiser as the event's operator and clearly confirms which device owns live control.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-08",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-08-handoff-desk",
+          "title": "Live control handoff desk",
+          "description": "The Command Center identifies the operator and lets them hand control to another verified event admin or release it cleanly.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-08",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-08-protected-live-commands",
+          "title": "Server-protected live commands",
+          "description": "Chants, announcements, polls, incidents, help resolution, timing, and event-ending commands now reject conflicting non-operator changes.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-08",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-08-read-only-collaboration",
+          "title": "Read-only collaborator mode",
+          "description": "Other admins can monitor live readiness and participant responses while risky controls stay visibly locked on their device.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-08",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-08-owner-recovery",
+          "title": "Owner device-loss recovery",
+          "description": "An event owner can explicitly take over after an operator device fails; durable status refresh and 44px participant display/recovery controls support mobile continuity.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-08",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        }
+      ]
+    },
+    {
       "version": "1.1.76",
       "releasedAt": "2026-08-07",
       "summary": "Restart-safe live incident continuity for organisers and participants during deployments and outages.",

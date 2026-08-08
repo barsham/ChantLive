@@ -98,6 +98,8 @@ export async function ensureDemoColumnsAndTables(): Promise<void> {
     ADD COLUMN IF NOT EXISTS people_duration integer NOT NULL DEFAULT 3,
     ADD COLUMN IF NOT EXISTS current_phase text NOT NULL DEFAULT 'leader',
     ADD COLUMN IF NOT EXISTS current_cycle integer NOT NULL DEFAULT 1,
+    ADD COLUMN IF NOT EXISTS live_controller_user_id varchar(255) REFERENCES users(id) ON DELETE SET NULL,
+    ADD COLUMN IF NOT EXISTS live_control_claimed_at timestamp,
     ADD COLUMN IF NOT EXISTS updated_at timestamp NOT NULL DEFAULT now();
 
     CREATE TABLE IF NOT EXISTS safety_checks (
