@@ -19,6 +19,102 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "write-easy-to-follow-chants",
+    title: "How to Write Chants That Are Easy to Follow",
+    description:
+      "A practical guide to writing short, clear, accessible chants for peaceful demonstrations and community events, with call-and-response structure, pacing, testing, and live delivery tips.",
+    publishedAt: "2026-08-09",
+    category: "Communication",
+    readingMinutes: 7,
+    tags: ["chants", "communication", "accessibility", "live-events"],
+    sections: [
+      {
+        heading: "Start With One Message",
+        paragraphs: [
+          "A chant is easier to follow when it carries one idea at a time. If a line tries to explain the full campaign, the crowd has to read, remember, and repeat too much while standing, moving, listening, or watching for updates.",
+          "Write the message in plain speech first, then trim it until it can be understood after hearing it once.",
+        ],
+        bullets: [
+          "Use one main verb or action in each chant.",
+          "Avoid long clauses, abbreviations, and insider language.",
+          "Read the chant aloud before deciding it works on a page.",
+        ],
+      },
+      {
+        heading: "Use Call And Response On Purpose",
+        paragraphs: [
+          "Call and response works because participants only need to learn the next small piece. A leader gives the cue, the crowd answers, and the rhythm teaches the pattern through repetition.",
+          "Keep the response shorter than the call when possible. The crowd should feel confident joining by the second or third round, not after a long explanation.",
+        ],
+        bullets: [
+          "Leader line: introduces the idea or question.",
+          "Crowd line: repeats the clearest phrase or answer.",
+          "Repeat the same structure enough times for late joiners to catch up.",
+        ],
+      },
+      {
+        heading: "Choose Words That Travel Through Noise",
+        paragraphs: [
+          "Crowds, traffic, wind, masks, and distance can blur speech. Strong chant words are usually short, concrete, and easy to distinguish when heard imperfectly.",
+          "If two key words sound similar, participants may lose confidence and go quiet. Test the chant from several steps away, not only beside the person leading it.",
+        ],
+        bullets: [
+          "Prefer short words with clear consonants.",
+          "Avoid tongue-twisters and repeated similar sounds.",
+          "Keep the most important phrase at the end of the line where people naturally listen for the response.",
+        ],
+      },
+      {
+        heading: "Make The Rhythm Forgiving",
+        paragraphs: [
+          "A chant does not need to be musically complex to be powerful. In real event conditions, a steady pulse and predictable pause matter more than clever wording.",
+          "Leave room to breathe. If the leader has to rush, the crowd will rush too, and anyone reading from a phone or using assistive technology may fall behind.",
+        ],
+        bullets: [
+          "Keep lines close to the same length.",
+          "Add a pause between call and response.",
+          "Test whether people can join while walking slowly or looking up from a phone.",
+        ],
+      },
+      {
+        heading: "Design For Accessibility",
+        paragraphs: [
+          "Accessible chanting means people can participate in more than one way. Some participants may not speak loudly, may need written prompts, may join late, or may prefer to follow quietly while still being part of the event.",
+          "Give the chant a visual path as well as a spoken path. A live page, printed sheet, large sign, or volunteer cue can help people join without needing to catch every word by ear.",
+        ],
+        bullets: [
+          "Write chants in large, plain text on participant materials.",
+          "Avoid making volume the only sign of participation.",
+          "Offer a short link or QR fallback for people who want the words on their own device.",
+        ],
+      },
+      {
+        heading: "Test With Real People Before Going Live",
+        paragraphs: [
+          "The fastest chant test is simple: ask two or three people who did not write it to follow the leader once, then explain what they think the chant means.",
+          "If they stumble over the same word, miss the response cue, or interpret the message differently, revise the chant before the event starts.",
+        ],
+        bullets: [
+          "Test one quiet read, one spoken call-and-response round, and one louder round.",
+          "Ask whether the response is obvious without looking at the text.",
+          "Keep the best version and remove weaker alternatives from the live list.",
+        ],
+      },
+      {
+        heading: "Use ChantLive To Keep Everyone Together",
+        paragraphs: [
+          "ChantLive can help organizers publish a simple live chant list, show which line the leader is on, and give participants a phone-friendly way to follow when sound or sightlines are difficult.",
+          "It works best when the chant itself is already clear. Use the tool to reduce timing confusion, support late joiners, and give backup admins a shared source of truth.",
+        ],
+        bullets: [
+          "Add only polished chants to the live event before participants arrive.",
+          "Use short titles so volunteers can find the right chant quickly.",
+          "Invite a backup admin who can keep the chant flow moving if the main leader is busy.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "permit-preparation-questions-peaceful-demonstration",
     title: "Permit Preparation Questions to Ask Before a Peaceful Demonstration",
     description:

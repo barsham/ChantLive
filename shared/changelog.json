@@ -1,6 +1,22 @@
 {
   "releases": [
     {
+      "version": "1.1.79",
+      "releasedAt": "2026-08-09",
+      "summary": "Weekly blog guidance for writing chants that peaceful event participants can follow quickly.",
+      "items": [
+        {
+          "id": "cl-2026-08-09-easy-to-follow-chant-writing-guide",
+          "title": "Easy-to-follow chant writing guide",
+          "description": "A new weekly blog post helps organizers write short, clear, accessible call-and-response chants, test them with real people, and use ChantLive to keep participants together.",
+          "type": "docs",
+          "visibility": "public",
+          "dateAdded": "2026-08-09",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.78",
       "releasedAt": "2026-08-09",
       "summary": "A private participant-to-organiser conduct response workflow for reporting, triage, follow-up, and safer post-event learning.",

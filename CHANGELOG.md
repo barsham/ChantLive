@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.79 - 9 August 2026
+
+Weekly blog guidance for writing chants that peaceful event participants can follow quickly.
+
+### Documentation
+
+- Easy-to-follow chant writing guide: A new weekly blog post helps organizers write short, clear, accessible call-and-response chants, test them with real people, and use ChantLive to keep participants together.
+
 ## 1.1.78 - 9 August 2026
 
 A private participant-to-organiser conduct response workflow for reporting, triage, follow-up, and safer post-event learning.
