@@ -149,6 +149,32 @@ type EngagementSummary = {
     updatedAt: string;
   }>;
 };
+type ConductReport = {
+  id: string;
+  reference: string;
+  category: "harassment" | "unsafe_behavior" | "privacy" | "misinformation" | "other";
+  urgency: "urgent" | "follow_up";
+  details: string;
+  status: "open" | "acknowledged" | "resolved";
+  organizerResponse: string | null;
+  createdAt: string;
+  updatedAt: string;
+  acknowledgedAt: string | null;
+  resolvedAt: string | null;
+  participantLabel: string;
+};
+type ConductReportSummary = {
+  total: number;
+  open: number;
+  acknowledged: number;
+  resolved: number;
+  urgent: number;
+  activeUrgent: number;
+  categories: Record<ConductReport["category"], number>;
+  averageAcknowledgementMinutes: number | null;
+  averageResolutionMinutes: number | null;
+};
+type ConductReportQueue = { reports: ConductReport[]; summary: ConductReportSummary };
 
 function statusTone(status: string) {
   if (status === "live") return "Live event: prioritize recovery, current chant, and participant link visibility.";
@@ -308,6 +334,8 @@ export default function CommandCenter() {
   const [incidentError, setIncidentError] = useState<string | null>(null);
   const [offlineLinkStatus, setOfflineLinkStatus] = useState<string | null>(null);
   const [handoffTargetUserId, setHandoffTargetUserId] = useState("");
+  const [conductFilter, setConductFilter] = useState<"active" | "urgent" | "all">("active");
+  const [conductResponses, setConductResponses] = useState<Record<string, string>>({});
   const applyIncidentPreset = (preset: (typeof incidentPresets)[number]) => {
     setSafetyCheckKind(preset.kind);
     setSafetyCheckMessage(preset.message);
@@ -391,6 +419,11 @@ export default function CommandCenter() {
     refetchInterval: 3000,
     enabled: Boolean(id),
   });
+  const { data: conductQueue } = useQuery<ConductReportQueue>({
+    queryKey: ["/api/demos", id, "conduct-reports"],
+    refetchInterval: 3000,
+    enabled: Boolean(id),
+  });
   const resolveAssistance = useMutation({
     mutationFn: async (requestId: string) => {
       await apiRequest("PATCH", `/api/demos/${id}/assistance/${requestId}`, { status: "resolved" });
@@ -401,6 +434,19 @@ export default function CommandCenter() {
     },
     onError: (err: Error) => {
       toast({ title: "Could not resolve request", description: err.message, variant: "destructive" });
+    },
+  });
+  const updateConductReport = useMutation({
+    mutationFn: async ({ reportId, status }: { reportId: string; status: ConductReport["status"] }) => {
+      const organizerResponse = (conductResponses[reportId] ?? "").trim();
+      await apiRequest("PATCH", `/api/demos/${id}/conduct-reports/${reportId}`, { status, organizerResponse });
+    },
+    onSuccess: (_result, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "conduct-reports"] });
+      toast({ title: variables.status === "resolved" ? "Concern resolved" : "Concern acknowledged", description: "The participant can privately recover this status and response." });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Could not update concern", description: err.message, variant: "destructive" });
     },
   });
   const sendAnnouncement = useMutation({
@@ -565,6 +611,11 @@ export default function CommandCenter() {
     }
   };
   const openAssistance = assistance.filter((request) => request.status === "open");
+  const conductReports = conductQueue?.reports ?? [];
+  const visibleConductReports = conductReports.filter((report) => (
+    conductFilter === "all" ||
+    (conductFilter === "urgent" ? report.urgency === "urgent" && report.status !== "resolved" : report.status !== "resolved")
+  ));
   const openQuestions = audienceQuestions
     .filter((question) => question.status === "open")
     .sort((a, b) => b.votes - a.votes || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
@@ -587,6 +638,7 @@ export default function CommandCenter() {
     { label: "Engagement", ready: (engagement?.totalParticipants ?? 0) > 0, detail: `${engagement?.totalPoints ?? 0} points` },
     { label: "Live poll", ready: Boolean(activePoll), detail: activePoll ? `${activePoll.totalVotes} votes` : "None open" },
     { label: "Incident response", ready: !activeSafetyCheck || activeSafetyCheck.counts.need_help === 0, detail: activeSafetyCheck ? `${activeSafetyCheck.totalResponses} responses` : "None active" },
+    { label: "Private concerns", ready: (conductQueue?.summary.open ?? 0) === 0, detail: `${(conductQueue?.summary.open ?? 0) + (conductQueue?.summary.acknowledged ?? 0)} active` },
     { label: "Help requests", ready: openAssistance.length === 0, detail: `${openAssistance.length} open` },
     { label: "Questions", ready: openQuestions.length === 0, detail: `${openQuestions.length} open` },
   ];
@@ -1521,6 +1573,89 @@ export default function CommandCenter() {
                   </ol>
                 )}
               </section>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6 border-violet-500/30 bg-violet-500/5" data-testid="card-conduct-moderation-desk">
+            <CardHeader>
+              <CardTitle className="flex flex-wrap items-center justify-between gap-3 text-base">
+                <span className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-violet-700" aria-hidden="true" />
+                  Private conduct concern desk
+                </span>
+                <span className="flex flex-wrap gap-2">
+                  <Badge variant={(conductQueue?.summary.activeUrgent ?? 0) > 0 ? "destructive" : "secondary"}>{conductQueue?.summary.activeUrgent ?? 0} urgent</Badge>
+                  <Badge variant={(conductQueue?.summary.open ?? 0) > 0 ? "default" : "secondary"}>{conductQueue?.summary.open ?? 0} unseen</Badge>
+                  <Badge variant="secondary">{conductQueue?.summary.acknowledged ?? 0} acknowledged</Badge>
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-lg border border-violet-500/20 bg-background p-3 text-sm" role="note">
+                <p className="font-medium">Sensitive and private</p>
+                <p className="mt-1 text-xs text-muted-foreground">Only verified event organisers can read these reports. Do not copy identifying details into public announcements or the post-event summary.</p>
+              </div>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap gap-2" aria-label="Filter private conduct concerns">
+                  {(["active", "urgent", "all"] as const).map((filter) => (
+                    <Button key={filter} type="button" size="sm" variant={conductFilter === filter ? "default" : "outline"} aria-pressed={conductFilter === filter} onClick={() => setConductFilter(filter)} data-testid={`button-conduct-filter-${filter}`}>
+                      {filter === "active" ? "Active" : filter === "urgent" ? "Urgent" : "All reports"}
+                    </Button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">{visibleConductReports.length} shown · {conductQueue?.summary.total ?? 0} total</p>
+              </div>
+              {visibleConductReports.length === 0 ? (
+                <div className="mt-4" data-testid="text-no-conduct-reports">
+                  <p className="text-sm text-muted-foreground">No private concerns match this view.</p>
+                  <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground"><Database className="h-3.5 w-3.5" aria-hidden="true" /> Reports and organiser responses are server-saved through restarts.</p>
+                </div>
+              ) : (
+                <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                  {visibleConductReports.map((report) => {
+                    const responseText = conductResponses[report.id] ?? report.organizerResponse ?? "";
+                    return (
+                      <article key={report.id} className={`rounded-xl border bg-background p-4 ${report.urgency === "urgent" && report.status !== "resolved" ? "border-red-500/50" : ""}`} data-testid={`card-admin-conduct-report-${report.id}`}>
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div>
+                            <p className="font-semibold capitalize">{report.category.replaceAll("_", " ")}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">{report.participantLabel} · Ref {report.reference} · {new Date(report.createdAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</p>
+                          </div>
+                          <span className="flex gap-2">
+                            {report.urgency === "urgent" && <Badge variant="destructive">Urgent</Badge>}
+                            <Badge variant={report.status === "resolved" ? "secondary" : "default"}>{report.status}</Badge>
+                          </span>
+                        </div>
+                        <p className="mt-3 whitespace-pre-wrap break-words rounded-lg border bg-muted/30 p-3 text-sm" data-testid={`text-admin-conduct-details-${report.id}`}>{report.details}</p>
+                        <label htmlFor={`conduct-response-${report.id}`} className="mt-3 block text-xs font-medium text-muted-foreground">Private response to this participant</label>
+                        <Textarea
+                          id={`conduct-response-${report.id}`}
+                          value={responseText}
+                          onChange={(event) => setConductResponses((current) => ({ ...current, [report.id]: event.target.value }))}
+                          rows={3}
+                          maxLength={300}
+                          placeholder="Example: We have alerted the lead marshal and will follow up at the information point."
+                          className="mt-1"
+                          data-testid={`input-conduct-response-${report.id}`}
+                        />
+                        <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                          <span className="text-xs text-muted-foreground">{responseText.length}/300 · visible only on this participant's device receipt</span>
+                          <div className="flex flex-wrap gap-2">
+                            {report.status === "resolved" ? (
+                              <Button size="sm" variant="outline" disabled={liveOperationLocked || updateConductReport.isPending} onClick={() => updateConductReport.mutate({ reportId: report.id, status: "acknowledged" })} data-testid={`button-reopen-conduct-${report.id}`}>Reopen</Button>
+                            ) : (
+                              <>
+                                <Button size="sm" variant="outline" disabled={liveOperationLocked || updateConductReport.isPending} onClick={() => updateConductReport.mutate({ reportId: report.id, status: "acknowledged" })} data-testid={`button-acknowledge-conduct-${report.id}`}>Acknowledge</Button>
+                                <Button size="sm" disabled={liveOperationLocked || updateConductReport.isPending || !responseText.trim()} onClick={() => updateConductReport.mutate({ reportId: report.id, status: "resolved" })} data-testid={`button-resolve-conduct-${report.id}`}>Resolve with response</Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
 

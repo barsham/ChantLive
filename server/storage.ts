@@ -4,7 +4,7 @@ import {
   type Chant, type InsertChant,
   type DemoState, type DemoAdmin,
   users, demonstrations, chants, demoAdmins, demoState, viewSessions,
-  safetyChecks, safetyCheckResponses, assistanceRequests,
+  safetyChecks, safetyCheckResponses, assistanceRequests, conductReports,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, asc, desc, inArray, isNull, or, sql } from "drizzle-orm";
@@ -47,6 +47,9 @@ export type RepeatDemonstrationResult = {
 export type SafetyCheckKind = "route_change" | "separation" | "weather" | "accessibility" | "general";
 export type SafetyCheckResponseType = "ok" | "need_help" | "leaving" | "not_sure";
 export type AssistanceType = "accessibility" | "connection" | "safety" | "organizer";
+export type ConductReportCategory = "harassment" | "unsafe_behavior" | "privacy" | "misinformation" | "other";
+export type ConductReportUrgency = "urgent" | "follow_up";
+export type ConductReportStatus = "open" | "acknowledged" | "resolved";
 
 export type StoredSafetyCheckResponse = {
   sessionId: string;
@@ -76,6 +79,21 @@ export type StoredAssistanceRequest = {
   sessionId: string;
   status: "open" | "resolved";
   createdAt: Date;
+  resolvedAt: Date | null;
+};
+
+export type StoredConductReport = {
+  id: string;
+  demoId: string;
+  sessionId: string;
+  category: ConductReportCategory;
+  urgency: ConductReportUrgency;
+  details: string;
+  status: ConductReportStatus;
+  organizerResponse: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  acknowledgedAt: Date | null;
   resolvedAt: Date | null;
 };
 
@@ -136,6 +154,10 @@ export interface IStorage {
   getAssistanceRequests(demonstrationId: string): Promise<StoredAssistanceRequest[]>;
   createAssistanceRequest(demonstrationId: string, data: { type: AssistanceType; message: string; sessionId: string }): Promise<{ request: StoredAssistanceRequest; created: boolean }>;
   resolveAssistanceRequest(demonstrationId: string, requestId: string): Promise<StoredAssistanceRequest | undefined>;
+  getConductReports(demonstrationId: string): Promise<StoredConductReport[]>;
+  getParticipantConductReports(demonstrationId: string, sessionId: string): Promise<StoredConductReport[]>;
+  createConductReport(demonstrationId: string, data: { sessionId: string; category: ConductReportCategory; urgency: ConductReportUrgency; details: string }): Promise<{ report: StoredConductReport; created: boolean }>;
+  updateConductReport(demonstrationId: string, reportId: string, data: { status: ConductReportStatus; organizerResponse: string | null }): Promise<StoredConductReport | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -690,6 +712,81 @@ export class DatabaseStorage implements IStorage {
     )).returning({ id: assistanceRequests.id });
     if (!updated) return undefined;
     return (await this.getAssistanceRequests(demonstrationId)).find((item) => item.id === requestId);
+  }
+
+  private mapConductReport(report: typeof conductReports.$inferSelect): StoredConductReport {
+    return {
+      id: report.id,
+      demoId: report.demonstrationId,
+      sessionId: report.sessionId,
+      category: report.category as ConductReportCategory,
+      urgency: report.urgency as ConductReportUrgency,
+      details: report.details,
+      status: report.status as ConductReportStatus,
+      organizerResponse: report.organizerResponse,
+      createdAt: report.createdAt,
+      updatedAt: report.updatedAt,
+      acknowledgedAt: report.acknowledgedAt,
+      resolvedAt: report.resolvedAt,
+    };
+  }
+
+  async getConductReports(demonstrationId: string): Promise<StoredConductReport[]> {
+    const reports = await db.select().from(conductReports)
+      .where(eq(conductReports.demonstrationId, demonstrationId))
+      .orderBy(desc(conductReports.createdAt))
+      .limit(100);
+    return reports.map((report) => this.mapConductReport(report));
+  }
+
+  async getParticipantConductReports(demonstrationId: string, sessionId: string): Promise<StoredConductReport[]> {
+    const reports = await db.select().from(conductReports).where(and(
+      eq(conductReports.demonstrationId, demonstrationId),
+      eq(conductReports.sessionId, sessionId),
+    )).orderBy(desc(conductReports.createdAt)).limit(12);
+    return reports.map((report) => this.mapConductReport(report));
+  }
+
+  async createConductReport(demonstrationId: string, data: { sessionId: string; category: ConductReportCategory; urgency: ConductReportUrgency; details: string }): Promise<{ report: StoredConductReport; created: boolean }> {
+    const id = crypto.randomUUID();
+    const inserted = await db.insert(conductReports).values({
+      id,
+      demonstrationId,
+      sessionId: data.sessionId,
+      category: data.category,
+      urgency: data.urgency,
+      details: data.details,
+      status: "open",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).onConflictDoNothing().returning();
+    const report = inserted[0]
+      ? this.mapConductReport(inserted[0])
+      : (await this.getParticipantConductReports(demonstrationId, data.sessionId)).find((item) => (
+          item.category === data.category && item.status !== "resolved" && item.details.toLowerCase() === data.details.toLowerCase()
+        ));
+    if (!report) throw new Error("CONDUCT_REPORT_NOT_CREATED");
+    return { report, created: inserted.length > 0 };
+  }
+
+  async updateConductReport(demonstrationId: string, reportId: string, data: { status: ConductReportStatus; organizerResponse: string | null }): Promise<StoredConductReport | undefined> {
+    const now = new Date();
+    const [existing] = await db.select().from(conductReports).where(and(
+      eq(conductReports.id, reportId),
+      eq(conductReports.demonstrationId, demonstrationId),
+    ));
+    if (!existing) return undefined;
+    const [updated] = await db.update(conductReports).set({
+      status: data.status,
+      organizerResponse: data.organizerResponse,
+      updatedAt: now,
+      acknowledgedAt: data.status === "open" ? null : existing.acknowledgedAt ?? now,
+      resolvedAt: data.status === "resolved" ? now : null,
+    }).where(and(
+      eq(conductReports.id, reportId),
+      eq(conductReports.demonstrationId, demonstrationId),
+    )).returning();
+    return updated ? this.mapConductReport(updated) : undefined;
   }
 }
 

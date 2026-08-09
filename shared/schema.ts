@@ -111,6 +111,21 @@ export const assistanceRequests = pgTable("assistance_requests", {
   resolvedAt: timestamp("resolved_at"),
 });
 
+export const conductReports = pgTable("conduct_reports", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  demonstrationId: varchar("demonstration_id", { length: 255 }).notNull().references(() => demonstrations.id, { onDelete: "cascade" }),
+  sessionId: text("session_id").notNull(),
+  category: text("category").notNull(),
+  urgency: text("urgency").notNull().default("follow_up"),
+  details: text("details").notNull(),
+  status: text("status").notNull().default("open"),
+  organizerResponse: text("organizer_response"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  acknowledgedAt: timestamp("acknowledged_at"),
+  resolvedAt: timestamp("resolved_at"),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, lastActivityAt: true });
 export const insertDemonstrationSchema = createInsertSchema(demonstrations).omit({ id: true, createdAt: true, publicId: true });
 export const insertChantSchema = createInsertSchema(chants).omit({ id: true });
@@ -128,3 +143,4 @@ export type ViewSession = typeof viewSessions.$inferSelect;
 export type StoredSafetyCheck = typeof safetyChecks.$inferSelect;
 export type StoredSafetyCheckResponse = typeof safetyCheckResponses.$inferSelect;
 export type StoredAssistanceRequest = typeof assistanceRequests.$inferSelect;
+export type StoredConductReport = typeof conductReports.$inferSelect;

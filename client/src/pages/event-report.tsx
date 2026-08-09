@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowLeft, Check, ClipboardCheck, Copy, Download, Printer, Users } from "lucide-react";
+import { ArrowLeft, Check, ClipboardCheck, Copy, Download, Printer, ShieldCheck, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +36,18 @@ type FeedbackSummary = {
     participantLabel: string;
   }>;
 };
+type ConductReportSummary = {
+  total: number;
+  open: number;
+  acknowledged: number;
+  resolved: number;
+  urgent: number;
+  activeUrgent: number;
+  categories: Record<"harassment" | "unsafe_behavior" | "privacy" | "misinformation" | "other", number>;
+  averageAcknowledgementMinutes: number | null;
+  averageResolutionMinutes: number | null;
+};
+type ConductReportQueue = { reports: unknown[]; summary: ConductReportSummary };
 
 function formatRuntime(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
@@ -44,7 +56,7 @@ function formatRuntime(totalSeconds: number) {
   return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`;
 }
 
-function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackSummary) {
+function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackSummary, conduct?: ConductReportSummary) {
   return [
     `ChantLive Post-Event Report: ${data.demo.title}`,
     "",
@@ -56,12 +68,16 @@ function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackS
     `Current viewer count snapshot: ${data.viewerCount}`,
     `Participant feedback responses: ${feedback?.total ?? 0}`,
     `Feedback averages: clarity ${feedback?.averages.clarity ?? 0}/5, safety ${feedback?.averages.safety ?? 0}/5, accessibility ${feedback?.averages.accessibility ?? 0}/5`,
+    `Private conduct concerns: ${conduct?.total ?? 0} total, ${conduct?.open ?? 0} unseen, ${conduct?.acknowledged ?? 0} acknowledged, ${conduct?.resolved ?? 0} resolved, ${conduct?.urgent ?? 0} urgent`,
+    `Average acknowledgement: ${conduct?.averageAcknowledgementMinutes ?? "not available"} minutes`,
+    `Average resolution: ${conduct?.averageResolutionMinutes ?? "not available"} minutes`,
     "",
     "Debrief checklist:",
     "- Did participants understand how to join?",
     "- Did QR and fallback link sharing work?",
     "- Did the backup admin know when to step in?",
     "- Did accessibility options cover visibility, scanning, and low-signal needs?",
+    "- Were private conduct concerns acknowledged, resolved, and handled without copying sensitive details?",
     "- Which chants should be reused, edited, or removed next time?",
     "",
     "Participant comments:",
@@ -81,6 +97,10 @@ export default function EventReport() {
     queryKey: ["/api/demos", id, "feedback"],
     enabled: Boolean(id),
   });
+  const { data: conductQueue } = useQuery<ConductReportQueue>({
+    queryKey: ["/api/demos", id, "conduct-reports"],
+    enabled: Boolean(id),
+  });
 
   const runtimeSeconds = useMemo(() => {
     if (!data) return 0;
@@ -96,7 +116,7 @@ export default function EventReport() {
 
   const copyReport = async () => {
     if (!data) return;
-    await navigator.clipboard.writeText(buildReportText(data, runtime, feedback));
+    await navigator.clipboard.writeText(buildReportText(data, runtime, feedback, conductQueue?.summary));
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };
@@ -225,6 +245,47 @@ export default function EventReport() {
             </CardContent>
           </Card>
 
+          <Card className="mt-6 border-violet-500/30" data-testid="card-report-conduct-summary">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ShieldCheck className="h-5 w-5 text-violet-700" aria-hidden="true" />
+                Private conduct response summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-4 text-sm text-muted-foreground">Trend counts only. Sensitive participant report text and organiser responses are intentionally excluded from print and copied reports.</p>
+              <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-5">
+                {[
+                  ["Total", conductQueue?.summary.total ?? 0],
+                  ["Urgent", conductQueue?.summary.urgent ?? 0],
+                  ["Unseen", conductQueue?.summary.open ?? 0],
+                  ["Acknowledged", conductQueue?.summary.acknowledged ?? 0],
+                  ["Resolved", conductQueue?.summary.resolved ?? 0],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-lg border bg-background p-3">
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className="mt-1 text-lg font-semibold">{value}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 grid gap-3 text-sm md:grid-cols-2">
+                <div className="rounded-lg border bg-background p-3">
+                  <p className="text-xs text-muted-foreground">Average acknowledgement</p>
+                  <p className="mt-1 font-semibold">{conductQueue?.summary.averageAcknowledgementMinutes == null ? "Not available" : `${conductQueue.summary.averageAcknowledgementMinutes} min`}</p>
+                </div>
+                <div className="rounded-lg border bg-background p-3">
+                  <p className="text-xs text-muted-foreground">Average resolution</p>
+                  <p className="mt-1 font-semibold">{conductQueue?.summary.averageResolutionMinutes == null ? "Not available" : `${conductQueue.summary.averageResolutionMinutes} min`}</p>
+                </div>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2" aria-label="Concern categories">
+                {Object.entries(conductQueue?.summary.categories ?? {}).map(([category, count]) => (
+                  <Badge key={category} variant="secondary" className="capitalize">{category.replaceAll("_", " ")}: {count}</Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader>
@@ -237,6 +298,7 @@ export default function EventReport() {
                 <p>Did participants understand how to join?</p>
                 <p>Did QR, fallback links, and printed handouts work?</p>
                 <p>Did the backup admin know when to step in?</p>
+                <p>Were urgent private concerns acknowledged and safely resolved?</p>
                 <p>Which chants should be reused, edited, or removed?</p>
               </CardContent>
             </Card>

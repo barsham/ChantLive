@@ -4,9 +4,13 @@ import { Server as SocketIOServer } from "socket.io";
 import {
   storage,
   type AssistanceType,
+  type ConductReportCategory,
+  type ConductReportStatus,
+  type ConductReportUrgency,
   type SafetyCheckKind,
   type SafetyCheckResponseType,
   type StoredAssistanceRequest as AssistanceRequest,
+  type StoredConductReport as ConductReport,
   type StoredSafetyCheck as SafetyCheck,
 } from "./storage";
 import { ensureDemoColumnsAndTables, ensureUserAuthColumns } from "./db";
@@ -121,6 +125,52 @@ function serializeAssistanceRequest(request: AssistanceRequest) {
     createdAt: request.createdAt.toISOString(),
     resolvedAt: request.resolvedAt?.toISOString() ?? null,
     participantLabel: `Participant ${request.sessionId.slice(-4).toUpperCase()}`,
+  };
+}
+
+function serializeConductReport(report: ConductReport, participantView = false) {
+  return {
+    id: report.id,
+    reference: report.id.slice(0, 8).toUpperCase(),
+    category: report.category,
+    urgency: report.urgency,
+    details: report.details,
+    status: report.status,
+    organizerResponse: report.organizerResponse,
+    createdAt: report.createdAt.toISOString(),
+    updatedAt: report.updatedAt.toISOString(),
+    acknowledgedAt: report.acknowledgedAt?.toISOString() ?? null,
+    resolvedAt: report.resolvedAt?.toISOString() ?? null,
+    ...(participantView ? {} : { participantLabel: `Participant ${report.sessionId.slice(-4).toUpperCase()}` }),
+  };
+}
+
+function summarizeConductReports(reports: ConductReport[]) {
+  const categories: Record<ConductReportCategory, number> = {
+    harassment: 0,
+    unsafe_behavior: 0,
+    privacy: 0,
+    misinformation: 0,
+    other: 0,
+  };
+  for (const report of reports) categories[report.category] += 1;
+  const acknowledgedMinutes = reports
+    .filter((report) => report.acknowledgedAt)
+    .map((report) => Math.max(0, Math.round((report.acknowledgedAt!.getTime() - report.createdAt.getTime()) / 60_000)));
+  const resolvedMinutes = reports
+    .filter((report) => report.resolvedAt)
+    .map((report) => Math.max(0, Math.round((report.resolvedAt!.getTime() - report.createdAt.getTime()) / 60_000)));
+  const average = (values: number[]) => values.length ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length) : null;
+  return {
+    total: reports.length,
+    open: reports.filter((report) => report.status === "open").length,
+    acknowledged: reports.filter((report) => report.status === "acknowledged").length,
+    resolved: reports.filter((report) => report.status === "resolved").length,
+    urgent: reports.filter((report) => report.urgency === "urgent").length,
+    activeUrgent: reports.filter((report) => report.urgency === "urgent" && report.status !== "resolved").length,
+    categories,
+    averageAcknowledgementMinutes: average(acknowledgedMinutes),
+    averageResolutionMinutes: average(resolvedMinutes),
   };
 }
 
@@ -824,6 +874,43 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/demos/:id/conduct-reports", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      const reports = await storage.getConductReports(demo.id);
+      res.json({ reports: reports.map((report) => serializeConductReport(report)), summary: summarizeConductReports(reports) });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch private conduct reports" });
+    }
+  });
+
+  app.patch("/api/demos/:id/conduct-reports/:reportId", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      if (!(await requireLiveController(user, demo, res))) return;
+      const rawStatus = typeof req.body?.status === "string" ? req.body.status : "acknowledged";
+      if (!["open", "acknowledged", "resolved"].includes(rawStatus)) return res.status(400).json({ message: "Choose open, acknowledged, or resolved" });
+      const status = rawStatus as ConductReportStatus;
+      const organizerResponse = typeof req.body?.organizerResponse === "string" && req.body.organizerResponse.trim()
+        ? req.body.organizerResponse.trim().slice(0, 300)
+        : null;
+      if (status === "resolved" && !organizerResponse) return res.status(400).json({ message: "Add a private response before resolving the concern" });
+      const reportId = getSingleParam(req.params.reportId);
+      const report = reportId ? await storage.updateConductReport(demo.id, reportId, { status, organizerResponse }) : undefined;
+      if (!report) return res.status(404).json({ message: "Conduct report not found" });
+      io.to(`demo:${demo.publicId}`).emit("conduct_report_status_update", { updatedAt: report.updatedAt.toISOString() });
+      res.json(serializeConductReport(report));
+    } catch (err) {
+      res.status(500).json({ message: "Failed to update private conduct report" });
+    }
+  });
+
   app.get("/api/demos/:id/pulse", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
@@ -1116,6 +1203,40 @@ export async function registerRoutes(
       res.status(result.created ? 201 : 200).json(serializeAssistanceRequest(result.request));
     } catch (err) {
       res.status(500).json({ message: "Failed to submit assistance request" });
+    }
+  });
+
+  app.get("/api/public/demos/:publicId/conduct-reports", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      const sessionId = typeof req.query.sessionId === "string" ? req.query.sessionId.trim().slice(0, 80) : "";
+      if (!sessionId) return res.status(400).json({ message: "sessionId is required" });
+      const reports = await storage.getParticipantConductReports(demo.id, sessionId);
+      res.json(reports.map((report) => serializeConductReport(report, true)));
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch your private reports" });
+    }
+  });
+
+  app.post("/api/public/demos/:publicId/conduct-reports", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      const sessionId = typeof req.body?.sessionId === "string" ? req.body.sessionId.trim().slice(0, 80) : "";
+      if (!sessionId) return res.status(400).json({ message: "A private device session is required" });
+      const rawCategory = typeof req.body?.category === "string" ? req.body.category : "other";
+      const category: ConductReportCategory = ["harassment", "unsafe_behavior", "privacy", "misinformation", "other"].includes(rawCategory)
+        ? rawCategory as ConductReportCategory
+        : "other";
+      const urgency: ConductReportUrgency = req.body?.urgency === "urgent" ? "urgent" : "follow_up";
+      const details = typeof req.body?.details === "string" ? req.body.details.trim().replace(/\s+/g, " ").slice(0, 600) : "";
+      if (details.length < 20) return res.status(400).json({ message: "Add at least 20 characters so organisers can understand the concern" });
+      const result = await storage.createConductReport(demo.id, { sessionId, category, urgency, details });
+      io.to(`demo:${demo.publicId}`).emit("conduct_report_status_update", { updatedAt: result.report.updatedAt.toISOString() });
+      res.status(result.created ? 201 : 200).json({ ...serializeConductReport(result.report, true), duplicate: !result.created });
+    } catch (err) {
+      res.status(500).json({ message: "Failed to submit the private conduct report" });
     }
   });
 

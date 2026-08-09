@@ -67,6 +67,21 @@ type ParticipantEngagement = {
   participantLabel: string;
   updatedAt: string;
 };
+type ConductReportCategory = "harassment" | "unsafe_behavior" | "privacy" | "misinformation" | "other";
+type ConductReport = {
+  id: string;
+  reference: string;
+  category: ConductReportCategory;
+  urgency: "urgent" | "follow_up";
+  details: string;
+  status: "open" | "acknowledged" | "resolved";
+  organizerResponse: string | null;
+  createdAt: string;
+  updatedAt: string;
+  acknowledgedAt: string | null;
+  resolvedAt: string | null;
+  duplicate?: boolean;
+};
 
 const clampProgress = (value: number) => Math.min(100, Math.max(0, value));
 const getFallbackPhaseDuration = (phase: "leader" | "people") => phase === "leader" ? 4000 : 3000;
@@ -1136,6 +1151,37 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     feedbackFailed: "بازخورد ارسال نشد. مستقیماً به برگزارکننده اطلاع دهید.",
   },
 };
+const conductCopy: Record<ParticipantLanguage, {
+  title: string; body: string; privacy: string; emergency: string; category: string;
+  categories: Record<ConductReportCategory, string>; followUp: string; urgent: string;
+  details: string; placeholder: string; submit: string; sent: string; duplicate: string;
+  failed: string; myReports: string; noReports: string; refresh: string; response: string;
+  statuses: Record<ConductReport["status"], string>; reference: string; privateLabel: string; urgencyLabel: string; minimumLabel: string;
+}> = {
+  en: {
+    title: "Privately report a conduct concern",
+    body: "Tell verified event organisers about harassment, unsafe behaviour, a privacy concern, or harmful misinformation.",
+    privacy: "Private to this event's organisers. Your name, phone number, and location are not requested.",
+    emergency: "ChantLive is not an emergency service. If anyone is in immediate danger, move to safety and contact local emergency services or a nearby marshal.",
+    category: "Concern category",
+    categories: { harassment: "Harassment", unsafe_behavior: "Unsafe behaviour", privacy: "Privacy concern", misinformation: "Harmful misinformation", other: "Other concern" },
+    followUp: "Can follow up", urgent: "Needs attention now", details: "What happened?", placeholder: "Describe what organisers need to know. Avoid names or identifying details unless essential.",
+    submit: "Send private report", sent: "Private report sent. Keep the reference below.", duplicate: "This matching open report already exists; its receipt is shown below.", failed: "The private report was not sent. Move to safety and tell a marshal directly if help is needed.",
+    myReports: "Your private report receipts", noReports: "No private reports sent from this device for this event.", refresh: "Refresh status", response: "Organiser response", statuses: { open: "Sent", acknowledged: "Seen by organiser", resolved: "Resolved" }, reference: "Reference", privateLabel: "Private", urgencyLabel: "Urgency", minimumLabel: "minimum",
+  },
+  es: {
+    title: "Informar en privado de una conducta", body: "Avisa a los organizadores verificados sobre acoso, conducta insegura, privacidad o desinformación dañina.", privacy: "Privado para los organizadores del evento. No se pide tu nombre, teléfono ni ubicación.", emergency: "ChantLive no es un servicio de emergencias. Si hay peligro inmediato, ve a un lugar seguro y contacta con emergencias locales o un responsable cercano.", category: "Categoría", categories: { harassment: "Acoso", unsafe_behavior: "Conducta insegura", privacy: "Privacidad", misinformation: "Desinformación dañina", other: "Otro" }, followUp: "Puede esperar", urgent: "Necesita atención ahora", details: "¿Qué ocurrió?", placeholder: "Describe lo que los organizadores deben saber. Evita datos identificativos salvo que sean esenciales.", submit: "Enviar informe privado", sent: "Informe privado enviado. Conserva la referencia.", duplicate: "Ya existe un informe abierto igual; se muestra su recibo.", failed: "No se envió el informe. Ve a un lugar seguro y avisa directamente a un responsable si necesitas ayuda.", myReports: "Tus recibos privados", noReports: "No hay informes privados de este dispositivo para este evento.", refresh: "Actualizar estado", response: "Respuesta del organizador", statuses: { open: "Enviado", acknowledged: "Visto por el organizador", resolved: "Resuelto" }, reference: "Referencia", privateLabel: "Privado", urgencyLabel: "Urgencia", minimumLabel: "mínimo",
+  },
+  fr: {
+    title: "Signaler un problème de conduite en privé", body: "Informez les organisateurs vérifiés d'un harcèlement, d'un comportement dangereux, d'un problème de confidentialité ou d'une désinformation nuisible.", privacy: "Privé pour les organisateurs de cet événement. Votre nom, téléphone et position ne sont pas demandés.", emergency: "ChantLive n'est pas un service d'urgence. En cas de danger immédiat, mettez-vous en sécurité et contactez les secours locaux ou un responsable proche.", category: "Catégorie", categories: { harassment: "Harcèlement", unsafe_behavior: "Comportement dangereux", privacy: "Confidentialité", misinformation: "Désinformation nuisible", other: "Autre" }, followUp: "Suivi possible", urgent: "Attention immédiate", details: "Que s'est-il passé ?", placeholder: "Décrivez ce que les organisateurs doivent savoir. Évitez les données identifiantes sauf si elles sont essentielles.", submit: "Envoyer le signalement privé", sent: "Signalement privé envoyé. Gardez la référence.", duplicate: "Un signalement ouvert identique existe déjà ; son reçu est affiché.", failed: "Le signalement n'a pas été envoyé. Mettez-vous en sécurité et prévenez directement un responsable si nécessaire.", myReports: "Vos reçus privés", noReports: "Aucun signalement privé envoyé depuis cet appareil pour cet événement.", refresh: "Actualiser le statut", response: "Réponse de l'organisateur", statuses: { open: "Envoyé", acknowledged: "Vu par l'organisateur", resolved: "Résolu" }, reference: "Référence", privateLabel: "Privé", urgencyLabel: "Urgence", minimumLabel: "minimum",
+  },
+  ar: {
+    title: "الإبلاغ الخاص عن مشكلة سلوك", body: "أبلغ منظمي الفعالية الموثقين عن تحرش أو سلوك غير آمن أو مشكلة خصوصية أو معلومات مضللة ضارة.", privacy: "خاص بمنظمي هذه الفعالية. لا نطلب اسمك أو رقم هاتفك أو موقعك.", emergency: "ChantLive ليست خدمة طوارئ. عند وجود خطر فوري، انتقل إلى مكان آمن واتصل بالطوارئ المحلية أو بمنظم قريب.", category: "فئة المشكلة", categories: { harassment: "تحرش", unsafe_behavior: "سلوك غير آمن", privacy: "خصوصية", misinformation: "معلومات مضللة ضارة", other: "أخرى" }, followUp: "يمكن متابعته لاحقاً", urgent: "يحتاج انتباهاً الآن", details: "ماذا حدث؟", placeholder: "اشرح ما يحتاج المنظمون إلى معرفته. تجنب بيانات التعريف إلا عند الضرورة.", submit: "إرسال بلاغ خاص", sent: "تم إرسال البلاغ الخاص. احتفظ بالمرجع.", duplicate: "يوجد بلاغ مفتوح مطابق؛ يظهر إيصالُه أدناه.", failed: "لم يُرسل البلاغ. انتقل إلى الأمان وأخبر منظماً مباشرة إذا احتجت للمساعدة.", myReports: "إيصالات بلاغاتك الخاصة", noReports: "لم تُرسل بلاغات خاصة من هذا الجهاز لهذه الفعالية.", refresh: "تحديث الحالة", response: "رد المنظم", statuses: { open: "تم الإرسال", acknowledged: "شاهده المنظم", resolved: "تم الحل" }, reference: "المرجع", privateLabel: "خاص", urgencyLabel: "الاستعجال", minimumLabel: "الحد الأدنى",
+  },
+  fa: {
+    title: "گزارش خصوصی نگرانی رفتاری", body: "آزار، رفتار ناامن، نگرانی حریم خصوصی یا اطلاعات گمراه‌کننده زیان‌بار را به برگزارکنندگان تأییدشده اطلاع دهید.", privacy: "خصوصی برای برگزارکنندگان این رویداد. نام، شماره تلفن و موقعیت شما درخواست نمی‌شود.", emergency: "ChantLive خدمات اضطراری نیست. اگر خطر فوری وجود دارد، به محل امن بروید و با امداد محلی یا مسئول نزدیک تماس بگیرید.", category: "دسته نگرانی", categories: { harassment: "آزار", unsafe_behavior: "رفتار ناامن", privacy: "حریم خصوصی", misinformation: "اطلاعات گمراه‌کننده زیان‌بار", other: "سایر" }, followUp: "پیگیری بعدی", urgent: "نیازمند توجه فوری", details: "چه اتفاقی افتاد؟", placeholder: "آنچه برگزارکنندگان باید بدانند شرح دهید. جز در موارد ضروری از اطلاعات هویتی خودداری کنید.", submit: "ارسال گزارش خصوصی", sent: "گزارش خصوصی ارسال شد. مرجع را نگه دارید.", duplicate: "یک گزارش باز مشابه وجود دارد؛ رسید آن در پایین آمده است.", failed: "گزارش ارسال نشد. به محل امن بروید و در صورت نیاز مستقیماً به مسئول اطلاع دهید.", myReports: "رسیدهای خصوصی شما", noReports: "برای این رویداد گزارشی از این دستگاه ارسال نشده است.", refresh: "تازه‌سازی وضعیت", response: "پاسخ برگزارکننده", statuses: { open: "ارسال شد", acknowledged: "برگزارکننده دید", resolved: "حل شد" }, reference: "مرجع", privateLabel: "خصوصی", urgencyLabel: "فوریت", minimumLabel: "حداقل",
+  },
+};
 const getAnnouncementAudienceLabel = (targetRole: OrganizerAnnouncement["targetRole"], copy: Record<string, string>) => {
   const labels: Record<OrganizerAnnouncement["targetRole"], string> = {
     all: copy.announcementEveryone,
@@ -1206,6 +1252,13 @@ export default function Participant() {
   const [feedbackRatings, setFeedbackRatings] = useState({ clarity: 4, safety: 4, accessibility: 4 });
   const [feedbackComment, setFeedbackComment] = useState("");
   const [feedbackStatus, setFeedbackStatus] = useState<string | null>(null);
+  const [conductCategory, setConductCategory] = useState<ConductReportCategory>("harassment");
+  const [conductUrgency, setConductUrgency] = useState<"urgent" | "follow_up">("follow_up");
+  const [conductDetails, setConductDetails] = useState("");
+  const [conductReports, setConductReports] = useState<ConductReport[]>([]);
+  const [conductStatus, setConductStatus] = useState<string | null>(null);
+  const [conductStatusError, setConductStatusError] = useState(false);
+  const [conductLoading, setConductLoading] = useState(false);
   const [engagement, setEngagement] = useState<ParticipantEngagement | null>(null);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const [shareFallbackText, setShareFallbackText] = useState<string | null>(null);
@@ -1223,6 +1276,7 @@ export default function Participant() {
   const lowBandwidthRef = useRef(lowBandwidth);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const t = participantCopy[participantLanguage];
+  const conductT = conductCopy[participantLanguage];
   const restoreSafetyResponse = (check: SafetyCheck | null) => {
     if (!check?.participantResponse) return;
     setSafetyResponses((current) => {
@@ -1264,6 +1318,25 @@ export default function Participant() {
       localStorage.setItem("chant_session_id", sessionId);
     }
     return sessionId;
+  };
+  const refreshConductReports = async (announce = false) => {
+    setConductLoading(true);
+    try {
+      const response = await fetch(`/api/public/demos/${publicId}/conduct-reports?sessionId=${encodeURIComponent(getSessionId())}`);
+      if (!response.ok) throw new Error("Could not load private reports");
+      setConductReports(await response.json() as ConductReport[]);
+      if (announce) {
+        setConductStatus(conductT.refresh);
+        setConductStatusError(false);
+      }
+    } catch {
+      if (announce) {
+        setConductStatus(conductT.failed);
+        setConductStatusError(true);
+      }
+    } finally {
+      setConductLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -1402,6 +1475,9 @@ export default function Participant() {
         .then((data: ParticipantEngagement | null) => setEngagement(data))
         .catch(() => {});
     });
+    socket.on("conduct_report_status_update", () => {
+      refreshConductReports();
+    });
 
     if (!socket.connected) {
       socket.connect();
@@ -1422,6 +1498,7 @@ export default function Participant() {
       socket.off("safety_check_update");
       socket.off("safety_check_results_update");
       socket.off("engagement_update");
+      socket.off("conduct_report_status_update");
       socket.off("connect");
       socket.off("disconnect");
     };
@@ -1456,6 +1533,7 @@ export default function Participant() {
       .then((response) => response.ok ? response.json() : null)
       .then((data: ParticipantEngagement | null) => setEngagement(data))
       .catch(() => setEngagement(null));
+    refreshConductReports();
   }, [publicId]);
 
   useEffect(() => {
@@ -2079,6 +2157,30 @@ export default function Participant() {
       setTimeout(() => setFeedbackStatus(null), 3500);
     } catch {
       setFeedbackStatus(t.feedbackFailed);
+    }
+  };
+  const submitConductReport = async () => {
+    const details = conductDetails.trim();
+    if (details.length < 20) return;
+    setConductLoading(true);
+    setConductStatus(null);
+    setConductStatusError(false);
+    try {
+      const response = await fetch(`/api/public/demos/${publicId}/conduct-reports`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: conductCategory, urgency: conductUrgency, details, sessionId: getSessionId() }),
+      });
+      const report = await response.json() as ConductReport & { message?: string };
+      if (!response.ok) throw new Error(report.message || "Could not send report");
+      setConductDetails("");
+      setConductReports((current) => [report, ...current.filter((item) => item.id !== report.id)]);
+      setConductStatus(report.duplicate ? conductT.duplicate : conductT.sent);
+    } catch {
+      setConductStatus(conductT.failed);
+      setConductStatusError(true);
+    } finally {
+      setConductLoading(false);
     }
   };
 
@@ -2823,6 +2925,117 @@ export default function Participant() {
             </div>
           </div>
           <div className="mx-auto mt-4 grid max-w-6xl gap-4 md:grid-cols-[1fr_1.2fr]">
+            <div className="rounded-xl border border-violet-300/40 bg-violet-400/10 p-4 md:col-span-2" data-testid="card-private-conduct-report">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="max-w-3xl">
+                  <p className="flex items-center gap-2 font-semibold text-violet-50">
+                    <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                    {conductT.title}
+                  </p>
+                  <p className="mt-1 text-sm text-violet-100/90">{conductT.body}</p>
+                  <p className="mt-2 text-xs text-violet-100/80" data-testid="text-conduct-privacy">{conductT.privacy}</p>
+                </div>
+                <span className="rounded-full border border-violet-200/40 px-3 py-1 text-xs font-semibold text-violet-50">{conductT.privateLabel}</span>
+              </div>
+              <p className="mt-3 rounded-lg border border-amber-300/40 bg-amber-300/10 p-3 text-xs leading-relaxed text-amber-100" role="note" data-testid="text-conduct-emergency-boundary">
+                {conductT.emergency}
+              </p>
+              <div className="mt-4 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+                <div>
+                  <label htmlFor="conduct-category" className="text-xs font-medium text-violet-100">{conductT.category}</label>
+                  <select
+                    id="conduct-category"
+                    value={conductCategory}
+                    onChange={(event) => setConductCategory(event.target.value as ConductReportCategory)}
+                    className="mt-1 min-h-11 w-full rounded-lg border border-violet-300/30 bg-neutral-950 px-3 text-sm text-white"
+                    data-testid="select-conduct-category"
+                  >
+                    {(Object.keys(conductT.categories) as ConductReportCategory[]).map((category) => (
+                      <option key={category} value={category}>{conductT.categories[category]}</option>
+                    ))}
+                  </select>
+                  <fieldset className="mt-3">
+                    <legend className="text-xs font-medium text-violet-100">{conductT.urgencyLabel}</legend>
+                    <div className="mt-1 grid grid-cols-2 gap-2">
+                      {(["follow_up", "urgent"] as const).map((urgency) => (
+                        <button
+                          key={urgency}
+                          type="button"
+                          onClick={() => setConductUrgency(urgency)}
+                          aria-pressed={conductUrgency === urgency}
+                          className={`min-h-11 rounded-lg border px-3 py-2 text-xs font-semibold ${conductUrgency === urgency ? "border-violet-100 bg-violet-200/20 text-white" : "border-violet-300/30 text-violet-100"}`}
+                          data-testid={`button-conduct-urgency-${urgency}`}
+                        >
+                          {urgency === "urgent" ? conductT.urgent : conductT.followUp}
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
+                </div>
+                <div>
+                  <label htmlFor="conduct-details" className="text-xs font-medium text-violet-100">{conductT.details}</label>
+                  <textarea
+                    id="conduct-details"
+                    value={conductDetails}
+                    onChange={(event) => setConductDetails(event.target.value)}
+                    maxLength={600}
+                    rows={5}
+                    className="mt-1 w-full rounded-lg border border-violet-300/30 bg-neutral-950 p-3 text-sm text-white outline-none focus:border-violet-100"
+                    placeholder={conductT.placeholder}
+                    data-testid="input-conduct-details"
+                  />
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-xs text-violet-100/70">{conductDetails.trim().length}/600 · {conductT.minimumLabel} 20</span>
+                    <button
+                      type="button"
+                      onClick={submitConductReport}
+                      disabled={conductDetails.trim().length < 20 || conductLoading}
+                      className="min-h-11 rounded-lg border border-violet-200/50 bg-violet-200/15 px-4 py-2 text-sm font-semibold text-violet-50 hover:bg-violet-200/25 disabled:cursor-not-allowed disabled:opacity-50"
+                      data-testid="button-submit-conduct-report"
+                    >
+                      {conductLoading ? "…" : conductT.submit}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              {conductStatus && (
+                <p className={`mt-3 text-sm ${conductStatusError ? "text-red-200" : "text-emerald-200"}`} role={conductStatusError ? "alert" : "status"} data-testid="text-conduct-submit-status">
+                  {conductStatus}
+                </p>
+              )}
+              <div className="mt-5 border-t border-violet-200/20 pt-4" data-testid="panel-private-conduct-receipts">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-semibold text-violet-50">{conductT.myReports}</p>
+                  <button type="button" onClick={() => refreshConductReports(true)} disabled={conductLoading} className="min-h-11 rounded-full border border-violet-200/30 px-3 py-2 text-xs font-semibold text-violet-100 disabled:opacity-50" data-testid="button-refresh-conduct-reports">
+                    <RefreshCw className="me-1 inline h-3.5 w-3.5" aria-hidden="true" />{conductT.refresh}
+                  </button>
+                </div>
+                {conductReports.length === 0 ? (
+                  <p className="mt-2 text-sm text-violet-100/70" data-testid="text-no-conduct-reports">{conductT.noReports}</p>
+                ) : (
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    {conductReports.map((report) => (
+                      <article key={report.id} className="rounded-lg border border-violet-200/25 bg-black/25 p-3" data-testid={`card-conduct-receipt-${report.id}`}>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="text-xs font-semibold text-violet-100">{conductT.reference} {report.reference}</p>
+                          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${report.status === "resolved" ? "bg-emerald-300/20 text-emerald-100" : report.status === "acknowledged" ? "bg-sky-300/20 text-sky-100" : "bg-amber-300/20 text-amber-100"}`}>
+                            {conductT.statuses[report.status]}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-xs text-violet-100/80">{conductT.categories[report.category]} · {report.urgency === "urgent" ? conductT.urgent : conductT.followUp}</p>
+                        <p className="mt-2 line-clamp-3 text-sm text-violet-50">{report.details}</p>
+                        {report.organizerResponse && (
+                          <div className="mt-3 rounded-md border border-emerald-300/30 bg-emerald-300/10 p-2 text-sm text-emerald-50">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-100/80">{conductT.response}</p>
+                            <p className="mt-1">{report.organizerResponse}</p>
+                          </div>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
             <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 p-4 md:col-span-2" data-testid="card-participant-engagement">
               <p className="font-semibold text-emerald-50">{t.participation}</p>
               <p className="mt-1 text-xs text-emerald-100/80">

@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.78 - 9 August 2026
+
+A private participant-to-organiser conduct response workflow for reporting, triage, follow-up, and safer post-event learning.
+
+### Added
+
+- Private participant conduct reporting: Participants can confidentially report harassment, unsafe behaviour, privacy concerns, harmful misinformation, or another concern with an urgency level and clear emergency boundaries. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+- Organiser moderation desk: Verified event organisers can prioritise urgent concerns, filter the private queue, acknowledge reports, send a private response, resolve them, and reopen follow-up when needed. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+
+### Improved
+
+- Durable privacy-safe concern ledger: Validated reports are stored without participant accounts or requested identity details, survive server restarts, and safely return an existing receipt for a matching open submission. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+- Private participant receipts and recovery: Each participant receives a reference and can privately recover only their own sent, seen, resolved, and organiser-response status after reload or reconnection in all five interface languages. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+- Privacy-preserving conduct response summary: Post-event reports show category, urgency, status, acknowledgement, and resolution trends while deliberately excluding sensitive participant report text and private organiser replies. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+
 ## 1.1.77 - 8 August 2026
 
 One accountable live operator can safely hand event control between organiser devices without conflicting participant updates.

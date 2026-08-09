@@ -147,5 +147,33 @@ export async function ensureDemoColumnsAndTables(): Promise<void> {
     CREATE UNIQUE INDEX IF NOT EXISTS assistance_requests_one_open_per_type_idx
     ON assistance_requests (demonstration_id, session_id, type)
     WHERE status = 'open';
+
+    CREATE TABLE IF NOT EXISTS conduct_reports (
+      id varchar(255) PRIMARY KEY,
+      demonstration_id varchar(255) NOT NULL REFERENCES demonstrations(id) ON DELETE CASCADE,
+      session_id text NOT NULL,
+      category text NOT NULL,
+      urgency text NOT NULL DEFAULT 'follow_up',
+      details text NOT NULL,
+      status text NOT NULL DEFAULT 'open',
+      organizer_response text,
+      created_at timestamp NOT NULL DEFAULT now(),
+      updated_at timestamp NOT NULL DEFAULT now(),
+      acknowledged_at timestamp,
+      resolved_at timestamp
+    );
+
+    ALTER TABLE conduct_reports
+    ADD COLUMN IF NOT EXISTS acknowledged_at timestamp;
+
+    CREATE INDEX IF NOT EXISTS conduct_reports_demo_created_idx
+    ON conduct_reports (demonstration_id, created_at DESC);
+
+    CREATE INDEX IF NOT EXISTS conduct_reports_demo_status_idx
+    ON conduct_reports (demonstration_id, status, urgency);
+
+    CREATE UNIQUE INDEX IF NOT EXISTS conduct_reports_one_matching_open_idx
+    ON conduct_reports (demonstration_id, session_id, category, md5(lower(details)))
+    WHERE status <> 'resolved';
   `);
 }
