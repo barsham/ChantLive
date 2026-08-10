@@ -4,7 +4,7 @@ import {
   type Chant, type InsertChant,
   type DemoState, type DemoAdmin,
   users, demonstrations, chants, demoAdmins, demoState, viewSessions,
-  safetyChecks, safetyCheckResponses, assistanceRequests, conductReports,
+  safetyChecks, safetyCheckResponses, assistanceRequests, conductReports, runSheetItems,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, asc, desc, inArray, isNull, or, sql } from "drizzle-orm";
@@ -50,6 +50,9 @@ export type AssistanceType = "accessibility" | "connection" | "safety" | "organi
 export type ConductReportCategory = "harassment" | "unsafe_behavior" | "privacy" | "misinformation" | "other";
 export type ConductReportUrgency = "urgent" | "follow_up";
 export type ConductReportStatus = "open" | "acknowledged" | "resolved";
+export type RunSheetItemKind = "arrival" | "welcome" | "chant" | "speaker" | "movement" | "break" | "closing" | "custom";
+export type RunSheetItemStatus = "pending" | "active" | "completed" | "skipped";
+export type RunSheetTransition = "start" | "advance" | "skip" | "reopen";
 
 export type StoredSafetyCheckResponse = {
   sessionId: string;
@@ -95,6 +98,21 @@ export type StoredConductReport = {
   updatedAt: Date;
   acknowledgedAt: Date | null;
   resolvedAt: Date | null;
+};
+
+export type StoredRunSheetItem = {
+  id: string;
+  demoId: string;
+  orderIndex: number;
+  kind: RunSheetItemKind;
+  title: string;
+  participantNote: string | null;
+  plannedDurationMinutes: number;
+  status: RunSheetItemStatus;
+  startedAt: Date | null;
+  completedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export interface IStorage {
@@ -158,6 +176,12 @@ export interface IStorage {
   getParticipantConductReports(demonstrationId: string, sessionId: string): Promise<StoredConductReport[]>;
   createConductReport(demonstrationId: string, data: { sessionId: string; category: ConductReportCategory; urgency: ConductReportUrgency; details: string }): Promise<{ report: StoredConductReport; created: boolean }>;
   updateConductReport(demonstrationId: string, reportId: string, data: { status: ConductReportStatus; organizerResponse: string | null }): Promise<StoredConductReport | undefined>;
+  getRunSheetItems(demonstrationId: string): Promise<StoredRunSheetItem[]>;
+  createRunSheetItem(demonstrationId: string, data: { kind: RunSheetItemKind; title: string; participantNote: string | null; plannedDurationMinutes: number }): Promise<StoredRunSheetItem>;
+  updateRunSheetItem(demonstrationId: string, itemId: string, data: { kind: RunSheetItemKind; title: string; participantNote: string | null; plannedDurationMinutes: number }): Promise<StoredRunSheetItem | undefined>;
+  moveRunSheetItem(demonstrationId: string, itemId: string, direction: "up" | "down"): Promise<StoredRunSheetItem[]>;
+  deleteRunSheetItem(demonstrationId: string, itemId: string): Promise<boolean>;
+  transitionRunSheetItem(demonstrationId: string, itemId: string, transition: RunSheetTransition): Promise<StoredRunSheetItem[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -787,6 +811,132 @@ export class DatabaseStorage implements IStorage {
       eq(conductReports.demonstrationId, demonstrationId),
     )).returning();
     return updated ? this.mapConductReport(updated) : undefined;
+  }
+
+  private mapRunSheetItem(item: typeof runSheetItems.$inferSelect): StoredRunSheetItem {
+    return {
+      id: item.id,
+      demoId: item.demonstrationId,
+      orderIndex: item.orderIndex,
+      kind: item.kind as RunSheetItemKind,
+      title: item.title,
+      participantNote: item.participantNote,
+      plannedDurationMinutes: item.plannedDurationMinutes,
+      status: item.status as RunSheetItemStatus,
+      startedAt: item.startedAt,
+      completedAt: item.completedAt,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+    };
+  }
+
+  async getRunSheetItems(demonstrationId: string): Promise<StoredRunSheetItem[]> {
+    const items = await db.select().from(runSheetItems)
+      .where(eq(runSheetItems.demonstrationId, demonstrationId))
+      .orderBy(asc(runSheetItems.orderIndex));
+    return items.map((item) => this.mapRunSheetItem(item));
+  }
+
+  async createRunSheetItem(demonstrationId: string, data: { kind: RunSheetItemKind; title: string; participantNote: string | null; plannedDurationMinutes: number }): Promise<StoredRunSheetItem> {
+    const existing = await this.getRunSheetItems(demonstrationId);
+    const [created] = await db.insert(runSheetItems).values({
+      id: crypto.randomUUID(),
+      demonstrationId,
+      orderIndex: existing.length,
+      kind: data.kind,
+      title: data.title,
+      participantNote: data.participantNote,
+      plannedDurationMinutes: data.plannedDurationMinutes,
+      status: "pending",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return this.mapRunSheetItem(created);
+  }
+
+  async updateRunSheetItem(demonstrationId: string, itemId: string, data: { kind: RunSheetItemKind; title: string; participantNote: string | null; plannedDurationMinutes: number }): Promise<StoredRunSheetItem | undefined> {
+    const [updated] = await db.update(runSheetItems).set({
+      kind: data.kind,
+      title: data.title,
+      participantNote: data.participantNote,
+      plannedDurationMinutes: data.plannedDurationMinutes,
+      updatedAt: new Date(),
+    }).where(and(
+      eq(runSheetItems.id, itemId),
+      eq(runSheetItems.demonstrationId, demonstrationId),
+    )).returning();
+    return updated ? this.mapRunSheetItem(updated) : undefined;
+  }
+
+  async moveRunSheetItem(demonstrationId: string, itemId: string, direction: "up" | "down"): Promise<StoredRunSheetItem[]> {
+    await db.transaction(async (tx) => {
+      const items = await tx.select().from(runSheetItems)
+        .where(eq(runSheetItems.demonstrationId, demonstrationId))
+        .orderBy(asc(runSheetItems.orderIndex));
+      const index = items.findIndex((item) => item.id === itemId);
+      const targetIndex = direction === "up" ? index - 1 : index + 1;
+      if (index < 0 || targetIndex < 0 || targetIndex >= items.length) return;
+      const current = items[index];
+      const target = items[targetIndex];
+      const now = new Date();
+      await tx.update(runSheetItems).set({ orderIndex: target.orderIndex, updatedAt: now }).where(eq(runSheetItems.id, current.id));
+      await tx.update(runSheetItems).set({ orderIndex: current.orderIndex, updatedAt: now }).where(eq(runSheetItems.id, target.id));
+    });
+    return this.getRunSheetItems(demonstrationId);
+  }
+
+  async deleteRunSheetItem(demonstrationId: string, itemId: string): Promise<boolean> {
+    const deleted = await db.transaction(async (tx) => {
+      const rows = await tx.delete(runSheetItems).where(and(
+        eq(runSheetItems.id, itemId),
+        eq(runSheetItems.demonstrationId, demonstrationId),
+      )).returning({ id: runSheetItems.id });
+      if (rows.length === 0) return false;
+      const remaining = await tx.select().from(runSheetItems)
+        .where(eq(runSheetItems.demonstrationId, demonstrationId))
+        .orderBy(asc(runSheetItems.orderIndex));
+      for (let index = 0; index < remaining.length; index += 1) {
+        const item = remaining[index];
+        if (item.orderIndex !== index) await tx.update(runSheetItems).set({ orderIndex: index }).where(eq(runSheetItems.id, item.id));
+      }
+      return true;
+    });
+    return deleted;
+  }
+
+  async transitionRunSheetItem(demonstrationId: string, itemId: string, transition: RunSheetTransition): Promise<StoredRunSheetItem[]> {
+    await db.transaction(async (tx) => {
+      const items = await tx.select().from(runSheetItems)
+        .where(eq(runSheetItems.demonstrationId, demonstrationId))
+        .orderBy(asc(runSheetItems.orderIndex));
+      const item = items.find((candidate) => candidate.id === itemId);
+      if (!item) throw new Error("RUN_SHEET_ITEM_NOT_FOUND");
+      const now = new Date();
+      const activateNext = async () => {
+        const next =
+          items.find((candidate) => candidate.orderIndex > item.orderIndex && candidate.status === "pending") ??
+          items.find((candidate) => candidate.status === "pending");
+        if (next) await tx.update(runSheetItems).set({ status: "active", startedAt: now, completedAt: null, updatedAt: now }).where(eq(runSheetItems.id, next.id));
+      };
+
+      if (transition === "start") {
+        if (item.status !== "pending") throw new Error("RUN_SHEET_ITEM_NOT_PENDING");
+        if (items.some((candidate) => candidate.status === "active")) throw new Error("RUN_SHEET_ACTIVE_EXISTS");
+        await tx.update(runSheetItems).set({ status: "active", startedAt: now, completedAt: null, updatedAt: now }).where(eq(runSheetItems.id, item.id));
+      } else if (transition === "advance") {
+        if (item.status !== "active") throw new Error("RUN_SHEET_ITEM_NOT_ACTIVE");
+        await tx.update(runSheetItems).set({ status: "completed", completedAt: now, updatedAt: now }).where(eq(runSheetItems.id, item.id));
+        await activateNext();
+      } else if (transition === "skip") {
+        if (item.status !== "pending" && item.status !== "active") throw new Error("RUN_SHEET_ITEM_NOT_ACTIONABLE");
+        await tx.update(runSheetItems).set({ status: "skipped", completedAt: now, updatedAt: now }).where(eq(runSheetItems.id, item.id));
+        if (item.status === "active") await activateNext();
+      } else {
+        if (item.status !== "completed" && item.status !== "skipped") throw new Error("RUN_SHEET_ITEM_NOT_REOPENABLE");
+        await tx.update(runSheetItems).set({ status: "pending", startedAt: null, completedAt: null, updatedAt: now }).where(eq(runSheetItems.id, item.id));
+      }
+    });
+    return this.getRunSheetItems(demonstrationId);
   }
 }
 

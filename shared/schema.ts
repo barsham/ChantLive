@@ -126,6 +126,21 @@ export const conductReports = pgTable("conduct_reports", {
   resolvedAt: timestamp("resolved_at"),
 });
 
+export const runSheetItems = pgTable("run_sheet_items", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  demonstrationId: varchar("demonstration_id", { length: 255 }).notNull().references(() => demonstrations.id, { onDelete: "cascade" }),
+  orderIndex: integer("order_index").notNull(),
+  kind: text("kind").notNull().default("custom"),
+  title: text("title").notNull(),
+  participantNote: text("participant_note"),
+  plannedDurationMinutes: integer("planned_duration_minutes").notNull().default(10),
+  status: text("status").notNull().default("pending"),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, lastActivityAt: true });
 export const insertDemonstrationSchema = createInsertSchema(demonstrations).omit({ id: true, createdAt: true, publicId: true });
 export const insertChantSchema = createInsertSchema(chants).omit({ id: true });
@@ -144,3 +159,4 @@ export type StoredSafetyCheck = typeof safetyChecks.$inferSelect;
 export type StoredSafetyCheckResponse = typeof safetyCheckResponses.$inferSelect;
 export type StoredAssistanceRequest = typeof assistanceRequests.$inferSelect;
 export type StoredConductReport = typeof conductReports.$inferSelect;
+export type StoredRunSheetItem = typeof runSheetItems.$inferSelect;

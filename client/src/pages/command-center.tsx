@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowLeft, CalendarPlus, CheckCircle2, ClipboardList, Copy, Database, Download, ExternalLink, FileText, History, LifeBuoy, LockKeyhole, Megaphone, QrCode, Route, Share2, ShieldCheck, UserRoundCheck, Users, WifiOff } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, CalendarPlus, CheckCircle2, ClipboardList, Clock3, Copy, Database, Download, ExternalLink, FileText, History, LifeBuoy, ListOrdered, LockKeyhole, Megaphone, Play, Plus, QrCode, RotateCcw, Route, Share2, ShieldCheck, SkipForward, Trash2, UserRoundCheck, Users, WifiOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -175,6 +175,43 @@ type ConductReportSummary = {
   averageResolutionMinutes: number | null;
 };
 type ConductReportQueue = { reports: ConductReport[]; summary: ConductReportSummary };
+type RunSheetItemKind = "arrival" | "welcome" | "chant" | "speaker" | "movement" | "break" | "closing" | "custom";
+type RunSheetItem = {
+  id: string;
+  orderIndex: number;
+  kind: RunSheetItemKind;
+  title: string;
+  participantNote: string | null;
+  plannedDurationMinutes: number;
+  actualDurationMinutes: number | null;
+  status: "pending" | "active" | "completed" | "skipped";
+  startedAt: string | null;
+  completedAt: string | null;
+  updatedAt: string;
+};
+type RunSheetSummary = {
+  total: number;
+  plannedDurationMinutes: number;
+  completed: number;
+  skipped: number;
+  pending: number;
+  active: RunSheetItem | null;
+  next: RunSheetItem | null;
+  storage: "shared";
+  updatedAt: string | null;
+};
+type RunSheetPayload = { items: RunSheetItem[]; summary: RunSheetSummary };
+
+const runSheetPresets: Array<{ kind: RunSheetItemKind; label: string; title: string; note: string; duration: number }> = [
+  { kind: "arrival", label: "Arrival", title: "Arrival and check-in", note: "Arrive, find your group, and check in with an organiser.", duration: 15 },
+  { kind: "welcome", label: "Welcome", title: "Welcome and safety briefing", note: "Listen for the welcome, access information, and safety guidance.", duration: 10 },
+  { kind: "chant", label: "Chant block", title: "Live chant block", note: "Follow the call-and-response shown on this screen.", duration: 15 },
+  { kind: "speaker", label: "Speaker", title: "Speaker address", note: "Please give the speaker your attention.", duration: 10 },
+  { kind: "movement", label: "Movement", title: "Move to the next location", note: "Follow marshals and the latest organiser safety instructions.", duration: 15 },
+  { kind: "break", label: "Break", title: "Water and access break", note: "Take a short break and ask an organiser if you need support.", duration: 10 },
+  { kind: "closing", label: "Closing", title: "Closing and next steps", note: "Stay for final information and a safe departure.", duration: 10 },
+  { kind: "custom", label: "Custom", title: "", note: "", duration: 10 },
+];
 
 function statusTone(status: string) {
   if (status === "live") return "Live event: prioritize recovery, current chant, and participant link visibility.";
@@ -336,6 +373,10 @@ export default function CommandCenter() {
   const [handoffTargetUserId, setHandoffTargetUserId] = useState("");
   const [conductFilter, setConductFilter] = useState<"active" | "urgent" | "all">("active");
   const [conductResponses, setConductResponses] = useState<Record<string, string>>({});
+  const [runSheetKind, setRunSheetKind] = useState<RunSheetItemKind>("welcome");
+  const [runSheetTitle, setRunSheetTitle] = useState(runSheetPresets[1].title);
+  const [runSheetNote, setRunSheetNote] = useState(runSheetPresets[1].note);
+  const [runSheetDuration, setRunSheetDuration] = useState(runSheetPresets[1].duration);
   const applyIncidentPreset = (preset: (typeof incidentPresets)[number]) => {
     setSafetyCheckKind(preset.kind);
     setSafetyCheckMessage(preset.message);
@@ -424,6 +465,11 @@ export default function CommandCenter() {
     refetchInterval: 3000,
     enabled: Boolean(id),
   });
+  const { data: runSheet } = useQuery<RunSheetPayload>({
+    queryKey: ["/api/demos", id, "run-sheet"],
+    refetchInterval: 3000,
+    enabled: Boolean(id),
+  });
   const resolveAssistance = useMutation({
     mutationFn: async (requestId: string) => {
       await apiRequest("PATCH", `/api/demos/${id}/assistance/${requestId}`, { status: "resolved" });
@@ -447,6 +493,56 @@ export default function CommandCenter() {
     },
     onError: (err: Error) => {
       toast({ title: "Could not update concern", description: err.message, variant: "destructive" });
+    },
+  });
+  const createRunSheetItem = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", `/api/demos/${id}/run-sheet`, {
+        kind: runSheetKind,
+        title: runSheetTitle,
+        participantNote: runSheetNote,
+        plannedDurationMinutes: runSheetDuration,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "run-sheet"] });
+      const preset = runSheetPresets.find((item) => item.kind === runSheetKind) ?? runSheetPresets[7];
+      setRunSheetTitle(preset.title);
+      setRunSheetNote(preset.note);
+      setRunSheetDuration(preset.duration);
+      toast({ title: "Stage added to the run sheet", description: "Its participant guidance is ready for the live Now / Next view." });
+    },
+    onError: (err: Error) => toast({ title: "Could not add stage", description: err.message, variant: "destructive" }),
+  });
+  const moveRunSheetItem = useMutation({
+    mutationFn: async ({ itemId, direction }: { itemId: string; direction: "up" | "down" }) => {
+      await apiRequest("POST", `/api/demos/${id}/run-sheet/${itemId}/move`, { direction });
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "run-sheet"] }),
+    onError: (err: Error) => toast({ title: "Could not reorder run sheet", description: err.message, variant: "destructive" }),
+  });
+  const removeRunSheetItem = useMutation({
+    mutationFn: async (itemId: string) => apiRequest("DELETE", `/api/demos/${id}/run-sheet/${itemId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "run-sheet"] });
+      toast({ title: "Pending stage removed" });
+    },
+    onError: (err: Error) => toast({ title: "Could not remove stage", description: err.message, variant: "destructive" }),
+  });
+  const transitionRunSheetItem = useMutation({
+    mutationFn: async ({ itemId, transition }: { itemId: string; transition: "start" | "advance" | "skip" | "reopen" }) => {
+      await apiRequest("POST", `/api/demos/${id}/run-sheet/${itemId}/transition`, { transition });
+    },
+    onSuccess: (_result, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "run-sheet"] });
+      toast({
+        title: variables.transition === "advance" ? "Stage completed; next stage is live" : variables.transition === "start" ? "Run sheet stage is live" : variables.transition === "skip" ? "Stage skipped" : "Stage reopened",
+        description: "Connected participant screens update automatically.",
+      });
+    },
+    onError: (err: Error) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "run-sheet"] });
+      toast({ title: "Run sheet did not change", description: err.message, variant: "destructive" });
     },
   });
   const sendAnnouncement = useMutation({
@@ -616,6 +712,17 @@ export default function CommandCenter() {
     conductFilter === "all" ||
     (conductFilter === "urgent" ? report.urgency === "urgent" && report.status !== "resolved" : report.status !== "resolved")
   ));
+  const runSheetItems = runSheet?.items ?? [];
+  const runSheetAllPending = runSheetItems.every((item) => item.status === "pending");
+  const runSheetActive = runSheet?.summary.active ?? null;
+  const getRunSheetEstimate = (item: RunSheetItem) => {
+    if (!data.demo.scheduledAt) return `${item.plannedDurationMinutes} min planned`;
+    const precedingMinutes = runSheetItems
+      .filter((candidate) => candidate.orderIndex < item.orderIndex)
+      .reduce((total, candidate) => total + candidate.plannedDurationMinutes, 0);
+    const estimate = new Date(new Date(data.demo.scheduledAt).getTime() + precedingMinutes * 60_000);
+    return `${estimate.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} estimate · ${item.plannedDurationMinutes} min`;
+  };
   const openQuestions = audienceQuestions
     .filter((question) => question.status === "open")
     .sort((a, b) => b.votes - a.votes || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
@@ -633,6 +740,7 @@ export default function CommandCenter() {
     { label: "Support action", ready: Boolean(data.demo.supportUrl), detail: data.demo.supportUrl ? "Configured" : "Optional" },
     { label: "Live state", ready: data.demo.status === "live", detail: data.demo.status },
     { label: "Live operator", ready: data.demo.status !== "live" || Boolean(liveController), detail: liveController?.name ?? "Unclaimed" },
+    { label: "Run sheet", ready: runSheetItems.length > 0, detail: runSheetItems.length > 0 ? `${runSheetItems.length} stages` : "Not planned" },
     { label: "Checked in", ready: (checkIns?.total ?? 0) > 0, detail: `${checkIns?.total ?? 0} people` },
     { label: "Feedback", ready: (feedback?.total ?? 0) > 0, detail: `${feedback?.total ?? 0} responses` },
     { label: "Engagement", ready: (engagement?.totalParticipants ?? 0) > 0, detail: `${engagement?.totalPoints ?? 0} points` },
@@ -895,6 +1003,161 @@ export default function CommandCenter() {
                   <Button variant="outline" size="sm" onClick={() => navigate(`/admin/demos/${id}`)} data-testid="button-command-set-schedule">
                     Set event schedule
                   </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6 border-indigo-500/30 bg-indigo-500/5" data-testid="card-command-run-sheet">
+            <CardHeader>
+              <CardTitle className="flex flex-wrap items-center justify-between gap-3 text-base">
+                <span className="flex items-center gap-2">
+                  <ListOrdered className="h-5 w-5 text-indigo-700" aria-hidden="true" />
+                  Live event run sheet
+                </span>
+                <span className="flex flex-wrap gap-2">
+                  <Badge variant="secondary">{runSheet?.summary.total ?? 0} stages</Badge>
+                  <Badge variant="secondary">{runSheet?.summary.plannedDurationMinutes ?? 0} min planned</Badge>
+                  <Badge variant={runSheetActive ? "default" : "outline"}>{runSheetActive ? "Stage live" : "No active stage"}</Badge>
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-lg border border-indigo-500/20 bg-background p-3 text-sm" role="note">
+                <p className="flex items-center gap-2 font-medium"><Database className="h-4 w-4" aria-hidden="true" /> Restart-safe event sequence</p>
+                <p className="mt-1 text-xs text-muted-foreground">Plan the whole gathering, then progress one stage at a time. Participants see only the current and next public guidance; the sequence survives deployments and reconnects.</p>
+              </div>
+
+              {data.demo.status !== "ended" && (
+                <fieldset className="mt-4 rounded-xl border bg-background p-4" disabled={liveOperationLocked || createRunSheetItem.isPending}>
+                  <legend className="px-1 text-sm font-semibold">Add a stage</legend>
+                  <div className="grid gap-3 md:grid-cols-[minmax(140px,0.8fr)_minmax(220px,1.4fr)_120px]">
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Stage type
+                      <select
+                        value={runSheetKind}
+                        onChange={(event) => {
+                          const kind = event.target.value as RunSheetItemKind;
+                          const preset = runSheetPresets.find((item) => item.kind === kind) ?? runSheetPresets[7];
+                          setRunSheetKind(kind);
+                          setRunSheetTitle(preset.title);
+                          setRunSheetNote(preset.note);
+                          setRunSheetDuration(preset.duration);
+                        }}
+                        className="mt-1 min-h-11 w-full rounded-md border bg-background px-3 text-sm text-foreground"
+                        data-testid="select-run-sheet-kind"
+                      >
+                        {runSheetPresets.map((preset) => <option key={preset.kind} value={preset.kind}>{preset.label}</option>)}
+                      </select>
+                    </label>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Stage title
+                      <input
+                        value={runSheetTitle}
+                        onChange={(event) => setRunSheetTitle(event.target.value)}
+                        maxLength={100}
+                        className="mt-1 min-h-11 w-full rounded-md border bg-background px-3 text-sm text-foreground"
+                        placeholder="Example: Main speaker and crowd response"
+                        data-testid="input-run-sheet-title"
+                      />
+                    </label>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Planned minutes
+                      <input
+                        type="number"
+                        min={1}
+                        max={180}
+                        value={runSheetDuration}
+                        onChange={(event) => setRunSheetDuration(Number.parseInt(event.target.value, 10) || 0)}
+                        className="mt-1 min-h-11 w-full rounded-md border bg-background px-3 text-sm text-foreground"
+                        data-testid="input-run-sheet-duration"
+                      />
+                    </label>
+                  </div>
+                  <label className="mt-3 block text-xs font-medium text-muted-foreground">
+                    Participant guidance
+                    <Textarea
+                      value={runSheetNote}
+                      onChange={(event) => setRunSheetNote(event.target.value)}
+                      rows={2}
+                      maxLength={240}
+                      placeholder="What should participants know or do during this stage?"
+                      className="mt-1"
+                      data-testid="input-run-sheet-note"
+                    />
+                  </label>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-xs text-muted-foreground">{runSheetNote.length}/240 · participant-facing</p>
+                    <Button
+                      className="min-h-11"
+                      onClick={() => createRunSheetItem.mutate()}
+                      disabled={runSheetTitle.trim().length < 3 || runSheetDuration < 1 || runSheetDuration > 180}
+                      data-testid="button-add-run-sheet-item"
+                    >
+                      <Plus className="mr-2 h-4 w-4" aria-hidden="true" /> Add stage
+                    </Button>
+                  </div>
+                </fieldset>
+              )}
+
+              {runSheetItems.length === 0 ? (
+                <div className="mt-4 rounded-xl border border-dashed bg-background p-6 text-center" data-testid="text-run-sheet-empty">
+                  <p className="font-medium">No event sequence yet</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Add arrival, welcome, chant, speaker, movement, break, and closing stages so the whole team shares one operational plan.</p>
+                </div>
+              ) : (
+                <div className="mt-4">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground" role="status" aria-live="polite">
+                    <span>{runSheet?.summary.completed ?? 0} completed · {runSheet?.summary.skipped ?? 0} skipped · {runSheet?.summary.pending ?? 0} pending</span>
+                    <span>{runSheetAllPending ? "Reordering is available before the first stage starts." : "Live progress is protected from accidental reordering."}</span>
+                  </div>
+                  <ol className="grid gap-3" aria-label="Event run sheet stages">
+                    {runSheetItems.map((item, index) => {
+                      const isCurrent = item.status === "active";
+                      const isNext = item.id === runSheet?.summary.next?.id;
+                      const transitionPending = transitionRunSheetItem.isPending;
+                      return (
+                        <li key={item.id} className={`rounded-xl border bg-background p-4 ${isCurrent ? "border-indigo-500 ring-2 ring-indigo-500/20" : ""}`} data-testid={`card-run-sheet-item-${item.id}`}>
+                          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-indigo-500/10 px-2 text-xs font-bold text-indigo-800">{index + 1}</span>
+                                <p className="font-semibold">{item.title}</p>
+                                <Badge variant={isCurrent ? "default" : item.status === "completed" ? "secondary" : item.status === "skipped" ? "outline" : "secondary"}>{isCurrent ? "Now" : isNext ? "Next" : item.status}</Badge>
+                                <Badge variant="outline" className="capitalize">{item.kind}</Badge>
+                              </div>
+                              <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground"><Clock3 className="h-3.5 w-3.5" aria-hidden="true" /> {getRunSheetEstimate(item)}{item.actualDurationMinutes !== null ? ` · ${item.actualDurationMinutes} min actual` : ""}</p>
+                              <p className="mt-2 text-sm text-muted-foreground">{item.participantNote || "No participant guidance for this stage."}</p>
+                            </div>
+                            <div className="flex flex-wrap gap-2 lg:max-w-md lg:justify-end">
+                              {runSheetAllPending && item.status === "pending" && (
+                                <>
+                                  <Button className="min-h-11 min-w-11" size="sm" variant="outline" aria-label={`Move ${item.title} earlier`} disabled={index === 0 || moveRunSheetItem.isPending} onClick={() => moveRunSheetItem.mutate({ itemId: item.id, direction: "up" })} data-testid={`button-run-sheet-up-${item.id}`}><ArrowUp className="h-4 w-4" /></Button>
+                                  <Button className="min-h-11 min-w-11" size="sm" variant="outline" aria-label={`Move ${item.title} later`} disabled={index === runSheetItems.length - 1 || moveRunSheetItem.isPending} onClick={() => moveRunSheetItem.mutate({ itemId: item.id, direction: "down" })} data-testid={`button-run-sheet-down-${item.id}`}><ArrowDown className="h-4 w-4" /></Button>
+                                  <Button className="min-h-11 min-w-11" size="sm" variant="outline" aria-label={`Remove ${item.title}`} disabled={removeRunSheetItem.isPending} onClick={() => removeRunSheetItem.mutate(item.id)} data-testid={`button-run-sheet-delete-${item.id}`}><Trash2 className="h-4 w-4" /></Button>
+                                </>
+                              )}
+                              {data.demo.status === "live" && isNext && !runSheetActive && (
+                                <Button className="min-h-11" size="sm" disabled={liveOperationLocked || transitionPending} onClick={() => transitionRunSheetItem.mutate({ itemId: item.id, transition: "start" })} data-testid={`button-run-sheet-start-${item.id}`}><Play className="mr-2 h-4 w-4" /> Start stage</Button>
+                              )}
+                              {data.demo.status === "live" && isCurrent && (
+                                <>
+                                  <Button className="min-h-11" size="sm" disabled={liveOperationLocked || transitionPending} onClick={() => transitionRunSheetItem.mutate({ itemId: item.id, transition: "advance" })} data-testid={`button-run-sheet-advance-${item.id}`}><CheckCircle2 className="mr-2 h-4 w-4" /> Complete &amp; next</Button>
+                                  <Button className="min-h-11" size="sm" variant="outline" disabled={liveOperationLocked || transitionPending} onClick={() => transitionRunSheetItem.mutate({ itemId: item.id, transition: "skip" })} data-testid={`button-run-sheet-skip-${item.id}`}><SkipForward className="mr-2 h-4 w-4" /> Skip</Button>
+                                </>
+                              )}
+                              {data.demo.status === "live" && (item.status === "completed" || item.status === "skipped") && (
+                                <Button className="min-h-11" size="sm" variant="outline" disabled={liveOperationLocked || transitionPending} onClick={() => transitionRunSheetItem.mutate({ itemId: item.id, transition: "reopen" })} data-testid={`button-run-sheet-reopen-${item.id}`}><RotateCcw className="mr-2 h-4 w-4" /> Reopen</Button>
+                              )}
+                            </div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                  {data.demo.status !== "live" && data.demo.status !== "ended" && (
+                    <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-950">The sequence is ready to edit. Go live when the operator is ready to start the first stage.</p>
+                  )}
                 </div>
               )}
             </CardContent>

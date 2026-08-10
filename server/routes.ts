@@ -7,10 +7,13 @@ import {
   type ConductReportCategory,
   type ConductReportStatus,
   type ConductReportUrgency,
+  type RunSheetItemKind,
+  type RunSheetTransition,
   type SafetyCheckKind,
   type SafetyCheckResponseType,
   type StoredAssistanceRequest as AssistanceRequest,
   type StoredConductReport as ConductReport,
+  type StoredRunSheetItem as RunSheetItem,
   type StoredSafetyCheck as SafetyCheck,
 } from "./storage";
 import { ensureDemoColumnsAndTables, ensureUserAuthColumns } from "./db";
@@ -172,6 +175,70 @@ function summarizeConductReports(reports: ConductReport[]) {
     averageAcknowledgementMinutes: average(acknowledgedMinutes),
     averageResolutionMinutes: average(resolvedMinutes),
   };
+}
+
+const runSheetKinds: RunSheetItemKind[] = ["arrival", "welcome", "chant", "speaker", "movement", "break", "closing", "custom"];
+
+function serializeRunSheetItem(item: RunSheetItem) {
+  const actualDurationMinutes = item.startedAt && item.completedAt
+    ? Math.max(0, Math.round((item.completedAt.getTime() - item.startedAt.getTime()) / 60_000))
+    : null;
+  return {
+    id: item.id,
+    orderIndex: item.orderIndex,
+    kind: item.kind,
+    title: item.title,
+    participantNote: item.participantNote,
+    plannedDurationMinutes: item.plannedDurationMinutes,
+    actualDurationMinutes,
+    status: item.status,
+    startedAt: item.startedAt?.toISOString() ?? null,
+    completedAt: item.completedAt?.toISOString() ?? null,
+    updatedAt: item.updatedAt.toISOString(),
+  };
+}
+
+function summarizeRunSheet(items: RunSheetItem[]) {
+  const active = items.find((item) => item.status === "active") ?? null;
+  const next = items.find((item) => item.status === "pending" && (!active || item.orderIndex > active.orderIndex))
+    ?? items.find((item) => item.status === "pending")
+    ?? null;
+  return {
+    total: items.length,
+    plannedDurationMinutes: items.reduce((total, item) => total + item.plannedDurationMinutes, 0),
+    completed: items.filter((item) => item.status === "completed").length,
+    skipped: items.filter((item) => item.status === "skipped").length,
+    pending: items.filter((item) => item.status === "pending").length,
+    active: active ? serializeRunSheetItem(active) : null,
+    next: next ? serializeRunSheetItem(next) : null,
+    storage: "shared" as const,
+    updatedAt: items.reduce<Date | null>((latest, item) => !latest || item.updatedAt > latest ? item.updatedAt : latest, null)?.toISOString() ?? null,
+  };
+}
+
+async function getRunSheetPayload(demoId: string) {
+  const items = await storage.getRunSheetItems(demoId);
+  return { items: items.map(serializeRunSheetItem), summary: summarizeRunSheet(items) };
+}
+
+async function emitRunSheetUpdate(io: SocketIOServer, demo: Demonstration) {
+  const payload = await getRunSheetPayload(demo.id);
+  io.to(`demo:${demo.publicId}`).emit("run_sheet_update", payload.summary);
+  return payload;
+}
+
+function parseRunSheetItemInput(body: unknown) {
+  const input = body as Record<string, unknown> | null | undefined;
+  const title = typeof input?.title === "string" ? input.title.trim().slice(0, 100) : "";
+  const participantNote = typeof input?.participantNote === "string" && input.participantNote.trim()
+    ? input.participantNote.trim().slice(0, 240)
+    : null;
+  const kind = runSheetKinds.includes(input?.kind as RunSheetItemKind) ? input?.kind as RunSheetItemKind : "custom";
+  const rawDuration = typeof input?.plannedDurationMinutes === "number" ? input.plannedDurationMinutes : Number(input?.plannedDurationMinutes);
+  const plannedDurationMinutes = Number.isInteger(rawDuration) ? rawDuration : 0;
+  if (title.length < 3) return { error: "Stage title must be at least 3 characters" } as const;
+  if (plannedDurationMinutes < 1 || plannedDurationMinutes > 180) return { error: "Planned duration must be between 1 and 180 minutes" } as const;
+  return { data: { kind, title, participantNote, plannedDurationMinutes } } as const;
 }
 
 function getCrowdPulseSummary(demoId: string) {
@@ -911,6 +978,133 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/demos/:id/run-sheet", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      res.json(await getRunSheetPayload(demo.id));
+    } catch {
+      res.status(500).json({ message: "Failed to fetch the event run sheet" });
+    }
+  });
+
+  app.post("/api/demos/:id/run-sheet", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      if (demo.status === "ended") return res.status(409).json({ message: "Ended event run sheets are read-only" });
+      if (demo.status === "live" && !(await requireLiveController(user, demo, res))) return;
+      const parsed = parseRunSheetItemInput(req.body);
+      if ("error" in parsed) return res.status(400).json({ message: parsed.error });
+      const existing = await storage.getRunSheetItems(demo.id);
+      if (existing.length >= 40) return res.status(400).json({ message: "A run sheet can contain up to 40 stages" });
+      const created = await storage.createRunSheetItem(demo.id, parsed.data);
+      await emitRunSheetUpdate(io, demo);
+      res.status(201).json(serializeRunSheetItem(created));
+    } catch {
+      res.status(500).json({ message: "Failed to add the run-sheet stage" });
+    }
+  });
+
+  app.patch("/api/demos/:id/run-sheet/:itemId", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      if (demo.status === "ended") return res.status(409).json({ message: "Ended event run sheets are read-only" });
+      if (demo.status === "live" && !(await requireLiveController(user, demo, res))) return;
+      const itemId = getSingleParam(req.params.itemId) ?? "";
+      const items = await storage.getRunSheetItems(demo.id);
+      const existing = items.find((item) => item.id === itemId);
+      if (!existing) return res.status(404).json({ message: "Run-sheet stage not found" });
+      if (existing.status !== "pending") return res.status(409).json({ message: "Only pending stages can be edited" });
+      const parsed = parseRunSheetItemInput(req.body);
+      if ("error" in parsed) return res.status(400).json({ message: parsed.error });
+      const updated = await storage.updateRunSheetItem(demo.id, itemId, parsed.data);
+      if (!updated) return res.status(404).json({ message: "Run-sheet stage not found" });
+      await emitRunSheetUpdate(io, demo);
+      res.json(serializeRunSheetItem(updated));
+    } catch {
+      res.status(500).json({ message: "Failed to update the run-sheet stage" });
+    }
+  });
+
+  app.post("/api/demos/:id/run-sheet/:itemId/move", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      if (demo.status === "ended") return res.status(409).json({ message: "Ended event run sheets are read-only" });
+      if (demo.status === "live" && !(await requireLiveController(user, demo, res))) return;
+      const direction = req.body?.direction === "up" ? "up" : req.body?.direction === "down" ? "down" : null;
+      if (!direction) return res.status(400).json({ message: "Choose up or down" });
+      const itemId = getSingleParam(req.params.itemId) ?? "";
+      const items = await storage.getRunSheetItems(demo.id);
+      const item = items.find((candidate) => candidate.id === itemId);
+      if (!item) return res.status(404).json({ message: "Run-sheet stage not found" });
+      if (item.status !== "pending" || items.some((candidate) => candidate.status !== "pending")) {
+        return res.status(409).json({ message: "Reordering is available before the run sheet starts" });
+      }
+      const updated = await storage.moveRunSheetItem(demo.id, itemId, direction);
+      await emitRunSheetUpdate(io, demo);
+      res.json({ items: updated.map(serializeRunSheetItem), summary: summarizeRunSheet(updated) });
+    } catch {
+      res.status(500).json({ message: "Failed to reorder the run sheet" });
+    }
+  });
+
+  app.delete("/api/demos/:id/run-sheet/:itemId", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      if (demo.status === "ended") return res.status(409).json({ message: "Ended event run sheets are read-only" });
+      if (demo.status === "live" && !(await requireLiveController(user, demo, res))) return;
+      const itemId = getSingleParam(req.params.itemId) ?? "";
+      const items = await storage.getRunSheetItems(demo.id);
+      const item = items.find((candidate) => candidate.id === itemId);
+      if (!item) return res.status(404).json({ message: "Run-sheet stage not found" });
+      if (item.status !== "pending") return res.status(409).json({ message: "Only pending stages can be removed" });
+      await storage.deleteRunSheetItem(demo.id, itemId);
+      const payload = await emitRunSheetUpdate(io, demo);
+      res.json(payload);
+    } catch {
+      res.status(500).json({ message: "Failed to remove the run-sheet stage" });
+    }
+  });
+
+  app.post("/api/demos/:id/run-sheet/:itemId/transition", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      if (demo.status !== "live") return res.status(409).json({ message: "Go live before progressing the run sheet" });
+      if (!(await requireLiveController(user, demo, res))) return;
+      const transition = ["start", "advance", "skip", "reopen"].includes(req.body?.transition)
+        ? req.body.transition as RunSheetTransition
+        : null;
+      if (!transition) return res.status(400).json({ message: "Choose start, advance, skip, or reopen" });
+      const itemId = getSingleParam(req.params.itemId) ?? "";
+      const updated = await storage.transitionRunSheetItem(demo.id, itemId, transition);
+      const payload = { items: updated.map(serializeRunSheetItem), summary: summarizeRunSheet(updated) };
+      io.to(`demo:${demo.publicId}`).emit("run_sheet_update", payload.summary);
+      res.json(payload);
+    } catch (err) {
+      if (err instanceof Error && err.message.startsWith("RUN_SHEET_")) {
+        return res.status(err.message === "RUN_SHEET_ITEM_NOT_FOUND" ? 404 : 409).json({ message: "The run sheet changed on another device. Refresh and try again." });
+      }
+      res.status(500).json({ message: "Failed to progress the run sheet" });
+    }
+  });
+
   app.get("/api/demos/:id/pulse", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
@@ -1237,6 +1431,17 @@ export async function registerRoutes(
       res.status(result.created ? 201 : 200).json({ ...serializeConductReport(result.report, true), duplicate: !result.created });
     } catch (err) {
       res.status(500).json({ message: "Failed to submit the private conduct report" });
+    }
+  });
+
+  app.get("/api/public/demos/:publicId/run-sheet", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      const items = await storage.getRunSheetItems(demo.id);
+      res.json(summarizeRunSheet(items));
+    } catch {
+      res.status(500).json({ message: "Failed to fetch the live event stage" });
     }
   });
 

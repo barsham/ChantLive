@@ -4,6 +4,18 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.80 - 10 August 2026
+
+A restart-safe live event run sheet that keeps organisers and participants aligned from arrival through closing.
+
+### Added
+
+- Event run-sheet composer: Organisers can build a complete event sequence from arrival, welcome, chant, speaker, movement, break, closing, or custom stages with participant guidance and planned duration. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+- Timed operational readiness plan: The Command Center shows total planned time, scheduled start estimates, validation and empty states, plus safe reordering and removal before the sequence begins. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+- Accountable live stage progression: The authorised live operator can start, complete and advance, skip, or reopen stages while transactional PostgreSQL state prevents conflicting active stages and survives deployments. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+- Participant Now and Next programme: Participants receive an accessible mobile event-progress panel with the current stage, participant guidance, planned time, and next stage in all five interface languages after live updates or reconnection. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+- Post-event delivery timeline: Post-event reports compare planned stages with completed, skipped, pending, and actual-duration outcomes in both the visible report and copied debrief text. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+
 ## 1.1.79 - 9 August 2026
 
 Weekly blog guidance for writing chants that peaceful event participants can follow quickly.

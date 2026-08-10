@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.80",
+      "releasedAt": "2026-08-10",
+      "summary": "A restart-safe live event run sheet that keeps organisers and participants aligned from arrival through closing.",
+      "items": [
+        {
+          "id": "cl-2026-08-10-run-sheet-composer",
+          "title": "Event run-sheet composer",
+          "description": "Organisers can build a complete event sequence from arrival, welcome, chant, speaker, movement, break, closing, or custom stages with participant guidance and planned duration.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-10",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-10-run-sheet-readiness",
+          "title": "Timed operational readiness plan",
+          "description": "The Command Center shows total planned time, scheduled start estimates, validation and empty states, plus safe reordering and removal before the sequence begins.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-10",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-10-accountable-live-progression",
+          "title": "Accountable live stage progression",
+          "description": "The authorised live operator can start, complete and advance, skip, or reopen stages while transactional PostgreSQL state prevents conflicting active stages and survives deployments.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-10",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-10-participant-now-next",
+          "title": "Participant Now and Next programme",
+          "description": "Participants receive an accessible mobile event-progress panel with the current stage, participant guidance, planned time, and next stage in all five interface languages after live updates or reconnection.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-10",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-10-run-sheet-report",
+          "title": "Post-event delivery timeline",
+          "description": "Post-event reports compare planned stages with completed, skipped, pending, and actual-duration outcomes in both the visible report and copied debrief text.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-10",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        }
+      ]
+    },
+    {
       "version": "1.1.79",
       "releasedAt": "2026-08-09",
       "summary": "Weekly blog guidance for writing chants that peaceful event participants can follow quickly.",

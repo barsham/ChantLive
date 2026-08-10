@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useParams } from "wouter";
 import { getSocket } from "@/lib/socket";
-import { CalendarPlus, Copy, Download, ExternalLink, Eye, HelpCircle, Link2, MapPin, Share2, ShieldCheck, Sun, Trash2, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
+import { CalendarPlus, Clock3, Copy, Download, ExternalLink, Eye, HelpCircle, Link2, ListOrdered, MapPin, Share2, ShieldCheck, Sun, Trash2, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
 import { buildGoogleCalendarUrl, buildOutlookCalendarUrl, downloadCalendarFile, type CalendarEventDetails } from "@/lib/calendar";
 import { forgetRecentParticipantEvent, rememberParticipantEvent } from "@/lib/participant-history";
 import { forgetOfflineEvent, loadOfflineEvent, saveOfflineEvent, updateOfflineEventIfPrepared, type OfflineChantData, type OfflineEventSnapshot } from "@/lib/offline-event";
@@ -81,6 +81,29 @@ type ConductReport = {
   acknowledgedAt: string | null;
   resolvedAt: string | null;
   duplicate?: boolean;
+};
+type ParticipantRunSheetItem = {
+  id: string;
+  orderIndex: number;
+  kind: "arrival" | "welcome" | "chant" | "speaker" | "movement" | "break" | "closing" | "custom";
+  title: string;
+  participantNote: string | null;
+  plannedDurationMinutes: number;
+  status: "pending" | "active" | "completed" | "skipped";
+  startedAt: string | null;
+  completedAt: string | null;
+  updatedAt: string;
+};
+type ParticipantRunSheet = {
+  total: number;
+  plannedDurationMinutes: number;
+  completed: number;
+  skipped: number;
+  pending: number;
+  active: ParticipantRunSheetItem | null;
+  next: ParticipantRunSheetItem | null;
+  storage: "shared";
+  updatedAt: string | null;
 };
 
 const clampProgress = (value: number) => Math.min(100, Math.max(0, value));
@@ -1151,6 +1174,16 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     feedbackFailed: "بازخورد ارسال نشد. مستقیماً به برگزارکننده اطلاع دهید.",
   },
 };
+const runSheetCopy: Record<ParticipantLanguage, {
+  title: string; now: string; next: string; progress: string; stageOf: string;
+  plannedMinutes: string; waiting: string; completed: string;
+}> = {
+  en: { title: "Event programme", now: "Now", next: "Next", progress: "Event progress", stageOf: "stage of", plannedMinutes: "planned minutes", waiting: "The organiser has not started the first stage yet.", completed: "The planned programme is complete." },
+  es: { title: "Programa del evento", now: "Ahora", next: "A continuación", progress: "Progreso del evento", stageOf: "etapa de", plannedMinutes: "minutos previstos", waiting: "El organizador aún no ha iniciado la primera etapa.", completed: "El programa previsto ha terminado." },
+  fr: { title: "Programme de l’événement", now: "Maintenant", next: "Ensuite", progress: "Progression de l’événement", stageOf: "étape sur", plannedMinutes: "minutes prévues", waiting: "L’organisateur n’a pas encore lancé la première étape.", completed: "Le programme prévu est terminé." },
+  ar: { title: "برنامج الفعالية", now: "الآن", next: "التالي", progress: "تقدم الفعالية", stageOf: "مرحلة من", plannedMinutes: "دقائق مخططة", waiting: "لم يبدأ المنظم المرحلة الأولى بعد.", completed: "اكتمل البرنامج المخطط." },
+  fa: { title: "برنامه رویداد", now: "اکنون", next: "بعدی", progress: "پیشرفت رویداد", stageOf: "مرحله از", plannedMinutes: "دقیقه برنامه‌ریزی‌شده", waiting: "برگزارکننده هنوز مرحله اول را شروع نکرده است.", completed: "برنامه برنامه‌ریزی‌شده به پایان رسیده است." },
+};
 const conductCopy: Record<ParticipantLanguage, {
   title: string; body: string; privacy: string; emergency: string; category: string;
   categories: Record<ConductReportCategory, string>; followUp: string; urgent: string;
@@ -1259,6 +1292,7 @@ export default function Participant() {
   const [conductStatus, setConductStatus] = useState<string | null>(null);
   const [conductStatusError, setConductStatusError] = useState(false);
   const [conductLoading, setConductLoading] = useState(false);
+  const [runSheet, setRunSheet] = useState<ParticipantRunSheet | null>(null);
   const [engagement, setEngagement] = useState<ParticipantEngagement | null>(null);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const [shareFallbackText, setShareFallbackText] = useState<string | null>(null);
@@ -1276,6 +1310,7 @@ export default function Participant() {
   const lowBandwidthRef = useRef(lowBandwidth);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const t = participantCopy[participantLanguage];
+  const runSheetT = runSheetCopy[participantLanguage];
   const conductT = conductCopy[participantLanguage];
   const restoreSafetyResponse = (check: SafetyCheck | null) => {
     if (!check?.participantResponse) return;
@@ -1478,6 +1513,9 @@ export default function Participant() {
     socket.on("conduct_report_status_update", () => {
       refreshConductReports();
     });
+    socket.on("run_sheet_update", (summary: ParticipantRunSheet) => {
+      setRunSheet(summary);
+    });
 
     if (!socket.connected) {
       socket.connect();
@@ -1499,6 +1537,7 @@ export default function Participant() {
       socket.off("safety_check_results_update");
       socket.off("engagement_update");
       socket.off("conduct_report_status_update");
+      socket.off("run_sheet_update");
       socket.off("connect");
       socket.off("disconnect");
     };
@@ -1533,6 +1572,10 @@ export default function Participant() {
       .then((response) => response.ok ? response.json() : null)
       .then((data: ParticipantEngagement | null) => setEngagement(data))
       .catch(() => setEngagement(null));
+    fetch(`/api/public/demos/${publicId}/run-sheet`)
+      .then((response) => response.ok ? response.json() : null)
+      .then((summary: ParticipantRunSheet | null) => setRunSheet(summary))
+      .catch(() => setRunSheet(null));
     refreshConductReports();
   }, [publicId]);
 
@@ -2300,6 +2343,43 @@ export default function Participant() {
     chantData?.serverNow,
   ]);
 
+  const renderRunSheetStage = (className = "") => {
+    if (!runSheet || runSheet.total === 0) return null;
+    const progressed = runSheet.completed + runSheet.skipped;
+    const progressPercent = Math.min(100, Math.round((progressed / runSheet.total) * 100));
+    return (
+      <section className={`rounded-2xl border border-indigo-300/40 bg-indigo-300/10 p-4 text-start text-indigo-50 ${className}`} aria-labelledby="participant-run-sheet-title" data-testid="panel-participant-run-sheet">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 id="participant-run-sheet-title" className="flex items-center gap-2 text-sm font-semibold">
+            <ListOrdered className="h-4 w-4" aria-hidden="true" />
+            {runSheetT.title}
+          </h2>
+          <span className="text-xs text-indigo-100/75">{runSheetT.progress}: {formatParticipantNumber(progressed, participantLanguage)} {runSheetT.stageOf} {formatParticipantNumber(runSheet.total, participantLanguage)}</span>
+        </div>
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/15" role="progressbar" aria-label={runSheetT.progress} aria-valuemin={0} aria-valuemax={runSheet.total} aria-valuenow={progressed}>
+          <div className="h-full rounded-full bg-indigo-300" style={{ width: `${progressPercent}%` }} />
+        </div>
+        {runSheet.active ? (
+          <div className="mt-4" role="status" aria-live="polite" aria-atomic="true">
+            <p className="text-xs font-mono uppercase tracking-widest text-indigo-200/75">{runSheetT.now}</p>
+            <p className="mt-1 text-lg font-bold" data-testid="text-participant-run-sheet-now">{runSheet.active.title}</p>
+            {runSheet.active.participantNote && <p className="mt-1 text-sm leading-relaxed text-indigo-50/90">{runSheet.active.participantNote}</p>}
+            <p className="mt-2 flex items-center gap-1 text-xs text-indigo-100/70"><Clock3 className="h-3.5 w-3.5" aria-hidden="true" /> {formatParticipantNumber(runSheet.active.plannedDurationMinutes, participantLanguage)} {runSheetT.plannedMinutes}</p>
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-indigo-50/85" role="status" data-testid="text-participant-run-sheet-waiting">{runSheet.next ? runSheetT.waiting : runSheetT.completed}</p>
+        )}
+        {runSheet.next && runSheet.next.id !== runSheet.active?.id && (
+          <div className="mt-4 border-t border-indigo-200/20 pt-3">
+            <p className="text-xs font-mono uppercase tracking-widest text-indigo-200/75">{runSheetT.next}</p>
+            <p className="mt-1 font-semibold" data-testid="text-participant-run-sheet-next">{runSheet.next.title}</p>
+            {runSheet.next.participantNote && <p className="mt-1 text-sm text-indigo-50/80">{runSheet.next.participantNote}</p>}
+          </div>
+        )}
+      </section>
+    );
+  };
+
   const renderPhaseProgress = (phase: "leader" | "people") => {
     if (activePhase !== phase || !chantData || lowBandwidth) {
       return null;
@@ -2553,6 +2633,7 @@ export default function Participant() {
           </p>
           <p className="text-neutral-500">{chantData.demoTitle}</p>
           {renderParticipantAccess("mx-auto mt-5 max-w-lg")}
+          {renderRunSheetStage("mx-auto mt-5 max-w-lg")}
           <div className="mt-4">{renderParticipantLanguageSelect()}</div>
           {logisticsItems.length > 0 && (
             <div className="mx-auto mt-5 max-w-lg rounded-2xl border border-neutral-800 bg-neutral-950/80 p-4 text-start" data-testid="panel-waiting-logistics">
@@ -2644,6 +2725,7 @@ export default function Participant() {
         </div>
       )}
       {renderParticipantAccess("mx-4 mt-3", true)}
+      {renderRunSheetStage("mx-4 mt-4")}
       {renderIncidentNotice()}
       {renderOfflineWarning()}
       {(!connected || isOffline) && (

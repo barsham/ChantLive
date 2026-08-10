@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowLeft, Check, ClipboardCheck, Copy, Download, Printer, ShieldCheck, Users } from "lucide-react";
+import { ArrowLeft, Check, ClipboardCheck, Copy, Download, ListOrdered, Printer, ShieldCheck, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,6 +48,22 @@ type ConductReportSummary = {
   averageResolutionMinutes: number | null;
 };
 type ConductReportQueue = { reports: unknown[]; summary: ConductReportSummary };
+type RunSheetItem = {
+  id: string;
+  orderIndex: number;
+  kind: string;
+  title: string;
+  participantNote: string | null;
+  plannedDurationMinutes: number;
+  actualDurationMinutes: number | null;
+  status: "pending" | "active" | "completed" | "skipped";
+  startedAt: string | null;
+  completedAt: string | null;
+};
+type RunSheetPayload = {
+  items: RunSheetItem[];
+  summary: { total: number; plannedDurationMinutes: number; completed: number; skipped: number; pending: number; active: RunSheetItem | null; next: RunSheetItem | null; storage: "shared"; updatedAt: string | null };
+};
 
 function formatRuntime(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
@@ -56,7 +72,7 @@ function formatRuntime(totalSeconds: number) {
   return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`;
 }
 
-function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackSummary, conduct?: ConductReportSummary) {
+function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackSummary, conduct?: ConductReportSummary, runSheet?: RunSheetPayload) {
   return [
     `ChantLive Post-Event Report: ${data.demo.title}`,
     "",
@@ -71,6 +87,10 @@ function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackS
     `Private conduct concerns: ${conduct?.total ?? 0} total, ${conduct?.open ?? 0} unseen, ${conduct?.acknowledged ?? 0} acknowledged, ${conduct?.resolved ?? 0} resolved, ${conduct?.urgent ?? 0} urgent`,
     `Average acknowledgement: ${conduct?.averageAcknowledgementMinutes ?? "not available"} minutes`,
     `Average resolution: ${conduct?.averageResolutionMinutes ?? "not available"} minutes`,
+    `Run sheet: ${runSheet?.summary.total ?? 0} stages, ${runSheet?.summary.plannedDurationMinutes ?? 0} planned minutes, ${runSheet?.summary.completed ?? 0} completed, ${runSheet?.summary.skipped ?? 0} skipped`,
+    "",
+    "Run-sheet delivery timeline:",
+    ...(runSheet?.items.length ? runSheet.items.map((item, index) => `- ${index + 1}. ${item.title}: ${item.status}; ${item.plannedDurationMinutes} min planned${item.actualDurationMinutes == null ? "" : `; ${item.actualDurationMinutes} min actual`}`) : ["- No run sheet was prepared."]),
     "",
     "Debrief checklist:",
     "- Did participants understand how to join?",
@@ -101,6 +121,10 @@ export default function EventReport() {
     queryKey: ["/api/demos", id, "conduct-reports"],
     enabled: Boolean(id),
   });
+  const { data: runSheet } = useQuery<RunSheetPayload>({
+    queryKey: ["/api/demos", id, "run-sheet"],
+    enabled: Boolean(id),
+  });
 
   const runtimeSeconds = useMemo(() => {
     if (!data) return 0;
@@ -116,7 +140,7 @@ export default function EventReport() {
 
   const copyReport = async () => {
     if (!data) return;
-    await navigator.clipboard.writeText(buildReportText(data, runtime, feedback, conductQueue?.summary));
+    await navigator.clipboard.writeText(buildReportText(data, runtime, feedback, conductQueue?.summary, runSheet));
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };
@@ -206,6 +230,42 @@ export default function EventReport() {
               </CardContent>
             </Card>
           </div>
+
+          <Card className="mt-6 border-indigo-500/30" data-testid="card-report-run-sheet">
+            <CardHeader>
+              <CardTitle className="flex flex-wrap items-center justify-between gap-2 text-base">
+                <span className="flex items-center gap-2"><ListOrdered className="h-5 w-5 text-indigo-700" aria-hidden="true" /> Run-sheet delivery timeline</span>
+                <span className="flex flex-wrap gap-2">
+                  <Badge variant="secondary">{runSheet?.summary.completed ?? 0} completed</Badge>
+                  <Badge variant="outline">{runSheet?.summary.skipped ?? 0} skipped</Badge>
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-4 text-sm text-muted-foreground">Compare the plan with what the live operator delivered. This timeline is stored through restarts and is included in the copied report.</p>
+              {(runSheet?.items.length ?? 0) > 0 ? (
+                <ol className="grid gap-3" aria-label="Delivered event run sheet">
+                  {runSheet?.items.map((item, index) => (
+                    <li key={item.id} className="rounded-lg border bg-background p-3 text-sm">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="font-medium">{index + 1}. {item.title}</p>
+                        <Badge variant={item.status === "completed" ? "secondary" : item.status === "skipped" ? "outline" : "default"}>{item.status}</Badge>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">{item.plannedDurationMinutes} min planned{item.actualDurationMinutes == null ? "" : ` · ${item.actualDurationMinutes} min actual`} · {item.kind}</p>
+                      {item.participantNote && <p className="mt-2 text-sm text-muted-foreground">Participant guidance: {item.participantNote}</p>}
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">No run sheet was prepared for this event.</p>
+              )}
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-lg border bg-background p-3"><p className="text-xs text-muted-foreground">Stages</p><p className="mt-1 text-lg font-semibold">{runSheet?.summary.total ?? 0}</p></div>
+                <div className="rounded-lg border bg-background p-3"><p className="text-xs text-muted-foreground">Planned duration</p><p className="mt-1 text-lg font-semibold">{runSheet?.summary.plannedDurationMinutes ?? 0} min</p></div>
+                <div className="rounded-lg border bg-background p-3"><p className="text-xs text-muted-foreground">Still pending</p><p className="mt-1 text-lg font-semibold">{runSheet?.summary.pending ?? 0}</p></div>
+              </div>
+            </CardContent>
+          </Card>
 
           <Card className="mt-6" data-testid="card-report-feedback-summary">
             <CardHeader>

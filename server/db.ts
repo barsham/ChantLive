@@ -175,5 +175,27 @@ export async function ensureDemoColumnsAndTables(): Promise<void> {
     CREATE UNIQUE INDEX IF NOT EXISTS conduct_reports_one_matching_open_idx
     ON conduct_reports (demonstration_id, session_id, category, md5(lower(details)))
     WHERE status <> 'resolved';
+
+    CREATE TABLE IF NOT EXISTS run_sheet_items (
+      id varchar(255) PRIMARY KEY,
+      demonstration_id varchar(255) NOT NULL REFERENCES demonstrations(id) ON DELETE CASCADE,
+      order_index integer NOT NULL,
+      kind text NOT NULL DEFAULT 'custom',
+      title text NOT NULL,
+      participant_note text,
+      planned_duration_minutes integer NOT NULL DEFAULT 10,
+      status text NOT NULL DEFAULT 'pending',
+      started_at timestamp,
+      completed_at timestamp,
+      created_at timestamp NOT NULL DEFAULT now(),
+      updated_at timestamp NOT NULL DEFAULT now()
+    );
+
+    CREATE INDEX IF NOT EXISTS run_sheet_items_demo_order_idx
+    ON run_sheet_items (demonstration_id, order_index);
+
+    CREATE UNIQUE INDEX IF NOT EXISTS run_sheet_items_one_active_per_demo_idx
+    ON run_sheet_items (demonstration_id)
+    WHERE status = 'active';
   `);
 }
