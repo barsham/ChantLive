@@ -1,13 +1,24 @@
 # ChantLive Direct Outreach Targets
 
-Use this for a small, human first wave. The goal is not publicity; it is to find 3-5 people willing to run a realistic test and tell us what feels useful, unsafe, confusing, or missing.
+> **Strategy reset, 2026-08-03:** unsolicited first-contact email is paused.
+> The ledger records 59 contacts and zero confirmed test starts. Follow
+> `docs/promotion-strategy-v2.md`; do not add another cold-email recipient until
+> the participant-first guided demo has produced a completed test and the pause
+> is explicitly reviewed.
+
+Use this for small, human outreach. The goal is not publicity; it is to find
+people willing to run a realistic test and explain what feels useful, unsafe,
+confusing, inaccessible, or missing.
+
+Prefer two or three strong invitations over five adequate ones. Do not keep
+expanding a cold-email list when a channel produces deliveries but no tests.
 
 ## Core Message
 
 Subject:
 
 ```text
-Could you sanity-check a free event chant coordination tool?
+Could two people try ChantLive for seven minutes?
 ```
 
 Body:
@@ -15,29 +26,32 @@ Body:
 ```text
 Hi [name/team],
 
-I maintain ChantLive, a free and open-source real-time chant coordination tool for demonstrations and public events:
+I maintain ChantLive, a free and open-source tool that helps an organizer show the current chant to people at a demonstration or public event:
 
 https://chantlive.online/
 https://github.com/barsham/ChantLive
 
-The basic flow is that an organizer prepares a chant list and pushes the current chant live. Participants join from a public link or QR code and do not need an account.
+Could two people from your team or network try a prepared seven-minute test? One person acts as the organizer and the other joins as a participant. One person using two browsers or devices also works.
 
-I am not trying to promote it broadly yet. I am looking for a few organizers, campaigners, accessibility reviewers, or civic-tech people willing to do a short test and tell me what would make it useful, unsafe, confusing, or not worth relying on.
+The test is:
 
-A useful test would take about 10 minutes:
+1. Create a sample event with three harmless test chants.
+2. Open its ordinary participant link on the second device or browser.
+3. Change the current chant three times.
+4. Reply with where you hesitated, your biggest trust concern, and the one change that would help most.
 
-1. Create a sample event.
-2. Add 2-3 chants.
-3. Open the participant link on another phone or browser.
-4. Tell me what would need to change before this could be used at a real rally, vigil, march, meeting, or public event.
+Participants do not need an account, and the ordinary link can be used without scanning a QR code.
 
-I would especially value feedback on trust, safety, privacy, accessibility, poor mobile signal, and self-hosting needs.
+There is no paid offer, promotion request, endorsement request, or partnership pitch. The aim is simply to improve a free community tool through candid feedback. If it is not relevant, no need to reply.
 
-Would this be appropriate for someone on your team or network to test?
-
-Thank you,
-[your name]
+Kind regards,
+Barsham Sotoudeh
+ChantLive
+info@chantlive.online
 ```
+
+Send the fuller [seven-minute paired test](seven-minute-paired-test.md) after a
+person expresses interest or asks for testing details.
 
 ## Short Contact Form Version
 
@@ -66,10 +80,17 @@ Would this be appropriate for someone in your team or network to review?
 
 ## Notes
 
-- Do not mass-send. Start with 4-6 thoughtful messages.
+- Do not mass-send. Send at most three thoughtful first-contact messages per
+  weekday.
 - If a group works with students or vulnerable communities, contact the public/admin channel only.
 - Ask for critique, not endorsement.
-- If a group responds, offer a short test scenario instead of a long explanation.
+- If a group responds, send the seven-minute paired test instead of a long
+  explanation.
+- Send at most one polite follow-up, after seven business days, and only when
+  the organization was an unusually strong fit. Never follow up after an
+  opt-out, bounce, or negative response.
+- After 20 accepted first-contact messages in one audience/channel produce no
+  qualified reply, pause that channel and change the offer or audience.
 - Turn repeated concerns into GitHub issues after the conversation.
 
 ## Direct Email Send Log
@@ -120,6 +141,21 @@ Would this be appropriate for someone in your team or network to review?
 | 2026-07-21 | Vision Australia | info@visionaustralia.org | Sent via Zoho SMTP; QR-Free Challenge; official source: https://www.visionaustralia.org/about-us/contact-us/locations |
 | 2026-07-21 | National Ethnic Disability Alliance | comms@neda.org.au | Sent via Zoho SMTP; QR-Free Challenge; official source: https://neda.org.au/ |
 | 2026-07-21 | Children and Young People with Disability Australia | info@cyda.org.au | Sent via Zoho SMTP; QR-Free Challenge; official source: https://cyda.org.au/about/what-we-do-at-cyda/ |
+| 2026-07-22 | 350 Australia | info@350.org.au | Sent via Zoho SMTP; Two-Device Test Drill; official source: https://www.350.org.au/ |
+| 2026-07-22 | Environment Victoria | admin@environmentvictoria.org.au | Sent via Zoho SMTP; Two-Device Test Drill; official source: https://environmentvictoria.org.au/contact/ |
+| 2026-07-22 | GetUp | info@getup.org.au | Sent via Zoho SMTP; Two-Device Test Drill; official source: https://www.getup.org.au/media |
+| 2026-07-22 | Australian Student Environment Network | info@asen.org.au | Sent via Zoho SMTP; Two-Device Test Drill; official source: https://asen.org.au/ |
+| 2026-07-22 | ICAN Australia | australia@icanw.org | Sent via Zoho SMTP; Two-Device Test Drill; official source: https://icanw.org.au/contact/ |
+| 2026-07-23 | Linux Australia | council@linux.org.au | Sent via Zoho SMTP; Self-Hosting Pilot; official source: https://linux.org.au/grants-program/ |
+| 2026-07-23 | GovHack Australia | support@govhack.org | Sent via Zoho SMTP; Self-Hosting Pilot; official source: https://govhack.org/contact-us/ |
+| 2026-07-23 | Open Source Industry Australia | admin@osia.com.au | Permanent bounce confirmed 2026-07-27 after Zoho exhausted its retries: SMTP status 421, destination host unreachable. Address permanently suppressed; do not resend or follow up. Self-Hosting Pilot; official source: https://www.osia.com.au/contact.html |
+| 2026-07-23 | Infoxchange | transform@infoxchange.org | Sent via Zoho SMTP; Self-Hosting Pilot; official source: https://www.infoxchange.org/sites/default/files/infoxchanges_2025_digital_technology_in_the_not-for-profit_sector_report.pdf |
+| 2026-07-28 | Australian Religious Response to Climate Change | info@arrcc.org.au | Sent via Zoho SMTP; Seven-Minute Paired Test with a multi-faith gathering and vigil focus; official source: https://www.arrcc.org.au/contact-arrcc |
+| 2026-07-28 | Australian Refugee Action Network | austrefugeenetwork@gmail.com | Sent via Zoho SMTP; Seven-Minute Paired Test with a rally, vigil, QR-free joining, late-joining, and recovery focus; official source: https://aran.net.au/actions/10-years-too-long/ |
+| 2026-07-30 | Neighbourhood Houses Victoria | info@nhvic.org.au | Sent via Zoho SMTP; Trusted Introduction Relay asking for either a paired test or one introduction to a neighbourhood-house event organizer, not broad circulation; official source: https://www.nhvic.org.au/ |
+| 2026-07-30 | Community Centres SA | info@communitycentressa.asn.au | Sent via Zoho SMTP; Trusted Introduction Relay asking for either a paired test or one introduction to a community-centre event organizer, not broad circulation; official source: https://www.seniorscard.sa.gov.au/benefits/community-resources/offer?id=0062v00001b0PHjAAM |
+| 2026-08-03 | Linkwest | office@linkwest.asn.au | Sent via Zoho SMTP; Seven-Minute Paired Test focused on ordinary-link clarity for varied digital confidence and recovery after reopening the page; asked for one team or member-centre test, not broad circulation; official source: https://www.linkwest.asn.au/ |
+| 2026-08-03 | Neighbourhood Centres Queensland | info@ncq.org.au | Sent via Zoho SMTP; Seven-Minute Paired Test focused on role clarity, late joining, and recovery after reopening the page; asked for one team or member-centre test, not broad circulation; official source: https://ncq.org.au/contact-us/ |
 
 ## Reply Log
 
@@ -132,3 +168,12 @@ Would this be appropriate for someone in your team or network to review?
 | 2026-07-16 | Women With Disabilities Australia | Office Admin auto-reply | Receipt confirmed; a full response may follow. No action required. |
 | 2026-07-17 | Common Grace | General enquiries auto-reply | Receipt confirmed; no substantive response or opt-out. No action required. |
 | 2026-07-17 | Queensland Council for Civil Liberties | President mailbox auto-reply | Receipt confirmed; no substantive response or opt-out. No action required. |
+| 2026-07-21 | Australian Federation of Disability Organisations | Office mailbox auto-reply | Receipt confirmed. The message identified AFDO's Amplify Network as its channel for product trials and accessibility feedback; no reply required and no test activity yet. |
+| 2026-07-23 | Open Source Industry Australia | Zoho delivery-status notification | Initially classified as delivery delayed: SMTP status 421, destination host unreachable. Zoho said it would retry for four days and that the message must not be resent. |
+| 2026-07-27 | Open Source Industry Australia | Zoho delivery-status notification | Classified as a permanent bounce after all retries failed with SMTP status 421. `admin@osia.com.au` is permanently suppressed. No further outreach was sent that day because this is evidence of deliverability trouble. |
+
+## Suppression Log
+
+| Date | Organization | Address | Reason |
+| --- | --- | --- | --- |
+| 2026-07-27 | Open Source Industry Australia | admin@osia.com.au | Permanent bounce after repeated SMTP 421 responses: destination host unreachable. Never resend or follow up. |

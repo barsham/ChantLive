@@ -18,7 +18,9 @@ function loadEnv(path) {
 
 const [, , recipient, organization, fit, experimentRequest] = process.argv;
 if (!recipient || !organization || !fit) {
-  console.error('Usage: node script/send-community-outreach.js <email> <organization> <fit>');
+  console.error(
+    'Usage: node script/send-community-outreach.js <email> <organization> <fit> [focus]',
+  );
   process.exit(2);
 }
 
@@ -34,36 +36,28 @@ if (!host || !user || !password || !from) {
   process.exit(2);
 }
 
-const subject = 'Could you sanity-check a free event chant coordination tool?';
+const subject = 'Could two people try ChantLive for seven minutes?';
 const body = `Hi ${organization} team,
 
-I maintain ChantLive, a free and open-source real-time chant coordination tool for demonstrations and public events:
+I maintain ChantLive, a free and open-source tool that helps an organizer show the current chant to people at a demonstration or public event:
 
 https://chantlive.online/
 https://github.com/barsham/ChantLive
 
-I am reaching out because ${fit} could be very helpful in testing whether this is actually useful, safe, accessible, and understandable for real organizers and participants.
+I am reaching out because ${fit}.
 
-${experimentRequest ? `${experimentRequest}\n\n` : ''}The basic flow is that an organizer prepares a chant list and pushes the current chant live. Participants join from a public link or QR code and do not need an account.
+Could two people from your team or network try a prepared seven-minute test? One person acts as the organizer and the other joins as a participant. One person using two browsers or devices also works.
 
-I am not asking for promotion or endorsement. I would really appreciate a short practical review from someone in your team or network. A useful test takes about 10 minutes:
+The test is:
 
-1. Create a sample event.
-2. Add 2-3 chants.
-3. Open the participant link on another phone or browser.
-4. Tell me what would need to change before this could be used at a real rally, vigil, march, meeting, or public event.
+1. Create a sample event with three harmless test chants.
+2. Open its ordinary participant link on the second device or browser.
+3. Change the current chant three times.
+4. Reply with where you hesitated, your biggest trust concern, and the one change that would help most.
 
-Feedback that would help most:
+${experimentRequest ? `${experimentRequest}\n\n` : ''}Participants do not need an account, and the ordinary link can be used without scanning a QR code.
 
-- What would make you trust or not trust this tool?
-- What should participants see before joining?
-- What privacy or safety concerns should be addressed before broader use?
-- What accessibility issues should be fixed in the public-link or QR-code flow?
-- Should ChantLive support self-hosting instructions for groups that need tighter control?
-
-If this is appropriate for someone in your team or network to test, I would be grateful for any feedback. If it is not relevant, no need to reply.
-
-Thank you for the work you do, and thank you for any contribution you can make to improving this.
+There is no paid offer, promotion request, endorsement request, or partnership pitch. The aim is simply to improve a free community tool through candid feedback. If it is not relevant, no need to reply.
 
 Kind regards,
 Barsham Sotoudeh
