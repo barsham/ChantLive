@@ -90,9 +90,6 @@ type ParticipantRunSheetItem = {
   participantNote: string | null;
   plannedDurationMinutes: number;
   status: "pending" | "active" | "completed" | "skipped";
-  startedAt: string | null;
-  completedAt: string | null;
-  updatedAt: string;
 };
 type ParticipantRunSheet = {
   total: number;
@@ -102,6 +99,7 @@ type ParticipantRunSheet = {
   pending: number;
   active: ParticipantRunSheetItem | null;
   next: ParticipantRunSheetItem | null;
+  items: ParticipantRunSheetItem[];
   storage: "shared";
   updatedAt: string | null;
 };
@@ -1184,6 +1182,20 @@ const runSheetCopy: Record<ParticipantLanguage, {
   ar: { title: "برنامج الفعالية", now: "الآن", next: "التالي", progress: "تقدم الفعالية", stageOf: "مرحلة من", plannedMinutes: "دقائق مخططة", waiting: "لم يبدأ المنظم المرحلة الأولى بعد.", completed: "اكتمل البرنامج المخطط." },
   fa: { title: "برنامه رویداد", now: "اکنون", next: "بعدی", progress: "پیشرفت رویداد", stageOf: "مرحله از", plannedMinutes: "دقیقه برنامه‌ریزی‌شده", waiting: "برگزارکننده هنوز مرحله اول را شروع نکرده است.", completed: "برنامه برنامه‌ریزی‌شده به پایان رسیده است." },
 };
+const programmeCopy: Record<ParticipantLanguage, {
+  fullProgramme: string;
+  programmeHelp: string;
+  completedStage: string;
+  currentStage: string;
+  upcomingStage: string;
+  skippedStage: string;
+}> = {
+  en: { fullProgramme: "View full programme", programmeHelp: "Public stages and planned timing from the organiser", completedStage: "Completed", currentStage: "Now", upcomingStage: "Upcoming", skippedStage: "Skipped" },
+  es: { fullProgramme: "Ver programa completo", programmeHelp: "Etapas públicas y horario previsto por el organizador", completedStage: "Completada", currentStage: "Ahora", upcomingStage: "Próxima", skippedStage: "Omitida" },
+  fr: { fullProgramme: "Voir le programme complet", programmeHelp: "Étapes publiques et horaires prévus par l’organisateur", completedStage: "Terminée", currentStage: "Maintenant", upcomingStage: "À venir", skippedStage: "Ignorée" },
+  ar: { fullProgramme: "عرض البرنامج الكامل", programmeHelp: "المراحل العامة والتوقيت المخطط من المنظم", completedStage: "مكتملة", currentStage: "الآن", upcomingStage: "قادمة", skippedStage: "تم تخطيها" },
+  fa: { fullProgramme: "مشاهده برنامه کامل", programmeHelp: "مراحل عمومی و زمان‌بندی برنامه‌ریزی‌شده توسط برگزارکننده", completedStage: "تکمیل‌شده", currentStage: "اکنون", upcomingStage: "پیش رو", skippedStage: "ردشده" },
+};
 const conductCopy: Record<ParticipantLanguage, {
   title: string; body: string; privacy: string; emergency: string; category: string;
   categories: Record<ConductReportCategory, string>; followUp: string; urgent: string;
@@ -1311,6 +1323,7 @@ export default function Participant() {
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const t = participantCopy[participantLanguage];
   const runSheetT = runSheetCopy[participantLanguage];
+  const programmeT = programmeCopy[participantLanguage];
   const conductT = conductCopy[participantLanguage];
   const restoreSafetyResponse = (check: SafetyCheck | null) => {
     if (!check?.participantResponse) return;
@@ -1335,7 +1348,7 @@ export default function Participant() {
       <select
         value={participantLanguage}
         onChange={(event) => setParticipantLanguage(event.target.value as ParticipantLanguage)}
-        className="bg-black text-neutral-100 outline-none"
+        className="min-h-11 rounded-md bg-black px-2 text-neutral-100 outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
         aria-label={t.language}
         data-testid="select-participant-language"
       >
@@ -2376,6 +2389,34 @@ export default function Participant() {
             {runSheet.next.participantNote && <p className="mt-1 text-sm text-indigo-50/80">{runSheet.next.participantNote}</p>}
           </div>
         )}
+        <details className="mt-4 border-t border-indigo-200/20 pt-3" data-testid="details-participant-full-programme">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-lg px-2 py-2 text-sm font-semibold text-indigo-50 outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-indigo-200">
+            <span className="flex items-center gap-2"><ListOrdered className="h-4 w-4" aria-hidden="true" /> {programmeT.fullProgramme}</span>
+            <span className="text-xs font-normal text-indigo-100/70">{formatParticipantNumber(runSheet.total, participantLanguage)}</span>
+          </summary>
+          <p className="mt-2 px-2 text-xs text-indigo-100/70">{programmeT.programmeHelp}</p>
+          <ol className="mt-3 grid gap-2" aria-label={programmeT.fullProgramme} data-testid="list-participant-full-programme">
+            {(runSheet.items ?? []).map((item, index) => {
+              const statusLabel = item.status === "active"
+                ? programmeT.currentStage
+                : item.status === "completed"
+                  ? programmeT.completedStage
+                  : item.status === "skipped"
+                    ? programmeT.skippedStage
+                    : programmeT.upcomingStage;
+              return (
+                <li key={item.id} className={`rounded-lg border p-3 ${item.status === "active" ? "border-indigo-200 bg-white/10" : "border-indigo-200/20 bg-black/10"}`} aria-current={item.status === "active" ? "step" : undefined}>
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <p className="font-semibold">{formatParticipantNumber(index + 1, participantLanguage)}. {item.title}</p>
+                    <span className="rounded-full border border-indigo-200/30 px-2 py-1 text-[11px] text-indigo-100">{statusLabel}</span>
+                  </div>
+                  {item.participantNote && <p className="mt-1 text-sm text-indigo-50/80">{item.participantNote}</p>}
+                  <p className="mt-2 flex items-center gap-1 text-xs text-indigo-100/65"><Clock3 className="h-3.5 w-3.5" aria-hidden="true" /> {formatParticipantNumber(item.plannedDurationMinutes, participantLanguage)} {runSheetT.plannedMinutes}</p>
+                </li>
+              );
+            })}
+          </ol>
+        </details>
       </section>
     );
   };

@@ -197,5 +197,19 @@ export async function ensureDemoColumnsAndTables(): Promise<void> {
     CREATE UNIQUE INDEX IF NOT EXISTS run_sheet_items_one_active_per_demo_idx
     ON run_sheet_items (demonstration_id)
     WHERE status = 'active';
+
+    CREATE TABLE IF NOT EXISTS run_sheet_templates (
+      id varchar(255) PRIMARY KEY,
+      owner_user_id varchar(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name text NOT NULL,
+      description text,
+      category text NOT NULL DEFAULT 'custom',
+      stages jsonb NOT NULL,
+      created_at timestamp NOT NULL DEFAULT now(),
+      updated_at timestamp NOT NULL DEFAULT now()
+    );
+
+    CREATE INDEX IF NOT EXISTS run_sheet_templates_owner_updated_idx
+    ON run_sheet_templates (owner_user_id, updated_at DESC);
   `);
 }

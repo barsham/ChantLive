@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.81 - 11 August 2026
+
+Reusable event programme templates that carry a proven organiser plan into new events and give participants the complete public sequence.
+
+### Added
+
+- Field-ready programme starter library: Organisers can begin with complete march, vigil, prayer-circle, or community-gathering programmes instead of rebuilding every stage by hand. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Previewed replace and append workflow: Template previews show every stage, planned duration, and exact replace or append impact before an atomic draft-only update, with started-event and size-limit protection. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Personal reusable programme templates: An organiser can save any current event programme to a private PostgreSQL-backed library and reuse its public stages, guidance, types, and planned timing on future events. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Accessible participant full-programme view: Participants can expand the complete public sequence with localized status, guidance, and planned timing on mobile, including right-to-left layouts and a 44px language control. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+
+### Improved
+
+- Private template ownership and management: Saved programmes show stage and duration details, remain isolated to their owner, and use a confirmed deletion flow that never changes events which already used them. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+
 ## 1.1.80 - 10 August 2026
 
 A restart-safe live event run sheet that keeps organisers and participants aligned from arrival through closing.

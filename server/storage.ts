@@ -3,8 +3,9 @@ import {
   type Demonstration, type InsertDemonstration,
   type Chant, type InsertChant,
   type DemoState, type DemoAdmin,
+  type RunSheetTemplateStage,
   users, demonstrations, chants, demoAdmins, demoState, viewSessions,
-  safetyChecks, safetyCheckResponses, assistanceRequests, conductReports, runSheetItems,
+  safetyChecks, safetyCheckResponses, assistanceRequests, conductReports, runSheetItems, runSheetTemplates,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, asc, desc, inArray, isNull, or, sql } from "drizzle-orm";
@@ -115,6 +116,17 @@ export type StoredRunSheetItem = {
   updatedAt: Date;
 };
 
+export type StoredRunSheetTemplate = {
+  id: string;
+  ownerUserId: string;
+  name: string;
+  description: string | null;
+  category: string;
+  stages: RunSheetTemplateStage[];
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
@@ -182,6 +194,11 @@ export interface IStorage {
   moveRunSheetItem(demonstrationId: string, itemId: string, direction: "up" | "down"): Promise<StoredRunSheetItem[]>;
   deleteRunSheetItem(demonstrationId: string, itemId: string): Promise<boolean>;
   transitionRunSheetItem(demonstrationId: string, itemId: string, transition: RunSheetTransition): Promise<StoredRunSheetItem[]>;
+  getRunSheetTemplates(ownerUserId: string): Promise<StoredRunSheetTemplate[]>;
+  getRunSheetTemplate(ownerUserId: string, templateId: string): Promise<StoredRunSheetTemplate | undefined>;
+  createRunSheetTemplate(ownerUserId: string, data: { name: string; description: string | null; category: string; stages: RunSheetTemplateStage[] }): Promise<StoredRunSheetTemplate>;
+  deleteRunSheetTemplate(ownerUserId: string, templateId: string): Promise<boolean>;
+  applyRunSheetTemplate(demonstrationId: string, stages: RunSheetTemplateStage[], mode: "replace" | "append"): Promise<StoredRunSheetItem[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -934,6 +951,87 @@ export class DatabaseStorage implements IStorage {
       } else {
         if (item.status !== "completed" && item.status !== "skipped") throw new Error("RUN_SHEET_ITEM_NOT_REOPENABLE");
         await tx.update(runSheetItems).set({ status: "pending", startedAt: null, completedAt: null, updatedAt: now }).where(eq(runSheetItems.id, item.id));
+      }
+    });
+    return this.getRunSheetItems(demonstrationId);
+  }
+
+  private mapRunSheetTemplate(template: typeof runSheetTemplates.$inferSelect): StoredRunSheetTemplate {
+    return {
+      id: template.id,
+      ownerUserId: template.ownerUserId,
+      name: template.name,
+      description: template.description,
+      category: template.category,
+      stages: template.stages,
+      createdAt: template.createdAt,
+      updatedAt: template.updatedAt,
+    };
+  }
+
+  async getRunSheetTemplates(ownerUserId: string): Promise<StoredRunSheetTemplate[]> {
+    const templates = await db.select().from(runSheetTemplates)
+      .where(eq(runSheetTemplates.ownerUserId, ownerUserId))
+      .orderBy(desc(runSheetTemplates.updatedAt));
+    return templates.map((template) => this.mapRunSheetTemplate(template));
+  }
+
+  async getRunSheetTemplate(ownerUserId: string, templateId: string): Promise<StoredRunSheetTemplate | undefined> {
+    const [template] = await db.select().from(runSheetTemplates).where(and(
+      eq(runSheetTemplates.id, templateId),
+      eq(runSheetTemplates.ownerUserId, ownerUserId),
+    ));
+    return template ? this.mapRunSheetTemplate(template) : undefined;
+  }
+
+  async createRunSheetTemplate(ownerUserId: string, data: { name: string; description: string | null; category: string; stages: RunSheetTemplateStage[] }): Promise<StoredRunSheetTemplate> {
+    const now = new Date();
+    const [created] = await db.insert(runSheetTemplates).values({
+      id: crypto.randomUUID(),
+      ownerUserId,
+      name: data.name,
+      description: data.description,
+      category: data.category,
+      stages: data.stages,
+      createdAt: now,
+      updatedAt: now,
+    }).returning();
+    return this.mapRunSheetTemplate(created);
+  }
+
+  async deleteRunSheetTemplate(ownerUserId: string, templateId: string): Promise<boolean> {
+    const deleted = await db.delete(runSheetTemplates).where(and(
+      eq(runSheetTemplates.id, templateId),
+      eq(runSheetTemplates.ownerUserId, ownerUserId),
+    )).returning({ id: runSheetTemplates.id });
+    return deleted.length > 0;
+  }
+
+  async applyRunSheetTemplate(demonstrationId: string, stages: RunSheetTemplateStage[], mode: "replace" | "append"): Promise<StoredRunSheetItem[]> {
+    await db.transaction(async (tx) => {
+      const existing = await tx.select().from(runSheetItems)
+        .where(eq(runSheetItems.demonstrationId, demonstrationId))
+        .orderBy(asc(runSheetItems.orderIndex));
+      if (existing.some((item) => item.status !== "pending")) throw new Error("RUN_SHEET_TEMPLATE_STARTED");
+      const retainedCount = mode === "append" ? existing.length : 0;
+      if (retainedCount + stages.length > 40) throw new Error("RUN_SHEET_TEMPLATE_LIMIT");
+      if (mode === "replace") {
+        await tx.delete(runSheetItems).where(eq(runSheetItems.demonstrationId, demonstrationId));
+      }
+      if (stages.length > 0) {
+        const now = new Date();
+        await tx.insert(runSheetItems).values(stages.map((stage, index) => ({
+          id: crypto.randomUUID(),
+          demonstrationId,
+          orderIndex: retainedCount + index,
+          kind: stage.kind,
+          title: stage.title,
+          participantNote: stage.participantNote,
+          plannedDurationMinutes: stage.plannedDurationMinutes,
+          status: "pending",
+          createdAt: now,
+          updatedAt: now,
+        })));
       }
     });
     return this.getRunSheetItems(demonstrationId);

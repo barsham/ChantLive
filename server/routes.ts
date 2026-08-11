@@ -14,12 +14,13 @@ import {
   type StoredAssistanceRequest as AssistanceRequest,
   type StoredConductReport as ConductReport,
   type StoredRunSheetItem as RunSheetItem,
+  type StoredRunSheetTemplate as RunSheetTemplate,
   type StoredSafetyCheck as SafetyCheck,
 } from "./storage";
 import { ensureDemoColumnsAndTables, ensureUserAuthColumns } from "./db";
 import { setupAuth, requireAuth, requireSuperAdmin } from "./auth";
 import QRCode from "qrcode";
-import type { Demonstration, User } from "@shared/schema";
+import type { Demonstration, RunSheetTemplateStage, User } from "@shared/schema";
 import { demoTransferPackageSchema } from "@shared/demo-transfer";
 
 declare global {
@@ -179,6 +180,89 @@ function summarizeConductReports(reports: ConductReport[]) {
 
 const runSheetKinds: RunSheetItemKind[] = ["arrival", "welcome", "chant", "speaker", "movement", "break", "closing", "custom"];
 
+type BuiltInRunSheetTemplate = {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  stages: RunSheetTemplateStage[];
+};
+
+const builtInRunSheetTemplates: BuiltInRunSheetTemplate[] = [
+  {
+    id: "builtin:march",
+    name: "March and rally",
+    description: "Arrival, briefing, movement, two chant blocks, speaker, and safe departure.",
+    category: "march",
+    stages: [
+      { kind: "arrival", title: "Arrival and marshal check-in", participantNote: "Find your group, check the route information, and ask for access support now.", plannedDurationMinutes: 15 },
+      { kind: "welcome", title: "Welcome, route, and safety briefing", participantNote: "Listen for route, safety, accessibility, and meeting-point guidance.", plannedDurationMinutes: 10 },
+      { kind: "movement", title: "Move onto the route", participantNote: "Follow marshals and the latest organiser instructions.", plannedDurationMinutes: 15 },
+      { kind: "chant", title: "Opening chant block", participantNote: "Follow the call-and-response shown on this screen.", plannedDurationMinutes: 15 },
+      { kind: "speaker", title: "Community speaker and response", participantNote: "Pause movement and give the speaker your attention.", plannedDurationMinutes: 12 },
+      { kind: "chant", title: "Closing chant block", participantNote: "Join the final chant and stay with your group.", plannedDurationMinutes: 12 },
+      { kind: "closing", title: "Next steps and safe departure", participantNote: "Listen for departure routes, transport, and follow-up actions.", plannedDurationMinutes: 10 },
+    ],
+  },
+  {
+    id: "builtin:vigil",
+    name: "Vigil and remembrance",
+    description: "A calm sequence for arrival, welcome, reflection, speakers, silence, and closing.",
+    category: "vigil",
+    stages: [
+      { kind: "arrival", title: "Quiet arrival and access check", participantNote: "Settle in, keep pathways clear, and ask an organiser for access support.", plannedDurationMinutes: 15 },
+      { kind: "welcome", title: "Welcome and purpose", participantNote: "Listen for the purpose, care guidance, and the shape of the vigil.", plannedDurationMinutes: 8 },
+      { kind: "speaker", title: "Readings and community voices", participantNote: "Please give each reader your attention.", plannedDurationMinutes: 20 },
+      { kind: "custom", title: "Shared silence and reflection", participantNote: "Join the silence in the way that is comfortable for you.", plannedDurationMinutes: 10 },
+      { kind: "closing", title: "Closing care and departure", participantNote: "Leave gently and use the support contacts if you need them.", plannedDurationMinutes: 8 },
+    ],
+  },
+  {
+    id: "builtin:prayer",
+    name: "Prayer circle",
+    description: "Welcome, opening prayer, responsive reading, reflection, and community close.",
+    category: "prayer",
+    stages: [
+      { kind: "arrival", title: "Gather and settle", participantNote: "Join the circle or choose a comfortable nearby place.", plannedDurationMinutes: 10 },
+      { kind: "welcome", title: "Welcome and opening guidance", participantNote: "Listen for participation, access, and community-care guidance.", plannedDurationMinutes: 8 },
+      { kind: "custom", title: "Opening prayer", participantNote: "Participate, listen, or reflect in the way that is right for you.", plannedDurationMinutes: 10 },
+      { kind: "chant", title: "Responsive prayer or chant", participantNote: "Follow the leader and the response shown on this screen.", plannedDurationMinutes: 15 },
+      { kind: "speaker", title: "Reflection and community intentions", participantNote: "Listen or offer a response when invited by the facilitator.", plannedDurationMinutes: 12 },
+      { kind: "closing", title: "Blessing and community close", participantNote: "Stay for final support information and next steps.", plannedDurationMinutes: 8 },
+    ],
+  },
+  {
+    id: "builtin:community",
+    name: "Community gathering",
+    description: "A flexible meeting with welcome, updates, discussion, a break, decisions, and closing.",
+    category: "community",
+    stages: [
+      { kind: "arrival", title: "Arrival and informal check-in", participantNote: "Find a seat, meet the organisers, and ask for any access support.", plannedDurationMinutes: 15 },
+      { kind: "welcome", title: "Welcome, access, and agenda", participantNote: "Listen for the agenda, participation options, and community agreements.", plannedDurationMinutes: 10 },
+      { kind: "speaker", title: "Community updates", participantNote: "Listen for current information and note questions for discussion.", plannedDurationMinutes: 20 },
+      { kind: "custom", title: "Small-group discussion", participantNote: "Join a group or use the quiet participation option announced by organisers.", plannedDurationMinutes: 20 },
+      { kind: "break", title: "Water and access break", participantNote: "Take a break and ask an organiser if you need support.", plannedDurationMinutes: 10 },
+      { kind: "custom", title: "Decisions and next actions", participantNote: "Listen for decisions, volunteers, and agreed follow-up actions.", plannedDurationMinutes: 15 },
+      { kind: "closing", title: "Closing and departure", participantNote: "Stay for final contacts, feedback, and safe departure information.", plannedDurationMinutes: 8 },
+    ],
+  },
+];
+
+function serializeRunSheetTemplate(template: RunSheetTemplate | BuiltInRunSheetTemplate, source: "personal" | "built-in") {
+  return {
+    id: template.id,
+    source,
+    name: template.name,
+    description: template.description,
+    category: template.category,
+    stages: template.stages,
+    stageCount: template.stages.length,
+    plannedDurationMinutes: template.stages.reduce((total, stage) => total + stage.plannedDurationMinutes, 0),
+    createdAt: "createdAt" in template ? template.createdAt.toISOString() : null,
+    updatedAt: "updatedAt" in template ? template.updatedAt.toISOString() : null,
+  };
+}
+
 function serializeRunSheetItem(item: RunSheetItem) {
   const actualDurationMinutes = item.startedAt && item.completedAt
     ? Math.max(0, Math.round((item.completedAt.getTime() - item.startedAt.getTime()) / 60_000))
@@ -195,6 +279,18 @@ function serializeRunSheetItem(item: RunSheetItem) {
     startedAt: item.startedAt?.toISOString() ?? null,
     completedAt: item.completedAt?.toISOString() ?? null,
     updatedAt: item.updatedAt.toISOString(),
+  };
+}
+
+function toPublicRunSheetItem(item: ReturnType<typeof serializeRunSheetItem>) {
+  return {
+    id: item.id,
+    orderIndex: item.orderIndex,
+    kind: item.kind,
+    title: item.title,
+    participantNote: item.participantNote,
+    plannedDurationMinutes: item.plannedDurationMinutes,
+    status: item.status,
   };
 }
 
@@ -223,7 +319,7 @@ async function getRunSheetPayload(demoId: string) {
 
 async function emitRunSheetUpdate(io: SocketIOServer, demo: Demonstration) {
   const payload = await getRunSheetPayload(demo.id);
-  io.to(`demo:${demo.publicId}`).emit("run_sheet_update", payload.summary);
+  io.to(`demo:${demo.publicId}`).emit("run_sheet_update", { ...payload.summary, items: payload.items.map(toPublicRunSheetItem) });
   return payload;
 }
 
@@ -239,6 +335,16 @@ function parseRunSheetItemInput(body: unknown) {
   if (title.length < 3) return { error: "Stage title must be at least 3 characters" } as const;
   if (plannedDurationMinutes < 1 || plannedDurationMinutes > 180) return { error: "Planned duration must be between 1 and 180 minutes" } as const;
   return { data: { kind, title, participantNote, plannedDurationMinutes } } as const;
+}
+
+function parseRunSheetTemplateInput(body: unknown) {
+  const input = body as Record<string, unknown> | null | undefined;
+  const name = typeof input?.name === "string" ? input.name.trim().slice(0, 80) : "";
+  const description = typeof input?.description === "string" && input.description.trim()
+    ? input.description.trim().slice(0, 240)
+    : null;
+  if (name.length < 3) return { error: "Template name must be at least 3 characters" } as const;
+  return { data: { name, description } } as const;
 }
 
 function getCrowdPulseSummary(demoId: string) {
@@ -978,6 +1084,65 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/run-sheet-templates", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const personal = await storage.getRunSheetTemplates(user.id);
+      res.json({
+        templates: [
+          ...builtInRunSheetTemplates.map((template) => serializeRunSheetTemplate(template, "built-in")),
+          ...personal.map((template) => serializeRunSheetTemplate(template, "personal")),
+        ],
+        limits: { personal: 20, stagesPerTemplate: 40 },
+      });
+    } catch {
+      res.status(500).json({ message: "Failed to fetch programme templates" });
+    }
+  });
+
+  app.post("/api/run-sheet-templates", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const parsed = parseRunSheetTemplateInput(req.body);
+      if ("error" in parsed) return res.status(400).json({ message: parsed.error });
+      const demoId = typeof req.body?.demonstrationId === "string" ? req.body.demonstrationId : "";
+      const demo = await getDemoByIdentifier(demoId);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      const existingTemplates = await storage.getRunSheetTemplates(user.id);
+      if (existingTemplates.length >= 20) return res.status(400).json({ message: "You can save up to 20 personal programme templates" });
+      const items = await storage.getRunSheetItems(demo.id);
+      if (items.length === 0) return res.status(400).json({ message: "Add at least one run-sheet stage before saving a template" });
+      const stages: RunSheetTemplateStage[] = items.map((item) => ({
+        kind: item.kind,
+        title: item.title,
+        participantNote: item.participantNote,
+        plannedDurationMinutes: item.plannedDurationMinutes,
+      }));
+      const created = await storage.createRunSheetTemplate(user.id, {
+        ...parsed.data,
+        category: "custom",
+        stages,
+      });
+      res.status(201).json(serializeRunSheetTemplate(created, "personal"));
+    } catch {
+      res.status(500).json({ message: "Failed to save the programme template" });
+    }
+  });
+
+  app.delete("/api/run-sheet-templates/:templateId", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const templateId = getSingleParam(req.params.templateId) ?? "";
+      if (templateId.startsWith("builtin:")) return res.status(400).json({ message: "Built-in templates cannot be deleted" });
+      const deleted = await storage.deleteRunSheetTemplate(user.id, templateId);
+      if (!deleted) return res.status(404).json({ message: "Personal template not found" });
+      res.json({ success: true });
+    } catch {
+      res.status(500).json({ message: "Failed to delete the programme template" });
+    }
+  });
+
   app.get("/api/demos/:id/run-sheet", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
@@ -1007,6 +1172,35 @@ export async function registerRoutes(
       res.status(201).json(serializeRunSheetItem(created));
     } catch {
       res.status(500).json({ message: "Failed to add the run-sheet stage" });
+    }
+  });
+
+  app.post("/api/demos/:id/run-sheet/apply-template", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      if (demo.status !== "draft") return res.status(409).json({ message: "Programme templates can only be applied to draft events" });
+      const templateId = typeof req.body?.templateId === "string" ? req.body.templateId : "";
+      const mode = req.body?.mode === "append" ? "append" : req.body?.mode === "replace" ? "replace" : null;
+      if (!templateId || !mode) return res.status(400).json({ message: "Choose a template and whether to replace or append" });
+      const builtIn = builtInRunSheetTemplates.find((template) => template.id === templateId);
+      const personal = builtIn ? undefined : await storage.getRunSheetTemplate(user.id, templateId);
+      const template = builtIn ?? personal;
+      if (!template) return res.status(404).json({ message: "Programme template not found" });
+      const updated = await storage.applyRunSheetTemplate(demo.id, template.stages, mode);
+      const payload = { items: updated.map(serializeRunSheetItem), summary: summarizeRunSheet(updated) };
+      io.to(`demo:${demo.publicId}`).emit("run_sheet_update", { ...payload.summary, items: payload.items.map(toPublicRunSheetItem) });
+      res.json({ ...payload, appliedTemplate: { id: template.id, name: template.name, mode } });
+    } catch (err) {
+      if (err instanceof Error && err.message === "RUN_SHEET_TEMPLATE_STARTED") {
+        return res.status(409).json({ message: "This run sheet has already started and cannot be replaced" });
+      }
+      if (err instanceof Error && err.message === "RUN_SHEET_TEMPLATE_LIMIT") {
+        return res.status(400).json({ message: "Applying this template would exceed the 40-stage limit" });
+      }
+      res.status(500).json({ message: "Failed to apply the programme template" });
     }
   });
 
@@ -1439,7 +1633,7 @@ export async function registerRoutes(
       const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
       const items = await storage.getRunSheetItems(demo.id);
-      res.json(summarizeRunSheet(items));
+      res.json({ ...summarizeRunSheet(items), items: items.map(serializeRunSheetItem).map(toPublicRunSheetItem) });
     } catch {
       res.status(500).json({ message: "Failed to fetch the live event stage" });
     }

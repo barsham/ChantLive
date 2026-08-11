@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowDown, ArrowLeft, ArrowUp, CalendarPlus, CheckCircle2, ClipboardList, Clock3, Copy, Database, Download, ExternalLink, FileText, History, LifeBuoy, ListOrdered, LockKeyhole, Megaphone, Play, Plus, QrCode, RotateCcw, Route, Share2, ShieldCheck, SkipForward, Trash2, UserRoundCheck, Users, WifiOff } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, BookOpen, CalendarPlus, CheckCircle2, ClipboardList, Clock3, Copy, Database, Download, ExternalLink, FileText, History, LifeBuoy, ListOrdered, LockKeyhole, Megaphone, Play, Plus, QrCode, RotateCcw, Route, Save, Share2, ShieldCheck, SkipForward, Trash2, UserRoundCheck, Users, WifiOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -201,6 +201,23 @@ type RunSheetSummary = {
   updatedAt: string | null;
 };
 type RunSheetPayload = { items: RunSheetItem[]; summary: RunSheetSummary };
+type RunSheetTemplateStage = Pick<RunSheetItem, "kind" | "title" | "participantNote" | "plannedDurationMinutes">;
+type RunSheetTemplate = {
+  id: string;
+  source: "built-in" | "personal";
+  name: string;
+  description: string | null;
+  category: string;
+  stages: RunSheetTemplateStage[];
+  stageCount: number;
+  plannedDurationMinutes: number;
+  createdAt: string | null;
+  updatedAt: string | null;
+};
+type RunSheetTemplatePayload = {
+  templates: RunSheetTemplate[];
+  limits: { personal: number; stagesPerTemplate: number };
+};
 
 const runSheetPresets: Array<{ kind: RunSheetItemKind; label: string; title: string; note: string; duration: number }> = [
   { kind: "arrival", label: "Arrival", title: "Arrival and check-in", note: "Arrive, find your group, and check in with an organiser.", duration: 15 },
@@ -377,6 +394,11 @@ export default function CommandCenter() {
   const [runSheetTitle, setRunSheetTitle] = useState(runSheetPresets[1].title);
   const [runSheetNote, setRunSheetNote] = useState(runSheetPresets[1].note);
   const [runSheetDuration, setRunSheetDuration] = useState(runSheetPresets[1].duration);
+  const [selectedRunSheetTemplateId, setSelectedRunSheetTemplateId] = useState("builtin:community");
+  const [runSheetTemplateMode, setRunSheetTemplateMode] = useState<"replace" | "append">("replace");
+  const [runSheetTemplateName, setRunSheetTemplateName] = useState("");
+  const [runSheetTemplateDescription, setRunSheetTemplateDescription] = useState("");
+  const [templateDeleteConfirmationId, setTemplateDeleteConfirmationId] = useState<string | null>(null);
   const applyIncidentPreset = (preset: (typeof incidentPresets)[number]) => {
     setSafetyCheckKind(preset.kind);
     setSafetyCheckMessage(preset.message);
@@ -470,6 +492,10 @@ export default function CommandCenter() {
     refetchInterval: 3000,
     enabled: Boolean(id),
   });
+  const { data: runSheetTemplates, isLoading: runSheetTemplatesLoading, error: runSheetTemplatesError } = useQuery<RunSheetTemplatePayload>({
+    queryKey: ["/api/run-sheet-templates"],
+    enabled: Boolean(id),
+  });
   const resolveAssistance = useMutation({
     mutationFn: async (requestId: string) => {
       await apiRequest("PATCH", `/api/demos/${id}/assistance/${requestId}`, { status: "resolved" });
@@ -513,6 +539,49 @@ export default function CommandCenter() {
       toast({ title: "Stage added to the run sheet", description: "Its participant guidance is ready for the live Now / Next view." });
     },
     onError: (err: Error) => toast({ title: "Could not add stage", description: err.message, variant: "destructive" }),
+  });
+  const applyRunSheetTemplate = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", `/api/demos/${id}/run-sheet/apply-template`, {
+        templateId: selectedRunSheetTemplateId,
+        mode: runSheetTemplateMode,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "run-sheet"] });
+      const template = runSheetTemplates?.templates.find((item) => item.id === selectedRunSheetTemplateId);
+      toast({
+        title: `${template?.name ?? "Programme"} applied`,
+        description: runSheetTemplateMode === "replace" ? "The draft now uses this complete programme." : "The programme was added after the existing stages.",
+      });
+    },
+    onError: (err: Error) => toast({ title: "Could not apply template", description: err.message, variant: "destructive" }),
+  });
+  const saveRunSheetTemplate = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/run-sheet-templates", {
+        demonstrationId: id,
+        name: runSheetTemplateName,
+        description: runSheetTemplateDescription,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/run-sheet-templates"] });
+      setRunSheetTemplateName("");
+      setRunSheetTemplateDescription("");
+      toast({ title: "Programme saved to your library", description: "It is available on your other events and remains private to your account." });
+    },
+    onError: (err: Error) => toast({ title: "Could not save template", description: err.message, variant: "destructive" }),
+  });
+  const deleteRunSheetTemplate = useMutation({
+    mutationFn: async (templateId: string) => apiRequest("DELETE", `/api/run-sheet-templates/${templateId}`),
+    onSuccess: (_result, templateId) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/run-sheet-templates"] });
+      if (selectedRunSheetTemplateId === templateId) setSelectedRunSheetTemplateId("builtin:community");
+      setTemplateDeleteConfirmationId(null);
+      toast({ title: "Personal template deleted" });
+    },
+    onError: (err: Error) => toast({ title: "Could not delete template", description: err.message, variant: "destructive" }),
   });
   const moveRunSheetItem = useMutation({
     mutationFn: async ({ itemId, direction }: { itemId: string; direction: "up" | "down" }) => {
@@ -715,6 +784,11 @@ export default function CommandCenter() {
   const runSheetItems = runSheet?.items ?? [];
   const runSheetAllPending = runSheetItems.every((item) => item.status === "pending");
   const runSheetActive = runSheet?.summary.active ?? null;
+  const programmeTemplates = runSheetTemplates?.templates ?? [];
+  const personalProgrammeTemplates = programmeTemplates.filter((template) => template.source === "personal");
+  const selectedProgrammeTemplate = programmeTemplates.find((template) => template.id === selectedRunSheetTemplateId) ?? programmeTemplates[0] ?? null;
+  const templateResultCount = (runSheetTemplateMode === "append" ? runSheetItems.length : 0) + (selectedProgrammeTemplate?.stageCount ?? 0);
+  const canApplyProgrammeTemplate = data.demo.status === "draft" && runSheetAllPending && Boolean(selectedProgrammeTemplate) && templateResultCount <= 40;
   const getRunSheetEstimate = (item: RunSheetItem) => {
     if (!data.demo.scheduledAt) return `${item.plannedDurationMinutes} min planned`;
     const precedingMinutes = runSheetItems
@@ -1025,8 +1099,143 @@ export default function CommandCenter() {
             <CardContent>
               <div className="rounded-lg border border-indigo-500/20 bg-background p-3 text-sm" role="note">
                 <p className="flex items-center gap-2 font-medium"><Database className="h-4 w-4" aria-hidden="true" /> Restart-safe event sequence</p>
-                <p className="mt-1 text-xs text-muted-foreground">Plan the whole gathering, then progress one stage at a time. Participants see only the current and next public guidance; the sequence survives deployments and reconnects.</p>
+                <p className="mt-1 text-xs text-muted-foreground">Plan the whole gathering, then progress one stage at a time. Participants can preview the public programme and receive live Now / Next guidance; the sequence survives deployments and reconnects.</p>
               </div>
+
+              <section className="mt-4 rounded-xl border border-violet-500/30 bg-violet-500/5 p-4" aria-labelledby="programme-template-title" data-testid="panel-run-sheet-template-library">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h3 id="programme-template-title" className="flex items-center gap-2 font-semibold"><BookOpen className="h-4 w-4 text-violet-700" aria-hidden="true" /> Programme template library</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">Start from a field-ready plan or reuse a programme saved privately to your account.</p>
+                  </div>
+                  <Badge variant="outline">{personalProgrammeTemplates.length}/{runSheetTemplates?.limits.personal ?? 20} personal</Badge>
+                </div>
+
+                {runSheetTemplatesLoading && <p className="mt-4 rounded-lg border bg-background p-3 text-sm text-muted-foreground" role="status">Loading programme templates...</p>}
+                {runSheetTemplatesError && (
+                  <div className="mt-4 flex flex-col gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 sm:flex-row sm:items-center sm:justify-between" role="alert" data-testid="alert-run-sheet-template-error">
+                    <p className="text-sm">Programme templates could not be loaded. Your current run sheet has not changed.</p>
+                    <Button className="min-h-11" size="sm" variant="outline" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/run-sheet-templates"] })}>Try again</Button>
+                  </div>
+                )}
+
+                <div className="mt-4 grid gap-3 md:grid-cols-[minmax(220px,1fr)_180px_auto] md:items-end">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Programme template
+                    <select
+                      value={selectedRunSheetTemplateId}
+                      onChange={(event) => setSelectedRunSheetTemplateId(event.target.value)}
+                      className="mt-1 min-h-11 w-full rounded-md border bg-background px-3 text-sm text-foreground"
+                      data-testid="select-run-sheet-template"
+                    >
+                      <optgroup label="Built-in programmes">
+                        {programmeTemplates.filter((template) => template.source === "built-in").map((template) => <option key={template.id} value={template.id}>{template.name}</option>)}
+                      </optgroup>
+                      {personalProgrammeTemplates.length > 0 && (
+                        <optgroup label="My programmes">
+                          {personalProgrammeTemplates.map((template) => <option key={template.id} value={template.id}>{template.name}</option>)}
+                        </optgroup>
+                      )}
+                    </select>
+                  </label>
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Apply behavior
+                    <select
+                      value={runSheetTemplateMode}
+                      onChange={(event) => setRunSheetTemplateMode(event.target.value as "replace" | "append")}
+                      className="mt-1 min-h-11 w-full rounded-md border bg-background px-3 text-sm text-foreground"
+                      data-testid="select-run-sheet-template-mode"
+                    >
+                      <option value="replace">Replace current stages</option>
+                      <option value="append">Append after current stages</option>
+                    </select>
+                  </label>
+                  <Button
+                    className="min-h-11"
+                    disabled={!canApplyProgrammeTemplate || applyRunSheetTemplate.isPending}
+                    onClick={() => applyRunSheetTemplate.mutate()}
+                    data-testid="button-apply-run-sheet-template"
+                  >
+                    <BookOpen className="mr-2 h-4 w-4" aria-hidden="true" /> {applyRunSheetTemplate.isPending ? "Applying..." : "Apply template"}
+                  </Button>
+                </div>
+
+                {selectedProgrammeTemplate && (
+                  <div className="mt-4 rounded-lg border bg-background p-3" data-testid="preview-run-sheet-template">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div>
+                        <p className="font-medium">{selectedProgrammeTemplate.name}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{selectedProgrammeTemplate.description || "A programme saved from one of your events."}</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{selectedProgrammeTemplate.stageCount} stages · {selectedProgrammeTemplate.plannedDurationMinutes} min</span>
+                    </div>
+                    <ol className="mt-3 grid gap-2 sm:grid-cols-2" aria-label={`${selectedProgrammeTemplate.name} preview`}>
+                      {selectedProgrammeTemplate.stages.map((stage, index) => (
+                        <li key={`${stage.title}-${index}`} className="rounded-md border px-3 py-2 text-xs">
+                          <span className="font-semibold">{index + 1}. {stage.title}</span>
+                          <span className="mt-1 block text-muted-foreground">{stage.plannedDurationMinutes} min · {stage.kind}</span>
+                        </li>
+                      ))}
+                    </ol>
+                    <p className={`mt-3 text-xs ${templateResultCount > 40 || !runSheetAllPending || data.demo.status !== "draft" ? "text-amber-800" : "text-muted-foreground"}`} role="status" aria-live="polite" data-testid="text-run-sheet-template-impact">
+                      {data.demo.status !== "draft"
+                        ? "Templates can be applied only while the event is a draft. You can still save this delivered programme for reuse."
+                        : !runSheetAllPending
+                          ? "This programme has already started. Apply templates to a new draft or before starting stage one."
+                          : templateResultCount > 40
+                            ? `This would create ${templateResultCount} stages, above the 40-stage safety limit.`
+                            : runSheetTemplateMode === "replace"
+                              ? `Applying will replace ${runSheetItems.length} current stage${runSheetItems.length === 1 ? "" : "s"} with ${selectedProgrammeTemplate.stageCount} previewed stages.`
+                              : `Applying will retain ${runSheetItems.length} current stage${runSheetItems.length === 1 ? "" : "s"} and create ${templateResultCount} stages in total.`}
+                    </p>
+                  </div>
+                )}
+
+                {runSheetItems.length > 0 && (
+                  <div className="mt-4 border-t pt-4">
+                    <h4 className="flex items-center gap-2 text-sm font-semibold"><Save className="h-4 w-4" aria-hidden="true" /> Save this programme for another event</h4>
+                    <div className="mt-3 grid gap-3 md:grid-cols-[minmax(180px,0.8fr)_minmax(240px,1.2fr)_auto] md:items-end">
+                      <label className="text-xs font-medium text-muted-foreground">
+                        Template name
+                        <input value={runSheetTemplateName} onChange={(event) => setRunSheetTemplateName(event.target.value)} maxLength={80} placeholder="Example: Annual community march" className="mt-1 min-h-11 w-full rounded-md border bg-background px-3 text-sm text-foreground" data-testid="input-run-sheet-template-name" />
+                      </label>
+                      <label className="text-xs font-medium text-muted-foreground">
+                        Reuse note (optional)
+                        <input value={runSheetTemplateDescription} onChange={(event) => setRunSheetTemplateDescription(event.target.value)} maxLength={240} placeholder="When this programme works best" className="mt-1 min-h-11 w-full rounded-md border bg-background px-3 text-sm text-foreground" data-testid="input-run-sheet-template-description" />
+                      </label>
+                      <Button className="min-h-11" variant="outline" disabled={runSheetTemplateName.trim().length < 3 || saveRunSheetTemplate.isPending || personalProgrammeTemplates.length >= (runSheetTemplates?.limits.personal ?? 20)} onClick={() => saveRunSheetTemplate.mutate()} data-testid="button-save-run-sheet-template">
+                        <Save className="mr-2 h-4 w-4" aria-hidden="true" /> {saveRunSheetTemplate.isPending ? "Saving..." : "Save to library"}
+                      </Button>
+                    </div>
+                    <p className="mt-2 text-xs text-muted-foreground">Only stage titles, public participant guidance, types, and planned durations are saved. Live status and actual timings are never copied.</p>
+                  </div>
+                )}
+
+                {personalProgrammeTemplates.length > 0 && (
+                  <div className="mt-4 border-t pt-4" data-testid="list-personal-run-sheet-templates">
+                    <h4 className="text-sm font-semibold">My saved programmes</h4>
+                    <ul className="mt-2 grid gap-2">
+                      {personalProgrammeTemplates.map((template) => (
+                        <li key={template.id} className="flex flex-col gap-2 rounded-lg border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="text-sm font-medium">{template.name}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">{template.stageCount} stages · {template.plannedDurationMinutes} min{template.description ? ` · ${template.description}` : ""}</p>
+                          </div>
+                          {templateDeleteConfirmationId === template.id ? (
+                            <div className="flex flex-wrap gap-2" role="group" aria-label={`Confirm deletion of ${template.name}`}>
+                              <Button className="min-h-11" size="sm" variant="destructive" disabled={deleteRunSheetTemplate.isPending} onClick={() => deleteRunSheetTemplate.mutate(template.id)} data-testid={`button-confirm-delete-template-${template.id}`}>Confirm delete</Button>
+                              <Button className="min-h-11" size="sm" variant="outline" onClick={() => setTemplateDeleteConfirmationId(null)}>Cancel</Button>
+                            </div>
+                          ) : (
+                            <Button className="min-h-11" size="sm" variant="outline" onClick={() => setTemplateDeleteConfirmationId(template.id)} data-testid={`button-delete-template-${template.id}`}><Trash2 className="mr-2 h-4 w-4" aria-hidden="true" /> Delete</Button>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-2 text-xs text-muted-foreground">Deleting a template never changes events that already used it.</p>
+                  </div>
+                )}
+              </section>
 
               {data.demo.status !== "ended" && (
                 <fieldset className="mt-4 rounded-xl border bg-background p-4" disabled={liveOperationLocked || createRunSheetItem.isPending}>

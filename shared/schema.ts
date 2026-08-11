@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, primaryKey, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, primaryKey, boolean, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -141,6 +141,24 @@ export const runSheetItems = pgTable("run_sheet_items", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export type RunSheetTemplateStage = {
+  kind: "arrival" | "welcome" | "chant" | "speaker" | "movement" | "break" | "closing" | "custom";
+  title: string;
+  participantNote: string | null;
+  plannedDurationMinutes: number;
+};
+
+export const runSheetTemplates = pgTable("run_sheet_templates", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  ownerUserId: varchar("owner_user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category").notNull().default("custom"),
+  stages: jsonb("stages").$type<RunSheetTemplateStage[]>().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, lastActivityAt: true });
 export const insertDemonstrationSchema = createInsertSchema(demonstrations).omit({ id: true, createdAt: true, publicId: true });
 export const insertChantSchema = createInsertSchema(chants).omit({ id: true });
@@ -160,3 +178,4 @@ export type StoredSafetyCheckResponse = typeof safetyCheckResponses.$inferSelect
 export type StoredAssistanceRequest = typeof assistanceRequests.$inferSelect;
 export type StoredConductReport = typeof conductReports.$inferSelect;
 export type StoredRunSheetItem = typeof runSheetItems.$inferSelect;
+export type StoredRunSheetTemplate = typeof runSheetTemplates.$inferSelect;
