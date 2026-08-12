@@ -4,6 +4,24 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.82 - 12 August 2026
+
+Self-healing production continuity that keeps ChantLive reachable, explains degraded live data, and verifies recovery through the public edge.
+
+### Fixed
+
+- Always-reachable service with safe readiness gates: A database outage no longer prevents the ChantLive web shell from starting; liveness stays available while data-dependent actions pause with explicit 503 recovery responses. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+- Bounded database and web-service recovery: Production deployment now recovers a failed local PostgreSQL service before touching schema or app state and installs a controlled app restart policy with actionable diagnostics. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+
+### Added
+
+- Public service status and recovery banner: Visitors can open an accessible status centre, retry checks, and see a global degraded or recovered message instead of an unexplained failure. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+- Public-edge deployment certification and watchdog: Deployments must remain ready through repeated public checks, and a five-minute watchdog can restart the local database and app after a confirmed sustained outage. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+
+### Improved
+
+- Role-specific event recovery guidance: Organisers receive an always-visible readiness card, while participant screens warn that the last chant is stale and direct people back to rehearsed safety instructions during recovery. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+
 ## 1.1.81 - 11 August 2026
 
 Reusable event programme templates that carry a proven organiser plan into new events and give participants the complete public sequence.

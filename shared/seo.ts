@@ -248,6 +248,17 @@ export function getSeoForPath(pathname: string, origin: string): SeoConfig {
     };
   }
 
+  if (normalizedPath === "/status") {
+    return {
+      title: "Service Status | ChantLive",
+      description: "Check whether ChantLive's public web service and live event data service are ready for organiser and participant use.",
+      canonicalPath: "/status",
+      robots: "noindex,follow",
+      ogType: "website",
+      jsonLd: buildNoIndexJsonLd(origin),
+    };
+  }
+
   if (normalizedPath === "/blog") {
     return {
       title: "Blog | Peaceful Demonstration Guides | ChantLive",

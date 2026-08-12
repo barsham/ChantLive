@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.82",
+      "releasedAt": "2026-08-12",
+      "summary": "Self-healing production continuity that keeps ChantLive reachable, explains degraded live data, and verifies recovery through the public edge.",
+      "items": [
+        {
+          "id": "cl-2026-08-12-always-reachable-readiness",
+          "title": "Always-reachable service with safe readiness gates",
+          "description": "A database outage no longer prevents the ChantLive web shell from starting; liveness stays available while data-dependent actions pause with explicit 503 recovery responses.",
+          "type": "fix",
+          "visibility": "public",
+          "dateAdded": "2026-08-12",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-12-public-status-centre",
+          "title": "Public service status and recovery banner",
+          "description": "Visitors can open an accessible status centre, retry checks, and see a global degraded or recovered message instead of an unexplained failure.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-12",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-12-event-operations-guidance",
+          "title": "Role-specific event recovery guidance",
+          "description": "Organisers receive an always-visible readiness card, while participant screens warn that the last chant is stale and direct people back to rehearsed safety instructions during recovery.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-08-12",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-12-bounded-service-recovery",
+          "title": "Bounded database and web-service recovery",
+          "description": "Production deployment now recovers a failed local PostgreSQL service before touching schema or app state and installs a controlled app restart policy with actionable diagnostics.",
+          "type": "fix",
+          "visibility": "public",
+          "dateAdded": "2026-08-12",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-12-public-edge-watchdog",
+          "title": "Public-edge deployment certification and watchdog",
+          "description": "Deployments must remain ready through repeated public checks, and a five-minute watchdog can restart the local database and app after a confirmed sustained outage.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-12",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        }
+      ]
+    },
+    {
       "version": "1.1.81",
       "releasedAt": "2026-08-11",
       "summary": "Reusable event programme templates that carry a proven organiser plan into new events and give participants the complete public sequence.",

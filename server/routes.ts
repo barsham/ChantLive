@@ -17,11 +17,11 @@ import {
   type StoredRunSheetTemplate as RunSheetTemplate,
   type StoredSafetyCheck as SafetyCheck,
 } from "./storage";
-import { ensureDemoColumnsAndTables, ensureUserAuthColumns } from "./db";
 import { setupAuth, requireAuth, requireSuperAdmin } from "./auth";
 import QRCode from "qrcode";
 import type { Demonstration, RunSheetTemplateStage, User } from "@shared/schema";
 import { demoTransferPackageSchema } from "@shared/demo-transfer";
+import { isPlatformReady } from "./readiness";
 
 declare global {
   namespace Express {
@@ -683,13 +683,16 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  await ensureUserAuthColumns();
-  await ensureDemoColumnsAndTables();
   setupAuth(app);
 
   const io = new SocketIOServer(httpServer, {
     cors: { origin: "*" },
     path: "/socket.io",
+  });
+
+  io.use((_socket, next) => {
+    if (isPlatformReady()) return next();
+    return next(new Error("platform_not_ready"));
   });
 
   app.get("/api/demos", requireAuth, async (req, res) => {
@@ -2823,7 +2826,18 @@ export async function registerRoutes(
     });
   });
 
-  await resumeLiveAutoRotations();
+  // The readiness monitor provisions the schema and gates API traffic. Resume
+  // timers only after storage is available so a database outage cannot prevent
+  // the public web shell and status page from starting.
+  const resumeWhenReady = setInterval(async () => {
+    try {
+      await resumeLiveAutoRotations();
+      clearInterval(resumeWhenReady);
+    } catch {
+      // Readiness retries every ten seconds; keep this bounded retry alongside it.
+    }
+  }, 10_000);
+  resumeWhenReady.unref();
 
   return httpServer;
 }

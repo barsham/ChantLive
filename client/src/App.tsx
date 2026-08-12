@@ -29,6 +29,9 @@ import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
+import StatusPage from "@/pages/status";
+import { PlatformStatusProvider } from "@/lib/platform-status";
+import { PlatformStatusBanner } from "@/components/platform-status-banner";
 import { useLocation } from "wouter";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
@@ -60,6 +63,7 @@ function Router() {
       <Route path="/blog" component={Blog} />
       <Route path="/blog/:slug" component={BlogPost} />
       <Route path="/changelog" component={Changelog} />
+      <Route path="/status" component={StatusPage} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/forgot-password" component={ForgotPassword} />
@@ -110,11 +114,14 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <AuthProvider>
-          <SeoManager />
-          <Toaster />
-          <Router />
-        </AuthProvider>
+        <PlatformStatusProvider>
+          <AuthProvider>
+            <SeoManager />
+            <Toaster />
+            <PlatformStatusBanner />
+            <Router />
+          </AuthProvider>
+        </PlatformStatusProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

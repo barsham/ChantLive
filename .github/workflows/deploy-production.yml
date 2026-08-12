@@ -75,3 +75,32 @@ jobs:
           git reset --hard origin/main
           bash script/deploy-production.sh
           REMOTE
+
+      - name: Certify public service readiness
+        env:
+          PUBLIC_URL: ${{ vars.PUBLIC_URL || 'https://chantlive.online' }}
+        run: |
+          for attempt in 1 2 3; do
+            curl --fail --silent --show-error \
+              --max-time 15 \
+              --retry 2 \
+              --retry-all-errors \
+              "$PUBLIC_URL/readyz"
+            sleep 10
+          done
+
+      - name: Collect production diagnostics on failure
+        if: failure()
+        env:
+          HETZNER_HOST: ${{ secrets.HETZNER_HOST || '178.105.99.151' }}
+          HETZNER_USER: ${{ secrets.HETZNER_USER || 'root' }}
+          SERVICE_NAME: ${{ vars.HETZNER_SERVICE_NAME || 'chantlive' }}
+        run: |
+          if [ ! -f ~/.ssh/hetzner_deploy ]; then
+            exit 0
+          fi
+          ssh -i ~/.ssh/hetzner_deploy "$HETZNER_USER@$HETZNER_HOST" \
+            "systemctl status '$SERVICE_NAME' --no-pager -n 20 || true; \
+             systemctl status postgresql --no-pager -n 20 || true; \
+             journalctl -u '$SERVICE_NAME' --no-pager -n 60 || true; \
+             journalctl -u postgresql --no-pager -n 40 || true"

@@ -24,7 +24,10 @@ function getRequestOrigin(req: express.Request): string {
 
 function renderSeoHtml(template: string, req: express.Request): string {
   const origin = getRequestOrigin(req);
-  const seo = getSeoForPath(req.path, origin);
+  // Express 5 rewrites req.path while processing a wildcard middleware. Keep
+  // the original route so deep links receive their own status/participant SEO.
+  const requestPath = new URL(req.originalUrl, origin).pathname;
+  const seo = getSeoForPath(requestPath, origin);
   const canonicalUrl = new URL(seo.canonicalPath, origin).toString();
   const imageUrl = new URL("/social-card.svg", origin).toString();
   const jsonLd = seo.jsonLd ? JSON.stringify(seo.jsonLd) : "";

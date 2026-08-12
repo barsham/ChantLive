@@ -37,6 +37,7 @@ import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload, Se
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppVersion } from "@/components/app-version";
+import { PlatformReadinessCard } from "@/components/platform-readiness-card";
 import {
   buildParticipantInvitation,
   getStoredInvitationLanguage,
@@ -473,7 +474,8 @@ export default function AdminDashboard() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+        <PlatformReadinessCard compact />
+        <div className="mt-6 flex items-center justify-between gap-4 mb-6 flex-wrap">
           <div>
             <h1 className="text-2xl font-bold" data-testid="text-dashboard-title">Demonstrations</h1>
             <p className="text-sm text-muted-foreground mt-1">Create and manage your live chant demonstrations</p>

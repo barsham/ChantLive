@@ -1,0 +1,81 @@
+name: Production watchdog
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: production-recovery
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify-and-recover:
+    name: Verify and recover production
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Check public readiness
+        id: public-check
+        continue-on-error: true
+        env:
+          PUBLIC_URL: ${{ vars.PUBLIC_URL || 'https://chantlive.online' }}
+        run: |
+          for attempt in 1 2 3; do
+            if curl --fail --silent --show-error --max-time 15 "$PUBLIC_URL/readyz"; then
+              exit 0
+            fi
+            sleep 10
+          done
+          exit 1
+
+      - name: Prepare recovery access
+        if: steps.public-check.outcome == 'failure'
+        env:
+          HETZNER_HOST: ${{ secrets.HETZNER_HOST || '178.105.99.151' }}
+          HETZNER_SSH_PRIVATE_KEY: ${{ secrets.HETZNER_SSH_PRIVATE_KEY }}
+        run: |
+          test -n "$HETZNER_SSH_PRIVATE_KEY"
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$HETZNER_SSH_PRIVATE_KEY" > ~/.ssh/hetzner_recovery
+          chmod 600 ~/.ssh/hetzner_recovery
+          ssh-keyscan -H "$HETZNER_HOST" >> ~/.ssh/known_hosts
+
+      - name: Recover local data and web services
+        if: steps.public-check.outcome == 'failure'
+        env:
+          HETZNER_HOST: ${{ secrets.HETZNER_HOST || '178.105.99.151' }}
+          HETZNER_USER: ${{ secrets.HETZNER_USER || 'root' }}
+          APP_DIR: ${{ vars.HETZNER_APP_DIR || '/opt/chantlive' }}
+          SERVICE_NAME: ${{ vars.HETZNER_SERVICE_NAME || 'chantlive' }}
+          PUBLIC_URL: ${{ vars.PUBLIC_URL || 'https://chantlive.online' }}
+        run: |
+          ssh -i ~/.ssh/hetzner_recovery "$HETZNER_USER@$HETZNER_HOST" \
+            "cd '$APP_DIR'; set -a; source .env; set +a; \
+             if [[ \"\$DATABASE_URL\" =~ @(localhost|127\\.0\\.0\\.1|\\[::1\\])([:/]) ]]; then systemctl restart postgresql; fi; \
+             for attempt in \$(seq 1 20); do pg_isready --dbname=\"\$DATABASE_URL\" --timeout=3 -q && break; sleep 1; done; \
+             pg_isready --dbname=\"\$DATABASE_URL\" --timeout=3 -q; \
+             systemctl restart '$SERVICE_NAME'; \
+             systemctl is-active --quiet '$SERVICE_NAME'"
+
+          for attempt in 1 2 3; do
+            sleep 10
+            curl --fail --silent --show-error --max-time 15 "$PUBLIC_URL/readyz"
+          done
+
+      - name: Collect diagnostics when recovery fails
+        if: failure() && steps.public-check.outcome == 'failure'
+        env:
+          HETZNER_HOST: ${{ secrets.HETZNER_HOST || '178.105.99.151' }}
+          HETZNER_USER: ${{ secrets.HETZNER_USER || 'root' }}
+          SERVICE_NAME: ${{ vars.HETZNER_SERVICE_NAME || 'chantlive' }}
+        run: |
+          ssh -i ~/.ssh/hetzner_recovery "$HETZNER_USER@$HETZNER_HOST" \
+            "systemctl status '$SERVICE_NAME' --no-pager -n 25 || true; \
+             systemctl status postgresql --no-pager -n 25 || true; \
+             journalctl -u '$SERVICE_NAME' --no-pager -n 80 || true; \
+             journalctl -u postgresql --no-pager -n 60 || true"

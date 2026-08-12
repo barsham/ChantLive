@@ -133,6 +133,9 @@ export default function Landing() {
               <Button variant="ghost" asChild data-testid="link-changelog">
                 <Link href="/changelog">Changelog</Link>
               </Button>
+              <Button variant="ghost" asChild data-testid="link-status">
+                <Link href="/status">Status</Link>
+              </Button>
               <Button asChild data-testid="button-go-dashboard">
                 <Link href="/admin">
                   Dashboard
@@ -153,6 +156,9 @@ export default function Landing() {
               </Button>
               <Button variant="ghost" asChild data-testid="link-changelog">
                 <Link href="/changelog">Changelog</Link>
+              </Button>
+              <Button variant="ghost" asChild data-testid="link-status">
+                <Link href="/status">Status</Link>
               </Button>
               <Button variant="outline" asChild data-testid="button-sign-in">
                 <Link href="/login">Sign In</Link>
@@ -177,6 +183,9 @@ export default function Landing() {
               </Button>
               <Button variant="ghost" className="justify-start" asChild>
                 <Link href="/changelog" onClick={() => setMobileNavOpen(false)}>Changelog</Link>
+              </Button>
+              <Button variant="ghost" className="justify-start" asChild>
+                <Link href="/status" onClick={() => setMobileNavOpen(false)}>Status</Link>
               </Button>
               {isAuthenticated ? (
                 <Button className="col-span-2" asChild>
@@ -534,7 +543,7 @@ export default function Landing() {
             Open-source project for free speech worldwide. <a href="https://github.com/barsham/ChantLive" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">Source code on GitHub</a>. <AppVersion className="inline" />
           </p>
           <p>
-            Learn more <Link href="/for-organizers" className="underline underline-offset-4">for organizers</Link>, read <Link href="/about" className="underline underline-offset-4">about ChantLive</Link>, explore the <Link href="/blog" className="underline underline-offset-4">community blog</Link>, or see what changed in the <Link href="/changelog" className="underline underline-offset-4">public changelog</Link>.
+            Learn more <Link href="/for-organizers" className="underline underline-offset-4">for organizers</Link>, check <Link href="/status" className="underline underline-offset-4">service status</Link>, explore the <Link href="/blog" className="underline underline-offset-4">community blog</Link>, or see what changed in the <Link href="/changelog" className="underline underline-offset-4">public changelog</Link>.
           </p>
         </div>
       </footer>

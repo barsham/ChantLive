@@ -3,6 +3,12 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import pkg from "../package.json";
+import {
+  checkPlatformReadiness,
+  getPlatformReadiness,
+  isPlatformReady,
+  startPlatformReadinessMonitor,
+} from "./readiness";
 
 const app = express();
 const httpServer = createServer(app);
@@ -40,10 +46,34 @@ app.use(express.urlencoded({ extended: false }));
 
 app.get("/healthz", (_req, res) => {
   res.json({
-    status: "ok",
+    status: "alive",
     version: pkg.version,
     uptimeSeconds: Math.floor(process.uptime()),
     timestamp: new Date().toISOString(),
+  });
+});
+
+app.get("/readyz", async (_req, res) => {
+  await checkPlatformReadiness();
+  const readiness = getPlatformReadiness();
+  res.status(readiness.status === "operational" ? 200 : 503).json(readiness);
+});
+
+app.get("/api/platform-status", async (_req, res) => {
+  await checkPlatformReadiness();
+  const readiness = getPlatformReadiness();
+  res.setHeader("Cache-Control", "no-store");
+  res.status(readiness.status === "operational" ? 200 : 503).json(readiness);
+});
+
+app.use("/api", (_req, res, next) => {
+  if (isPlatformReady()) return next();
+  const readiness = getPlatformReadiness();
+  res.setHeader("Retry-After", String(readiness.retryAfterSeconds));
+  return res.status(503).json({
+    message: "ChantLive is reconnecting to its data service. No changes were accepted; please retry shortly.",
+    code: "platform_not_ready",
+    ...readiness,
   });
 });
 
@@ -122,6 +152,7 @@ app.use((req, res, next) => {
     },
     () => {
       log(`serving on port ${port}`);
+      startPlatformReadinessMonitor();
     },
   );
 })();
