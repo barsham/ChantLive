@@ -56,7 +56,14 @@ jobs:
         run: |
           ssh -i ~/.ssh/hetzner_recovery "$HETZNER_USER@$HETZNER_HOST" \
             "cd '$APP_DIR'; set -a; source .env; set +a; \
-             if [[ \"\$DATABASE_URL\" =~ @(localhost|127\\.0\\.0\\.1|\\[::1\\])([:/]) ]]; then systemctl restart postgresql; fi; \
+             if [[ \"\$DATABASE_URL\" =~ @(localhost|127\\.0\\.0\\.1|\\[::1\\])([:/]) ]]; then \
+               systemctl restart postgresql || true; \
+               database_port=5432; \
+               if [[ \"\$DATABASE_URL\" =~ @([^/]+):([0-9]+)/ ]]; then database_port=\"\${BASH_REMATCH[2]}\"; fi; \
+               while read -r version cluster port status rest; do \
+                 if [[ \"\$port\" == \"\$database_port\" && \"\$status\" != online ]]; then pg_ctlcluster \"\$version\" \"\$cluster\" start || true; fi; \
+               done < <(pg_lsclusters --no-header); \
+             fi; \
              for attempt in \$(seq 1 20); do pg_isready --dbname=\"\$DATABASE_URL\" --timeout=3 -q && break; sleep 1; done; \
              pg_isready --dbname=\"\$DATABASE_URL\" --timeout=3 -q; \
              systemctl restart '$SERVICE_NAME'; \
@@ -77,5 +84,9 @@ jobs:
           ssh -i ~/.ssh/hetzner_recovery "$HETZNER_USER@$HETZNER_HOST" \
             "systemctl status '$SERVICE_NAME' --no-pager -n 25 || true; \
              systemctl status postgresql --no-pager -n 25 || true; \
+             pg_lsclusters || true; \
+             systemctl list-units 'postgresql@*' --all --no-pager || true; \
              journalctl -u '$SERVICE_NAME' --no-pager -n 80 || true; \
-             journalctl -u postgresql --no-pager -n 60 || true"
+             journalctl -u postgresql --no-pager -n 60 || true; \
+             tail -n 80 /var/log/postgresql/postgresql-*.log || true; \
+             df -h / /var/lib/postgresql || true"
