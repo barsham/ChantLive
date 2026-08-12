@@ -41,6 +41,39 @@ database_ready() {
   command -v pg_isready >/dev/null 2>&1 && pg_isready --dbname="$DATABASE_URL" --timeout=3 >/dev/null 2>&1
 }
 
+repair_postgres_ssl_key_access() {
+  local ssl_key="/etc/ssl/private/ssl-cert-snakeoil.key"
+  local failure='could not access private key file "/etc/ssl/private/ssl-cert-snakeoil.key": Permission denied'
+
+  if [[ ! -f "$ssl_key" ]] || ! grep -Fq "$failure" /var/log/postgresql/postgresql-*.log 2>/dev/null; then
+    return 1
+  fi
+
+  if ! getent group ssl-cert >/dev/null 2>&1; then
+    echo "Cannot repair PostgreSQL TLS access because the ssl-cert group is missing" >&2
+    return 1
+  fi
+
+  echo "Repairing standard PostgreSQL access to the Debian snakeoil TLS key" >&2
+  usermod -aG ssl-cert postgres
+  chown root:ssl-cert "$ssl_key"
+  chmod 640 "$ssl_key"
+}
+
+start_configured_postgres_cluster() {
+  local database_port="$1"
+
+  if command -v pg_lsclusters >/dev/null 2>&1 && command -v pg_ctlcluster >/dev/null 2>&1; then
+    while read -r version cluster port status _; do
+      if [[ "$port" == "$database_port" && "$status" != "online" ]]; then
+        echo "Starting PostgreSQL cluster $version/$cluster on configured port $port" >&2
+        systemctl reset-failed "postgresql@$version-$cluster.service" || true
+        pg_ctlcluster "$version" "$cluster" start || true
+      fi
+    done < <(pg_lsclusters --no-header)
+  fi
+}
+
 recover_database_if_local() {
   if database_ready; then
     echo "Database readiness check passed"
@@ -57,13 +90,10 @@ recover_database_if_local() {
       database_port="${BASH_REMATCH[2]}"
     fi
 
-    if command -v pg_lsclusters >/dev/null 2>&1 && command -v pg_ctlcluster >/dev/null 2>&1; then
-      while read -r version cluster port status _; do
-        if [[ "$port" == "$database_port" && "$status" != "online" ]]; then
-          echo "Starting PostgreSQL cluster $version/$cluster on configured port $port" >&2
-          pg_ctlcluster "$version" "$cluster" start || true
-        fi
-      done < <(pg_lsclusters --no-header)
+    start_configured_postgres_cluster "$database_port"
+
+    if ! database_ready && repair_postgres_ssl_key_access; then
+      start_configured_postgres_cluster "$database_port"
     fi
 
     for attempt in {1..20}; do

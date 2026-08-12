@@ -102,5 +102,11 @@ jobs:
           ssh -i ~/.ssh/hetzner_deploy "$HETZNER_USER@$HETZNER_HOST" \
             "systemctl status '$SERVICE_NAME' --no-pager -n 20 || true; \
              systemctl status postgresql --no-pager -n 20 || true; \
+             pg_lsclusters || true; \
+             systemctl list-units 'postgresql@*' --all --no-pager || true; \
              journalctl -u '$SERVICE_NAME' --no-pager -n 60 || true; \
-             journalctl -u postgresql --no-pager -n 40 || true"
+             journalctl -u postgresql --no-pager -n 40 || true; \
+             tail -n 80 /var/log/postgresql/postgresql-*.log || true; \
+             id postgres || true; \
+             stat -c '%U:%G %a %n' /etc/ssl/private/ssl-cert-snakeoil.key || true; \
+             df -h / /var/lib/postgresql || true"
