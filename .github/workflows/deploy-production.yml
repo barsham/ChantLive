@@ -109,4 +109,6 @@ jobs:
              tail -n 80 /var/log/postgresql/postgresql-*.log || true; \
              id postgres || true; \
              stat -c '%U:%G %a %n' /etc/ssl/private/ssl-cert-snakeoil.key || true; \
+             stat -c '%U:%G %a %n' /etc/ssl/private || true; \
+             runuser -u postgres -- test -r /etc/ssl/private/ssl-cert-snakeoil.key || true; \
              df -h / /var/lib/postgresql || true"

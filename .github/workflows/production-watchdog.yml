@@ -66,7 +66,7 @@ jobs:
                ssl_key=/etc/ssl/private/ssl-cert-snakeoil.key; \
                failure='could not access private key file \"/etc/ssl/private/ssl-cert-snakeoil.key\": Permission denied'; \
                if ! pg_isready --dbname=\"\$DATABASE_URL\" --timeout=3 -q && [[ -f \"\$ssl_key\" ]] && grep -Fq \"\$failure\" /var/log/postgresql/postgresql-*.log && getent group ssl-cert >/dev/null; then \
-                 usermod -aG ssl-cert postgres; chown root:ssl-cert \"\$ssl_key\"; chmod 640 \"\$ssl_key\"; \
+                 usermod -aG ssl-cert postgres; chown root:ssl-cert /etc/ssl/private; chmod 710 /etc/ssl/private; chown root:ssl-cert \"\$ssl_key\"; chmod 640 \"\$ssl_key\"; \
                  while read -r version cluster port status rest; do \
                    if [[ \"\$port\" == \"\$database_port\" && \"\$status\" != online ]]; then systemctl reset-failed \"postgresql@\$version-\$cluster.service\" || true; pg_ctlcluster \"\$version\" \"\$cluster\" start || true; fi; \
                  done < <(pg_lsclusters --no-header); \
@@ -95,6 +95,8 @@ jobs:
              pg_lsclusters || true; \
              id postgres || true; \
              stat -c '%U:%G %a %n' /etc/ssl/private/ssl-cert-snakeoil.key || true; \
+             stat -c '%U:%G %a %n' /etc/ssl/private || true; \
+             runuser -u postgres -- test -r /etc/ssl/private/ssl-cert-snakeoil.key || true; \
              systemctl list-units 'postgresql@*' --all --no-pager || true; \
              journalctl -u '$SERVICE_NAME' --no-pager -n 80 || true; \
              journalctl -u postgresql --no-pager -n 60 || true; \

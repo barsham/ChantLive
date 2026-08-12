@@ -56,6 +56,8 @@ repair_postgres_ssl_key_access() {
 
   echo "Repairing standard PostgreSQL access to the Debian snakeoil TLS key" >&2
   usermod -aG ssl-cert postgres
+  chown root:ssl-cert /etc/ssl/private
+  chmod 710 /etc/ssl/private
   chown root:ssl-cert "$ssl_key"
   chmod 640 "$ssl_key"
 }
