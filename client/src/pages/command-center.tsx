@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowDown, ArrowLeft, ArrowUp, BookOpen, CalendarPlus, CheckCircle2, ClipboardList, Clock3, Copy, Database, Download, ExternalLink, FileText, History, LifeBuoy, ListOrdered, LockKeyhole, Megaphone, Play, Plus, QrCode, RotateCcw, Route, Save, Share2, ShieldCheck, SkipForward, Trash2, UserRoundCheck, Users, WifiOff } from "lucide-react";
+import { Activity, ArrowDown, ArrowLeft, ArrowUp, BookOpen, CalendarPlus, CheckCircle2, ClipboardList, Clock3, Copy, Database, Download, ExternalLink, FileText, History, LifeBuoy, ListOrdered, LockKeyhole, Megaphone, Play, Plus, QrCode, RotateCcw, Route, Save, Share2, ShieldCheck, SkipForward, Trash2, UserRoundCheck, Users, WifiOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +43,13 @@ function formatCommandSchedule(value: Date | string | null | undefined) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
+}
+
+function formatObservedTime(totalSeconds: number) {
+  if (totalSeconds < 60) return `${totalSeconds}s`;
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.round((totalSeconds % 3600) / 60);
+  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 }
 
 type AssistanceRequest = {
@@ -148,6 +155,19 @@ type EngagementSummary = {
     participantLabel: string;
     updatedAt: string;
   }>;
+};
+type AttendanceSummary = {
+  liveNow: number;
+  uniqueParticipants: number;
+  totalVisits: number;
+  returningParticipants: number;
+  reconnectVisits: number;
+  peakConcurrent: number;
+  observedSeconds: number;
+  firstJoinAt: string | null;
+  lastSeenAt: string | null;
+  timeline: Array<{ startedAt: string; firstJoins: number; returnVisits: number }>;
+  privacy: string;
 };
 type ConductReport = {
   id: string;
@@ -464,6 +484,11 @@ export default function CommandCenter() {
   });
   const { data: feedback } = useQuery<FeedbackSummary>({
     queryKey: ["/api/demos", id, "feedback"],
+    refetchInterval: 5000,
+    enabled: Boolean(id),
+  });
+  const { data: attendance, isLoading: attendanceLoading, error: attendanceError } = useQuery<AttendanceSummary>({
+    queryKey: ["/api/demos", id, "attendance"],
     refetchInterval: 5000,
     enabled: Boolean(id),
   });
@@ -1397,6 +1422,69 @@ export default function CommandCenter() {
               <p><span className="font-medium text-foreground">Current chant:</span> {currentChant ? currentChant.callText || "Chant selected" : "None"}</p>
               <p className="break-all"><span className="font-medium text-foreground">Participant link:</span> {publicUrl}</p>
               <p><span className="font-medium text-foreground">Meeting point:</span> {data.demo.meetingPoint || "Not set"}</p>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6 border-sky-500/30" data-testid="card-attendance-journey">
+            <CardHeader>
+              <CardTitle className="flex flex-wrap items-center justify-between gap-3 text-base">
+                <span className="flex items-center gap-2"><Activity className="h-5 w-5 text-sky-700" aria-hidden="true" /> Live attendance journey</span>
+                <Badge variant={(attendance?.liveNow ?? 0) > 0 ? "default" : "secondary"}>{attendance?.liveNow ?? data.viewerCount} live now</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {attendanceLoading ? (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6" aria-label="Loading attendance journey">
+                  {Array.from({ length: 6 }).map((_, index) => <Skeleton key={index} className="h-20 w-full" />)}
+                </div>
+              ) : attendanceError ? (
+                <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-950" role="alert" data-testid="text-attendance-error">Attendance history is temporarily unavailable. Live event controls are not affected.</p>
+              ) : (
+                <>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+                    {[
+                      ["Unique people", attendance?.uniqueParticipants ?? 0],
+                      ["Total visits", attendance?.totalVisits ?? 0],
+                      ["Returned", attendance?.returningParticipants ?? 0],
+                      ["Reconnect visits", attendance?.reconnectVisits ?? 0],
+                      ["Peak together", attendance?.peakConcurrent ?? 0],
+                      ["Observed time", formatObservedTime(attendance?.observedSeconds ?? 0)],
+                    ].map(([label, value]) => (
+                      <div key={label} className="rounded-lg border bg-background p-3">
+                        <p className="text-xs text-muted-foreground">{label}</p>
+                        <p className="mt-1 text-2xl font-bold">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {(attendance?.totalVisits ?? 0) === 0 ? (
+                    <p className="mt-4 rounded-lg border border-dashed p-4 text-sm text-muted-foreground" data-testid="text-no-attendance">No anonymous attendance has been shared yet. The first participant visit will appear here and remain available after they disconnect.</p>
+                  ) : (
+                    <div className="mt-5">
+                      <div className="flex flex-wrap items-end justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold">Arrivals over time</p>
+                          <p className="text-xs text-muted-foreground">First joins and return visits, grouped by hour.</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Last activity {formatCommandSchedule(attendance?.lastSeenAt)}</p>
+                      </div>
+                      <ol className="mt-3 grid gap-2" aria-label="Anonymous attendance arrivals by hour">
+                        {attendance?.timeline.map((point) => {
+                          const total = point.firstJoins + point.returnVisits;
+                          const max = Math.max(1, ...attendance.timeline.map((item) => item.firstJoins + item.returnVisits));
+                          return (
+                            <li key={point.startedAt} className="grid grid-cols-[7rem_1fr_auto] items-center gap-3 text-xs">
+                              <time dateTime={point.startedAt} className="text-muted-foreground">{new Date(point.startedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</time>
+                              <div className="h-3 overflow-hidden rounded-full bg-muted" aria-hidden="true"><div className="h-full rounded-full bg-sky-600" style={{ width: `${Math.max(6, (total / max) * 100)}%` }} /></div>
+                              <span className="font-medium">{point.firstJoins} new · {point.returnVisits} return</span>
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    </div>
+                  )}
+                  <p className="mt-4 text-xs text-muted-foreground" data-testid="text-attendance-privacy">{attendance?.privacy}</p>
+                </>
+              )}
             </CardContent>
           </Card>
 

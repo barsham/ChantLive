@@ -74,8 +74,9 @@ export const viewSessions = pgTable("view_sessions", {
   id: varchar("id", { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),
   demonstrationId: varchar("demonstration_id", { length: 255 }).notNull().references(() => demonstrations.id, { onDelete: "cascade" }),
   sessionId: text("session_id").notNull(),
-  firstSeenAt: timestamp("first_seen_at").defaultNow().notNull(),
-  lastSeenAt: timestamp("last_seen_at").defaultNow().notNull(),
+  firstSeenAt: timestamp("first_seen_at", { withTimezone: true }).defaultNow().notNull(),
+  lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).defaultNow().notNull(),
+  disconnectedAt: timestamp("disconnected_at", { withTimezone: true }),
 });
 
 export const safetyChecks = pgTable("safety_checks", {

@@ -22,6 +22,7 @@ import QRCode from "qrcode";
 import type { Demonstration, RunSheetTemplateStage, User } from "@shared/schema";
 import { demoTransferPackageSchema } from "@shared/demo-transfer";
 import { isPlatformReady } from "./readiness";
+import { createHash } from "node:crypto";
 
 declare global {
   namespace Express {
@@ -118,6 +119,34 @@ function getSingleParam(value: string | string[] | undefined): string | undefine
 
 function getViewerCount(demoId: string): number {
   return demoViewers.get(demoId)?.size ?? 0;
+}
+
+function hashAttendanceSession(demoId: string, sessionId: string): string {
+  return createHash("sha256").update(`${demoId}:${sessionId}`).digest("hex");
+}
+
+function serializeAttendanceReceipt(receipt: Awaited<ReturnType<typeof storage.getParticipantAttendance>>) {
+  if (!receipt) return null;
+  return {
+    firstJoinAt: receipt.firstJoinAt.toISOString(),
+    lastSeenAt: receipt.lastSeenAt.toISOString(),
+    visitCount: receipt.visitCount,
+    observedSeconds: receipt.observedSeconds,
+  };
+}
+
+async function getSerializedAttendanceSummary(demoId: string) {
+  const summary = await storage.getAttendanceSummary(demoId);
+  const liveNow = getViewerCount(demoId);
+  return {
+    ...summary,
+    liveNow,
+    peakConcurrent: Math.max(summary.peakConcurrent, liveNow),
+    firstJoinAt: summary.firstJoinAt?.toISOString() ?? null,
+    lastSeenAt: summary.lastSeenAt?.toISOString() ?? null,
+    timeline: summary.timeline.map((point) => ({ ...point, startedAt: point.startedAt.toISOString() })),
+    privacy: "Pseudonymous event-scoped session hashes only; no IP address, device, location, account, or participant content is stored.",
+  };
 }
 
 function serializeAssistanceRequest(request: AssistanceRequest) {
@@ -1409,6 +1438,19 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/demos/:id/attendance", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      res.setHeader("Cache-Control", "no-store");
+      res.json(await getSerializedAttendanceSummary(demo.id));
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch attendance journey" });
+    }
+  });
+
   app.get("/api/demos/:id/engagement", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
@@ -1674,6 +1716,32 @@ export async function registerRoutes(
       res.status(existing ? 200 : 201).json(summary);
     } catch (err) {
       res.status(500).json({ message: "Failed to submit participant feedback" });
+    }
+  });
+
+  app.post("/api/public/demos/:publicId/attendance-receipt", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      const sessionId = typeof req.body?.sessionId === "string" ? req.body.sessionId.trim().slice(0, 80) : "";
+      if (!sessionId) return res.status(400).json({ message: "A private device session is required" });
+      res.setHeader("Cache-Control", "no-store");
+      res.json(serializeAttendanceReceipt(await storage.getParticipantAttendance(demo.id, hashAttendanceSession(demo.id, sessionId))));
+    } catch {
+      res.status(500).json({ message: "Failed to load your attendance receipt" });
+    }
+  });
+
+  app.delete("/api/public/demos/:publicId/attendance-receipt", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      const sessionId = typeof req.body?.sessionId === "string" ? req.body.sessionId.trim().slice(0, 80) : "";
+      if (!sessionId) return res.status(400).json({ message: "A private device session is required" });
+      const deleted = await storage.deleteParticipantAttendance(demo.id, hashAttendanceSession(demo.id, sessionId));
+      res.json({ deleted });
+    } catch {
+      res.status(500).json({ message: "Failed to forget your attendance" });
     }
   });
 
@@ -2742,9 +2810,18 @@ export async function registerRoutes(
   });
 
   io.on("connection", (socket) => {
-    let currentDemo: { publicId: string; demoId: string; socketId: string } | null = null;
+    let currentDemo: { publicId: string; demoId: string; socketId: string; sessionHash: string | null; viewSessionId: string | null } | null = null;
+    let attendanceHeartbeat: NodeJS.Timeout | null = null;
 
-    socket.on("join_demo", async ({ publicId, sessionId }) => {
+    const stopAttendanceTracking = async (target = currentDemo) => {
+      if (target === currentDemo && attendanceHeartbeat) clearInterval(attendanceHeartbeat);
+      if (target === currentDemo) attendanceHeartbeat = null;
+      const viewSessionId = target?.viewSessionId ?? null;
+      if (target) target.viewSessionId = null;
+      if (viewSessionId) await storage.endViewSession(viewSessionId);
+    };
+
+    socket.on("join_demo", async ({ publicId, sessionId, attendanceOptOut }) => {
       try {
         const demo = await storage.getDemonstrationByPublicId(publicId);
         if (!demo) {
@@ -2752,8 +2829,32 @@ export async function registerRoutes(
           return;
         }
 
+        if (currentDemo) {
+          const previousDemo = currentDemo;
+          await stopAttendanceTracking(previousDemo);
+          if (previousDemo.publicId !== publicId) {
+            socket.leave(`demo:${previousDemo.publicId}`);
+            demoViewers.get(previousDemo.demoId)?.delete(socket.id);
+            io.to(`demo:${previousDemo.publicId}`).emit("viewer_count", getViewerCount(previousDemo.demoId));
+          }
+        }
         socket.join(`demo:${publicId}`);
-        currentDemo = { publicId, demoId: demo.id, socketId: socket.id };
+        const participantSessionId = typeof sessionId === "string" ? sessionId.trim().slice(0, 80) : "";
+        const sessionHash = participantSessionId ? hashAttendanceSession(demo.id, participantSessionId) : null;
+        const viewSessionId = attendanceOptOut === true || !sessionHash ? null : await storage.startViewSession(demo.id, sessionHash);
+        currentDemo = { publicId, demoId: demo.id, socketId: socket.id, sessionHash, viewSessionId };
+        if (viewSessionId) {
+          attendanceHeartbeat = setInterval(async () => {
+            try {
+              await storage.touchViewSession(viewSessionId);
+              const receipt = sessionHash ? await storage.getParticipantAttendance(demo.id, sessionHash) : null;
+              socket.emit("attendance_receipt", serializeAttendanceReceipt(receipt));
+            } catch {
+              socket.emit("attendance_error", "Attendance receipt is temporarily unavailable. Live chants are not affected.");
+            }
+          }, 30_000);
+          attendanceHeartbeat.unref();
+        }
 
         if (!demoViewers.has(demo.id)) {
           demoViewers.set(demo.id, new Set());
@@ -2796,9 +2897,12 @@ export async function registerRoutes(
           eventDurationMinutes: state?.eventDurationMinutes ?? 120,
         });
 
-        const participantSessionId = typeof sessionId === "string" ? sessionId.trim().slice(0, 80) : undefined;
+        const safetySessionId = participantSessionId || undefined;
         const currentSafetyCheck = getCurrentSafetyCheck(await storage.getSafetyChecks(demo.id));
-        socket.emit("safety_check_update", currentSafetyCheck ? serializeSafetyCheck(currentSafetyCheck, participantSessionId) : null);
+        socket.emit("safety_check_update", currentSafetyCheck ? serializeSafetyCheck(currentSafetyCheck, safetySessionId) : null);
+        socket.emit("attendance_receipt", sessionHash && viewSessionId
+          ? serializeAttendanceReceipt(await storage.getParticipantAttendance(demo.id, sessionHash))
+          : null);
 
         const count = getViewerCount(demo.id);
         io.to(`demo:${publicId}`).emit("viewer_count", count);
@@ -2807,21 +2911,25 @@ export async function registerRoutes(
       }
     });
 
-    socket.on("leave_demo", ({ publicId }) => {
+    socket.on("leave_demo", async ({ publicId }) => {
       socket.leave(`demo:${publicId}`);
-      if (currentDemo) {
-        demoViewers.get(currentDemo.demoId)?.delete(socket.id);
-        const count = getViewerCount(currentDemo.demoId);
-        io.to(`demo:${publicId}`).emit("viewer_count", count);
-        currentDemo = null;
-      }
+      const leavingDemo = currentDemo;
+      if (!leavingDemo || leavingDemo.publicId !== publicId) return;
+      currentDemo = null;
+      await stopAttendanceTracking(leavingDemo);
+      demoViewers.get(leavingDemo.demoId)?.delete(socket.id);
+      const count = getViewerCount(leavingDemo.demoId);
+      io.to(`demo:${publicId}`).emit("viewer_count", count);
     });
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", async () => {
       if (currentDemo) {
-        demoViewers.get(currentDemo.demoId)?.delete(socket.id);
-        const count = getViewerCount(currentDemo.demoId);
-        io.to(`demo:${currentDemo.publicId}`).emit("viewer_count", count);
+        const leavingDemo = currentDemo;
+        currentDemo = null;
+        await stopAttendanceTracking(leavingDemo);
+        demoViewers.get(leavingDemo.demoId)?.delete(socket.id);
+        const count = getViewerCount(leavingDemo.demoId);
+        io.to(`demo:${leavingDemo.publicId}`).emit("viewer_count", count);
       }
     });
   });

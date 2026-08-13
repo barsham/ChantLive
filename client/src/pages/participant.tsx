@@ -67,6 +67,12 @@ type ParticipantEngagement = {
   participantLabel: string;
   updatedAt: string;
 };
+type AttendanceReceipt = {
+  firstJoinAt: string;
+  lastSeenAt: string;
+  visitCount: number;
+  observedSeconds: number;
+};
 type ConductReportCategory = "harassment" | "unsafe_behavior" | "privacy" | "misinformation" | "other";
 type ConductReport = {
   id: string;
@@ -1172,6 +1178,16 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     feedbackFailed: "بازخورد ارسال نشد. مستقیماً به برگزارکننده اطلاع دهید.",
   },
 };
+const attendanceCopy: Record<ParticipantLanguage, {
+  title: string; body: string; exactPrivacy: string; firstJoin: string; visits: string; observed: string; lastSeen: string;
+  forget: string; forgotten: string; restore: string; noRecord: string; error: string; pending: string; on: string; off: string; minutes: string;
+}> = {
+  en: { title: "Your anonymous attendance receipt", body: "This helps organisers understand reach and reconnection without knowing who you are.", exactPrivacy: "Stored: an event-only random session hash and join, last-seen, disconnect times. Never stored: IP address, device, location, account, chant activity, messages, or report content.", firstJoin: "First joined", visits: "Visits", observed: "Observed time", lastSeen: "Last seen", forget: "Forget this event's attendance", forgotten: "Attendance forgotten. This device is opted out for this event.", restore: "Share anonymous attendance again", noRecord: "No attendance is stored for this device and event.", error: "Your receipt is temporarily unavailable. Live chants are not affected.", pending: "The saved record will be erased automatically when this device reconnects.", on: "Anonymous attendance on", off: "Attendance sharing off", minutes: "min" },
+  es: { title: "Tu recibo de asistencia anónima", body: "Ayuda a los organizadores a entender el alcance y las reconexiones sin saber quién eres.", exactPrivacy: "Se guarda: un identificador aleatorio cifrado solo para este evento y las horas de entrada, última actividad y salida. Nunca: IP, dispositivo, ubicación, cuenta, actividad, mensajes ni informes.", firstJoin: "Primera entrada", visits: "Visitas", observed: "Tiempo observado", lastSeen: "Última actividad", forget: "Olvidar mi asistencia a este evento", forgotten: "Asistencia olvidada. Este dispositivo no compartirá asistencia en este evento.", restore: "Volver a compartir asistencia anónima", noRecord: "No hay asistencia guardada para este dispositivo y evento.", error: "Tu recibo no está disponible temporalmente. Los cánticos en directo no se ven afectados.", pending: "El registro guardado se borrará automáticamente cuando este dispositivo vuelva a conectarse.", on: "Asistencia anónima activa", off: "Asistencia desactivada", minutes: "min" },
+  fr: { title: "Votre reçu de présence anonyme", body: "Il aide les organisateurs à comprendre la portée et les reconnexions sans connaître votre identité.", exactPrivacy: "Conservé : un identifiant aléatoire haché propre à l’événement et les heures d’arrivée, de dernière activité et de départ. Jamais : adresse IP, appareil, position, compte, activité, messages ou signalements.", firstJoin: "Première arrivée", visits: "Visites", observed: "Temps observé", lastSeen: "Dernière activité", forget: "Oublier ma présence à cet événement", forgotten: "Présence oubliée. Cet appareil ne la partagera plus pour cet événement.", restore: "Partager à nouveau la présence anonyme", noRecord: "Aucune présence n’est conservée pour cet appareil et cet événement.", error: "Votre reçu est temporairement indisponible. Les chants en direct ne sont pas affectés.", pending: "L’enregistrement sera effacé automatiquement lorsque cet appareil se reconnectera.", on: "Présence anonyme active", off: "Partage de présence désactivé", minutes: "min" },
+  ar: { title: "إيصال حضورك المجهول", body: "يساعد المنظمين على فهم الوصول وإعادة الاتصال دون معرفة هويتك.", exactPrivacy: "يُحفظ: معرّف عشوائي مُجزأ خاص بالفعالية وأوقات الانضمام وآخر ظهور والمغادرة. لا يُحفظ أبداً: عنوان IP أو الجهاز أو الموقع أو الحساب أو النشاط أو الرسائل أو البلاغات.", firstJoin: "أول انضمام", visits: "الزيارات", observed: "الوقت المرصود", lastSeen: "آخر ظهور", forget: "نسيان حضوري لهذه الفعالية", forgotten: "تم نسيان الحضور. أُوقف الإرسال من هذا الجهاز لهذه الفعالية.", restore: "مشاركة الحضور المجهول مجدداً", noRecord: "لا يوجد حضور محفوظ لهذا الجهاز وهذه الفعالية.", error: "إيصالك غير متاح مؤقتاً. لا تتأثر الهتافات المباشرة.", pending: "سيُحذف السجل المحفوظ تلقائياً عند إعادة اتصال هذا الجهاز.", on: "الحضور المجهول مفعّل", off: "مشاركة الحضور متوقفة", minutes: "دقيقة" },
+  fa: { title: "رسید حضور ناشناس شما", body: "به برگزارکنندگان کمک می‌کند میزان دسترسی و اتصال دوباره را بدون شناخت هویت شما بفهمند.", exactPrivacy: "ذخیره می‌شود: شناسه تصادفی هش‌شده مخصوص رویداد و زمان‌های ورود، آخرین مشاهده و خروج. هرگز ذخیره نمی‌شود: IP، دستگاه، مکان، حساب، فعالیت، پیام یا گزارش.", firstJoin: "اولین ورود", visits: "بازدیدها", observed: "زمان مشاهده‌شده", lastSeen: "آخرین مشاهده", forget: "حضور این رویداد را فراموش کن", forgotten: "حضور حذف شد. این دستگاه برای این رویداد انصراف داده است.", restore: "اشتراک دوباره حضور ناشناس", noRecord: "هیچ حضوری برای این دستگاه و رویداد ذخیره نشده است.", error: "رسید شما موقتاً در دسترس نیست. شعارهای زنده تحت تأثیر نیستند.", pending: "رکورد ذخیره‌شده پس از اتصال دوباره این دستگاه خودکار حذف می‌شود.", on: "حضور ناشناس روشن", off: "اشتراک حضور خاموش", minutes: "دقیقه" },
+};
 const runSheetCopy: Record<ParticipantLanguage, {
   title: string; now: string; next: string; progress: string; stageOf: string;
   plannedMinutes: string; waiting: string; completed: string;
@@ -1306,6 +1322,11 @@ export default function Participant() {
   const [conductLoading, setConductLoading] = useState(false);
   const [runSheet, setRunSheet] = useState<ParticipantRunSheet | null>(null);
   const [engagement, setEngagement] = useState<ParticipantEngagement | null>(null);
+  const [attendanceReceipt, setAttendanceReceipt] = useState<AttendanceReceipt | null>(null);
+  const [attendanceOptOut, setAttendanceOptOut] = useState(() => localStorage.getItem(`chant_attendance_opt_out_${publicId}`) === "true");
+  const [attendanceDeletionPending, setAttendanceDeletionPending] = useState(() => localStorage.getItem(`chant_attendance_delete_pending_${publicId}`) === "true");
+  const [attendanceStatus, setAttendanceStatus] = useState<string | null>(null);
+  const [attendanceError, setAttendanceError] = useState(false);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const [shareFallbackText, setShareFallbackText] = useState<string | null>(null);
   const [recoveryFallbackText, setRecoveryFallbackText] = useState<string | null>(null);
@@ -1320,8 +1341,10 @@ export default function Participant() {
   const [offlineStatusError, setOfflineStatusError] = useState(false);
   const localPhaseStartRef = useRef(Date.now());
   const lowBandwidthRef = useRef(lowBandwidth);
+  const checkedInRoleRef = useRef<CheckInRole | null>(checkedInRole);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const t = participantCopy[participantLanguage];
+  const attendanceT = attendanceCopy[participantLanguage];
   const runSheetT = runSheetCopy[participantLanguage];
   const programmeT = programmeCopy[participantLanguage];
   const conductT = conductCopy[participantLanguage];
@@ -1388,6 +1411,10 @@ export default function Participant() {
   };
 
   useEffect(() => {
+    checkedInRoleRef.current = checkedInRole;
+  }, [checkedInRole]);
+
+  useEffect(() => {
     const updateOnlineStatus = () => {
       setIsOffline(!navigator.onLine);
     };
@@ -1444,7 +1471,7 @@ export default function Participant() {
 
     socket.on("connect", () => {
       setConnected(true);
-      socket.emit("join_demo", { publicId, sessionId: getSessionId() });
+      socket.emit("join_demo", { publicId, sessionId: getSessionId(), attendanceOptOut });
     });
 
     socket.on("disconnect", () => {
@@ -1489,9 +1516,17 @@ export default function Participant() {
     });
 
     socket.on("organizer_announcement", (data: OrganizerAnnouncement) => {
-      if (data.targetRole === "all" || data.targetRole === checkedInRole) {
+      if (data.targetRole === "all" || data.targetRole === checkedInRoleRef.current) {
         setAnnouncement(data);
       }
+    });
+
+    socket.on("attendance_receipt", (receipt: AttendanceReceipt | null) => {
+      setAttendanceReceipt(receipt);
+      setAttendanceError(false);
+    });
+    socket.on("attendance_error", () => {
+      setAttendanceError(true);
     });
 
     socket.on("question_update", (questions: AudienceQuestion[]) => {
@@ -1533,7 +1568,7 @@ export default function Participant() {
     if (!socket.connected) {
       socket.connect();
     } else {
-      socket.emit("join_demo", { publicId, sessionId: getSessionId() });
+      socket.emit("join_demo", { publicId, sessionId: getSessionId(), attendanceOptOut });
     }
 
     return () => {
@@ -1551,10 +1586,12 @@ export default function Participant() {
       socket.off("engagement_update");
       socket.off("conduct_report_status_update");
       socket.off("run_sheet_update");
+      socket.off("attendance_receipt");
+      socket.off("attendance_error");
       socket.off("connect");
       socket.off("disconnect");
     };
-  }, [publicId, checkedInRole]);
+  }, [publicId, attendanceOptOut]);
 
   useEffect(() => {
     fetch(`/api/public/demos/${publicId}/questions`)
@@ -2215,6 +2252,59 @@ export default function Participant() {
       setFeedbackStatus(t.feedbackFailed);
     }
   };
+  const forgetAttendance = async () => {
+    setAttendanceStatus(null);
+    setAttendanceError(false);
+    const sessionId = getSessionId();
+    localStorage.setItem(`chant_attendance_opt_out_${publicId}`, "true");
+    localStorage.setItem(`chant_attendance_delete_pending_${publicId}`, "true");
+    setAttendanceReceipt(null);
+    setAttendanceOptOut(true);
+    setAttendanceDeletionPending(true);
+    try {
+      const response = await fetch(`/api/public/demos/${publicId}/attendance-receipt`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      });
+      if (!response.ok) throw new Error("Could not forget attendance");
+      localStorage.removeItem(`chant_attendance_delete_pending_${publicId}`);
+      setAttendanceDeletionPending(false);
+      setAttendanceStatus(attendanceT.forgotten);
+    } catch {
+      setAttendanceError(true);
+      setAttendanceStatus(`${attendanceT.forgotten} ${attendanceT.pending}`);
+    }
+  };
+  const restoreAttendance = () => {
+    localStorage.removeItem(`chant_attendance_opt_out_${publicId}`);
+    localStorage.removeItem(`chant_attendance_delete_pending_${publicId}`);
+    setAttendanceOptOut(false);
+    setAttendanceDeletionPending(false);
+    setAttendanceStatus(null);
+    setAttendanceError(false);
+  };
+
+  useEffect(() => {
+    if (!attendanceDeletionPending || isOffline) return;
+    const retryDeletion = async () => {
+      try {
+        const response = await fetch(`/api/public/demos/${publicId}/attendance-receipt`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId: getSessionId() }),
+        });
+        if (!response.ok) return;
+        localStorage.removeItem(`chant_attendance_delete_pending_${publicId}`);
+        setAttendanceDeletionPending(false);
+        setAttendanceError(false);
+        setAttendanceStatus(attendanceT.forgotten);
+      } catch {
+        // The device stays opted out; the next online transition retries deletion.
+      }
+    };
+    void retryDeletion();
+  }, [attendanceDeletionPending, attendanceT.forgotten, isOffline, publicId]);
   const submitConductReport = async () => {
     const details = conductDetails.trim();
     if (details.length < 20) return;
@@ -3048,6 +3138,40 @@ export default function Participant() {
             </div>
           </div>
           <div className="mx-auto mt-4 grid max-w-6xl gap-4 md:grid-cols-[1fr_1.2fr]">
+            <div className="rounded-xl border border-sky-300/40 bg-sky-400/10 p-4 md:col-span-2" dir={participantDirection} data-testid="card-attendance-receipt">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="max-w-3xl">
+                  <p className="flex items-center gap-2 font-semibold text-sky-50">
+                    <Users className="h-4 w-4" aria-hidden="true" />
+                    {attendanceT.title}
+                  </p>
+                  <p className="mt-1 text-sm text-sky-100/90">{attendanceT.body}</p>
+                  <p className="mt-2 text-xs leading-relaxed text-sky-100/80" data-testid="text-attendance-privacy">{attendanceT.exactPrivacy}</p>
+                </div>
+                <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${attendanceOptOut ? "border-neutral-500 text-neutral-300" : "border-emerald-300/50 text-emerald-100"}`}>
+                  {attendanceOptOut ? attendanceT.off : attendanceT.on}
+                </span>
+              </div>
+              {attendanceReceipt && !attendanceOptOut ? (
+                <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" data-testid="attendance-receipt-values">
+                  <div className="rounded-lg border border-sky-200/20 bg-black/20 p-3"><dt className="text-xs text-sky-100/70">{attendanceT.firstJoin}</dt><dd className="mt-1 font-semibold text-white">{formatParticipantSchedule(attendanceReceipt.firstJoinAt, participantLanguage)}</dd></div>
+                  <div className="rounded-lg border border-sky-200/20 bg-black/20 p-3"><dt className="text-xs text-sky-100/70">{attendanceT.visits}</dt><dd className="mt-1 font-semibold text-white">{formatParticipantNumber(attendanceReceipt.visitCount, participantLanguage)}</dd></div>
+                  <div className="rounded-lg border border-sky-200/20 bg-black/20 p-3"><dt className="text-xs text-sky-100/70">{attendanceT.observed}</dt><dd className="mt-1 font-semibold text-white">{formatParticipantNumber(Math.round(attendanceReceipt.observedSeconds / 60), participantLanguage)} {attendanceT.minutes}</dd></div>
+                  <div className="rounded-lg border border-sky-200/20 bg-black/20 p-3"><dt className="text-xs text-sky-100/70">{attendanceT.lastSeen}</dt><dd className="mt-1 font-semibold text-white">{formatParticipantSchedule(attendanceReceipt.lastSeenAt, participantLanguage)}</dd></div>
+                </dl>
+              ) : (
+                <p className="mt-4 rounded-lg border border-sky-200/20 bg-black/20 p-3 text-sm text-sky-100/80" data-testid="text-no-attendance-receipt">{attendanceT.noRecord}</p>
+              )}
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                {attendanceOptOut ? (
+                  <button type="button" onClick={restoreAttendance} className="min-h-11 rounded-md border border-sky-200/40 px-3 py-2 text-xs font-semibold text-sky-50 hover:bg-sky-950/40" data-testid="button-restore-attendance">{attendanceT.restore}</button>
+                ) : (
+                  <button type="button" onClick={forgetAttendance} className="min-h-11 rounded-md border border-neutral-600 px-3 py-2 text-xs font-semibold text-neutral-200 hover:bg-neutral-900" data-testid="button-forget-attendance">{attendanceT.forget}</button>
+                )}
+                {attendanceStatus && <p className="text-xs text-emerald-200" role="status" data-testid="text-attendance-status">{attendanceStatus}</p>}
+                {attendanceError && <p className="text-xs text-amber-200" role="alert" data-testid="text-attendance-error">{attendanceT.error}</p>}
+              </div>
+            </div>
             <div className="rounded-xl border border-violet-300/40 bg-violet-400/10 p-4 md:col-span-2" data-testid="card-private-conduct-report">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="max-w-3xl">
@@ -3478,6 +3602,16 @@ export default function Participant() {
           </button>
         )}
         {renderParticipantLanguageSelect()}
+        <button
+          type="button"
+          onClick={() => setShowHelp(true)}
+          className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${attendanceOptOut ? "border-neutral-700 text-neutral-300" : "border-sky-500/30 bg-sky-500/10 text-sky-200"}`}
+          aria-label={`${attendanceOptOut ? attendanceT.off : attendanceT.on}. ${attendanceT.title}`}
+          data-testid="button-open-attendance-receipt"
+        >
+          <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+          {attendanceOptOut ? attendanceT.off : attendanceT.on}
+        </button>
         <span className="inline-flex items-center gap-2">
           <Users className="w-4 h-4 text-neutral-500" />
           <span className="text-neutral-400 text-sm font-mono" data-testid="text-viewer-count">

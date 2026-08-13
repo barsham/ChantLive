@@ -212,5 +212,39 @@ export async function ensureDemoColumnsAndTables(): Promise<void> {
 
     CREATE INDEX IF NOT EXISTS run_sheet_templates_owner_updated_idx
     ON run_sheet_templates (owner_user_id, updated_at DESC);
+
+    CREATE TABLE IF NOT EXISTS view_sessions (
+      id varchar(255) PRIMARY KEY,
+      demonstration_id varchar(255) NOT NULL REFERENCES demonstrations(id) ON DELETE CASCADE,
+      session_id text NOT NULL,
+      first_seen_at timestamptz NOT NULL DEFAULT now(),
+      last_seen_at timestamptz NOT NULL DEFAULT now(),
+      disconnected_at timestamptz
+    );
+
+    ALTER TABLE view_sessions
+    ADD COLUMN IF NOT EXISTS disconnected_at timestamptz;
+
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'view_sessions'
+          AND column_name = 'first_seen_at'
+          AND data_type = 'timestamp without time zone'
+      ) THEN
+        ALTER TABLE view_sessions
+        ALTER COLUMN first_seen_at TYPE timestamptz USING first_seen_at AT TIME ZONE current_setting('TIMEZONE'),
+        ALTER COLUMN last_seen_at TYPE timestamptz USING last_seen_at AT TIME ZONE current_setting('TIMEZONE'),
+        ALTER COLUMN disconnected_at TYPE timestamptz USING disconnected_at AT TIME ZONE current_setting('TIMEZONE');
+      END IF;
+    END
+    $$;
+
+    CREATE INDEX IF NOT EXISTS view_sessions_demo_first_seen_idx
+    ON view_sessions (demonstration_id, first_seen_at);
+
+    CREATE INDEX IF NOT EXISTS view_sessions_demo_session_idx
+    ON view_sessions (demonstration_id, session_id);
   `);
 }

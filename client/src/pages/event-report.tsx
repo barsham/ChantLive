@@ -36,6 +36,19 @@ type FeedbackSummary = {
     participantLabel: string;
   }>;
 };
+type AttendanceSummary = {
+  liveNow: number;
+  uniqueParticipants: number;
+  totalVisits: number;
+  returningParticipants: number;
+  reconnectVisits: number;
+  peakConcurrent: number;
+  observedSeconds: number;
+  firstJoinAt: string | null;
+  lastSeenAt: string | null;
+  timeline: Array<{ startedAt: string; firstJoins: number; returnVisits: number }>;
+  privacy: string;
+};
 type ConductReportSummary = {
   total: number;
   open: number;
@@ -72,7 +85,7 @@ function formatRuntime(totalSeconds: number) {
   return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`;
 }
 
-function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackSummary, conduct?: ConductReportSummary, runSheet?: RunSheetPayload) {
+function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackSummary, conduct?: ConductReportSummary, runSheet?: RunSheetPayload, attendance?: AttendanceSummary) {
   return [
     `ChantLive Post-Event Report: ${data.demo.title}`,
     "",
@@ -81,7 +94,8 @@ function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackS
     `Chants prepared: ${data.chants.length}`,
     `Estimated chant runtime: ${runtime}`,
     `Admins: ${data.admins.map((admin) => `${admin.name} <${admin.email}>`).join(", ") || "None listed"}`,
-    `Current viewer count snapshot: ${data.viewerCount}`,
+    `Attendance: ${attendance?.uniqueParticipants ?? 0} unique people, ${attendance?.totalVisits ?? 0} total visits, ${attendance?.returningParticipants ?? 0} returning, ${attendance?.peakConcurrent ?? 0} peak together`,
+    `Observed participant time: ${formatRuntime(attendance?.observedSeconds ?? 0)}`,
     `Participant feedback responses: ${feedback?.total ?? 0}`,
     `Feedback averages: clarity ${feedback?.averages.clarity ?? 0}/5, safety ${feedback?.averages.safety ?? 0}/5, accessibility ${feedback?.averages.accessibility ?? 0}/5`,
     `Private conduct concerns: ${conduct?.total ?? 0} total, ${conduct?.open ?? 0} unseen, ${conduct?.acknowledged ?? 0} acknowledged, ${conduct?.resolved ?? 0} resolved, ${conduct?.urgent ?? 0} urgent`,
@@ -117,6 +131,10 @@ export default function EventReport() {
     queryKey: ["/api/demos", id, "feedback"],
     enabled: Boolean(id),
   });
+  const { data: attendance, isLoading: attendanceLoading, error: attendanceError } = useQuery<AttendanceSummary>({
+    queryKey: ["/api/demos", id, "attendance"],
+    enabled: Boolean(id),
+  });
   const { data: conductQueue } = useQuery<ConductReportQueue>({
     queryKey: ["/api/demos", id, "conduct-reports"],
     enabled: Boolean(id),
@@ -140,7 +158,7 @@ export default function EventReport() {
 
   const copyReport = async () => {
     if (!data) return;
-    await navigator.clipboard.writeText(buildReportText(data, runtime, feedback, conductQueue?.summary, runSheet));
+    await navigator.clipboard.writeText(buildReportText(data, runtime, feedback, conductQueue?.summary, runSheet, attendance));
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };
@@ -225,11 +243,47 @@ export default function EventReport() {
             </Card>
             <Card>
               <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground">Viewer snapshot</p>
-                <p className="mt-1 text-lg font-semibold">{data.viewerCount}</p>
+                <p className="text-xs text-muted-foreground">Unique attendance</p>
+                <p className="mt-1 text-lg font-semibold">{attendance?.uniqueParticipants ?? 0}</p>
               </CardContent>
             </Card>
           </div>
+
+          <Card className="mt-6 border-sky-500/30" data-testid="card-report-attendance-journey">
+            <CardHeader>
+              <CardTitle className="flex flex-wrap items-center justify-between gap-2 text-base">
+                <span className="flex items-center gap-2"><Users className="h-5 w-5 text-sky-700" aria-hidden="true" /> Anonymous attendance journey</span>
+                <Badge variant="secondary">Retained after disconnect</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {attendanceLoading ? (
+                <div className="grid gap-3 sm:grid-cols-3"><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /></div>
+              ) : attendanceError ? (
+                <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm" role="alert">Attendance history is temporarily unavailable; other report sections are still complete.</p>
+              ) : (
+                <>
+                  <p className="mb-4 text-sm text-muted-foreground">See whether participants arrived, returned, and stayed. Counts are event-scoped and pseudonymous; the report contains no individual session list.</p>
+                  <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-6">
+                    {[
+                      ["Unique", attendance?.uniqueParticipants ?? 0],
+                      ["Visits", attendance?.totalVisits ?? 0],
+                      ["Returned", attendance?.returningParticipants ?? 0],
+                      ["Reconnects", attendance?.reconnectVisits ?? 0],
+                      ["Peak together", attendance?.peakConcurrent ?? 0],
+                      ["Observed", formatRuntime(attendance?.observedSeconds ?? 0)],
+                    ].map(([label, value]) => <div key={label} className="rounded-lg border bg-background p-3"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-lg font-semibold">{value}</p></div>)}
+                  </div>
+                  {(attendance?.timeline.length ?? 0) > 0 ? (
+                    <ol className="mt-4 grid gap-2" aria-label="Attendance arrivals timeline">
+                      {attendance?.timeline.map((point) => <li key={point.startedAt} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-background p-3 text-sm"><time dateTime={point.startedAt}>{new Date(point.startedAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</time><span>{point.firstJoins} new · {point.returnVisits} return</span></li>)}
+                    </ol>
+                  ) : <p className="mt-4 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">No anonymous attendance was shared for this event.</p>}
+                  <p className="mt-4 text-xs text-muted-foreground">{attendance?.privacy}</p>
+                </>
+              )}
+            </CardContent>
+          </Card>
 
           <Card className="mt-6 border-indigo-500/30" data-testid="card-report-run-sheet">
             <CardHeader>

@@ -55,6 +55,31 @@ export type RunSheetItemKind = "arrival" | "welcome" | "chant" | "speaker" | "mo
 export type RunSheetItemStatus = "pending" | "active" | "completed" | "skipped";
 export type RunSheetTransition = "start" | "advance" | "skip" | "reopen";
 
+export type AttendanceTimelinePoint = {
+  startedAt: Date;
+  firstJoins: number;
+  returnVisits: number;
+};
+
+export type AttendanceSummary = {
+  uniqueParticipants: number;
+  totalVisits: number;
+  returningParticipants: number;
+  reconnectVisits: number;
+  peakConcurrent: number;
+  observedSeconds: number;
+  firstJoinAt: Date | null;
+  lastSeenAt: Date | null;
+  timeline: AttendanceTimelinePoint[];
+};
+
+export type ParticipantAttendanceReceipt = {
+  firstJoinAt: Date;
+  lastSeenAt: Date;
+  visitCount: number;
+  observedSeconds: number;
+};
+
 export type StoredSafetyCheckResponse = {
   sessionId: string;
   response: SafetyCheckResponseType;
@@ -152,6 +177,13 @@ export interface IStorage {
   updateDemoTitle(id: string, title: string): Promise<Demonstration | undefined>;
   updateDemoSupport(id: string, data: { supportUrl: string | null; supportLabel: string | null }): Promise<Demonstration | undefined>;
   updateDemoLogistics(id: string, data: { scheduledAt: Date | null; locationName: string | null; meetingPoint: string | null; arrivalNote: string | null }): Promise<Demonstration | undefined>;
+
+  startViewSession(demonstrationId: string, sessionHash: string): Promise<string>;
+  touchViewSession(viewSessionId: string): Promise<void>;
+  endViewSession(viewSessionId: string): Promise<void>;
+  getAttendanceSummary(demonstrationId: string): Promise<AttendanceSummary>;
+  getParticipantAttendance(demonstrationId: string, sessionHash: string): Promise<ParticipantAttendanceReceipt | null>;
+  deleteParticipantAttendance(demonstrationId: string, sessionHash: string): Promise<number>;
 
   getChants(demonstrationId: string): Promise<Chant[]>;
   addChant(data: InsertChant): Promise<Chant>;
@@ -329,6 +361,95 @@ export class DatabaseStorage implements IStorage {
   async updateDemoTitle(id: string, title: string): Promise<Demonstration | undefined> {
     const [demo] = await db.update(demonstrations).set({ title }).where(eq(demonstrations.id, id)).returning();
     return demo;
+  }
+
+  async startViewSession(demonstrationId: string, sessionHash: string): Promise<string> {
+    const id = nanoid();
+    const now = new Date();
+    await db.insert(viewSessions).values({ id, demonstrationId, sessionId: sessionHash, firstSeenAt: now, lastSeenAt: now });
+    return id;
+  }
+
+  async touchViewSession(viewSessionId: string): Promise<void> {
+    await db.update(viewSessions).set({ lastSeenAt: new Date() }).where(eq(viewSessions.id, viewSessionId));
+  }
+
+  async endViewSession(viewSessionId: string): Promise<void> {
+    const now = new Date();
+    await db.update(viewSessions).set({ lastSeenAt: now, disconnectedAt: now }).where(eq(viewSessions.id, viewSessionId));
+  }
+
+  async getAttendanceSummary(demonstrationId: string): Promise<AttendanceSummary> {
+    const visits = await db.select().from(viewSessions)
+      .where(eq(viewSessions.demonstrationId, demonstrationId))
+      .orderBy(asc(viewSessions.firstSeenAt));
+    const sessions = new Map<string, number>();
+    const timeline = new Map<number, { firstJoins: number; returnVisits: number }>();
+    const sweep: Array<{ at: number; delta: number }> = [];
+    let observedSeconds = 0;
+
+    for (const visit of visits) {
+      const priorVisits = sessions.get(visit.sessionId) ?? 0;
+      sessions.set(visit.sessionId, priorVisits + 1);
+      const bucket = new Date(visit.firstSeenAt);
+      bucket.setMinutes(0, 0, 0);
+      const bucketTime = bucket.getTime();
+      const point = timeline.get(bucketTime) ?? { firstJoins: 0, returnVisits: 0 };
+      if (priorVisits === 0) point.firstJoins += 1;
+      else point.returnVisits += 1;
+      timeline.set(bucketTime, point);
+
+      const start = visit.firstSeenAt.getTime();
+      const end = Math.max(start, (visit.disconnectedAt ?? visit.lastSeenAt).getTime());
+      observedSeconds += Math.min(86_400, Math.max(0, Math.round((end - start) / 1_000)));
+      sweep.push({ at: start, delta: 1 }, { at: end, delta: -1 });
+    }
+
+    sweep.sort((a, b) => a.at - b.at || b.delta - a.delta);
+    let concurrent = 0;
+    let peakConcurrent = 0;
+    for (const event of sweep) {
+      concurrent += event.delta;
+      peakConcurrent = Math.max(peakConcurrent, concurrent);
+    }
+
+    return {
+      uniqueParticipants: sessions.size,
+      totalVisits: visits.length,
+      returningParticipants: Array.from(sessions.values()).filter((count) => count > 1).length,
+      reconnectVisits: Math.max(0, visits.length - sessions.size),
+      peakConcurrent,
+      observedSeconds,
+      firstJoinAt: visits[0]?.firstSeenAt ?? null,
+      lastSeenAt: visits.reduce<Date | null>((latest, visit) => !latest || visit.lastSeenAt > latest ? visit.lastSeenAt : latest, null),
+      timeline: Array.from(timeline.entries()).sort(([a], [b]) => a - b).slice(-12).map(([startedAt, point]) => ({ startedAt: new Date(startedAt), ...point })),
+    };
+  }
+
+  async getParticipantAttendance(demonstrationId: string, sessionHash: string): Promise<ParticipantAttendanceReceipt | null> {
+    const visits = await db.select().from(viewSessions).where(and(
+      eq(viewSessions.demonstrationId, demonstrationId),
+      eq(viewSessions.sessionId, sessionHash),
+    )).orderBy(asc(viewSessions.firstSeenAt));
+    if (visits.length === 0) return null;
+    const observedSeconds = visits.reduce((total, visit) => {
+      const end = Math.max(visit.firstSeenAt.getTime(), (visit.disconnectedAt ?? visit.lastSeenAt).getTime());
+      return total + Math.min(86_400, Math.max(0, Math.round((end - visit.firstSeenAt.getTime()) / 1_000)));
+    }, 0);
+    return {
+      firstJoinAt: visits[0].firstSeenAt,
+      lastSeenAt: visits.reduce((latest, visit) => visit.lastSeenAt > latest ? visit.lastSeenAt : latest, visits[0].lastSeenAt),
+      visitCount: visits.length,
+      observedSeconds,
+    };
+  }
+
+  async deleteParticipantAttendance(demonstrationId: string, sessionHash: string): Promise<number> {
+    const deleted = await db.delete(viewSessions).where(and(
+      eq(viewSessions.demonstrationId, demonstrationId),
+      eq(viewSessions.sessionId, sessionHash),
+    )).returning({ id: viewSessions.id });
+    return deleted.length;
   }
 
   async repeatDemonstration(

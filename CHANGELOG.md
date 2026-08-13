@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.83 - 13 August 2026
+
+A privacy-safe attendance journey that shows organisers who joined, returned, and stayed while giving every participant a transparent, erasable receipt.
+
+### Added
+
+- Durable anonymous visit ledger: Event-scoped session hashes now retain join, last-seen, disconnect, reconnect, and observed-time evidence through application restarts without storing IP address, device, location, account, or participant content. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+- Live organiser attendance journey: The Command Center now shows live viewers, unique participants, visits, returning people, reconnects, peak concurrency, observed time, and hourly arrivals with loading, empty, and recovery states. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+- Post-event attendance report: Printable and copied debrief reports retain aggregate attendance and arrival evidence after the crowd disconnects, replacing the previous point-in-time viewer snapshot. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+- Participant-owned attendance receipt: Participants can inspect their own first join, visits, last-seen time, and observed connection time in all five interface languages, then erase the event record and opt out from an accessible mobile control. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+
+### Improved
+
+- Restart-safe attendance recovery: Connection heartbeats preserve observed time, reconnects add visits without double-counting a person, receipt updates resume automatically, and opting out prevents the active device from being recorded again. [GitHub issue #13](https://github.com/barsham/ChantLive/issues/13)
+
 ## 1.1.82 - 12 August 2026
 
 Self-healing production continuity that keeps ChantLive reachable, explains degraded live data, and verifies recovery through the public edge.

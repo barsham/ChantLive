@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.83",
+      "releasedAt": "2026-08-13",
+      "summary": "A privacy-safe attendance journey that shows organisers who joined, returned, and stayed while giving every participant a transparent, erasable receipt.",
+      "items": [
+        {
+          "id": "cl-2026-08-13-durable-anonymous-visit-ledger",
+          "title": "Durable anonymous visit ledger",
+          "description": "Event-scoped session hashes now retain join, last-seen, disconnect, reconnect, and observed-time evidence through application restarts without storing IP address, device, location, account, or participant content.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-13",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-13-live-attendance-journey",
+          "title": "Live organiser attendance journey",
+          "description": "The Command Center now shows live viewers, unique participants, visits, returning people, reconnects, peak concurrency, observed time, and hourly arrivals with loading, empty, and recovery states.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-13",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-13-post-event-attendance-report",
+          "title": "Post-event attendance report",
+          "description": "Printable and copied debrief reports retain aggregate attendance and arrival evidence after the crowd disconnects, replacing the previous point-in-time viewer snapshot.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-13",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-13-participant-attendance-receipt",
+          "title": "Participant-owned attendance receipt",
+          "description": "Participants can inspect their own first join, visits, last-seen time, and observed connection time in all five interface languages, then erase the event record and opt out from an accessible mobile control.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-13",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-13-attendance-reconnect-recovery",
+          "title": "Restart-safe attendance recovery",
+          "description": "Connection heartbeats preserve observed time, reconnects add visits without double-counting a person, receipt updates resume automatically, and opting out prevents the active device from being recorded again.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-08-13",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        }
+      ]
+    },
+    {
       "version": "1.1.82",
       "releasedAt": "2026-08-12",
       "summary": "Self-healing production continuity that keeps ChantLive reachable, explains degraded live data, and verifies recovery through the public edge.",
