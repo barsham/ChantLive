@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowLeft, Check, ClipboardCheck, Copy, Download, ListOrdered, Printer, ShieldCheck, Users } from "lucide-react";
+import { ArrowLeft, CalendarCheck2, Check, ClipboardCheck, Copy, Download, ListOrdered, Printer, ShieldCheck, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,6 +49,19 @@ type AttendanceSummary = {
   timeline: Array<{ startedAt: string; firstJoins: number; returnVisits: number }>;
   privacy: string;
 };
+type RegistrationSummary = {
+  enabled: boolean;
+  capacity: number | null;
+  closesAt: string | null;
+  closed: boolean;
+  confirmed: number;
+  waitlisted: number;
+  available: number | null;
+  overCapacity: number;
+  confirmedAttended: number;
+  turnoutRate: number | null;
+  privacy: string;
+};
 type ConductReportSummary = {
   total: number;
   open: number;
@@ -85,7 +98,7 @@ function formatRuntime(totalSeconds: number) {
   return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`;
 }
 
-function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackSummary, conduct?: ConductReportSummary, runSheet?: RunSheetPayload, attendance?: AttendanceSummary) {
+function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackSummary, conduct?: ConductReportSummary, runSheet?: RunSheetPayload, attendance?: AttendanceSummary, registration?: RegistrationSummary) {
   return [
     `ChantLive Post-Event Report: ${data.demo.title}`,
     "",
@@ -96,6 +109,8 @@ function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackS
     `Admins: ${data.admins.map((admin) => `${admin.name} <${admin.email}>`).join(", ") || "None listed"}`,
     `Attendance: ${attendance?.uniqueParticipants ?? 0} unique people, ${attendance?.totalVisits ?? 0} total visits, ${attendance?.returningParticipants ?? 0} returning, ${attendance?.peakConcurrent ?? 0} peak together`,
     `Observed participant time: ${formatRuntime(attendance?.observedSeconds ?? 0)}`,
+    `Anonymous RSVP: ${registration?.confirmed ?? 0} confirmed, ${registration?.waitlisted ?? 0} waitlisted, ${registration?.capacity ?? "no capacity set"} capacity`,
+    `Confirmed RSVP turnout: ${registration?.confirmedAttended ?? 0} attended${registration?.turnoutRate == null ? "" : ` (${registration.turnoutRate}%)`}`,
     `Participant feedback responses: ${feedback?.total ?? 0}`,
     `Feedback averages: clarity ${feedback?.averages.clarity ?? 0}/5, safety ${feedback?.averages.safety ?? 0}/5, accessibility ${feedback?.averages.accessibility ?? 0}/5`,
     `Private conduct concerns: ${conduct?.total ?? 0} total, ${conduct?.open ?? 0} unseen, ${conduct?.acknowledged ?? 0} acknowledged, ${conduct?.resolved ?? 0} resolved, ${conduct?.urgent ?? 0} urgent`,
@@ -135,6 +150,10 @@ export default function EventReport() {
     queryKey: ["/api/demos", id, "attendance"],
     enabled: Boolean(id),
   });
+  const { data: registration, isLoading: registrationLoading, error: registrationError } = useQuery<RegistrationSummary>({
+    queryKey: ["/api/demos", id, "registration"],
+    enabled: Boolean(id),
+  });
   const { data: conductQueue } = useQuery<ConductReportQueue>({
     queryKey: ["/api/demos", id, "conduct-reports"],
     enabled: Boolean(id),
@@ -158,7 +177,7 @@ export default function EventReport() {
 
   const copyReport = async () => {
     if (!data) return;
-    await navigator.clipboard.writeText(buildReportText(data, runtime, feedback, conductQueue?.summary, runSheet, attendance));
+    await navigator.clipboard.writeText(buildReportText(data, runtime, feedback, conductQueue?.summary, runSheet, attendance, registration));
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };
@@ -280,6 +299,37 @@ export default function EventReport() {
                     </ol>
                   ) : <p className="mt-4 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">No anonymous attendance was shared for this event.</p>}
                   <p className="mt-4 text-xs text-muted-foreground">{attendance?.privacy}</p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6 border-cyan-500/30" data-testid="card-report-registration">
+            <CardHeader>
+              <CardTitle className="flex flex-wrap items-center justify-between gap-2 text-base">
+                <span className="flex items-center gap-2"><CalendarCheck2 className="h-5 w-5 text-cyan-700" aria-hidden="true" /> RSVP-to-turnout planning</span>
+                <Badge variant="secondary">Anonymous aggregate</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {registrationLoading ? (
+                <div className="grid gap-3 sm:grid-cols-4"><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /></div>
+              ) : registrationError ? (
+                <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm" role="alert">Registration totals are temporarily unavailable; other report sections are still complete.</p>
+              ) : (
+                <>
+                  <p className="mb-4 text-sm text-muted-foreground">Compare intended attendance with devices that actually opened the live event. The match uses the same event-only anonymous hash and never creates a participant roster.</p>
+                  <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-5">
+                    {[
+                      ["Capacity", registration?.capacity ?? "—"],
+                      ["Confirmed", registration?.confirmed ?? 0],
+                      ["Waitlisted", registration?.waitlisted ?? 0],
+                      ["Confirmed attended", registration?.confirmedAttended ?? 0],
+                      ["Turnout", registration?.turnoutRate == null ? "—" : `${registration.turnoutRate}%`],
+                    ].map(([label, value]) => <div key={label} className="rounded-lg border bg-background p-3"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-lg font-semibold">{value}</p></div>)}
+                  </div>
+                  {(registration?.confirmed ?? 0) === 0 ? <p className="mt-4 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">No anonymous RSVP was collected for this event.</p> : null}
+                  <p className="mt-4 flex items-start gap-2 text-xs text-muted-foreground"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-cyan-700" aria-hidden="true" />{registration?.privacy}</p>
                 </>
               )}
             </CardContent>

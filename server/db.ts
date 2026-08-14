@@ -52,6 +52,12 @@ export async function ensureDemoColumnsAndTables(): Promise<void> {
     ALTER TABLE demonstrations
     ADD COLUMN IF NOT EXISTS arrival_note text;
 
+    ALTER TABLE demonstrations
+    ADD COLUMN IF NOT EXISTS registration_enabled boolean NOT NULL DEFAULT false,
+    ADD COLUMN IF NOT EXISTS registration_capacity integer,
+    ADD COLUMN IF NOT EXISTS registration_closes_at timestamptz,
+    ADD COLUMN IF NOT EXISTS registration_closed boolean NOT NULL DEFAULT false;
+
     UPDATE demonstrations
     SET public_id = substr(md5(random()::text || clock_timestamp()::text), 1, 8)
     WHERE public_id IS NULL;
@@ -246,5 +252,18 @@ export async function ensureDemoColumnsAndTables(): Promise<void> {
 
     CREATE INDEX IF NOT EXISTS view_sessions_demo_session_idx
     ON view_sessions (demonstration_id, session_id);
+
+    CREATE TABLE IF NOT EXISTS event_registrations (
+      demonstration_id varchar(255) NOT NULL REFERENCES demonstrations(id) ON DELETE CASCADE,
+      session_id text NOT NULL,
+      status text NOT NULL DEFAULT 'confirmed',
+      registered_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now(),
+      PRIMARY KEY (demonstration_id, session_id),
+      CONSTRAINT event_registrations_status_check CHECK (status IN ('confirmed', 'waitlisted'))
+    );
+
+    CREATE INDEX IF NOT EXISTS event_registrations_demo_status_registered_idx
+    ON event_registrations (demonstration_id, status, registered_at);
   `);
 }

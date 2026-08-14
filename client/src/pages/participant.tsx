@@ -4,6 +4,7 @@ import { getSocket } from "@/lib/socket";
 import { CalendarPlus, Clock3, Copy, Download, ExternalLink, Eye, HelpCircle, Link2, ListOrdered, MapPin, Share2, ShieldCheck, Sun, Trash2, Type, Users, Megaphone, RefreshCw, WifiOff } from "lucide-react";
 import { buildGoogleCalendarUrl, buildOutlookCalendarUrl, downloadCalendarFile, type CalendarEventDetails } from "@/lib/calendar";
 import { forgetRecentParticipantEvent, rememberParticipantEvent } from "@/lib/participant-history";
+import { ParticipantRegistration } from "@/components/participant-registration";
 import { forgetOfflineEvent, loadOfflineEvent, saveOfflineEvent, updateOfflineEventIfPrepared, type OfflineChantData, type OfflineEventSnapshot } from "@/lib/offline-event";
 import {
   DropdownMenu,
@@ -2675,6 +2676,7 @@ export default function Participant() {
             {t.joinAnotherEvent}
           </Link>
           {renderParticipantAccess("mt-5")}
+          <ParticipantRegistration publicId={publicId} sessionId={getSessionId()} language={participantLanguage} className="mx-auto mt-5 max-w-lg" />
           <div className="mt-4">{renderParticipantLanguageSelect()}</div>
           {logisticsItems.length > 0 && (
             <div className="mx-auto mt-5 max-w-lg rounded-2xl border border-neutral-800 bg-neutral-950 p-4 text-start" data-testid="panel-ended-logistics">
@@ -2764,6 +2766,7 @@ export default function Participant() {
           </p>
           <p className="text-neutral-500">{chantData.demoTitle}</p>
           {renderParticipantAccess("mx-auto mt-5 max-w-lg")}
+          <ParticipantRegistration publicId={publicId} sessionId={getSessionId()} language={participantLanguage} className="mx-auto mt-5 max-w-lg" />
           {renderRunSheetStage("mx-auto mt-5 max-w-lg")}
           <div className="mt-4">{renderParticipantLanguageSelect()}</div>
           {logisticsItems.length > 0 && (
@@ -2856,6 +2859,7 @@ export default function Participant() {
         </div>
       )}
       {renderParticipantAccess("mx-4 mt-3", true)}
+      <ParticipantRegistration publicId={publicId} sessionId={getSessionId()} language={participantLanguage} className="mx-4 mt-4" />
       {renderRunSheetStage("mx-4 mt-4")}
       {renderIncidentNotice()}
       {renderOfflineWarning()}

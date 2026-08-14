@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.84 - 14 August 2026
+
+Privacy-safe event registration that lets communities plan capacity, run a fair waitlist, and compare RSVPs with real attendance without collecting identities.
+
+### Added
+
+- Optional organiser RSVP settings: Organisers can enable anonymous registration per event, set capacity and a closing time, and close or reopen reservations from the Command Center without changing events that do not need registration. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Anonymous participant reservation: Participants can reserve or cancel one place from the event page in five languages without providing an account, name, email address, or phone number. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Fair automatic capacity waitlist: Capacity is enforced transactionally, repeat taps stay idempotent, and the oldest waiting reservation is promoted automatically when a confirmed place opens or capacity increases. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+- Live organiser capacity desk: The Command Center now shows confirmed, waiting, available, over-capacity, and confirmed-attendee turnout states with accessible controls and automatic updates during event preparation. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+
+### Improved
+
+- Restart-safe RSVP reporting: Private device receipts survive restarts and post-event reports compare confirmed RSVPs with aggregate attendance using only event-scoped anonymous hashes, never a participant roster. [GitHub issue #15](https://github.com/barsham/ChantLive/issues/15)
+
 ## 1.1.83 - 13 August 2026
 
 A privacy-safe attendance journey that shows organisers who joined, returned, and stayed while giving every participant a transparent, erasable receipt.

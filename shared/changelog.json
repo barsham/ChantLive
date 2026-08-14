@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.84",
+      "releasedAt": "2026-08-14",
+      "summary": "Privacy-safe event registration that lets communities plan capacity, run a fair waitlist, and compare RSVPs with real attendance without collecting identities.",
+      "items": [
+        {
+          "id": "cl-2026-08-14-organiser-rsvp-settings",
+          "title": "Optional organiser RSVP settings",
+          "description": "Organisers can enable anonymous registration per event, set capacity and a closing time, and close or reopen reservations from the Command Center without changing events that do not need registration.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-14",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-08-14-anonymous-participant-rsvp",
+          "title": "Anonymous participant reservation",
+          "description": "Participants can reserve or cancel one place from the event page in five languages without providing an account, name, email address, or phone number.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-14",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-08-14-fair-capacity-waitlist",
+          "title": "Fair automatic capacity waitlist",
+          "description": "Capacity is enforced transactionally, repeat taps stay idempotent, and the oldest waiting reservation is promoted automatically when a confirmed place opens or capacity increases.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-14",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-08-14-live-capacity-desk",
+          "title": "Live organiser capacity desk",
+          "description": "The Command Center now shows confirmed, waiting, available, over-capacity, and confirmed-attendee turnout states with accessible controls and automatic updates during event preparation.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-14",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        },
+        {
+          "id": "cl-2026-08-14-restart-safe-rsvp-reporting",
+          "title": "Restart-safe RSVP reporting",
+          "description": "Private device receipts survive restarts and post-event reports compare confirmed RSVPs with aggregate attendance using only event-scoped anonymous hashes, never a participant roster.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-08-14",
+          "links": [{ "label": "GitHub issue #15", "url": "https://github.com/barsham/ChantLive/issues/15" }]
+        }
+      ]
+    },
+    {
       "version": "1.1.83",
       "releasedAt": "2026-08-13",
       "summary": "A privacy-safe attendance journey that shows organisers who joined, returned, and stayed while giving every participant a transparent, erasable receipt.",

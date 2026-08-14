@@ -4,7 +4,7 @@ import {
   type Chant, type InsertChant,
   type DemoState, type DemoAdmin,
   type RunSheetTemplateStage,
-  users, demonstrations, chants, demoAdmins, demoState, viewSessions,
+  users, demonstrations, chants, demoAdmins, demoState, viewSessions, eventRegistrations,
   safetyChecks, safetyCheckResponses, assistanceRequests, conductReports, runSheetItems, runSheetTemplates,
 } from "@shared/schema";
 import { db } from "./db";
@@ -78,6 +78,30 @@ export type ParticipantAttendanceReceipt = {
   lastSeenAt: Date;
   visitCount: number;
   observedSeconds: number;
+};
+
+export type EventRegistrationSettings = {
+  enabled: boolean;
+  capacity: number | null;
+  closesAt: Date | null;
+  manuallyClosed: boolean;
+};
+
+export type EventRegistrationSummary = EventRegistrationSettings & {
+  closed: boolean;
+  confirmed: number;
+  waitlisted: number;
+  available: number | null;
+  overCapacity: number;
+  confirmedAttended: number;
+  turnoutRate: number | null;
+};
+
+export type ParticipantRegistrationReceipt = {
+  status: "confirmed" | "waitlisted";
+  registeredAt: Date;
+  updatedAt: Date;
+  waitlistPosition: number | null;
 };
 
 export type StoredSafetyCheckResponse = {
@@ -184,6 +208,11 @@ export interface IStorage {
   getAttendanceSummary(demonstrationId: string): Promise<AttendanceSummary>;
   getParticipantAttendance(demonstrationId: string, sessionHash: string): Promise<ParticipantAttendanceReceipt | null>;
   deleteParticipantAttendance(demonstrationId: string, sessionHash: string): Promise<number>;
+  updateEventRegistrationSettings(demonstrationId: string, settings: EventRegistrationSettings): Promise<EventRegistrationSummary>;
+  getEventRegistrationSummary(demonstrationId: string): Promise<EventRegistrationSummary>;
+  getParticipantRegistration(demonstrationId: string, sessionHash: string): Promise<ParticipantRegistrationReceipt | null>;
+  reserveEventPlace(demonstrationId: string, sessionHash: string): Promise<ParticipantRegistrationReceipt>;
+  cancelEventRegistration(demonstrationId: string, sessionHash: string): Promise<{ canceled: boolean; promoted: number }>;
 
   getChants(demonstrationId: string): Promise<Chant[]>;
   addChant(data: InsertChant): Promise<Chant>;
@@ -450,6 +479,173 @@ export class DatabaseStorage implements IStorage {
       eq(viewSessions.sessionId, sessionHash),
     )).returning({ id: viewSessions.id });
     return deleted.length;
+  }
+
+  private registrationClosed(demo: Demonstration, now = new Date()): boolean {
+    return !demo.registrationEnabled
+      || demo.status === "ended"
+      || demo.registrationClosed
+      || Boolean(demo.registrationClosesAt && demo.registrationClosesAt.getTime() <= now.getTime());
+  }
+
+  async getEventRegistrationSummary(demonstrationId: string): Promise<EventRegistrationSummary> {
+    const demo = await this.getDemonstration(demonstrationId);
+    if (!demo) throw new Error("DEMONSTRATION_NOT_FOUND");
+    const rows = await db.select({ status: eventRegistrations.status, count: sql<number>`count(*)` })
+      .from(eventRegistrations)
+      .where(eq(eventRegistrations.demonstrationId, demonstrationId))
+      .groupBy(eventRegistrations.status);
+    const confirmed = Number(rows.find((row) => row.status === "confirmed")?.count ?? 0);
+    const waitlisted = Number(rows.find((row) => row.status === "waitlisted")?.count ?? 0);
+    const attendedResult = await db.execute(sql`
+      SELECT count(*)::int AS count
+      FROM event_registrations registration
+      WHERE registration.demonstration_id = ${demonstrationId}
+        AND registration.status = 'confirmed'
+        AND EXISTS (
+          SELECT 1 FROM view_sessions visit
+          WHERE visit.demonstration_id = registration.demonstration_id
+            AND visit.session_id = registration.session_id
+        )
+    `);
+    const confirmedAttended = Number((attendedResult.rows[0] as { count?: number | string } | undefined)?.count ?? 0);
+    const capacity = demo.registrationCapacity;
+    return {
+      enabled: demo.registrationEnabled,
+      capacity,
+      closesAt: demo.registrationClosesAt,
+      manuallyClosed: demo.registrationClosed,
+      closed: this.registrationClosed(demo),
+      confirmed,
+      waitlisted,
+      available: capacity === null ? null : Math.max(0, capacity - confirmed),
+      overCapacity: capacity === null ? 0 : Math.max(0, confirmed - capacity),
+      confirmedAttended,
+      turnoutRate: confirmed > 0 ? Math.round((confirmedAttended / confirmed) * 100) : null,
+    };
+  }
+
+  async updateEventRegistrationSettings(demonstrationId: string, settings: EventRegistrationSettings): Promise<EventRegistrationSummary> {
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT id FROM demonstrations WHERE id = ${demonstrationId} FOR UPDATE`);
+      const [demo] = await tx.update(demonstrations).set({
+        registrationEnabled: settings.enabled,
+        registrationCapacity: settings.capacity,
+        registrationClosesAt: settings.closesAt,
+        registrationClosed: settings.manuallyClosed,
+      }).where(eq(demonstrations.id, demonstrationId)).returning();
+      if (!demo) throw new Error("DEMONSTRATION_NOT_FOUND");
+      if (!settings.enabled || settings.capacity === null) return;
+      const [confirmedRow] = await tx.select({ count: sql<number>`count(*)` }).from(eventRegistrations).where(and(
+        eq(eventRegistrations.demonstrationId, demonstrationId),
+        eq(eventRegistrations.status, "confirmed"),
+      ));
+      const available = Math.max(0, settings.capacity - Number(confirmedRow?.count ?? 0));
+      if (available === 0) return;
+      const promote = await tx.select({ sessionId: eventRegistrations.sessionId }).from(eventRegistrations).where(and(
+        eq(eventRegistrations.demonstrationId, demonstrationId),
+        eq(eventRegistrations.status, "waitlisted"),
+      )).orderBy(asc(eventRegistrations.registeredAt)).limit(available);
+      if (promote.length > 0) {
+        await tx.update(eventRegistrations).set({ status: "confirmed", updatedAt: new Date() }).where(and(
+          eq(eventRegistrations.demonstrationId, demonstrationId),
+          inArray(eventRegistrations.sessionId, promote.map((row) => row.sessionId)),
+        ));
+      }
+    });
+    return this.getEventRegistrationSummary(demonstrationId);
+  }
+
+  async getParticipantRegistration(demonstrationId: string, sessionHash: string): Promise<ParticipantRegistrationReceipt | null> {
+    const [registration] = await db.select().from(eventRegistrations).where(and(
+      eq(eventRegistrations.demonstrationId, demonstrationId),
+      eq(eventRegistrations.sessionId, sessionHash),
+    ));
+    if (!registration) return null;
+    let waitlistPosition: number | null = null;
+    if (registration.status === "waitlisted") {
+      const waitlist = await db.select({ sessionId: eventRegistrations.sessionId }).from(eventRegistrations).where(and(
+        eq(eventRegistrations.demonstrationId, demonstrationId),
+        eq(eventRegistrations.status, "waitlisted"),
+      )).orderBy(asc(eventRegistrations.registeredAt));
+      const index = waitlist.findIndex((row) => row.sessionId === sessionHash);
+      waitlistPosition = index >= 0 ? index + 1 : null;
+    }
+    return {
+      status: registration.status === "waitlisted" ? "waitlisted" : "confirmed",
+      registeredAt: registration.registeredAt,
+      updatedAt: registration.updatedAt,
+      waitlistPosition,
+    };
+  }
+
+  async reserveEventPlace(demonstrationId: string, sessionHash: string): Promise<ParticipantRegistrationReceipt> {
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT id FROM demonstrations WHERE id = ${demonstrationId} FOR UPDATE`);
+      const [demo] = await tx.select().from(demonstrations).where(eq(demonstrations.id, demonstrationId));
+      if (!demo) throw new Error("DEMONSTRATION_NOT_FOUND");
+      const [existing] = await tx.select().from(eventRegistrations).where(and(
+        eq(eventRegistrations.demonstrationId, demonstrationId),
+        eq(eventRegistrations.sessionId, sessionHash),
+      ));
+      if (existing) return;
+      if (!demo.registrationEnabled) throw new Error("REGISTRATION_DISABLED");
+      if (this.registrationClosed(demo)) throw new Error("REGISTRATION_CLOSED");
+      if (demo.registrationCapacity === null) throw new Error("REGISTRATION_CAPACITY_REQUIRED");
+      const [confirmedRow] = await tx.select({ count: sql<number>`count(*)` }).from(eventRegistrations).where(and(
+        eq(eventRegistrations.demonstrationId, demonstrationId),
+        eq(eventRegistrations.status, "confirmed"),
+      ));
+      const status = Number(confirmedRow?.count ?? 0) < demo.registrationCapacity ? "confirmed" : "waitlisted";
+      await tx.insert(eventRegistrations).values({
+        demonstrationId,
+        sessionId: sessionHash,
+        status,
+        registeredAt: new Date(),
+        updatedAt: new Date(),
+      }).onConflictDoNothing();
+    });
+    const receipt = await this.getParticipantRegistration(demonstrationId, sessionHash);
+    if (!receipt) throw new Error("REGISTRATION_FAILED");
+    return receipt;
+  }
+
+  async cancelEventRegistration(demonstrationId: string, sessionHash: string): Promise<{ canceled: boolean; promoted: number }> {
+    return db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT id FROM demonstrations WHERE id = ${demonstrationId} FOR UPDATE`);
+      const [demo] = await tx.select().from(demonstrations).where(eq(demonstrations.id, demonstrationId));
+      if (!demo) throw new Error("DEMONSTRATION_NOT_FOUND");
+      const [registration] = await tx.select().from(eventRegistrations).where(and(
+        eq(eventRegistrations.demonstrationId, demonstrationId),
+        eq(eventRegistrations.sessionId, sessionHash),
+      ));
+      if (!registration) return { canceled: false, promoted: 0 };
+      await tx.delete(eventRegistrations).where(and(
+        eq(eventRegistrations.demonstrationId, demonstrationId),
+        eq(eventRegistrations.sessionId, sessionHash),
+      ));
+      let promoted = 0;
+      if (registration.status === "confirmed" && demo.registrationEnabled && demo.registrationCapacity !== null) {
+        const [confirmedRow] = await tx.select({ count: sql<number>`count(*)` }).from(eventRegistrations).where(and(
+          eq(eventRegistrations.demonstrationId, demonstrationId),
+          eq(eventRegistrations.status, "confirmed"),
+        ));
+        const hasAvailablePlace = Number(confirmedRow?.count ?? 0) < demo.registrationCapacity;
+        if (!hasAvailablePlace) return { canceled: true, promoted };
+        const [next] = await tx.select({ sessionId: eventRegistrations.sessionId }).from(eventRegistrations).where(and(
+          eq(eventRegistrations.demonstrationId, demonstrationId),
+          eq(eventRegistrations.status, "waitlisted"),
+        )).orderBy(asc(eventRegistrations.registeredAt)).limit(1);
+        if (next) {
+          await tx.update(eventRegistrations).set({ status: "confirmed", updatedAt: new Date() }).where(and(
+            eq(eventRegistrations.demonstrationId, demonstrationId),
+            eq(eventRegistrations.sessionId, next.sessionId),
+          ));
+          promoted = 1;
+        }
+      }
+      return { canceled: true, promoted };
+    });
   }
 
   async repeatDemonstration(

@@ -135,6 +135,23 @@ function serializeAttendanceReceipt(receipt: Awaited<ReturnType<typeof storage.g
   };
 }
 
+function serializeRegistrationReceipt(receipt: Awaited<ReturnType<typeof storage.getParticipantRegistration>>) {
+  if (!receipt) return null;
+  return {
+    ...receipt,
+    registeredAt: receipt.registeredAt.toISOString(),
+    updatedAt: receipt.updatedAt.toISOString(),
+  };
+}
+
+function serializeRegistrationSummary(summary: Awaited<ReturnType<typeof storage.getEventRegistrationSummary>>) {
+  return {
+    ...summary,
+    closesAt: summary.closesAt?.toISOString() ?? null,
+    privacy: "Anonymous event-scoped reservation hashes only. ChantLive stores no participant name, email, phone number, account, IP address, device, or location.",
+  };
+}
+
 async function getSerializedAttendanceSummary(demoId: string) {
   const summary = await storage.getAttendanceSummary(demoId);
   const liveNow = getViewerCount(demoId);
@@ -1451,6 +1468,49 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/demos/:id/registration", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      res.setHeader("Cache-Control", "no-store");
+      res.json(serializeRegistrationSummary(await storage.getEventRegistrationSummary(demo.id)));
+    } catch {
+      res.status(500).json({ message: "Failed to load event registration" });
+    }
+  });
+
+  app.patch("/api/demos/:id/registration", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as User;
+      const demo = await getDemoByIdentifier(req.params.id);
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
+      const enabled = req.body?.enabled === true;
+      const capacity = req.body?.capacity == null || req.body?.capacity === "" ? null : Number(req.body.capacity);
+      if (enabled && (!Number.isInteger(capacity) || (capacity ?? 0) < 1 || (capacity ?? 0) > 100_000)) {
+        return res.status(400).json({ message: "Capacity must be a whole number between 1 and 100,000" });
+      }
+      let closesAt: Date | null = null;
+      if (req.body?.closesAt) {
+        closesAt = new Date(req.body.closesAt);
+        if (Number.isNaN(closesAt.getTime())) return res.status(400).json({ message: "Choose a valid registration closing time" });
+      }
+      const summary = await storage.updateEventRegistrationSettings(demo.id, {
+        enabled,
+        capacity: enabled ? capacity : demo.registrationCapacity,
+        closesAt: enabled ? closesAt : demo.registrationClosesAt,
+        manuallyClosed: enabled ? req.body?.manuallyClosed === true : demo.registrationClosed,
+      });
+      const serialized = serializeRegistrationSummary(summary);
+      io.to(`demo:${demo.publicId}`).emit("registration_update", serialized);
+      res.json(serialized);
+    } catch {
+      res.status(500).json({ message: "Failed to update event registration" });
+    }
+  });
+
   app.get("/api/demos/:id/engagement", requireAuth, async (req, res) => {
     try {
       const user = req.user as User;
@@ -1716,6 +1776,55 @@ export async function registerRoutes(
       res.status(existing ? 200 : 201).json(summary);
     } catch (err) {
       res.status(500).json({ message: "Failed to submit participant feedback" });
+    }
+  });
+
+  app.get("/api/public/demos/:publicId/registration", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      const sessionId = typeof req.query.sessionId === "string" ? req.query.sessionId.trim().slice(0, 80) : "";
+      const summary = await storage.getEventRegistrationSummary(demo.id);
+      const receipt = sessionId
+        ? await storage.getParticipantRegistration(demo.id, hashAttendanceSession(demo.id, sessionId))
+        : null;
+      res.setHeader("Cache-Control", "no-store");
+      res.json({ ...serializeRegistrationSummary(summary), receipt: serializeRegistrationReceipt(receipt) });
+    } catch {
+      res.status(500).json({ message: "Failed to load event registration" });
+    }
+  });
+
+  app.post("/api/public/demos/:publicId/registration", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      const sessionId = typeof req.body?.sessionId === "string" ? req.body.sessionId.trim().slice(0, 80) : "";
+      if (!sessionId) return res.status(400).json({ message: "A private device session is required" });
+      const receipt = await storage.reserveEventPlace(demo.id, hashAttendanceSession(demo.id, sessionId));
+      const summary = await storage.getEventRegistrationSummary(demo.id);
+      io.to(`demo:${demo.publicId}`).emit("registration_update", serializeRegistrationSummary(summary));
+      res.status(201).json({ ...serializeRegistrationSummary(summary), receipt: serializeRegistrationReceipt(receipt) });
+    } catch (error) {
+      const code = error instanceof Error ? error.message : "";
+      if (code === "REGISTRATION_DISABLED") return res.status(409).json({ message: "Registration is not enabled for this event" });
+      if (code === "REGISTRATION_CLOSED") return res.status(409).json({ message: "Registration is closed for this event" });
+      res.status(500).json({ message: "Failed to reserve a place" });
+    }
+  });
+
+  app.delete("/api/public/demos/:publicId/registration", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      const sessionId = typeof req.body?.sessionId === "string" ? req.body.sessionId.trim().slice(0, 80) : "";
+      if (!sessionId) return res.status(400).json({ message: "A private device session is required" });
+      const result = await storage.cancelEventRegistration(demo.id, hashAttendanceSession(demo.id, sessionId));
+      const summary = await storage.getEventRegistrationSummary(demo.id);
+      io.to(`demo:${demo.publicId}`).emit("registration_update", serializeRegistrationSummary(summary));
+      res.json({ ...result, ...serializeRegistrationSummary(summary), receipt: null });
+    } catch {
+      res.status(500).json({ message: "Failed to cancel the reservation" });
     }
   });
 

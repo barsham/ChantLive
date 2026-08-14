@@ -31,6 +31,10 @@ export const demonstrations = pgTable("demonstrations", {
   locationName: text("location_name"),
   meetingPoint: text("meeting_point"),
   arrivalNote: text("arrival_note"),
+  registrationEnabled: boolean("registration_enabled").notNull().default(false),
+  registrationCapacity: integer("registration_capacity"),
+  registrationClosesAt: timestamp("registration_closes_at", { withTimezone: true }),
+  registrationClosed: boolean("registration_closed").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -78,6 +82,16 @@ export const viewSessions = pgTable("view_sessions", {
   lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).defaultNow().notNull(),
   disconnectedAt: timestamp("disconnected_at", { withTimezone: true }),
 });
+
+export const eventRegistrations = pgTable("event_registrations", {
+  demonstrationId: varchar("demonstration_id", { length: 255 }).notNull().references(() => demonstrations.id, { onDelete: "cascade" }),
+  sessionId: text("session_id").notNull(),
+  status: text("status").notNull().default("confirmed"),
+  registeredAt: timestamp("registered_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.demonstrationId, table.sessionId] }),
+}));
 
 export const safetyChecks = pgTable("safety_checks", {
   id: varchar("id", { length: 255 }).primaryKey(),
@@ -174,6 +188,7 @@ export type InsertChant = z.infer<typeof insertChantSchema>;
 export type DemoAdmin = typeof demoAdmins.$inferSelect;
 export type DemoState = typeof demoState.$inferSelect;
 export type ViewSession = typeof viewSessions.$inferSelect;
+export type StoredEventRegistration = typeof eventRegistrations.$inferSelect;
 export type StoredSafetyCheck = typeof safetyChecks.$inferSelect;
 export type StoredSafetyCheckResponse = typeof safetyCheckResponses.$inferSelect;
 export type StoredAssistanceRequest = typeof assistanceRequests.$inferSelect;

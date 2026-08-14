@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { Activity, ArrowDown, ArrowLeft, ArrowUp, BookOpen, CalendarPlus, CheckCircle2, ClipboardList, Clock3, Copy, Database, Download, ExternalLink, FileText, History, LifeBuoy, ListOrdered, LockKeyhole, Megaphone, Play, Plus, QrCode, RotateCcw, Route, Save, Share2, ShieldCheck, SkipForward, Trash2, UserRoundCheck, Users, WifiOff } from "lucide-react";
+import { Activity, ArrowDown, ArrowLeft, ArrowUp, BookOpen, CalendarCheck2, CalendarPlus, CheckCircle2, ClipboardList, Clock3, Copy, Database, Download, ExternalLink, FileText, History, LifeBuoy, ListOrdered, LockKeyhole, Megaphone, Play, Plus, QrCode, RotateCcw, Route, Save, Share2, ShieldCheck, SkipForward, TicketCheck, Trash2, UserRoundCheck, Users, WifiOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -169,6 +169,28 @@ type AttendanceSummary = {
   timeline: Array<{ startedAt: string; firstJoins: number; returnVisits: number }>;
   privacy: string;
 };
+type RegistrationSummary = {
+  enabled: boolean;
+  capacity: number | null;
+  closesAt: string | null;
+  manuallyClosed: boolean;
+  closed: boolean;
+  confirmed: number;
+  waitlisted: number;
+  available: number | null;
+  overCapacity: number;
+  confirmedAttended: number;
+  turnoutRate: number | null;
+  privacy: string;
+};
+
+function toLocalDateTimeInput(value: string | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
+}
 type ConductReport = {
   id: string;
   reference: string;
@@ -419,6 +441,11 @@ export default function CommandCenter() {
   const [runSheetTemplateName, setRunSheetTemplateName] = useState("");
   const [runSheetTemplateDescription, setRunSheetTemplateDescription] = useState("");
   const [templateDeleteConfirmationId, setTemplateDeleteConfirmationId] = useState<string | null>(null);
+  const [registrationEnabled, setRegistrationEnabled] = useState(false);
+  const [registrationCapacity, setRegistrationCapacity] = useState("100");
+  const [registrationClosesAt, setRegistrationClosesAt] = useState("");
+  const [registrationManuallyClosed, setRegistrationManuallyClosed] = useState(false);
+  const [registrationFormDirty, setRegistrationFormDirty] = useState(false);
   const applyIncidentPreset = (preset: (typeof incidentPresets)[number]) => {
     setSafetyCheckKind(preset.kind);
     setSafetyCheckMessage(preset.message);
@@ -491,6 +518,36 @@ export default function CommandCenter() {
     queryKey: ["/api/demos", id, "attendance"],
     refetchInterval: 5000,
     enabled: Boolean(id),
+  });
+  const { data: registration, isLoading: registrationLoading, error: registrationError } = useQuery<RegistrationSummary>({
+    queryKey: ["/api/demos", id, "registration"],
+    refetchInterval: 5000,
+    enabled: Boolean(id),
+  });
+  useEffect(() => {
+    if (!registration || registrationFormDirty) return;
+    setRegistrationEnabled(registration.enabled);
+    setRegistrationCapacity(String(registration.capacity ?? 100));
+    setRegistrationClosesAt(toLocalDateTimeInput(registration.closesAt));
+    setRegistrationManuallyClosed(registration.manuallyClosed);
+  }, [registration, registrationFormDirty]);
+  const saveRegistration = useMutation({
+    mutationFn: async (manualOverride?: boolean) => {
+      const response = await apiRequest("PATCH", `/api/demos/${id}/registration`, {
+        enabled: registrationEnabled,
+        capacity: Number(registrationCapacity),
+        closesAt: registrationClosesAt ? new Date(registrationClosesAt).toISOString() : null,
+        manuallyClosed: manualOverride ?? registrationManuallyClosed,
+      });
+      return response.json() as Promise<RegistrationSummary>;
+    },
+    onSuccess: (updated) => {
+      queryClient.setQueryData(["/api/demos", id, "registration"], updated);
+      setRegistrationManuallyClosed(updated.manuallyClosed);
+      setRegistrationFormDirty(false);
+      toast({ title: updated.closed ? "Event registration is closed" : updated.enabled ? "Event registration is open" : "Event registration is disabled", description: "Participant receipts and capacity totals are stored without personal details." });
+    },
+    onError: (err: Error) => toast({ title: "Could not update registration", description: err.message, variant: "destructive" }),
   });
   const { data: engagement } = useQuery<EngagementSummary>({
     queryKey: ["/api/demos", id, "engagement"],
@@ -1422,6 +1479,55 @@ export default function CommandCenter() {
               <p><span className="font-medium text-foreground">Current chant:</span> {currentChant ? currentChant.callText || "Chant selected" : "None"}</p>
               <p className="break-all"><span className="font-medium text-foreground">Participant link:</span> {publicUrl}</p>
               <p><span className="font-medium text-foreground">Meeting point:</span> {data.demo.meetingPoint || "Not set"}</p>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6 border-cyan-500/30 bg-cyan-500/5" data-testid="card-event-registration">
+            <CardHeader>
+              <CardTitle className="flex flex-wrap items-center justify-between gap-3 text-base">
+                <span className="flex items-center gap-2"><CalendarCheck2 className="h-5 w-5 text-cyan-700" aria-hidden="true" /> Anonymous RSVP &amp; capacity</span>
+                <Badge variant={registration?.enabled && !registration.closed ? "default" : "secondary"}>{registration?.enabled ? registration.closed ? "Closed" : "Open" : "Disabled"}</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">Let people reserve a place from the participant page without creating an account or providing a name, email, or phone number. Full events use a first-in waitlist.</p>
+              {registrationLoading ? (
+                <div className="mt-4 grid gap-3 sm:grid-cols-4" aria-label="Loading registration capacity"><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /></div>
+              ) : registrationError ? (
+                <p className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-950" role="alert" data-testid="text-registration-admin-error">Registration settings are temporarily unavailable. Existing participant receipts are not changed.</p>
+              ) : (
+                <>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    {[
+                      ["Confirmed", registration?.confirmed ?? 0],
+                      ["Waitlisted", registration?.waitlisted ?? 0],
+                      ["Places available", registration?.available ?? "—"],
+                      ["Turnout so far", registration?.turnoutRate === null || registration?.turnoutRate === undefined ? "—" : `${registration.turnoutRate}%`],
+                    ].map(([label, value]) => <div key={label} className="rounded-lg border bg-background p-3"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-xl font-semibold">{value}</p></div>)}
+                  </div>
+                  <div className="mt-4 grid gap-4 rounded-xl border bg-background p-4 lg:grid-cols-[auto_10rem_minmax(14rem,1fr)] lg:items-end">
+                    <label className="flex min-h-11 items-center gap-3 text-sm font-semibold">
+                      <input type="checkbox" checked={registrationEnabled} onChange={(event) => { setRegistrationEnabled(event.target.checked); setRegistrationFormDirty(true); }} className="h-5 w-5" data-testid="checkbox-registration-enabled" />
+                      Accept anonymous RSVPs
+                    </label>
+                    <label className="text-sm font-medium">Capacity
+                      <input type="number" min="1" max="100000" step="1" value={registrationCapacity} onChange={(event) => { setRegistrationCapacity(event.target.value); setRegistrationFormDirty(true); }} disabled={!registrationEnabled} className="mt-1 min-h-11 w-full rounded-md border bg-background px-3" data-testid="input-registration-capacity" />
+                    </label>
+                    <label className="text-sm font-medium">Optional closing time
+                      <input type="datetime-local" value={registrationClosesAt} onChange={(event) => { setRegistrationClosesAt(event.target.value); setRegistrationFormDirty(true); }} disabled={!registrationEnabled} className="mt-1 min-h-11 w-full rounded-md border bg-background px-3" data-testid="input-registration-closes-at" />
+                    </label>
+                  </div>
+                  {registration?.overCapacity ? <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-950" role="alert">Capacity is below the {registration.confirmed} places already confirmed. Nobody is removed; increase capacity or wait for cancellations.</p> : null}
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Button className="min-h-11" onClick={() => saveRegistration.mutate(undefined)} disabled={saveRegistration.isPending || (registrationEnabled && (!Number.isInteger(Number(registrationCapacity)) || Number(registrationCapacity) < 1 || Number(registrationCapacity) > 100000))} data-testid="button-save-registration"><Save className="mr-2 h-4 w-4" aria-hidden="true" />{saveRegistration.isPending ? "Saving…" : "Save registration"}</Button>
+                    {registrationEnabled && <Button className="min-h-11" variant="outline" onClick={() => { const next = !registrationManuallyClosed; setRegistrationManuallyClosed(next); saveRegistration.mutate(next); }} disabled={saveRegistration.isPending} data-testid="button-toggle-registration-closed">{registrationManuallyClosed ? "Reopen registration" : "Close registration now"}</Button>}
+                  </div>
+                  <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                    <p className="flex items-start gap-2 rounded-lg border bg-background p-3"><TicketCheck className="mt-0.5 h-4 w-4 shrink-0 text-cyan-700" aria-hidden="true" /><span><strong>{registration?.confirmedAttended ?? 0}</strong> confirmed reservations have opened the live event. This produces aggregate turnout only.</span></p>
+                    <p className="flex items-start gap-2 rounded-lg border bg-background p-3 text-muted-foreground"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-cyan-700" aria-hidden="true" /><span>{registration?.privacy}</span></p>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
