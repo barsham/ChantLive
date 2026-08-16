@@ -4,7 +4,7 @@ import {
   type Chant, type InsertChant,
   type DemoState, type DemoAdmin,
   type RunSheetTemplateStage,
-  users, demonstrations, chants, demoAdmins, demoState, viewSessions, eventRegistrations,
+  users, demonstrations, chants, demoAdmins, demoState, viewSessions, eventRegistrations, audienceQuestions, audienceQuestionVotes,
   safetyChecks, safetyCheckResponses, assistanceRequests, conductReports, runSheetItems, runSheetTemplates,
 } from "@shared/schema";
 import { db } from "./db";
@@ -102,6 +102,21 @@ export type ParticipantRegistrationReceipt = {
   registeredAt: Date;
   updatedAt: Date;
   waitlistPosition: number | null;
+};
+
+export type AudienceQuestionStatus = "open" | "answering" | "answered" | "dismissed";
+
+export type StoredAudienceQuestion = {
+  id: string;
+  demoId: string;
+  sessionId: string;
+  text: string;
+  status: AudienceQuestionStatus;
+  organizerResponse: string | null;
+  votes: number;
+  createdAt: Date;
+  updatedAt: Date;
+  resolvedAt: Date | null;
 };
 
 export type StoredSafetyCheckResponse = {
@@ -213,6 +228,12 @@ export interface IStorage {
   getParticipantRegistration(demonstrationId: string, sessionHash: string): Promise<ParticipantRegistrationReceipt | null>;
   reserveEventPlace(demonstrationId: string, sessionHash: string): Promise<ParticipantRegistrationReceipt>;
   cancelEventRegistration(demonstrationId: string, sessionHash: string): Promise<{ canceled: boolean; promoted: number }>;
+  getAudienceQuestions(demonstrationId: string): Promise<StoredAudienceQuestion[]>;
+  getParticipantAudienceQuestions(demonstrationId: string, sessionHash: string): Promise<StoredAudienceQuestion[]>;
+  createAudienceQuestion(demonstrationId: string, sessionHash: string, text: string): Promise<{ question: StoredAudienceQuestion; created: boolean }>;
+  upvoteAudienceQuestion(demonstrationId: string, questionId: string, sessionHash: string): Promise<{ question: StoredAudienceQuestion | null; created: boolean }>;
+  updateAudienceQuestion(demonstrationId: string, questionId: string, status: AudienceQuestionStatus, organizerResponse: string | null): Promise<StoredAudienceQuestion | null>;
+  withdrawAudienceQuestion(demonstrationId: string, questionId: string, sessionHash: string): Promise<boolean>;
 
   getChants(demonstrationId: string): Promise<Chant[]>;
   addChant(data: InsertChant): Promise<Chant>;
@@ -646,6 +667,118 @@ export class DatabaseStorage implements IStorage {
       }
       return { canceled: true, promoted };
     });
+  }
+
+  private async attachAudienceQuestionVotes(rows: Array<typeof audienceQuestions.$inferSelect>): Promise<StoredAudienceQuestion[]> {
+    const voteRows = rows.length > 0
+      ? await db.select({ questionId: audienceQuestionVotes.questionId }).from(audienceQuestionVotes)
+        .where(inArray(audienceQuestionVotes.questionId, rows.map((row) => row.id)))
+      : [];
+    const voteCounts = new Map<string, number>();
+    for (const vote of voteRows) voteCounts.set(vote.questionId, (voteCounts.get(vote.questionId) ?? 0) + 1);
+    return rows.map((row) => ({
+      id: row.id,
+      demoId: row.demonstrationId,
+      sessionId: row.sessionId,
+      text: row.text,
+      status: ["open", "answering", "answered", "dismissed"].includes(row.status) ? row.status as AudienceQuestionStatus : "open",
+      organizerResponse: row.organizerResponse,
+      votes: voteCounts.get(row.id) ?? 0,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      resolvedAt: row.resolvedAt,
+    }));
+  }
+
+  async getAudienceQuestions(demonstrationId: string): Promise<StoredAudienceQuestion[]> {
+    const rows = await db.select().from(audienceQuestions)
+      .where(eq(audienceQuestions.demonstrationId, demonstrationId))
+      .orderBy(desc(audienceQuestions.createdAt));
+    return this.attachAudienceQuestionVotes(rows);
+  }
+
+  async getParticipantAudienceQuestions(demonstrationId: string, sessionHash: string): Promise<StoredAudienceQuestion[]> {
+    const rows = await db.select().from(audienceQuestions).where(and(
+      eq(audienceQuestions.demonstrationId, demonstrationId),
+      eq(audienceQuestions.sessionId, sessionHash),
+    )).orderBy(desc(audienceQuestions.createdAt)).limit(12);
+    return this.attachAudienceQuestionVotes(rows);
+  }
+
+  async createAudienceQuestion(demonstrationId: string, sessionHash: string, text: string): Promise<{ question: StoredAudienceQuestion; created: boolean }> {
+    const result = await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT id FROM demonstrations WHERE id = ${demonstrationId} FOR UPDATE`);
+      const [existing] = await tx.select().from(audienceQuestions).where(and(
+        eq(audienceQuestions.demonstrationId, demonstrationId),
+        eq(audienceQuestions.sessionId, sessionHash),
+        inArray(audienceQuestions.status, ["open", "answering"]),
+        sql`lower(${audienceQuestions.text}) = lower(${text})`,
+      ));
+      if (existing) return { row: existing, created: false };
+      const now = new Date();
+      const [row] = await tx.insert(audienceQuestions).values({
+        id: nanoid(),
+        demonstrationId,
+        sessionId: sessionHash,
+        text,
+        status: "open",
+        createdAt: now,
+        updatedAt: now,
+      }).returning();
+      await tx.insert(audienceQuestionVotes).values({ questionId: row.id, sessionId: sessionHash }).onConflictDoNothing();
+      return { row, created: true };
+    });
+    const [question] = await this.attachAudienceQuestionVotes([result.row]);
+    return { question, created: result.created };
+  }
+
+  async upvoteAudienceQuestion(demonstrationId: string, questionId: string, sessionHash: string): Promise<{ question: StoredAudienceQuestion | null; created: boolean }> {
+    const [questionRow] = await db.select().from(audienceQuestions).where(and(
+      eq(audienceQuestions.id, questionId),
+      eq(audienceQuestions.demonstrationId, demonstrationId),
+      inArray(audienceQuestions.status, ["open", "answering"]),
+    ));
+    if (!questionRow) return { question: null, created: false };
+    const inserted = await db.insert(audienceQuestionVotes).values({ questionId, sessionId: sessionHash })
+      .onConflictDoNothing().returning({ questionId: audienceQuestionVotes.questionId });
+    const [question] = await this.attachAudienceQuestionVotes([questionRow]);
+    return { question, created: inserted.length > 0 };
+  }
+
+  async updateAudienceQuestion(demonstrationId: string, questionId: string, status: AudienceQuestionStatus, organizerResponse: string | null): Promise<StoredAudienceQuestion | null> {
+    const row = await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT id FROM demonstrations WHERE id = ${demonstrationId} FOR UPDATE`);
+      if (status === "answering") {
+        await tx.update(audienceQuestions).set({ status: "open", updatedAt: new Date() }).where(and(
+          eq(audienceQuestions.demonstrationId, demonstrationId),
+          eq(audienceQuestions.status, "answering"),
+        ));
+      }
+      const now = new Date();
+      const [updated] = await tx.update(audienceQuestions).set({
+        status,
+        organizerResponse,
+        updatedAt: now,
+        resolvedAt: status === "answered" || status === "dismissed" ? now : null,
+      }).where(and(
+        eq(audienceQuestions.id, questionId),
+        eq(audienceQuestions.demonstrationId, demonstrationId),
+      )).returning();
+      return updated;
+    });
+    if (!row) return null;
+    const [question] = await this.attachAudienceQuestionVotes([row]);
+    return question;
+  }
+
+  async withdrawAudienceQuestion(demonstrationId: string, questionId: string, sessionHash: string): Promise<boolean> {
+    const deleted = await db.delete(audienceQuestions).where(and(
+      eq(audienceQuestions.id, questionId),
+      eq(audienceQuestions.demonstrationId, demonstrationId),
+      eq(audienceQuestions.sessionId, sessionHash),
+      eq(audienceQuestions.status, "open"),
+    )).returning({ id: audienceQuestions.id });
+    return deleted.length > 0;
   }
 
   async repeatDemonstration(

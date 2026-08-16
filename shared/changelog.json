@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.85",
+      "releasedAt": "2026-08-16",
+      "summary": "A restart-safe anonymous Q&A lifecycle that lets participants privately track questions while organisers spotlight, answer, moderate, and review them end to end.",
+      "items": [
+        {
+          "id": "cl-2026-08-16-durable-anonymous-questions",
+          "title": "Durable anonymous questions and votes",
+          "description": "Questions and one-vote-per-device signals now use shared event-scoped storage, stay idempotent across repeat taps, and survive reconnects, restarts, and multi-instance deployments without storing participant identities.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-16",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-16-private-question-receipts",
+          "title": "Private participant question receipts",
+          "description": "Participants can see the status of questions submitted from their device, follow published answers, and withdraw their own still-open question through a deliberate two-step mobile control.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-16",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-16-live-question-desk",
+          "title": "Live organiser Q&A desk",
+          "description": "The active controller can spotlight one question, compose and publish an answer, dismiss inappropriate submissions, and recover loading or network failures from an accessible Command Center queue.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-16",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-16-live-published-answers",
+          "title": "Multilingual live and published answers",
+          "description": "Participant screens now announce the question being answered and its published response in English, Spanish, French, Arabic, and Persian, with socket updates and reload recovery.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-16",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-08-16-question-outcomes-report",
+          "title": "Post-event Q&A outcomes report",
+          "description": "Printable and copied event reports now retain question totals, votes, answer rate, moderation outcomes, and published responses while excluding device hashes and withdrawn content.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-16",
+          "links": [{ "label": "GitHub issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        }
+      ]
+    },
+    {
       "version": "1.1.84",
       "releasedAt": "2026-08-14",
       "summary": "Privacy-safe event registration that lets communities plan capacity, run a fair waitlist, and compare RSVPs with real attendance without collecting identities.",

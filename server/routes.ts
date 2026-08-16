@@ -4,6 +4,7 @@ import { Server as SocketIOServer } from "socket.io";
 import {
   storage,
   type AssistanceType,
+  type AudienceQuestionStatus,
   type ConductReportCategory,
   type ConductReportStatus,
   type ConductReportUrgency,
@@ -12,6 +13,7 @@ import {
   type SafetyCheckKind,
   type SafetyCheckResponseType,
   type StoredAssistanceRequest as AssistanceRequest,
+  type StoredAudienceQuestion as AudienceQuestion,
   type StoredConductReport as ConductReport,
   type StoredRunSheetItem as RunSheetItem,
   type StoredRunSheetTemplate as RunSheetTemplate,
@@ -53,17 +55,6 @@ type OrganizerAnnouncement = {
   message: string;
   targetRole: "all" | "participant" | "marshal" | "speaker" | "accessibility";
   createdAt: string;
-};
-type AudienceQuestionStatus = "open" | "answered" | "dismissed";
-type AudienceQuestion = {
-  id: string;
-  demoId: string;
-  text: string;
-  sessionId: string;
-  status: AudienceQuestionStatus;
-  voterSessionIds: string[];
-  createdAt: string;
-  resolvedAt: string | null;
 };
 type LivePollStatus = "open" | "closed";
 type LivePollOption = {
@@ -107,7 +98,6 @@ type ParticipantEngagement = {
 
 const crowdPulses = new Map<string, Map<string, CrowdPulse>>();
 const organizerAnnouncements = new Map<string, OrganizerAnnouncement[]>();
-const audienceQuestions = new Map<string, AudienceQuestion[]>();
 const livePolls = new Map<string, LivePoll[]>();
 const participantCheckIns = new Map<string, Map<string, ParticipantCheckIn>>();
 const participantFeedback = new Map<string, Map<string, ParticipantFeedback>>();
@@ -418,15 +408,50 @@ function serializeAudienceQuestion(question: AudienceQuestion) {
     id: question.id,
     text: question.text,
     status: question.status,
-    votes: question.voterSessionIds.length,
-    createdAt: question.createdAt,
-    resolvedAt: question.resolvedAt,
+    votes: question.votes,
+    organizerResponse: question.organizerResponse,
+    createdAt: question.createdAt.toISOString(),
+    updatedAt: question.updatedAt.toISOString(),
+    resolvedAt: question.resolvedAt?.toISOString() ?? null,
     participantLabel: `Participant ${question.sessionId.slice(-4).toUpperCase()}`,
   };
 }
 
-function getAudienceQuestions(demoId: string) {
-  return audienceQuestions.get(demoId) ?? [];
+function summarizeAudienceQuestions(questions: AudienceQuestion[]) {
+  return {
+    total: questions.length,
+    open: questions.filter((question) => question.status === "open").length,
+    answering: questions.filter((question) => question.status === "answering").length,
+    answered: questions.filter((question) => question.status === "answered").length,
+    dismissed: questions.filter((question) => question.status === "dismissed").length,
+    votes: questions.reduce((total, question) => total + question.votes, 0),
+    answerRate: questions.length > 0 ? Math.round((questions.filter((question) => question.status === "answered").length / questions.length) * 100) : null,
+  };
+}
+
+async function getAudienceQuestionPayload(demoId: string) {
+  const questions = await storage.getAudienceQuestions(demoId);
+  const latestAnswered = questions
+    .filter((question) => question.status === "answered")
+    .sort((left, right) => right.updatedAt.getTime() - left.updatedAt.getTime())[0];
+  const spotlight = questions.find((question) => question.status === "answering")
+    ?? latestAnswered
+    ?? null;
+  return {
+    questions: questions.map(serializeAudienceQuestion),
+    summary: summarizeAudienceQuestions(questions),
+    spotlight: spotlight ? serializeAudienceQuestion(spotlight) : null,
+    storage: "shared" as const,
+    privacy: "Event-scoped anonymous hashes only; no participant account, name, email, phone, IP address, device, or location is stored.",
+  };
+}
+
+async function emitAudienceQuestionUpdate(io: SocketIOServer, demo: Demonstration) {
+  const payload = await getAudienceQuestionPayload(demo.id);
+  io.to(`demo:${demo.publicId}`).emit("question_update", payload.questions.filter((question) => question.status === "open"));
+  io.to(`demo:${demo.publicId}`).emit("question_spotlight", payload.spotlight);
+  io.to(`demo:${demo.publicId}`).emit("question_receipt_update");
+  return payload;
 }
 
 function getLivePolls(demoId: string) {
@@ -1398,7 +1423,8 @@ export async function registerRoutes(
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
-      res.json(getAudienceQuestions(demo.id).map(serializeAudienceQuestion));
+      res.setHeader("Cache-Control", "no-store");
+      res.json(await getAudienceQuestionPayload(demo.id));
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch audience questions" });
     }
@@ -1413,16 +1439,22 @@ export async function registerRoutes(
       if (!(await requireLiveController(user, demo, res))) return;
 
       const questionId = getSingleParam(req.params.questionId);
-      const status = req.body?.status === "answered" ? "answered" : req.body?.status === "dismissed" ? "dismissed" : null;
+      const status: AudienceQuestionStatus | null = req.body?.status === "answering"
+        ? "answering"
+        : req.body?.status === "answered"
+          ? "answered"
+          : req.body?.status === "dismissed"
+            ? "dismissed"
+            : null;
       if (!status) return res.status(400).json({ message: "Valid question status is required" });
+      const response = typeof req.body?.response === "string" ? req.body.response.trim().slice(0, 500) : "";
+      if (status === "answered" && response.length < 3) {
+        return res.status(400).json({ message: "Publish an answer of at least 3 characters" });
+      }
 
-      const questions = getAudienceQuestions(demo.id);
-      const question = questions.find((item) => item.id === questionId);
+      const question = await storage.updateAudienceQuestion(demo.id, questionId ?? "", status, status === "answered" ? response : null);
       if (!question) return res.status(404).json({ message: "Audience question not found" });
-
-      question.status = status;
-      question.resolvedAt = new Date().toISOString();
-      io.to(`demo:${demo.publicId}`).emit("question_update", questions.filter((item) => item.status === "open").map(serializeAudienceQuestion));
+      await emitAudienceQuestionUpdate(io, demo);
       res.json(serializeAudienceQuestion(question));
     } catch (err) {
       res.status(500).json({ message: "Failed to update audience question" });
@@ -2005,7 +2037,9 @@ export async function registerRoutes(
       const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
 
-      res.json(getAudienceQuestions(demo.id).filter((question) => question.status === "open").map(serializeAudienceQuestion));
+      const questions = await storage.getAudienceQuestions(demo.id);
+      res.setHeader("Cache-Control", "no-store");
+      res.json(questions.filter((question) => question.status === "open").map(serializeAudienceQuestion));
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch audience questions" });
     }
@@ -2017,34 +2051,14 @@ export async function registerRoutes(
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
 
       const text = typeof req.body?.text === "string" ? req.body.text.trim().slice(0, 220) : "";
-      if (!text) return res.status(400).json({ message: "Question text is required" });
+      if (text.length < 3) return res.status(400).json({ message: "Question must be at least 3 characters" });
       const sessionId = typeof req.body?.sessionId === "string" && req.body.sessionId.trim()
         ? req.body.sessionId.trim().slice(0, 80)
         : crypto.randomUUID();
-      const questions = getAudienceQuestions(demo.id);
-      const duplicate = questions.find((question) => question.sessionId === sessionId && question.status === "open" && question.text.toLowerCase() === text.toLowerCase());
-
-      if (duplicate) {
-        return res.json(serializeAudienceQuestion(duplicate));
-      }
-
-      const question: AudienceQuestion = {
-        id: crypto.randomUUID(),
-        demoId: demo.id,
-        text,
-        sessionId,
-        status: "open",
-        voterSessionIds: [sessionId],
-        createdAt: new Date().toISOString(),
-        resolvedAt: null,
-      };
-
-      questions.unshift(question);
-      audienceQuestions.set(demo.id, questions.slice(0, 80));
-      awardEngagement(demo.id, demo.publicId, sessionId, "question", io);
-      const openQuestions = getAudienceQuestions(demo.id).filter((item) => item.status === "open").map(serializeAudienceQuestion);
-      io.to(`demo:${demo.publicId}`).emit("question_update", openQuestions);
-      res.status(201).json(serializeAudienceQuestion(question));
+      const result = await storage.createAudienceQuestion(demo.id, hashAttendanceSession(demo.id, sessionId), text);
+      if (result.created) awardEngagement(demo.id, demo.publicId, sessionId, "question", io);
+      await emitAudienceQuestionUpdate(io, demo);
+      res.status(result.created ? 201 : 200).json({ ...serializeAudienceQuestion(result.question), duplicate: !result.created });
     } catch (err) {
       res.status(500).json({ message: "Failed to submit audience question" });
     }
@@ -2059,20 +2073,62 @@ export async function registerRoutes(
       const sessionId = typeof req.body?.sessionId === "string" && req.body.sessionId.trim()
         ? req.body.sessionId.trim().slice(0, 80)
         : crypto.randomUUID();
-      const questions = getAudienceQuestions(demo.id);
-      const question = questions.find((item) => item.id === questionId && item.status === "open");
-      if (!question) return res.status(404).json({ message: "Audience question not found" });
-
-      if (!question.voterSessionIds.includes(sessionId)) {
-        question.voterSessionIds.push(sessionId);
-        awardEngagement(demo.id, demo.publicId, sessionId, "upvote", io);
-      }
-
-      const openQuestions = questions.filter((item) => item.status === "open").map(serializeAudienceQuestion);
-      io.to(`demo:${demo.publicId}`).emit("question_update", openQuestions);
-      res.json(serializeAudienceQuestion(question));
+      const result = await storage.upvoteAudienceQuestion(demo.id, questionId ?? "", hashAttendanceSession(demo.id, sessionId));
+      if (!result.question) return res.status(404).json({ message: "Audience question not found" });
+      if (result.created) awardEngagement(demo.id, demo.publicId, sessionId, "upvote", io);
+      await emitAudienceQuestionUpdate(io, demo);
+      res.json({ ...serializeAudienceQuestion(result.question), duplicate: !result.created });
     } catch (err) {
       res.status(500).json({ message: "Failed to upvote audience question" });
+    }
+  });
+
+  app.get("/api/public/demos/:publicId/questions/spotlight", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      const payload = await getAudienceQuestionPayload(demo.id);
+      res.setHeader("Cache-Control", "no-store");
+      res.json(payload.spotlight);
+    } catch {
+      res.status(500).json({ message: "Failed to load the live answer" });
+    }
+  });
+
+  app.get("/api/public/demos/:publicId/questions/mine", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      const sessionId = typeof req.query.sessionId === "string" ? req.query.sessionId.trim().slice(0, 80) : "";
+      if (!sessionId) return res.status(400).json({ message: "A private device session is required" });
+      const questions = await storage.getParticipantAudienceQuestions(demo.id, hashAttendanceSession(demo.id, sessionId));
+      res.setHeader("Cache-Control", "no-store");
+      res.json({
+        questions: questions.map(serializeAudienceQuestion),
+        privacy: "Only questions submitted from this private device key are returned.",
+        storage: "shared",
+      });
+    } catch {
+      res.status(500).json({ message: "Failed to load your question receipts" });
+    }
+  });
+
+  app.delete("/api/public/demos/:publicId/questions/:questionId", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      const sessionId = typeof req.body?.sessionId === "string" ? req.body.sessionId.trim().slice(0, 80) : "";
+      if (!sessionId) return res.status(400).json({ message: "A private device session is required" });
+      const withdrawn = await storage.withdrawAudienceQuestion(
+        demo.id,
+        getSingleParam(req.params.questionId) ?? "",
+        hashAttendanceSession(demo.id, sessionId),
+      );
+      if (!withdrawn) return res.status(409).json({ message: "Only your own open question can be withdrawn" });
+      await emitAudienceQuestionUpdate(io, demo);
+      res.json({ withdrawn: true });
+    } catch {
+      res.status(500).json({ message: "Failed to withdraw the question" });
     }
   });
 

@@ -23,10 +23,18 @@ type OrganizerAnnouncement = {
 type AudienceQuestion = {
   id: string;
   text: string;
-  status: "open" | "answered" | "dismissed";
+  status: "open" | "answering" | "answered" | "dismissed";
   votes: number;
+  organizerResponse: string | null;
   createdAt: string;
+  updatedAt: string;
+  resolvedAt: string | null;
   participantLabel: string;
+};
+type ParticipantQuestionReceipts = {
+  questions: AudienceQuestion[];
+  privacy: string;
+  storage: "shared";
 };
 type LivePoll = {
   id: string;
@@ -178,6 +186,21 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     assistanceFailed: "Could not notify the organizer. Please ask someone nearby for help.",
     questionSent: "Question sent to the organizer.",
     questionFailed: "Could not send question. Please ask an organizer directly.",
+    questionReceipts: "Your private question receipts",
+    noQuestionReceipts: "Questions sent from this device will appear here.",
+    questionOpen: "Waiting for the organiser",
+    questionAnswering: "Being answered now",
+    questionAnswered: "Answered",
+    questionDismissed: "Closed without a public answer",
+    withdrawQuestion: "Withdraw question",
+    confirmWithdrawQuestion: "Confirm withdrawal",
+    keepQuestion: "Keep question",
+    questionWithdrawn: "Question withdrawn.",
+    questionWithdrawFailed: "The question could not be withdrawn. It may already be in progress.",
+    nowAnswering: "The organiser is answering",
+    publishedAnswer: "Organiser answer",
+    waitingAnswer: "Keep this page open. The shared answer will appear here.",
+    questionReceiptPrivacy: "Only this device can recover your receipts. Organisers see an anonymous event-only identifier.",
     safetyResponseSent: "Safety response sent.",
     safetyResponseFailed: "Could not send safety response. Tell a marshal or organizer directly.",
     checkedIn: "Checked in",
@@ -381,6 +404,21 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     assistanceFailed: "No se pudo avisar al organizador. Pide ayuda a alguien cercano.",
     questionSent: "Pregunta enviada al organizador.",
     questionFailed: "No se pudo enviar la pregunta. Pregunta directamente al organizador.",
+    questionReceipts: "Tus recibos privados de preguntas",
+    noQuestionReceipts: "Las preguntas enviadas desde este dispositivo aparecerán aquí.",
+    questionOpen: "Esperando al organizador",
+    questionAnswering: "Se está respondiendo ahora",
+    questionAnswered: "Respondida",
+    questionDismissed: "Cerrada sin respuesta pública",
+    withdrawQuestion: "Retirar pregunta",
+    confirmWithdrawQuestion: "Confirmar retirada",
+    keepQuestion: "Conservar pregunta",
+    questionWithdrawn: "Pregunta retirada.",
+    questionWithdrawFailed: "No se pudo retirar. Puede que ya esté en curso.",
+    nowAnswering: "El organizador está respondiendo",
+    publishedAnswer: "Respuesta del organizador",
+    waitingAnswer: "Mantén esta página abierta. La respuesta aparecerá aquí.",
+    questionReceiptPrivacy: "Solo este dispositivo recupera tus recibos. Los organizadores ven un identificador anónimo del evento.",
     safetyResponseSent: "Respuesta de seguridad enviada.",
     safetyResponseFailed: "No se pudo enviar la respuesta de seguridad. Avisa directamente a un responsable o al organizador.",
     checkedIn: "Registrado",
@@ -584,6 +622,21 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     assistanceFailed: "Impossible de prévenir l'organisateur. Demandez de l'aide à une personne proche.",
     questionSent: "Question envoyée à l'organisateur.",
     questionFailed: "Impossible d'envoyer la question. Adressez-vous directement à un organisateur.",
+    questionReceipts: "Vos reçus privés de questions",
+    noQuestionReceipts: "Les questions envoyées depuis cet appareil apparaîtront ici.",
+    questionOpen: "En attente de l’organisateur",
+    questionAnswering: "Réponse en cours",
+    questionAnswered: "Répondue",
+    questionDismissed: "Fermée sans réponse publique",
+    withdrawQuestion: "Retirer la question",
+    confirmWithdrawQuestion: "Confirmer le retrait",
+    keepQuestion: "Garder la question",
+    questionWithdrawn: "Question retirée.",
+    questionWithdrawFailed: "La question ne peut pas être retirée. Elle est peut-être déjà en cours.",
+    nowAnswering: "L’organisateur répond",
+    publishedAnswer: "Réponse de l’organisateur",
+    waitingAnswer: "Gardez cette page ouverte. La réponse partagée apparaîtra ici.",
+    questionReceiptPrivacy: "Seul cet appareil récupère vos reçus. Les organisateurs voient un identifiant anonyme propre à l’événement.",
     safetyResponseSent: "Réponse de sécurité envoyée.",
     safetyResponseFailed: "Impossible d'envoyer la réponse de sécurité. Prévenez directement un responsable ou un organisateur.",
     checkedIn: "Présence confirmée",
@@ -787,6 +840,21 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     assistanceFailed: "تعذر إبلاغ المنظم. اطلب المساعدة من شخص قريب.",
     questionSent: "تم إرسال السؤال إلى المنظم.",
     questionFailed: "تعذر إرسال السؤال. اسأل المنظم مباشرة.",
+    questionReceipts: "إيصالات أسئلتك الخاصة",
+    noQuestionReceipts: "ستظهر هنا الأسئلة المرسلة من هذا الجهاز.",
+    questionOpen: "بانتظار المنظم",
+    questionAnswering: "تتم الإجابة الآن",
+    questionAnswered: "تمت الإجابة",
+    questionDismissed: "أُغلق دون إجابة عامة",
+    withdrawQuestion: "سحب السؤال",
+    confirmWithdrawQuestion: "تأكيد السحب",
+    keepQuestion: "الاحتفاظ بالسؤال",
+    questionWithdrawn: "تم سحب السؤال.",
+    questionWithdrawFailed: "تعذر سحب السؤال. ربما بدأت الإجابة عليه.",
+    nowAnswering: "المنظم يجيب الآن",
+    publishedAnswer: "إجابة المنظم",
+    waitingAnswer: "أبقِ هذه الصفحة مفتوحة. ستظهر الإجابة المشتركة هنا.",
+    questionReceiptPrivacy: "هذا الجهاز وحده يستعيد إيصالاتك. يرى المنظمون معرّفاً مجهولاً خاصاً بالفعالية.",
     safetyResponseSent: "تم إرسال رد السلامة.",
     safetyResponseFailed: "تعذر إرسال رد السلامة. أخبر مشرفاً ميدانياً أو المنظم مباشرة.",
     checkedIn: "تم تسجيل الحضور",
@@ -990,6 +1058,21 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     assistanceFailed: "برگزارکننده مطلع نشد. از فردی نزدیک کمک بخواهید.",
     questionSent: "پرسش برای برگزارکننده ارسال شد.",
     questionFailed: "پرسش ارسال نشد. مستقیماً از برگزارکننده بپرسید.",
+    questionReceipts: "رسیدهای خصوصی پرسش‌های شما",
+    noQuestionReceipts: "پرسش‌های ارسال‌شده از این دستگاه اینجا دیده می‌شوند.",
+    questionOpen: "در انتظار برگزارکننده",
+    questionAnswering: "در حال پاسخ‌گویی",
+    questionAnswered: "پاسخ داده شد",
+    questionDismissed: "بدون پاسخ عمومی بسته شد",
+    withdrawQuestion: "پس گرفتن پرسش",
+    confirmWithdrawQuestion: "تأیید پس گرفتن",
+    keepQuestion: "نگه داشتن پرسش",
+    questionWithdrawn: "پرسش پس گرفته شد.",
+    questionWithdrawFailed: "پرسش پس گرفته نشد. شاید پاسخ‌گویی آغاز شده باشد.",
+    nowAnswering: "برگزارکننده در حال پاسخ است",
+    publishedAnswer: "پاسخ برگزارکننده",
+    waitingAnswer: "این صفحه را باز نگه دارید. پاسخ مشترک اینجا ظاهر می‌شود.",
+    questionReceiptPrivacy: "فقط این دستگاه رسیدهای شما را بازیابی می‌کند. برگزارکنندگان یک شناسه ناشناس ویژه رویداد می‌بینند.",
     safetyResponseSent: "پاسخ ایمنی ارسال شد.",
     safetyResponseFailed: "پاسخ ایمنی ارسال نشد. مستقیماً به مسئول میدانی یا برگزارکننده بگویید.",
     checkedIn: "حضور ثبت شد",
@@ -1297,6 +1380,10 @@ export default function Participant() {
   const [pulseSent, setPulseSent] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState<OrganizerAnnouncement | null>(null);
   const [audienceQuestions, setAudienceQuestions] = useState<AudienceQuestion[]>([]);
+  const [questionReceipts, setQuestionReceipts] = useState<AudienceQuestion[]>([]);
+  const [questionSpotlight, setQuestionSpotlight] = useState<AudienceQuestion | null>(null);
+  const [questionReceiptError, setQuestionReceiptError] = useState(false);
+  const [withdrawQuestionPendingId, setWithdrawQuestionPendingId] = useState<string | null>(null);
   const [activePoll, setActivePoll] = useState<LivePoll | null>(null);
   const [pollVotes, setPollVotes] = useState<Record<string, string>>(getStoredPollVotes);
   const [pollStatus, setPollStatus] = useState<string | null>(null);
@@ -1390,6 +1477,21 @@ export default function Participant() {
       localStorage.setItem("chant_session_id", sessionId);
     }
     return sessionId;
+  };
+  const refreshQuestionReceipts = async () => {
+    try {
+      const [receiptsResponse, spotlightResponse] = await Promise.all([
+        fetch(`/api/public/demos/${publicId}/questions/mine?sessionId=${encodeURIComponent(getSessionId())}`),
+        fetch(`/api/public/demos/${publicId}/questions/spotlight`),
+      ]);
+      if (!receiptsResponse.ok || !spotlightResponse.ok) throw new Error("Question receipts unavailable");
+      const receipts = await receiptsResponse.json() as ParticipantQuestionReceipts;
+      setQuestionReceipts(receipts.questions);
+      setQuestionSpotlight(await spotlightResponse.json() as AudienceQuestion | null);
+      setQuestionReceiptError(false);
+    } catch {
+      setQuestionReceiptError(true);
+    }
   };
   const refreshConductReports = async (announce = false) => {
     setConductLoading(true);
@@ -1533,6 +1635,12 @@ export default function Participant() {
     socket.on("question_update", (questions: AudienceQuestion[]) => {
       setAudienceQuestions(questions);
     });
+    socket.on("question_spotlight", (question: AudienceQuestion | null) => {
+      setQuestionSpotlight(question);
+    });
+    socket.on("question_receipt_update", () => {
+      refreshQuestionReceipts();
+    });
 
     socket.on("poll_update", (poll: LivePoll | null) => {
       setActivePoll(poll);
@@ -1580,6 +1688,8 @@ export default function Participant() {
       socket.off("demo_error");
       socket.off("organizer_announcement");
       socket.off("question_update");
+      socket.off("question_spotlight");
+      socket.off("question_receipt_update");
       socket.off("poll_update");
       socket.off("poll_results_update");
       socket.off("safety_check_update");
@@ -1605,6 +1715,7 @@ export default function Participant() {
       })
       .then((questions: AudienceQuestion[]) => setAudienceQuestions(questions))
       .catch(() => setAudienceQuestions([]));
+    refreshQuestionReceipts();
 
     fetch(`/api/public/demos/${publicId}/polls/active`)
       .then((response) => response.ok ? response.json() : null)
@@ -2046,6 +2157,7 @@ export default function Participant() {
 
       setQuestionText("");
       setQuestionStatus(t.questionSent);
+      await refreshQuestionReceipts();
       setTimeout(() => setQuestionStatus(null), 3000);
     } catch {
       setQuestionStatus(t.questionFailed);
@@ -2060,6 +2172,26 @@ export default function Participant() {
       });
     } catch {
       // Upvotes are best-effort and should not disrupt the live chant view.
+    }
+  };
+  const withdrawQuestion = async (questionId: string) => {
+    if (withdrawQuestionPendingId !== questionId) {
+      setWithdrawQuestionPendingId(questionId);
+      return;
+    }
+    try {
+      const response = await fetch(`/api/public/demos/${publicId}/questions/${questionId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: getSessionId() }),
+      });
+      if (!response.ok) throw new Error("Question could not be withdrawn");
+      setWithdrawQuestionPendingId(null);
+      setQuestionStatus(t.questionWithdrawn);
+      await refreshQuestionReceipts();
+    } catch {
+      setWithdrawQuestionPendingId(null);
+      setQuestionStatus(t.questionWithdrawFailed);
     }
   };
   const submitPollVote = async (pollId: string, optionId: string) => {
@@ -2858,6 +2990,24 @@ export default function Participant() {
           </button>
         </div>
       )}
+      {questionSpotlight && (questionSpotlight.status === "answering" || questionSpotlight.status === "answered") && (
+        <section
+          className={`mx-4 mt-4 rounded-2xl border p-4 text-center ${questionSpotlight.status === "answering" ? "border-sky-300/50 bg-sky-400/15 text-sky-50" : "border-emerald-300/50 bg-emerald-400/15 text-emerald-50"}`}
+          aria-live="polite"
+          aria-labelledby="question-spotlight-title"
+          data-testid="banner-question-spotlight"
+        >
+          <p id="question-spotlight-title" className="text-xs font-mono uppercase tracking-widest opacity-80">
+            {questionSpotlight.status === "answering" ? t.nowAnswering : t.publishedAnswer}
+          </p>
+          <p className="mx-auto mt-2 max-w-2xl text-lg font-semibold">{questionSpotlight.text}</p>
+          {questionSpotlight.status === "answered" && questionSpotlight.organizerResponse ? (
+            <p className="mx-auto mt-3 max-w-2xl rounded-xl bg-black/25 p-3 text-base leading-relaxed" data-testid="text-question-spotlight-answer">{questionSpotlight.organizerResponse}</p>
+          ) : (
+            <p className="mt-2 text-sm opacity-85">{t.waitingAnswer}</p>
+          )}
+        </section>
+      )}
       {renderParticipantAccess("mx-4 mt-3", true)}
       <ParticipantRegistration publicId={publicId} sessionId={getSessionId()} language={participantLanguage} className="mx-4 mt-4" />
       {renderRunSheetStage("mx-4 mt-4")}
@@ -3456,7 +3606,7 @@ export default function Participant() {
                   type="button"
                   onClick={submitQuestion}
                   disabled={!questionText.trim()}
-                  className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-900 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="min-h-11 rounded-md border border-neutral-700 px-3 py-2 text-xs font-medium text-neutral-200 hover:bg-neutral-900 disabled:cursor-not-allowed disabled:opacity-50"
                   data-testid="button-submit-audience-question"
                 >
                   {t.sendQuestion}
@@ -3467,6 +3617,42 @@ export default function Participant() {
                   {questionStatus}
                 </p>
               )}
+              <div className="mt-4 border-t border-neutral-800 pt-4" data-testid="panel-private-question-receipts">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-semibold text-neutral-200">{t.questionReceipts}</p>
+                  <span className="rounded-full border border-emerald-400/30 px-2 py-1 text-[10px] text-emerald-200">{conductT.privateLabel}</span>
+                </div>
+                {questionReceiptError ? (
+                  <div className="mt-2" role="alert">
+                    <p className="text-xs text-amber-200">{t.questionFailed}</p>
+                    <button type="button" onClick={refreshQuestionReceipts} className="mt-2 min-h-11 rounded-md border border-neutral-700 px-3 py-2 text-xs">{t.refresh}</button>
+                  </div>
+                ) : questionReceipts.length === 0 ? (
+                  <p className="mt-2 text-xs text-neutral-500">{t.noQuestionReceipts}</p>
+                ) : (
+                  <div className="mt-2 space-y-2">
+                    {questionReceipts.slice(0, 3).map((receipt) => {
+                      const statusLabel = receipt.status === "open" ? t.questionOpen : receipt.status === "answering" ? t.questionAnswering : receipt.status === "answered" ? t.questionAnswered : t.questionDismissed;
+                      return (
+                        <div key={receipt.id} className="rounded-lg border border-neutral-800 bg-neutral-950 p-3" data-testid={`card-private-question-receipt-${receipt.id}`}>
+                          <p className="text-xs text-neutral-200">{receipt.text}</p>
+                          <p className="mt-2 text-[11px] font-semibold text-sky-200" role="status">{statusLabel}</p>
+                          {receipt.organizerResponse && <p className="mt-2 rounded-md bg-emerald-400/10 p-2 text-xs text-emerald-100">{receipt.organizerResponse}</p>}
+                          {receipt.status === "open" && (
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              <button type="button" onClick={() => withdrawQuestion(receipt.id)} className="min-h-11 rounded-md border border-neutral-700 px-3 py-2 text-xs text-neutral-200" data-testid={`button-withdraw-question-${receipt.id}`}>
+                                {withdrawQuestionPendingId === receipt.id ? t.confirmWithdrawQuestion : t.withdrawQuestion}
+                              </button>
+                              {withdrawQuestionPendingId === receipt.id && <button type="button" onClick={() => setWithdrawQuestionPendingId(null)} className="min-h-11 rounded-md px-3 py-2 text-xs text-neutral-300 underline">{t.keepQuestion}</button>}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <p className="mt-2 text-[11px] leading-relaxed text-neutral-500">{t.questionReceiptPrivacy}</p>
+              </div>
             </div>
             <div className="rounded-xl border border-neutral-800 bg-black/30 p-4">
               <p className="font-semibold text-white">{t.raisedQuestions}</p>
@@ -3480,7 +3666,7 @@ export default function Participant() {
                       <button
                         type="button"
                         onClick={() => upvoteQuestion(question.id)}
-                        className="mt-2 rounded-full border border-neutral-700 px-2.5 py-1 text-xs text-neutral-300 hover:bg-neutral-900"
+                        className="mt-2 min-h-11 rounded-full border border-neutral-700 px-3 py-2 text-xs text-neutral-300 hover:bg-neutral-900"
                         data-testid={`button-upvote-question-${question.id}`}
                       >
                         {t.voteUp} ({formatParticipantNumber(question.votes, participantLanguage)})

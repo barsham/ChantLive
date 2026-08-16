@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowLeft, CalendarCheck2, Check, ClipboardCheck, Copy, Download, ListOrdered, Printer, ShieldCheck, Users } from "lucide-react";
+import { ArrowLeft, CalendarCheck2, Check, ClipboardCheck, Copy, Download, ListOrdered, MessageCircleQuestion, Printer, ShieldCheck, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -90,6 +90,20 @@ type RunSheetPayload = {
   items: RunSheetItem[];
   summary: { total: number; plannedDurationMinutes: number; completed: number; skipped: number; pending: number; active: RunSheetItem | null; next: RunSheetItem | null; storage: "shared"; updatedAt: string | null };
 };
+type AudienceQuestion = {
+  id: string;
+  text: string;
+  status: "open" | "answering" | "answered" | "dismissed";
+  votes: number;
+  organizerResponse: string | null;
+  createdAt: string;
+};
+type AudienceQuestionPayload = {
+  questions: AudienceQuestion[];
+  summary: { total: number; open: number; answering: number; answered: number; dismissed: number; votes: number; answerRate: number | null };
+  storage: "shared";
+  privacy: string;
+};
 
 function formatRuntime(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
@@ -98,7 +112,7 @@ function formatRuntime(totalSeconds: number) {
   return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`;
 }
 
-function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackSummary, conduct?: ConductReportSummary, runSheet?: RunSheetPayload, attendance?: AttendanceSummary, registration?: RegistrationSummary) {
+function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackSummary, conduct?: ConductReportSummary, runSheet?: RunSheetPayload, attendance?: AttendanceSummary, registration?: RegistrationSummary, questions?: AudienceQuestionPayload) {
   return [
     `ChantLive Post-Event Report: ${data.demo.title}`,
     "",
@@ -117,9 +131,13 @@ function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackS
     `Average acknowledgement: ${conduct?.averageAcknowledgementMinutes ?? "not available"} minutes`,
     `Average resolution: ${conduct?.averageResolutionMinutes ?? "not available"} minutes`,
     `Run sheet: ${runSheet?.summary.total ?? 0} stages, ${runSheet?.summary.plannedDurationMinutes ?? 0} planned minutes, ${runSheet?.summary.completed ?? 0} completed, ${runSheet?.summary.skipped ?? 0} skipped`,
+    `Audience Q&A: ${questions?.summary.total ?? 0} questions, ${questions?.summary.answered ?? 0} answered, ${questions?.summary.dismissed ?? 0} dismissed, ${questions?.summary.votes ?? 0} votes${questions?.summary.answerRate == null ? "" : `, ${questions.summary.answerRate}% answer rate`}`,
     "",
     "Run-sheet delivery timeline:",
     ...(runSheet?.items.length ? runSheet.items.map((item, index) => `- ${index + 1}. ${item.title}: ${item.status}; ${item.plannedDurationMinutes} min planned${item.actualDurationMinutes == null ? "" : `; ${item.actualDurationMinutes} min actual`}`) : ["- No run sheet was prepared."]),
+    "",
+    "Audience Q&A:",
+    ...(questions?.questions.length ? questions.questions.map((question) => `- [${question.status}] ${question.text} (${question.votes} votes)${question.organizerResponse ? ` — ${question.organizerResponse}` : ""}`) : ["- No audience questions were submitted."]),
     "",
     "Debrief checklist:",
     "- Did participants understand how to join?",
@@ -162,6 +180,10 @@ export default function EventReport() {
     queryKey: ["/api/demos", id, "run-sheet"],
     enabled: Boolean(id),
   });
+  const { data: audienceQuestions, isLoading: audienceQuestionsLoading, error: audienceQuestionsError, refetch: refetchAudienceQuestions } = useQuery<AudienceQuestionPayload>({
+    queryKey: ["/api/demos", id, "questions"],
+    enabled: Boolean(id),
+  });
 
   const runtimeSeconds = useMemo(() => {
     if (!data) return 0;
@@ -177,7 +199,7 @@ export default function EventReport() {
 
   const copyReport = async () => {
     if (!data) return;
-    await navigator.clipboard.writeText(buildReportText(data, runtime, feedback, conductQueue?.summary, runSheet, attendance, registration));
+    await navigator.clipboard.writeText(buildReportText(data, runtime, feedback, conductQueue?.summary, runSheet, attendance, registration, audienceQuestions));
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };
@@ -368,6 +390,52 @@ export default function EventReport() {
                 <div className="rounded-lg border bg-background p-3"><p className="text-xs text-muted-foreground">Planned duration</p><p className="mt-1 text-lg font-semibold">{runSheet?.summary.plannedDurationMinutes ?? 0} min</p></div>
                 <div className="rounded-lg border bg-background p-3"><p className="text-xs text-muted-foreground">Still pending</p><p className="mt-1 text-lg font-semibold">{runSheet?.summary.pending ?? 0}</p></div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6 border-emerald-500/30" data-testid="card-report-audience-questions">
+            <CardHeader>
+              <CardTitle className="flex flex-wrap items-center justify-between gap-2 text-base">
+                <span className="flex items-center gap-2"><MessageCircleQuestion className="h-5 w-5 text-emerald-700" aria-hidden="true" /> Audience Q&amp;A outcomes</span>
+                <Badge variant="secondary">Shared after restart</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {audienceQuestionsLoading ? (
+                <div className="grid gap-3 sm:grid-cols-4" aria-label="Loading audience question outcomes"><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /></div>
+              ) : audienceQuestionsError ? (
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4" role="alert">
+                  <p className="text-sm">Audience Q&amp;A outcomes are temporarily unavailable; the rest of this report is still complete.</p>
+                  <Button className="mt-3 min-h-11" size="sm" variant="outline" onClick={() => void refetchAudienceQuestions()}>Retry Q&amp;A outcomes</Button>
+                </div>
+              ) : (
+                <>
+                  <p className="mb-4 text-sm text-muted-foreground">Review what participants asked, which topics mattered most, and the answers your team published. Anonymous session hashes and withdrawn question text are never shown here.</p>
+                  <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                    {[
+                      ["Questions", audienceQuestions?.summary.total ?? 0],
+                      ["Answered", audienceQuestions?.summary.answered ?? 0],
+                      ["Audience votes", audienceQuestions?.summary.votes ?? 0],
+                      ["Answer rate", audienceQuestions?.summary.answerRate == null ? "—" : `${audienceQuestions.summary.answerRate}%`],
+                    ].map(([label, value]) => <div key={label} className="rounded-lg border bg-background p-3"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-lg font-semibold">{value}</p></div>)}
+                  </div>
+                  {(audienceQuestions?.questions.length ?? 0) > 0 ? (
+                    <ol className="mt-4 grid gap-3" aria-label="Audience question outcomes">
+                      {audienceQuestions?.questions.slice(0, 8).map((question) => (
+                        <li key={question.id} className="rounded-lg border bg-background p-3 text-sm">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <Badge variant={question.status === "answered" ? "secondary" : question.status === "dismissed" ? "outline" : "default"}>{question.status}</Badge>
+                            <span className="text-xs text-muted-foreground">{question.votes} {question.votes === 1 ? "vote" : "votes"}</span>
+                          </div>
+                          <p className="mt-2 font-medium">{question.text}</p>
+                          {question.organizerResponse ? <p className="mt-2 rounded-md bg-emerald-500/10 p-3 text-muted-foreground"><span className="font-medium text-foreground">Published answer:</span> {question.organizerResponse}</p> : null}
+                        </li>
+                      ))}
+                    </ol>
+                  ) : <p className="mt-4 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">No audience questions were submitted for this event.</p>}
+                  <p className="mt-4 flex items-start gap-2 text-xs text-muted-foreground"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" aria-hidden="true" />{audienceQuestions?.privacy}</p>
+                </>
+              )}
             </CardContent>
           </Card>
 

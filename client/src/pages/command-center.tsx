@@ -74,11 +74,28 @@ type CrowdPulseSummary = {
 type AudienceQuestion = {
   id: string;
   text: string;
-  status: "open" | "answered" | "dismissed";
+  status: "open" | "answering" | "answered" | "dismissed";
   votes: number;
+  organizerResponse: string | null;
   createdAt: string;
+  updatedAt: string;
   resolvedAt: string | null;
   participantLabel: string;
+};
+type AudienceQuestionPayload = {
+  questions: AudienceQuestion[];
+  summary: {
+    total: number;
+    open: number;
+    answering: number;
+    answered: number;
+    dismissed: number;
+    votes: number;
+    answerRate: number | null;
+  };
+  spotlight: AudienceQuestion | null;
+  storage: "shared";
+  privacy: string;
 };
 type LivePoll = {
   id: string;
@@ -423,6 +440,7 @@ export default function CommandCenter() {
   const [announcementLanguage, setAnnouncementLanguage] = useState<AnnouncementLanguage>("en");
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState(["Yes", "No", "Need more info"]);
+  const [questionAnswerDraft, setQuestionAnswerDraft] = useState("");
   const [safetyCheckKind, setSafetyCheckKind] = useState<SafetyCheckKind>("general");
   const [safetyCheckMessage, setSafetyCheckMessage] = useState(incidentPresets[4].message);
   const [safetyCheckInstruction, setSafetyCheckInstruction] = useState(incidentPresets[4].instruction);
@@ -499,7 +517,7 @@ export default function CommandCenter() {
     refetchInterval: 3000,
     enabled: Boolean(id),
   });
-  const { data: audienceQuestions = [] } = useQuery<AudienceQuestion[]>({
+  const { data: audienceQuestionPayload, isLoading: audienceQuestionsLoading, error: audienceQuestionsError } = useQuery<AudienceQuestionPayload>({
     queryKey: ["/api/demos", id, "questions"],
     refetchInterval: 3000,
     enabled: Boolean(id),
@@ -709,12 +727,15 @@ export default function CommandCenter() {
     },
   });
   const moderateQuestion = useMutation({
-    mutationFn: async ({ questionId, status }: { questionId: string; status: "answered" | "dismissed" }) => {
-      await apiRequest("PATCH", `/api/demos/${id}/questions/${questionId}`, { status });
+    mutationFn: async ({ questionId, status, response }: { questionId: string; status: "answering" | "answered" | "dismissed"; response?: string }) => {
+      await apiRequest("PATCH", `/api/demos/${id}/questions/${questionId}`, { status, response });
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "questions"] });
-      toast({ title: "Audience question updated" });
+      if (variables.status === "answered") setQuestionAnswerDraft("");
+      toast({
+        title: variables.status === "answering" ? "Question is live for the crowd" : variables.status === "answered" ? "Answer published" : "Question dismissed",
+      });
     },
     onError: (err: Error) => {
       toast({ title: "Could not update question", description: err.message, variant: "destructive" });
@@ -879,9 +900,11 @@ export default function CommandCenter() {
     const estimate = new Date(new Date(data.demo.scheduledAt).getTime() + precedingMinutes * 60_000);
     return `${estimate.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} estimate · ${item.plannedDurationMinutes} min`;
   };
+  const audienceQuestions = audienceQuestionPayload?.questions ?? [];
   const openQuestions = audienceQuestions
     .filter((question) => question.status === "open")
     .sort((a, b) => b.votes - a.votes || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  const spotlightQuestion = audienceQuestionPayload?.spotlight ?? null;
   const activePoll = livePolls.find((poll) => poll.status === "open") ?? null;
   const activeSafetyCheck = safetyChecks.find((check) => check.status === "open") ?? null;
   const activeIncidentLabel = activeSafetyCheck
@@ -2375,18 +2398,63 @@ export default function CommandCenter() {
 
           <Card className="mt-6" data-testid="card-audience-question-queue">
             <CardHeader>
-              <CardTitle className="flex items-center justify-between gap-3 text-base">
-                <span className="flex items-center gap-2">
-                  <Megaphone className="h-5 w-5 text-primary" />
-                  Live audience Q&A
-                </span>
-                <Badge variant={openQuestions.length > 0 ? "default" : "secondary"}>{openQuestions.length} open</Badge>
-              </CardTitle>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Megaphone className="h-5 w-5 text-primary" />
+                    Live audience Q&A
+                  </CardTitle>
+                  <p className="mt-1 text-xs text-muted-foreground">Spotlight a crowd question, publish one shared answer, and retain the debrief through restarts.</p>
+                </div>
+                <Badge variant="outline" className="gap-1"><Database className="h-3.5 w-3.5" /> Shared database</Badge>
+              </div>
             </CardHeader>
-            <CardContent>
-              {openQuestions.length === 0 ? (
+            <CardContent className="space-y-4">
+              {audienceQuestionsLoading ? (
+                <div className="space-y-2" aria-label="Loading audience questions"><Skeleton className="h-16 w-full" /><Skeleton className="h-24 w-full" /></div>
+              ) : audienceQuestionsError ? (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4" role="alert">
+                  <p className="text-sm font-medium">Audience questions are temporarily unavailable.</p>
+                  <Button className="mt-3 min-h-11" variant="outline" onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "questions"] })}>Try again</Button>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Audience question summary">
+                    {[
+                      ["Open", audienceQuestionPayload?.summary.open ?? 0],
+                      ["Answered", audienceQuestionPayload?.summary.answered ?? 0],
+                      ["Votes", audienceQuestionPayload?.summary.votes ?? 0],
+                      ["Answer rate", audienceQuestionPayload?.summary.answerRate == null ? "—" : `${audienceQuestionPayload.summary.answerRate}%`],
+                    ].map(([label, value]) => (
+                      <div key={label} className="rounded-lg border bg-muted/30 p-3"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-lg font-semibold">{value}</p></div>
+                    ))}
+                  </div>
+
+                  {spotlightQuestion && (
+                    <div className={`rounded-lg border p-4 ${spotlightQuestion.status === "answering" ? "border-sky-500/40 bg-sky-500/5" : "border-emerald-500/30 bg-emerald-500/5"}`} data-testid="card-question-spotlight">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-sm font-semibold">{spotlightQuestion.status === "answering" ? "Now answering for participants" : "Latest published answer"}</p>
+                        <Badge variant={spotlightQuestion.status === "answering" ? "default" : "secondary"}>{spotlightQuestion.votes} vote{spotlightQuestion.votes === 1 ? "" : "s"}</Badge>
+                      </div>
+                      <p className="mt-2 text-sm">{spotlightQuestion.text}</p>
+                      {spotlightQuestion.status === "answering" ? (
+                        <div className="mt-3 space-y-3">
+                          <label htmlFor="question-live-answer" className="text-xs font-medium text-muted-foreground">Shared answer</label>
+                          <Textarea id="question-live-answer" value={questionAnswerDraft} onChange={(event) => setQuestionAnswerDraft(event.target.value)} maxLength={500} placeholder="Write the answer participants should see…" rows={3} data-testid="input-question-live-answer" />
+                          <div className="flex flex-wrap gap-2">
+                            <Button className="min-h-11" onClick={() => moderateQuestion.mutate({ questionId: spotlightQuestion.id, status: "answered", response: questionAnswerDraft })} disabled={liveOperationLocked || moderateQuestion.isPending || questionAnswerDraft.trim().length < 3} data-testid="button-publish-question-answer">Publish answer</Button>
+                            <Button className="min-h-11" variant="outline" onClick={() => moderateQuestion.mutate({ questionId: spotlightQuestion.id, status: "dismissed" })} disabled={liveOperationLocked || moderateQuestion.isPending}>Dismiss</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="mt-3 rounded-md bg-background/70 p-3 text-sm" data-testid="text-latest-question-answer">{spotlightQuestion.organizerResponse}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {openQuestions.length === 0 ? (
                 <p className="text-sm text-muted-foreground" data-testid="text-no-audience-question-queue">
-                  No open audience questions. Participant questions and upvotes will appear here.
+                  No open audience questions. Participant questions and upvotes will appear here and remain available after a restart.
                 </p>
               ) : (
                 <div className="space-y-3">
@@ -2403,15 +2471,17 @@ export default function CommandCenter() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => moderateQuestion.mutate({ questionId: question.id, status: "answered" })}
+                            className="min-h-11"
+                            onClick={() => { setQuestionAnswerDraft(""); moderateQuestion.mutate({ questionId: question.id, status: "answering" }); }}
                             disabled={liveOperationLocked || moderateQuestion.isPending}
                             data-testid={`button-answer-question-${question.id}`}
                           >
-                            Answered
+                            Answer live
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
+                            className="min-h-11"
                             onClick={() => moderateQuestion.mutate({ questionId: question.id, status: "dismissed" })}
                             disabled={liveOperationLocked || moderateQuestion.isPending}
                             data-testid={`button-dismiss-question-${question.id}`}
@@ -2423,6 +2493,9 @@ export default function CommandCenter() {
                     </div>
                   ))}
                 </div>
+              )}
+                  <p className="text-xs text-muted-foreground">{audienceQuestionPayload?.privacy}</p>
+                </>
               )}
             </CardContent>
           </Card>

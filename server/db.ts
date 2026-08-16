@@ -265,5 +265,39 @@ export async function ensureDemoColumnsAndTables(): Promise<void> {
 
     CREATE INDEX IF NOT EXISTS event_registrations_demo_status_registered_idx
     ON event_registrations (demonstration_id, status, registered_at);
+
+    CREATE TABLE IF NOT EXISTS audience_questions (
+      id varchar(255) PRIMARY KEY,
+      demonstration_id varchar(255) NOT NULL REFERENCES demonstrations(id) ON DELETE CASCADE,
+      session_id text NOT NULL,
+      text text NOT NULL,
+      status text NOT NULL DEFAULT 'open',
+      organizer_response text,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now(),
+      resolved_at timestamptz,
+      CONSTRAINT audience_questions_status_check CHECK (status IN ('open', 'answering', 'answered', 'dismissed'))
+    );
+
+    CREATE INDEX IF NOT EXISTS audience_questions_demo_created_idx
+    ON audience_questions (demonstration_id, created_at DESC);
+
+    CREATE UNIQUE INDEX IF NOT EXISTS audience_questions_one_matching_open_idx
+    ON audience_questions (demonstration_id, session_id, md5(lower(text)))
+    WHERE status IN ('open', 'answering');
+
+    CREATE UNIQUE INDEX IF NOT EXISTS audience_questions_one_spotlight_idx
+    ON audience_questions (demonstration_id)
+    WHERE status = 'answering';
+
+    CREATE TABLE IF NOT EXISTS audience_question_votes (
+      question_id varchar(255) NOT NULL REFERENCES audience_questions(id) ON DELETE CASCADE,
+      session_id text NOT NULL,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      PRIMARY KEY (question_id, session_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS audience_question_votes_question_idx
+    ON audience_question_votes (question_id);
   `);
 }

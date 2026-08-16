@@ -93,6 +93,26 @@ export const eventRegistrations = pgTable("event_registrations", {
   pk: primaryKey({ columns: [table.demonstrationId, table.sessionId] }),
 }));
 
+export const audienceQuestions = pgTable("audience_questions", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  demonstrationId: varchar("demonstration_id", { length: 255 }).notNull().references(() => demonstrations.id, { onDelete: "cascade" }),
+  sessionId: text("session_id").notNull(),
+  text: text("text").notNull(),
+  status: text("status").notNull().default("open"),
+  organizerResponse: text("organizer_response"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+});
+
+export const audienceQuestionVotes = pgTable("audience_question_votes", {
+  questionId: varchar("question_id", { length: 255 }).notNull().references(() => audienceQuestions.id, { onDelete: "cascade" }),
+  sessionId: text("session_id").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.questionId, table.sessionId] }),
+}));
+
 export const safetyChecks = pgTable("safety_checks", {
   id: varchar("id", { length: 255 }).primaryKey(),
   demonstrationId: varchar("demonstration_id", { length: 255 }).notNull().references(() => demonstrations.id, { onDelete: "cascade" }),
@@ -189,6 +209,7 @@ export type DemoAdmin = typeof demoAdmins.$inferSelect;
 export type DemoState = typeof demoState.$inferSelect;
 export type ViewSession = typeof viewSessions.$inferSelect;
 export type StoredEventRegistration = typeof eventRegistrations.$inferSelect;
+export type StoredAudienceQuestionRow = typeof audienceQuestions.$inferSelect;
 export type StoredSafetyCheck = typeof safetyChecks.$inferSelect;
 export type StoredSafetyCheckResponse = typeof safetyCheckResponses.$inferSelect;
 export type StoredAssistanceRequest = typeof assistanceRequests.$inferSelect;
