@@ -19,6 +19,104 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "backup-communication-weak-mobile-signal",
+    title: "How to Plan Backup Communication When Mobile Signal Is Weak",
+    description:
+      "A practical guide for peaceful event organizers preparing backup communication when crowds, weak mobile signal, noise, or device failures make the main channel unreliable.",
+    publishedAt: "2026-08-16",
+    category: "Communication",
+    readingMinutes: 7,
+    tags: ["communication", "backup-plan", "mobile-signal", "accessibility"],
+    disclaimer:
+      "This article is general event-planning information only. It is not emergency-response, legal, medical, or security advice. Follow local authority requirements, venue rules, and emergency services instructions for your event.",
+    sections: [
+      {
+        heading: "Assume The Main Channel May Slow Down",
+        paragraphs: [
+          "Mobile signal can degrade when a crowd gathers, when nearby networks are busy, or when participants are moving between buildings, streets, or transit areas. A backup communication plan starts from the assumption that the main channel may become delayed rather than completely unavailable.",
+          "Plan for partial failure: some people can load updates, some cannot, some receive them late, and some need the same message repeated in a different format.",
+        ],
+        bullets: [
+          "Identify the messages that must still reach people if mobile data slows down.",
+          "Decide which updates can wait until signal improves.",
+          "Prepare one fallback method before participants arrive.",
+        ],
+      },
+      {
+        heading: "Define The Essential Messages",
+        paragraphs: [
+          "A backup plan is strongest when it protects a short list of essential messages. If every detail is treated as urgent, volunteers will not know what to repeat first.",
+          "For most peaceful events, the essential messages are location, start status, route or meeting-point changes, accessibility updates, and where participants can ask for help.",
+        ],
+        bullets: [
+          "Where should participants gather right now?",
+          "Has the start time, route, or meeting point changed?",
+          "Who can answer access, joining, or participant-support questions?",
+        ],
+      },
+      {
+        heading: "Use One Digital Path And One Physical Fallback",
+        paragraphs: [
+          "Multiple apps, chat threads, and social feeds can fragment the group. Choose one digital source of truth, then pair it with one physical or human fallback that works when phones are slow.",
+          "The fallback should be simple enough that a volunteer can explain it in one sentence. Examples include a printed handout, a visible sign, a pre-briefed welcome point, or a runner who relays approved updates between fixed locations.",
+        ],
+        bullets: [
+          "Digital path: the live page, participant link, or official event update.",
+          "Physical fallback: printed short link, sign, handout, or volunteer script.",
+          "Shared wording: use the same phrases across both paths.",
+        ],
+      },
+      {
+        heading: "Prepare Volunteers To Relay, Not Improvise",
+        paragraphs: [
+          "Weak signal creates a high risk of inconsistent instructions. Volunteers should know who approves changes, which exact words to repeat, and which questions should be escalated instead of answered from memory.",
+          "A short briefing is enough if the roles are concrete. The aim is not to create a command structure; it is to prevent five well-meaning people from giving five different directions.",
+        ],
+        bullets: [
+          "Event lead: approves schedule, route, and meeting-point changes.",
+          "Communication lead: writes the current participant update.",
+          "Relay volunteers: repeat only the approved short message.",
+        ],
+      },
+      {
+        heading: "Make The Backup Accessible",
+        paragraphs: [
+          "A backup channel is not useful if only some participants can use it. Printed text, spoken announcements, signs, QR codes, and live pages all have different access strengths and weaknesses.",
+          "Use more than one format for the same essential message. This helps people who cannot scan a QR code, cannot hear a spoken update clearly, need larger text, arrive late, or prefer to follow quietly on their own device.",
+        ],
+        bullets: [
+          "Print the short link in large, plain text beside the QR code.",
+          "Keep walkways clear around signs and support points.",
+          "Ask volunteers to repeat updates calmly and point to the written version.",
+        ],
+      },
+      {
+        heading: "Run A Five-Minute Signal Test",
+        paragraphs: [
+          "The best test is practical and short. Before the event starts, have one person load the digital path, one person use the fallback, and one person ask a late-arrival question.",
+          "This reveals problems in wording, signage, volunteer handoff, and device readiness before the crowd is depending on the plan.",
+        ],
+        bullets: [
+          "Test the participant page from more than one phone if possible.",
+          "Confirm the short link can be read aloud and typed accurately.",
+          "Ask a volunteer to relay one approved change message without rewriting it.",
+        ],
+      },
+      {
+        heading: "Use ChantLive As One Layer",
+        paragraphs: [
+          "ChantLive can help by giving organizers one live page, a QR code, a short participant link, and backup-admin access for trusted helpers. That makes it easier to keep digital updates consistent when signal is uneven.",
+          "It should still be paired with offline-ready fallbacks. Print the link, brief volunteers, and prepare a simple message for delay, route change, or moved meeting point before the event goes live.",
+        ],
+        bullets: [
+          "Add the participant link to volunteer notes before arrival.",
+          "Print or display the same link beside the QR code.",
+          "Invite a backup admin so live updates can continue from another device.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "write-easy-to-follow-chants",
     title: "How to Write Chants That Are Easy to Follow",
     description:

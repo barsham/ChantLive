@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.86 - 16 August 2026
+
+Weekly blog guidance for backup communication when mobile signal is unreliable at peaceful events.
+
+### Documentation
+
+- Weak-signal backup communication guide: A new weekly blog post helps organizers define essential messages, pair one digital path with one physical fallback, brief relay volunteers, and use ChantLive as one layer in weak-signal conditions.
+
 ## 1.1.85 - 16 August 2026
 
 A restart-safe anonymous Q&A lifecycle that lets participants privately track questions while organisers spotlight, answer, moderate, and review them end to end.
