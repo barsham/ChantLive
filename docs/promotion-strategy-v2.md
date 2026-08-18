@@ -128,32 +128,32 @@ substantially.
 
 ## Current Hypothesis
 
-Hypothesis: a prebuilt, auto-running participant demo will outperform the
-self-guided paired test because the tester only opens one public link, watches
-live changes, refreshes or reopens once, and submits feedback inside ChantLive.
-The tester does not create an organizer account, coordinate another person,
-prepare chants, use a second browser, schedule a session, or return to a forum
-to report the result.
+The prebuilt participant demo hypothesis failed on 18 August 2026 with zero
+confirmed starts and zero concrete feedback. The demo worked, but publishing it
+only inside ChantLive's own low-traffic GitHub issue did not create an observable
+testing opportunity. Do not repeat passive repository discovery.
 
-Success: at least one participant submits a concrete first-hand observation
-through the demo's built-in feedback control by 18 August 2026. A page view,
-empty submission, reaction, or conceptual comment does not count.
+Next hypothesis: a reciprocal usability-testing community will outperform
+passive project discovery because its members are already there to test web
+apps and the platform makes both the test request and completed feedback
+observable. Keep the same prebuilt participant-only demo and ask for one page
+refresh plus one concrete observation.
 
-Failure: the demo is unavailable or produces no concrete participant feedback
-by 18 August 2026. On failure, separate discoverability from in-product
-completion by checking viewer and feedback counts before selecting another
-acquisition route.
+Success: at least one community member completes the task and posts a concrete
+first-hand observation within seven days of an accepted listing. Failure: the
+listing is rejected or removed, or it produces no completed test in seven days.
+Do not start the seven-day clock until a listing is publicly accepted.
 
 ## Immediate Next Step
 
-Keep the auto-running test event live at
-https://chantlive.online/d/lR4WSuUS and monitor its authenticated viewer and
-feedback summaries through 18 August 2026. The concise test is published in
-the repository's feedback issue at
-https://github.com/barsham/ChantLive/issues/13. Do not add another channel while
-this hypothesis is active. Count only a concrete built-in feedback submission;
-use viewer count only to diagnose whether failure came before or after opening
-the participant page.
+Complete one compliant listing in a community explicitly organized around
+website usability testing. Usability Testing Exchange was selected first from
+its official submission page and terms, and a verified ChantLive account was
+created, but its submission API currently rejects requests on the live Talkyard
+host as not being the exchange. External Edge control is unavailable because
+Edge is not running. Resume the listing through the UI once Edge is running; if
+the same platform error appears there, move once to Web Designer Forum's
+official Website Reviews and Feedback category. Do not use the in-app browser.
 
 ## Run Report
 
