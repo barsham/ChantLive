@@ -19,6 +19,104 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "post-event-review-questions-peaceful-events",
+    title: "Post-Event Review Questions for Peaceful Events",
+    description:
+      "A practical post-event review checklist for peaceful demonstrations and community events, covering communication, accessibility, safety planning, volunteer roles, and participant feedback.",
+    publishedAt: "2026-08-23",
+    category: "Review",
+    readingMinutes: 7,
+    tags: ["post-event-review", "debrief", "accessibility", "organizing"],
+    disclaimer:
+      "This article is general event-planning information only. It is not legal, medical, emergency-response, or security advice. Follow local authority requirements, venue rules, and emergency services instructions when reviewing incidents or future safety changes.",
+    sections: [
+      {
+        heading: "Review While The Details Are Fresh",
+        paragraphs: [
+          "A useful review happens soon enough that people remember what actually happened, but not so quickly that the team only reacts to stress. Aim for a short first debrief within a day or two, then capture any deeper follow-up after participants and volunteers have had time to respond.",
+          "Keep the tone practical. The goal is to improve the next event, not to assign blame or rewrite decisions with hindsight.",
+        ],
+        bullets: [
+          "What was supposed to happen?",
+          "What actually happened?",
+          "What should we repeat, change, or stop doing next time?",
+        ],
+      },
+      {
+        heading: "Compare The Plan With The Real Arrival Flow",
+        paragraphs: [
+          "Arrival is where many event plans first meet reality. Review whether people found the right place, understood the first instruction, could join the live page, and knew who could answer basic questions.",
+          "Look for specific friction rather than general impressions. A vague note such as 'arrival was confusing' is less useful than naming the sign, link, meeting point, or volunteer handoff that caused the confusion.",
+        ],
+        bullets: [
+          "Did participants find the meeting point without extra messages?",
+          "Did QR codes, short links, and printed instructions work for late arrivals?",
+          "Were accessibility notes visible before people needed them?",
+        ],
+      },
+      {
+        heading: "Ask Whether Communication Stayed Consistent",
+        paragraphs: [
+          "Peaceful events depend on consistent updates. Review what participants heard, what volunteers repeated, and where messages diverged from the plan.",
+          "If the team used several communication channels, identify which one was treated as the source of truth and whether participants knew to check it.",
+        ],
+        bullets: [
+          "Which updates were clear the first time?",
+          "Which updates had to be repeated or corrected?",
+          "Did volunteers use the same wording for timing, route, meeting-point, or fallback changes?",
+        ],
+      },
+      {
+        heading: "Include Accessibility And Participation Signals",
+        paragraphs: [
+          "A review should include people who experienced the event differently from the core organizing team. Accessibility, language, mobility, confidence, device access, and late arrival can all change whether someone felt able to participate.",
+          "Treat these signals as design input. If several people needed the same workaround, the workaround should become part of the next plan.",
+        ],
+        bullets: [
+          "Who could not scan, hear, see, move, or follow updates as expected?",
+          "Which formats helped most: spoken instructions, printed text, signs, QR codes, or live pages?",
+          "What would make quiet participation or late joining easier next time?",
+        ],
+      },
+      {
+        heading: "Review Volunteer Roles And Handoffs",
+        paragraphs: [
+          "Volunteer problems often come from unclear ownership, not unwillingness. Review whether each role had a clear purpose, whether helpers knew when to escalate, and whether the event lead or communication lead was overloaded.",
+          "Keep the result concrete. Update the role list, the briefing script, or the handoff point before the next event rather than relying on people to remember the lesson.",
+        ],
+        bullets: [
+          "Which roles were essential?",
+          "Which roles were unclear, duplicated, or missing?",
+          "Where did a volunteer need authority, information, or a backup person earlier?",
+        ],
+      },
+      {
+        heading: "Turn Feedback Into A Short Action List",
+        paragraphs: [
+          "A long debrief document can become another artifact nobody uses. Convert the review into a short action list with owners, dates, and one test for each change.",
+          "Separate urgent fixes from useful improvements. Urgent items affect safety, access, legality, or participant trust. Useful improvements make the next event smoother but should not bury the urgent work.",
+        ],
+        bullets: [
+          "Fix before next event: the highest-risk or highest-friction issue.",
+          "Test before next event: the joining, communication, or fallback flow that failed.",
+          "Document for volunteers: the one role or script change everyone needs to know.",
+        ],
+      },
+      {
+        heading: "Use ChantLive To Preserve Practical Evidence",
+        paragraphs: [
+          "ChantLive can help organizers review the practical flow of an event: which chants were used, which live updates mattered, how participants joined, and what questions, reports, or poll outcomes were captured without creating participant rosters.",
+          "Use that record to improve the next run. The most useful review output is not a perfect narrative; it is a clearer participant path, a better volunteer brief, and fewer avoidable surprises next time.",
+        ],
+        bullets: [
+          "Save chant lists and live update patterns that worked.",
+          "Review participant access and fallback points without collecting unnecessary identities.",
+          "Use post-event notes to update the next event template before planning starts again.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "backup-communication-weak-mobile-signal",
     title: "How to Plan Backup Communication When Mobile Signal Is Weak",
     description:

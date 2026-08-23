@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.88 - 23 August 2026
+
+Weekly blog guidance for reviewing peaceful events and turning participant feedback into concrete improvements.
+
+### Documentation
+
+- Post-event review questions guide: A new weekly blog post helps organizers review arrival flow, communication, accessibility, volunteer roles, and ChantLive records after a peaceful event.
+
 ## 1.1.87 - 23 August 2026
 
 A restart-safe crowd decision lifecycle that turns live polls into recoverable participant receipts, explicit organiser outcomes, and durable post-event records.
