@@ -107,8 +107,11 @@ type LivePoll = {
     votes: number;
   }>;
   totalVotes: number;
+  decisionOptionId: string | null;
+  decisionNote: string | null;
   createdAt: string;
   closedAt: string | null;
+  storage: "shared";
 };
 type SafetyCheckKind = "route_change" | "separation" | "weather" | "accessibility" | "general";
 type SafetyCheck = {
@@ -440,6 +443,8 @@ export default function CommandCenter() {
   const [announcementLanguage, setAnnouncementLanguage] = useState<AnnouncementLanguage>("en");
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState(["Yes", "No", "Need more info"]);
+  const [pollDecisionOptionId, setPollDecisionOptionId] = useState("");
+  const [pollDecisionNote, setPollDecisionNote] = useState("");
   const [questionAnswerDraft, setQuestionAnswerDraft] = useState("");
   const [safetyCheckKind, setSafetyCheckKind] = useState<SafetyCheckKind>("general");
   const [safetyCheckMessage, setSafetyCheckMessage] = useState(incidentPresets[4].message);
@@ -747,20 +752,24 @@ export default function CommandCenter() {
     },
     onSuccess: () => {
       setPollQuestion("");
+      setPollDecisionOptionId("");
+      setPollDecisionNote("");
       queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "polls"] });
-      toast({ title: "Live poll opened", description: "Participants can vote from the Help panel." });
+      toast({ title: "Live poll opened", description: "Participants can vote from the Help panel, and votes are retained through restarts." });
     },
     onError: (err: Error) => {
       toast({ title: "Could not open poll", description: err.message, variant: "destructive" });
     },
   });
   const closePoll = useMutation({
-    mutationFn: async (pollId: string) => {
-      await apiRequest("PATCH", `/api/demos/${id}/polls/${pollId}`, { status: "closed" });
+    mutationFn: async ({ pollId, decisionOptionId, decisionNote }: { pollId: string; decisionOptionId: string; decisionNote: string }) => {
+      await apiRequest("PATCH", `/api/demos/${id}/polls/${pollId}`, { status: "closed", decisionOptionId, decisionNote });
     },
     onSuccess: () => {
+      setPollDecisionOptionId("");
+      setPollDecisionNote("");
       queryClient.invalidateQueries({ queryKey: ["/api/demos", id, "polls"] });
-      toast({ title: "Live poll closed" });
+      toast({ title: "Decision recorded", description: "Participants can recover the outcome, and it is retained in the post-event report." });
     },
     onError: (err: Error) => {
       toast({ title: "Could not close poll", description: err.message, variant: "destructive" });
@@ -2011,12 +2020,12 @@ export default function CommandCenter() {
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="text-xs text-muted-foreground">
-                    Opening a new poll automatically closes the previous open poll.
+                    One decision stays open at a time. Record its outcome before opening another.
                   </p>
                   <Button
                     size="sm"
                     onClick={() => createPoll.mutate({ question: pollQuestion.trim(), options: pollOptions.map((option) => option.trim()).filter(Boolean) })}
-                    disabled={liveOperationLocked || !pollQuestion.trim() || pollOptions.map((option) => option.trim()).filter(Boolean).length < 2 || createPoll.isPending}
+                    disabled={liveOperationLocked || Boolean(activePoll) || !pollQuestion.trim() || pollOptions.map((option) => option.trim()).filter(Boolean).length < 2 || createPoll.isPending}
                     data-testid="button-open-live-poll"
                   >
                     Open live poll
@@ -2033,15 +2042,7 @@ export default function CommandCenter() {
                           Opened {new Date(activePoll.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                         </p>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => closePoll.mutate(activePoll.id)}
-                        disabled={liveOperationLocked || closePoll.isPending}
-                        data-testid="button-close-live-poll"
-                      >
-                        Close poll
-                      </Button>
+                      <Badge variant="secondary">Shared storage</Badge>
                     </div>
                     <div className="mt-4 space-y-3">
                       {activePoll.options.map((option) => {
@@ -2059,6 +2060,49 @@ export default function CommandCenter() {
                         );
                       })}
                     </div>
+                    <fieldset className="mt-5 rounded-lg border bg-muted/30 p-3" data-testid="fieldset-live-poll-decision">
+                      <legend className="px-1 text-sm font-semibold">Record the crowd decision</legend>
+                      <p className="mt-1 text-xs text-muted-foreground">Choose the outcome the organiser will act on. Vote totals inform the decision but do not select it automatically.</p>
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Decision outcome">
+                        {activePoll.options.map((option) => (
+                          <label key={option.id} className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm ${pollDecisionOptionId === option.id ? "border-primary bg-primary/10" : "bg-background"}`}>
+                            <input
+                              type="radio"
+                              name="poll-decision-outcome"
+                              value={option.id}
+                              checked={pollDecisionOptionId === option.id}
+                              onChange={() => setPollDecisionOptionId(option.id)}
+                              disabled={liveOperationLocked || closePoll.isPending}
+                            />
+                            <span>{option.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <label className="mt-3 block text-xs font-medium text-muted-foreground" htmlFor="poll-decision-note">
+                        Decision rationale (optional)
+                      </label>
+                      <Textarea
+                        id="poll-decision-note"
+                        value={pollDecisionNote}
+                        onChange={(event) => setPollDecisionNote(event.target.value)}
+                        placeholder="Example: We will repeat once, then move to the closing stage."
+                        rows={2}
+                        maxLength={240}
+                        className="mt-1"
+                        data-testid="input-live-poll-decision-note"
+                      />
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-xs text-muted-foreground">{pollDecisionNote.length}/240 characters</p>
+                        <Button
+                          size="sm"
+                          onClick={() => closePoll.mutate({ pollId: activePoll.id, decisionOptionId: pollDecisionOptionId, decisionNote: pollDecisionNote.trim() })}
+                          disabled={liveOperationLocked || !pollDecisionOptionId || closePoll.isPending}
+                          data-testid="button-close-live-poll"
+                        >
+                          Record decision and close
+                        </Button>
+                      </div>
+                    </fieldset>
                   </div>
                 ) : (
                   <div data-testid="text-no-live-poll">
@@ -2066,10 +2110,14 @@ export default function CommandCenter() {
                     <p className="mt-1 text-sm text-muted-foreground">
                       Use polls for quick event-day decisions like repeating a chant, slowing down, changing location, or checking readiness.
                     </p>
-                    {livePolls[0] && (
-                      <p className="mt-3 text-xs text-muted-foreground">
-                        Last poll: {livePolls[0].question} ({livePolls[0].totalVotes} votes)
-                      </p>
+                    {livePolls[0]?.status === "closed" && (
+                      <div className="mt-3 rounded-lg border bg-muted/30 p-3 text-sm" data-testid="panel-last-poll-decision">
+                        <p className="font-medium">Latest recorded decision</p>
+                        <p className="mt-1 text-muted-foreground">{livePolls[0].question}</p>
+                        <p className="mt-2 font-semibold">{livePolls[0].options.find((option) => option.id === livePolls[0].decisionOptionId)?.label ?? "Outcome unavailable"}</p>
+                        {livePolls[0].decisionNote ? <p className="mt-1 text-muted-foreground">{livePolls[0].decisionNote}</p> : null}
+                        <p className="mt-2 text-xs text-muted-foreground">{livePolls[0].totalVotes} votes · retained after restart</p>
+                      </div>
                     )}
                   </div>
                 )}

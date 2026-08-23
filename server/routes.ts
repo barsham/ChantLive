@@ -14,7 +14,8 @@ import {
   type SafetyCheckResponseType,
   type StoredAssistanceRequest as AssistanceRequest,
   type StoredAudienceQuestion as AudienceQuestion,
-  type StoredConductReport as ConductReport,
+    type StoredConductReport as ConductReport,
+    type StoredLivePoll as LivePoll,
   type StoredRunSheetItem as RunSheetItem,
   type StoredRunSheetTemplate as RunSheetTemplate,
   type StoredSafetyCheck as SafetyCheck,
@@ -56,21 +57,6 @@ type OrganizerAnnouncement = {
   targetRole: "all" | "participant" | "marshal" | "speaker" | "accessibility";
   createdAt: string;
 };
-type LivePollStatus = "open" | "closed";
-type LivePollOption = {
-  id: string;
-  label: string;
-  voterSessionIds: string[];
-};
-type LivePoll = {
-  id: string;
-  demoId: string;
-  question: string;
-  options: LivePollOption[];
-  status: LivePollStatus;
-  createdAt: string;
-  closedAt: string | null;
-};
 type ParticipantCheckInRole = "participant" | "marshal" | "speaker" | "accessibility";
 type ParticipantCheckIn = {
   sessionId: string;
@@ -98,7 +84,6 @@ type ParticipantEngagement = {
 
 const crowdPulses = new Map<string, Map<string, CrowdPulse>>();
 const organizerAnnouncements = new Map<string, OrganizerAnnouncement[]>();
-const livePolls = new Map<string, LivePoll[]>();
 const participantCheckIns = new Map<string, Map<string, ParticipantCheckIn>>();
 const participantFeedback = new Map<string, Map<string, ParticipantFeedback>>();
 const participantEngagement = new Map<string, Map<string, ParticipantEngagement>>();
@@ -454,17 +439,7 @@ async function emitAudienceQuestionUpdate(io: SocketIOServer, demo: Demonstratio
   return payload;
 }
 
-function getLivePolls(demoId: string) {
-  return livePolls.get(demoId) ?? [];
-}
-
-function getActiveLivePoll(demoId: string) {
-  return getLivePolls(demoId).find((poll) => poll.status === "open") ?? null;
-}
-
 function serializeLivePoll(poll: LivePoll) {
-  const totalVotes = poll.options.reduce((sum, option) => sum + option.voterSessionIds.length, 0);
-
   return {
     id: poll.id,
     question: poll.question,
@@ -472,11 +447,14 @@ function serializeLivePoll(poll: LivePoll) {
     options: poll.options.map((option) => ({
       id: option.id,
       label: option.label,
-      votes: option.voterSessionIds.length,
+      votes: option.votes,
     })),
-    totalVotes,
-    createdAt: poll.createdAt,
-    closedAt: poll.closedAt,
+    totalVotes: poll.totalVotes,
+    decisionOptionId: poll.decisionOptionId,
+    decisionNote: poll.decisionNote,
+    createdAt: poll.createdAt.toISOString(),
+    closedAt: poll.closedAt?.toISOString() ?? null,
+    storage: "shared" as const,
   };
 }
 
@@ -1563,7 +1541,7 @@ export async function registerRoutes(
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
-      res.json(getLivePolls(demo.id).map(serializeLivePoll));
+      res.json((await storage.getLivePolls(demo.id)).map(serializeLivePoll));
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch live polls" });
     }
@@ -1588,28 +1566,14 @@ export async function registerRoutes(
       if (!question) return res.status(400).json({ message: "Poll question is required" });
       if (uniqueOptionLabels.length < 2) return res.status(400).json({ message: "Add at least two poll options" });
 
-      const polls = getLivePolls(demo.id).map((poll) => (
-        poll.status === "open" ? { ...poll, status: "closed" as LivePollStatus, closedAt: new Date().toISOString() } : poll
-      ));
-      const poll: LivePoll = {
-        id: crypto.randomUUID(),
-        demoId: demo.id,
-        question,
-        options: uniqueOptionLabels.map((label) => ({
-          id: crypto.randomUUID(),
-          label,
-          voterSessionIds: [],
-        })),
-        status: "open",
-        createdAt: new Date().toISOString(),
-        closedAt: null,
-      };
-
-      livePolls.set(demo.id, [poll, ...polls].slice(0, 12));
+      const poll = await storage.createLivePoll(demo.id, question, uniqueOptionLabels);
       const serializedPoll = serializeLivePoll(poll);
       io.to(`demo:${demo.publicId}`).emit("poll_update", serializedPoll);
       res.status(201).json(serializedPoll);
     } catch (err) {
+      if (err instanceof Error && err.message === "LIVE_POLL_ALREADY_OPEN") {
+        return res.status(409).json({ message: "Record a decision for the open poll before starting another" });
+      }
       res.status(500).json({ message: "Failed to create live poll" });
     }
   });
@@ -1623,13 +1587,19 @@ export async function registerRoutes(
       if (!(await requireLiveController(user, demo, res))) return;
 
       const pollId = getSingleParam(req.params.pollId);
-      const polls = getLivePolls(demo.id);
-      const poll = polls.find((item) => item.id === pollId);
+      const poll = (await storage.getLivePolls(demo.id)).find((item) => item.id === pollId);
       if (!poll) return res.status(404).json({ message: "Live poll not found" });
-
-      poll.status = "closed";
-      poll.closedAt = new Date().toISOString();
-      const serializedPoll = serializeLivePoll(poll);
+      if (poll.status !== "open") return res.status(409).json({ message: "This poll is already closed" });
+      const decisionOptionId = typeof req.body?.decisionOptionId === "string" ? req.body.decisionOptionId : "";
+      const decisionNote = typeof req.body?.decisionNote === "string" && req.body.decisionNote.trim()
+        ? req.body.decisionNote.trim().slice(0, 240)
+        : null;
+      if (!poll.options.some((option) => option.id === decisionOptionId)) {
+        return res.status(400).json({ message: "Choose the outcome that was decided before closing the poll" });
+      }
+      const closedPoll = await storage.closeLivePoll(demo.id, poll.id, decisionOptionId, decisionNote);
+      if (!closedPoll) return res.status(409).json({ message: "The poll changed before the decision was recorded. Refresh and try again" });
+      const serializedPoll = serializeLivePoll(closedPoll);
       io.to(`demo:${demo.publicId}`).emit("poll_update", null);
       io.to(`demo:${demo.publicId}`).emit("poll_results_update", serializedPoll);
       res.json(serializedPoll);
@@ -1927,10 +1897,29 @@ export async function registerRoutes(
       const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
 
-      const activePoll = getActiveLivePoll(demo.id);
+      const activePoll = (await storage.getLivePolls(demo.id)).find((poll) => poll.status === "open") ?? null;
       res.json(activePoll ? serializeLivePoll(activePoll) : null);
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch active poll" });
+    }
+  });
+
+  app.post("/api/public/demos/:publicId/polls/receipt", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      const sessionId = typeof req.body?.sessionId === "string" && req.body.sessionId.trim()
+        ? req.body.sessionId.trim().slice(0, 80)
+        : "";
+      if (!sessionId) return res.status(400).json({ message: "Participant session is required" });
+      const receipt = await storage.getParticipantPollReceipt(demo.id, hashAttendanceSession(demo.id, sessionId));
+      res.json(receipt ? {
+        poll: serializeLivePoll(receipt.poll),
+        selectedOptionId: receipt.selectedOptionId,
+        privacy: "Your event-scoped anonymous vote receipt is visible only to this participant session. No name, account, email, phone, IP address, device, or location is stored.",
+      } : null);
+    } catch {
+      res.status(500).json({ message: "Failed to recover poll receipt" });
     }
   });
 
@@ -1944,24 +1933,15 @@ export async function registerRoutes(
       const sessionId = typeof req.body?.sessionId === "string" && req.body.sessionId.trim()
         ? req.body.sessionId.trim().slice(0, 80)
         : crypto.randomUUID();
-      const poll = getLivePolls(demo.id).find((item) => item.id === pollId && item.status === "open");
-      if (!poll) return res.status(404).json({ message: "Live poll not found" });
-
-      const selectedOption = poll.options.find((option) => option.id === optionId);
-      if (!selectedOption) return res.status(400).json({ message: "Valid poll option is required" });
-
-      const alreadyVoted = poll.options.some((option) => option.voterSessionIds.includes(sessionId));
-      for (const option of poll.options) {
-        option.voterSessionIds = option.voterSessionIds.filter((voterSessionId) => voterSessionId !== sessionId);
-      }
-      selectedOption.voterSessionIds.push(sessionId);
-      if (!alreadyVoted) {
+      const result = await storage.voteLivePoll(demo.id, pollId ?? "", optionId, hashAttendanceSession(demo.id, sessionId));
+      if (!result.poll) return res.status(404).json({ message: "Open poll and valid option are required" });
+      if (result.created) {
         awardEngagement(demo.id, demo.publicId, sessionId, "poll_vote", io);
       }
 
-      const serializedPoll = serializeLivePoll(poll);
+      const serializedPoll = serializeLivePoll(result.poll);
       io.to(`demo:${demo.publicId}`).emit("poll_results_update", serializedPoll);
-      res.json(serializedPoll);
+      res.json({ ...serializedPoll, selectedOptionId: optionId });
     } catch (err) {
       res.status(500).json({ message: "Failed to submit poll vote" });
     }

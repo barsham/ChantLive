@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowLeft, CalendarCheck2, Check, ClipboardCheck, Copy, Download, ListOrdered, MessageCircleQuestion, Printer, ShieldCheck, Users } from "lucide-react";
+import { ArrowLeft, CalendarCheck2, Check, ClipboardCheck, Copy, Download, ListOrdered, MessageCircleQuestion, Printer, ShieldCheck, Users, Vote } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -104,6 +104,18 @@ type AudienceQuestionPayload = {
   storage: "shared";
   privacy: string;
 };
+type LivePoll = {
+  id: string;
+  question: string;
+  status: "open" | "closed";
+  options: Array<{ id: string; label: string; votes: number }>;
+  totalVotes: number;
+  decisionOptionId: string | null;
+  decisionNote: string | null;
+  createdAt: string;
+  closedAt: string | null;
+  storage: "shared";
+};
 
 function formatRuntime(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
@@ -112,7 +124,8 @@ function formatRuntime(totalSeconds: number) {
   return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`;
 }
 
-function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackSummary, conduct?: ConductReportSummary, runSheet?: RunSheetPayload, attendance?: AttendanceSummary, registration?: RegistrationSummary, questions?: AudienceQuestionPayload) {
+function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackSummary, conduct?: ConductReportSummary, runSheet?: RunSheetPayload, attendance?: AttendanceSummary, registration?: RegistrationSummary, questions?: AudienceQuestionPayload, polls?: LivePoll[]) {
+  const closedPolls = polls?.filter((poll) => poll.status === "closed") ?? [];
   return [
     `ChantLive Post-Event Report: ${data.demo.title}`,
     "",
@@ -132,12 +145,19 @@ function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackS
     `Average resolution: ${conduct?.averageResolutionMinutes ?? "not available"} minutes`,
     `Run sheet: ${runSheet?.summary.total ?? 0} stages, ${runSheet?.summary.plannedDurationMinutes ?? 0} planned minutes, ${runSheet?.summary.completed ?? 0} completed, ${runSheet?.summary.skipped ?? 0} skipped`,
     `Audience Q&A: ${questions?.summary.total ?? 0} questions, ${questions?.summary.answered ?? 0} answered, ${questions?.summary.dismissed ?? 0} dismissed, ${questions?.summary.votes ?? 0} votes${questions?.summary.answerRate == null ? "" : `, ${questions.summary.answerRate}% answer rate`}`,
+    `Crowd decisions: ${polls?.length ?? 0} polls, ${closedPolls.length} recorded outcomes, ${polls?.reduce((total, poll) => total + poll.totalVotes, 0) ?? 0} votes`,
     "",
     "Run-sheet delivery timeline:",
     ...(runSheet?.items.length ? runSheet.items.map((item, index) => `- ${index + 1}. ${item.title}: ${item.status}; ${item.plannedDurationMinutes} min planned${item.actualDurationMinutes == null ? "" : `; ${item.actualDurationMinutes} min actual`}`) : ["- No run sheet was prepared."]),
     "",
     "Audience Q&A:",
     ...(questions?.questions.length ? questions.questions.map((question) => `- [${question.status}] ${question.text} (${question.votes} votes)${question.organizerResponse ? ` — ${question.organizerResponse}` : ""}`) : ["- No audience questions were submitted."]),
+    "",
+    "Crowd decision record:",
+    ...(polls?.length ? polls.map((poll) => {
+      const outcome = poll.options.find((option) => option.id === poll.decisionOptionId)?.label ?? (poll.status === "open" ? "Still open" : "Outcome unavailable");
+      return `- ${poll.question}: ${outcome} (${poll.totalVotes} votes)${poll.decisionNote ? ` — ${poll.decisionNote}` : ""}`;
+    }) : ["- No crowd decisions were recorded."]),
     "",
     "Debrief checklist:",
     "- Did participants understand how to join?",
@@ -184,6 +204,10 @@ export default function EventReport() {
     queryKey: ["/api/demos", id, "questions"],
     enabled: Boolean(id),
   });
+  const { data: polls = [], isLoading: pollsLoading, error: pollsError, refetch: refetchPolls } = useQuery<LivePoll[]>({
+    queryKey: ["/api/demos", id, "polls"],
+    enabled: Boolean(id),
+  });
 
   const runtimeSeconds = useMemo(() => {
     if (!data) return 0;
@@ -199,7 +223,7 @@ export default function EventReport() {
 
   const copyReport = async () => {
     if (!data) return;
-    await navigator.clipboard.writeText(buildReportText(data, runtime, feedback, conductQueue?.summary, runSheet, attendance, registration, audienceQuestions));
+    await navigator.clipboard.writeText(buildReportText(data, runtime, feedback, conductQueue?.summary, runSheet, attendance, registration, audienceQuestions, polls));
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };
@@ -434,6 +458,55 @@ export default function EventReport() {
                     </ol>
                   ) : <p className="mt-4 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">No audience questions were submitted for this event.</p>}
                   <p className="mt-4 flex items-start gap-2 text-xs text-muted-foreground"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" aria-hidden="true" />{audienceQuestions?.privacy}</p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6 border-sky-500/30" data-testid="card-report-poll-decisions">
+            <CardHeader>
+              <CardTitle className="flex flex-wrap items-center justify-between gap-2 text-base">
+                <span className="flex items-center gap-2"><Vote className="h-5 w-5 text-sky-700" aria-hidden="true" /> Crowd decision record</span>
+                <Badge variant="secondary">Shared after restart</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {pollsLoading ? (
+                <div className="grid gap-3 sm:grid-cols-3" aria-label="Loading crowd decisions"><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /></div>
+              ) : pollsError ? (
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4" role="alert">
+                  <p className="text-sm">Crowd decisions are temporarily unavailable; the rest of this report is still complete.</p>
+                  <Button className="mt-3 min-h-11" size="sm" variant="outline" onClick={() => void refetchPolls()}>Retry crowd decisions</Button>
+                </div>
+              ) : (
+                <>
+                  <p className="mb-4 text-sm text-muted-foreground">Review the questions asked, vote totals, organiser-selected outcomes, and recorded rationale. Only aggregate counts appear; event-scoped participant hashes remain private.</p>
+                  <div className="grid gap-3 text-sm sm:grid-cols-3">
+                    {[
+                      ["Polls", polls.length],
+                      ["Recorded outcomes", polls.filter((poll) => poll.status === "closed").length],
+                      ["Votes", polls.reduce((total, poll) => total + poll.totalVotes, 0)],
+                    ].map(([label, value]) => <div key={label} className="rounded-lg border bg-background p-3"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-lg font-semibold">{value}</p></div>)}
+                  </div>
+                  {polls.length > 0 ? (
+                    <ol className="mt-4 grid gap-3" aria-label="Recorded crowd decisions">
+                      {polls.map((poll) => {
+                        const outcome = poll.options.find((option) => option.id === poll.decisionOptionId)?.label;
+                        return (
+                          <li key={poll.id} className="rounded-lg border bg-background p-3 text-sm">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <Badge variant={poll.status === "closed" ? "secondary" : "default"}>{poll.status === "closed" ? "Decision recorded" : "Still open"}</Badge>
+                              <span className="text-xs text-muted-foreground">{poll.totalVotes} {poll.totalVotes === 1 ? "vote" : "votes"}</span>
+                            </div>
+                            <p className="mt-2 font-medium">{poll.question}</p>
+                            {outcome ? <p className="mt-2 rounded-md bg-sky-500/10 p-3"><span className="font-medium">Outcome:</span> {outcome}</p> : null}
+                            {poll.decisionNote ? <p className="mt-2 text-muted-foreground"><span className="font-medium text-foreground">Rationale:</span> {poll.decisionNote}</p> : null}
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  ) : <p className="mt-4 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">No crowd decisions were recorded for this event.</p>}
+                  <p className="mt-4 flex items-start gap-2 text-xs text-muted-foreground"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-sky-700" aria-hidden="true" />Polls, outcomes, and aggregate vote totals are restart-safe. Raw participant session keys are never stored.</p>
                 </>
               )}
             </CardContent>

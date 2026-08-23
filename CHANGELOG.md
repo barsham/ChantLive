@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.87 - 23 August 2026
+
+A restart-safe crowd decision lifecycle that turns live polls into recoverable participant receipts, explicit organiser outcomes, and durable post-event records.
+
+### Added
+
+- Restart-safe live poll ledger: Poll questions, options, event-scoped anonymous votes, and one-open-poll rules now survive reconnects, restarts, and deployments. [Issue](https://github.com/barsham/ChantLive/issues/13)
+- Private participant vote receipts: Participants can recover or change their own selection while a poll is open without exposing a name, account, device, or raw session key. [Issue](https://github.com/barsham/ChantLive/issues/13)
+- Organiser decision close workflow: The live controller must select the recorded outcome and can add a rationale before closing a poll and moving to the next decision. [Issue](https://github.com/barsham/ChantLive/issues/13)
+- Post-event crowd decision record: The event report now preserves poll history, aggregate totals, selected outcomes, and rationales while excluding participant hashes. [Issue](https://github.com/barsham/ChantLive/issues/13)
+
+### Improved
+
+- Multilingual participant decisions: Participants see the final outcome, organiser rationale, and recovered private receipt after reconnecting in English, Spanish, French, Arabic, or Persian. [Issue](https://github.com/barsham/ChantLive/issues/13)
+
 ## 1.1.86 - 16 August 2026
 
 Weekly blog guidance for backup communication when mobile signal is unreliable at peaceful events.

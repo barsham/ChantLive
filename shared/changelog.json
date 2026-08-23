@@ -1,6 +1,83 @@
 {
   "releases": [
     {
+      "version": "1.1.87",
+      "releasedAt": "2026-08-23",
+      "summary": "A restart-safe crowd decision lifecycle that turns live polls into recoverable participant receipts, explicit organiser outcomes, and durable post-event records.",
+      "items": [
+        {
+          "id": "cl-2026-08-23-restart-safe-live-poll-ledger",
+          "title": "Restart-safe live poll ledger",
+          "description": "Poll questions, options, event-scoped anonymous votes, and one-open-poll rules now survive reconnects, restarts, and deployments.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-23",
+          "links": [
+            {
+              "label": "Issue",
+              "url": "https://github.com/barsham/ChantLive/issues/13"
+            }
+          ]
+        },
+        {
+          "id": "cl-2026-08-23-private-participant-vote-receipts",
+          "title": "Private participant vote receipts",
+          "description": "Participants can recover or change their own selection while a poll is open without exposing a name, account, device, or raw session key.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-23",
+          "links": [
+            {
+              "label": "Issue",
+              "url": "https://github.com/barsham/ChantLive/issues/13"
+            }
+          ]
+        },
+        {
+          "id": "cl-2026-08-23-organiser-decision-close-workflow",
+          "title": "Organiser decision close workflow",
+          "description": "The live controller must select the recorded outcome and can add a rationale before closing a poll and moving to the next decision.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-23",
+          "links": [
+            {
+              "label": "Issue",
+              "url": "https://github.com/barsham/ChantLive/issues/13"
+            }
+          ]
+        },
+        {
+          "id": "cl-2026-08-23-multilingual-participant-decisions",
+          "title": "Multilingual participant decisions",
+          "description": "Participants see the final outcome, organiser rationale, and recovered private receipt after reconnecting in English, Spanish, French, Arabic, or Persian.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-08-23",
+          "links": [
+            {
+              "label": "Issue",
+              "url": "https://github.com/barsham/ChantLive/issues/13"
+            }
+          ]
+        },
+        {
+          "id": "cl-2026-08-23-post-event-crowd-decision-record",
+          "title": "Post-event crowd decision record",
+          "description": "The event report now preserves poll history, aggregate totals, selected outcomes, and rationales while excluding participant hashes.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-08-23",
+          "links": [
+            {
+              "label": "Issue",
+              "url": "https://github.com/barsham/ChantLive/issues/13"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "1.1.86",
       "releasedAt": "2026-08-16",
       "summary": "Weekly blog guidance for backup communication when mobile signal is unreliable at peaceful events.",

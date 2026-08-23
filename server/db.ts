@@ -299,5 +299,46 @@ export async function ensureDemoColumnsAndTables(): Promise<void> {
 
     CREATE INDEX IF NOT EXISTS audience_question_votes_question_idx
     ON audience_question_votes (question_id);
+
+    CREATE TABLE IF NOT EXISTS live_polls (
+      id varchar(255) PRIMARY KEY,
+      demonstration_id varchar(255) NOT NULL REFERENCES demonstrations(id) ON DELETE CASCADE,
+      question text NOT NULL,
+      status text NOT NULL DEFAULT 'open',
+      decision_option_id varchar(255),
+      decision_note text,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      closed_at timestamptz,
+      CONSTRAINT live_polls_status_check CHECK (status IN ('open', 'closed'))
+    );
+
+    CREATE INDEX IF NOT EXISTS live_polls_demo_created_idx
+    ON live_polls (demonstration_id, created_at DESC);
+
+    CREATE UNIQUE INDEX IF NOT EXISTS live_polls_one_open_per_demo_idx
+    ON live_polls (demonstration_id)
+    WHERE status = 'open';
+
+    CREATE TABLE IF NOT EXISTS live_poll_options (
+      id varchar(255) PRIMARY KEY,
+      poll_id varchar(255) NOT NULL REFERENCES live_polls(id) ON DELETE CASCADE,
+      label text NOT NULL,
+      order_index integer NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS live_poll_options_poll_order_idx
+    ON live_poll_options (poll_id, order_index);
+
+    CREATE TABLE IF NOT EXISTS live_poll_votes (
+      poll_id varchar(255) NOT NULL REFERENCES live_polls(id) ON DELETE CASCADE,
+      session_id text NOT NULL,
+      option_id varchar(255) NOT NULL REFERENCES live_poll_options(id) ON DELETE CASCADE,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      updated_at timestamptz NOT NULL DEFAULT now(),
+      PRIMARY KEY (poll_id, session_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS live_poll_votes_option_idx
+    ON live_poll_votes (option_id);
   `);
 }

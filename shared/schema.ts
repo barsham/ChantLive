@@ -113,6 +113,34 @@ export const audienceQuestionVotes = pgTable("audience_question_votes", {
   pk: primaryKey({ columns: [table.questionId, table.sessionId] }),
 }));
 
+export const livePolls = pgTable("live_polls", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  demonstrationId: varchar("demonstration_id", { length: 255 }).notNull().references(() => demonstrations.id, { onDelete: "cascade" }),
+  question: text("question").notNull(),
+  status: text("status").notNull().default("open"),
+  decisionOptionId: varchar("decision_option_id", { length: 255 }),
+  decisionNote: text("decision_note"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  closedAt: timestamp("closed_at", { withTimezone: true }),
+});
+
+export const livePollOptions = pgTable("live_poll_options", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  pollId: varchar("poll_id", { length: 255 }).notNull().references(() => livePolls.id, { onDelete: "cascade" }),
+  label: text("label").notNull(),
+  orderIndex: integer("order_index").notNull(),
+});
+
+export const livePollVotes = pgTable("live_poll_votes", {
+  pollId: varchar("poll_id", { length: 255 }).notNull().references(() => livePolls.id, { onDelete: "cascade" }),
+  sessionId: text("session_id").notNull(),
+  optionId: varchar("option_id", { length: 255 }).notNull().references(() => livePollOptions.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.pollId, table.sessionId] }),
+}));
+
 export const safetyChecks = pgTable("safety_checks", {
   id: varchar("id", { length: 255 }).primaryKey(),
   demonstrationId: varchar("demonstration_id", { length: 255 }).notNull().references(() => demonstrations.id, { onDelete: "cascade" }),
@@ -210,6 +238,8 @@ export type DemoState = typeof demoState.$inferSelect;
 export type ViewSession = typeof viewSessions.$inferSelect;
 export type StoredEventRegistration = typeof eventRegistrations.$inferSelect;
 export type StoredAudienceQuestionRow = typeof audienceQuestions.$inferSelect;
+export type StoredLivePollRow = typeof livePolls.$inferSelect;
+export type StoredLivePollOptionRow = typeof livePollOptions.$inferSelect;
 export type StoredSafetyCheck = typeof safetyChecks.$inferSelect;
 export type StoredSafetyCheckResponse = typeof safetyCheckResponses.$inferSelect;
 export type StoredAssistanceRequest = typeof assistanceRequests.$inferSelect;

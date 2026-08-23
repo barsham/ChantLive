@@ -5,6 +5,7 @@ import {
   type DemoState, type DemoAdmin,
   type RunSheetTemplateStage,
   users, demonstrations, chants, demoAdmins, demoState, viewSessions, eventRegistrations, audienceQuestions, audienceQuestionVotes,
+  livePolls, livePollOptions, livePollVotes,
   safetyChecks, safetyCheckResponses, assistanceRequests, conductReports, runSheetItems, runSheetTemplates,
 } from "@shared/schema";
 import { db } from "./db";
@@ -105,6 +106,7 @@ export type ParticipantRegistrationReceipt = {
 };
 
 export type AudienceQuestionStatus = "open" | "answering" | "answered" | "dismissed";
+export type LivePollStatus = "open" | "closed";
 
 export type StoredAudienceQuestion = {
   id: string;
@@ -117,6 +119,31 @@ export type StoredAudienceQuestion = {
   createdAt: Date;
   updatedAt: Date;
   resolvedAt: Date | null;
+};
+
+export type StoredLivePollOption = {
+  id: string;
+  label: string;
+  orderIndex: number;
+  votes: number;
+};
+
+export type StoredLivePoll = {
+  id: string;
+  demoId: string;
+  question: string;
+  status: LivePollStatus;
+  options: StoredLivePollOption[];
+  totalVotes: number;
+  decisionOptionId: string | null;
+  decisionNote: string | null;
+  createdAt: Date;
+  closedAt: Date | null;
+};
+
+export type ParticipantPollReceipt = {
+  poll: StoredLivePoll;
+  selectedOptionId: string | null;
 };
 
 export type StoredSafetyCheckResponse = {
@@ -234,6 +261,11 @@ export interface IStorage {
   upvoteAudienceQuestion(demonstrationId: string, questionId: string, sessionHash: string): Promise<{ question: StoredAudienceQuestion | null; created: boolean }>;
   updateAudienceQuestion(demonstrationId: string, questionId: string, status: AudienceQuestionStatus, organizerResponse: string | null): Promise<StoredAudienceQuestion | null>;
   withdrawAudienceQuestion(demonstrationId: string, questionId: string, sessionHash: string): Promise<boolean>;
+  getLivePolls(demonstrationId: string): Promise<StoredLivePoll[]>;
+  createLivePoll(demonstrationId: string, question: string, optionLabels: string[]): Promise<StoredLivePoll>;
+  closeLivePoll(demonstrationId: string, pollId: string, decisionOptionId: string, decisionNote: string | null): Promise<StoredLivePoll | null>;
+  voteLivePoll(demonstrationId: string, pollId: string, optionId: string, sessionHash: string): Promise<{ poll: StoredLivePoll | null; created: boolean }>;
+  getParticipantPollReceipt(demonstrationId: string, sessionHash: string): Promise<ParticipantPollReceipt | null>;
 
   getChants(demonstrationId: string): Promise<Chant[]>;
   addChant(data: InsertChant): Promise<Chant>;
@@ -779,6 +811,149 @@ export class DatabaseStorage implements IStorage {
       eq(audienceQuestions.status, "open"),
     )).returning({ id: audienceQuestions.id });
     return deleted.length > 0;
+  }
+
+  private async attachLivePollDetails(rows: Array<typeof livePolls.$inferSelect>): Promise<StoredLivePoll[]> {
+    if (rows.length === 0) return [];
+    const pollIds = rows.map((row) => row.id);
+    const options = await db.select().from(livePollOptions)
+      .where(inArray(livePollOptions.pollId, pollIds))
+      .orderBy(asc(livePollOptions.orderIndex));
+    const voteRows = await db.select({ optionId: livePollVotes.optionId, count: sql<number>`count(*)` })
+      .from(livePollVotes)
+      .where(inArray(livePollVotes.pollId, pollIds))
+      .groupBy(livePollVotes.optionId);
+    const voteCounts = new Map(voteRows.map((row) => [row.optionId, Number(row.count)]));
+    const optionsByPoll = new Map<string, StoredLivePollOption[]>();
+    for (const option of options) {
+      const pollOptions = optionsByPoll.get(option.pollId) ?? [];
+      pollOptions.push({ id: option.id, label: option.label, orderIndex: option.orderIndex, votes: voteCounts.get(option.id) ?? 0 });
+      optionsByPoll.set(option.pollId, pollOptions);
+    }
+    return rows.map((row) => {
+      const pollOptions = optionsByPoll.get(row.id) ?? [];
+      return {
+        id: row.id,
+        demoId: row.demonstrationId,
+        question: row.question,
+        status: row.status === "closed" ? "closed" : "open",
+        options: pollOptions,
+        totalVotes: pollOptions.reduce((total, option) => total + option.votes, 0),
+        decisionOptionId: row.decisionOptionId,
+        decisionNote: row.decisionNote,
+        createdAt: row.createdAt,
+        closedAt: row.closedAt,
+      };
+    });
+  }
+
+  async getLivePolls(demonstrationId: string): Promise<StoredLivePoll[]> {
+    const rows = await db.select().from(livePolls)
+      .where(eq(livePolls.demonstrationId, demonstrationId))
+      .orderBy(desc(livePolls.createdAt))
+      .limit(24);
+    return this.attachLivePollDetails(rows);
+  }
+
+  async createLivePoll(demonstrationId: string, question: string, optionLabels: string[]): Promise<StoredLivePoll> {
+    const row = await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT id FROM demonstrations WHERE id = ${demonstrationId} FOR UPDATE`);
+      const now = new Date();
+      const [existingOpen] = await tx.select({ id: livePolls.id }).from(livePolls).where(and(
+        eq(livePolls.demonstrationId, demonstrationId),
+        eq(livePolls.status, "open"),
+      ));
+      if (existingOpen) throw new Error("LIVE_POLL_ALREADY_OPEN");
+      const [created] = await tx.insert(livePolls).values({
+        id: nanoid(),
+        demonstrationId,
+        question,
+        status: "open",
+        createdAt: now,
+      }).returning();
+      await tx.insert(livePollOptions).values(optionLabels.map((label, orderIndex) => ({
+        id: nanoid(),
+        pollId: created.id,
+        label,
+        orderIndex,
+      })));
+      return created;
+    });
+    const [poll] = await this.attachLivePollDetails([row]);
+    return poll;
+  }
+
+  async closeLivePoll(demonstrationId: string, pollId: string, decisionOptionId: string, decisionNote: string | null): Promise<StoredLivePoll | null> {
+    const row = await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT id FROM demonstrations WHERE id = ${demonstrationId} FOR UPDATE`);
+      const [option] = await tx.select({ id: livePollOptions.id }).from(livePollOptions).innerJoin(
+        livePolls,
+        eq(livePollOptions.pollId, livePolls.id),
+      ).where(and(
+        eq(livePollOptions.id, decisionOptionId),
+        eq(livePolls.id, pollId),
+        eq(livePolls.demonstrationId, demonstrationId),
+        eq(livePolls.status, "open"),
+      ));
+      if (!option) return null;
+      const [updated] = await tx.update(livePolls).set({
+        status: "closed",
+        decisionOptionId,
+        decisionNote,
+        closedAt: new Date(),
+      }).where(and(
+        eq(livePolls.id, pollId),
+        eq(livePolls.demonstrationId, demonstrationId),
+        eq(livePolls.status, "open"),
+      )).returning();
+      return updated ?? null;
+    });
+    if (!row) return null;
+    const [poll] = await this.attachLivePollDetails([row]);
+    return poll;
+  }
+
+  async voteLivePoll(demonstrationId: string, pollId: string, optionId: string, sessionHash: string): Promise<{ poll: StoredLivePoll | null; created: boolean }> {
+    const result = await db.transaction(async (tx) => {
+      const [poll] = await tx.select().from(livePolls).where(and(
+        eq(livePolls.id, pollId),
+        eq(livePolls.demonstrationId, demonstrationId),
+        eq(livePolls.status, "open"),
+      )).for("update");
+      if (!poll) return { poll: null, created: false };
+      const [option] = await tx.select({ id: livePollOptions.id }).from(livePollOptions).where(and(
+        eq(livePollOptions.id, optionId),
+        eq(livePollOptions.pollId, pollId),
+      ));
+      if (!option) return { poll: null, created: false };
+      const [existing] = await tx.select({ optionId: livePollVotes.optionId }).from(livePollVotes).where(and(
+        eq(livePollVotes.pollId, pollId),
+        eq(livePollVotes.sessionId, sessionHash),
+      ));
+      await tx.insert(livePollVotes).values({ pollId, sessionId: sessionHash, optionId, updatedAt: new Date() })
+        .onConflictDoUpdate({
+          target: [livePollVotes.pollId, livePollVotes.sessionId],
+          set: { optionId, updatedAt: new Date() },
+        });
+      return { poll, created: !existing };
+    });
+    if (!result.poll) return { poll: null, created: false };
+    const [poll] = await this.attachLivePollDetails([result.poll]);
+    return { poll, created: result.created };
+  }
+
+  async getParticipantPollReceipt(demonstrationId: string, sessionHash: string): Promise<ParticipantPollReceipt | null> {
+    const [row] = await db.select().from(livePolls)
+      .where(eq(livePolls.demonstrationId, demonstrationId))
+      .orderBy(desc(livePolls.createdAt))
+      .limit(1);
+    if (!row) return null;
+    const [poll] = await this.attachLivePollDetails([row]);
+    const [vote] = await db.select({ optionId: livePollVotes.optionId }).from(livePollVotes).where(and(
+      eq(livePollVotes.pollId, row.id),
+      eq(livePollVotes.sessionId, sessionHash),
+    ));
+    return { poll, selectedOptionId: vote?.optionId ?? null };
   }
 
   async repeatDemonstration(

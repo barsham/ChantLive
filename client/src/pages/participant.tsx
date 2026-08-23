@@ -46,8 +46,16 @@ type LivePoll = {
     votes: number;
   }>;
   totalVotes: number;
+  decisionOptionId: string | null;
+  decisionNote: string | null;
   createdAt: string;
   closedAt: string | null;
+  storage: "shared";
+};
+type ParticipantPollReceipt = {
+  poll: LivePoll;
+  selectedOptionId: string | null;
+  privacy: string;
 };
 type SafetyCheck = {
   id: string;
@@ -282,6 +290,16 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     noPoll: "No live poll is open right now. If the organizer asks a crowd question, it will appear here.",
     voteGuidance: "Choose one option. You can change your vote while the poll is open.",
     voteCounted: "Your latest vote is counted. You can change it while the poll is open.",
+    pollOpen: "Open",
+    pollClosed: "Closed",
+    decisionRecorded: "Decision recorded",
+    decisionOutcome: "Outcome",
+    decisionReason: "Organizer rationale",
+    outcomeUnavailable: "Outcome unavailable",
+    pollDecisionRetained: "This decision and your private vote receipt are retained after reconnecting.",
+    voteRecovered: "Your previous vote was recovered from shared storage.",
+    pollReceiptFailed: "The latest poll or your private vote receipt could not be recovered. Other live controls still work.",
+    retryPollReceipt: "Retry poll receipt",
     safetyCheck: "Safety check",
     noSafetyCheck: "No safety check is active. If organisers need a quick roll call, it will appear here.",
     incidentActive: "Live organiser incident notice",
@@ -500,6 +518,16 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     noPoll: "No hay encuesta abierta. Si el organizador pregunta algo al grupo, aparecerá aquí.",
     voteGuidance: "Elige una opción. Puedes cambiar tu voto mientras la encuesta esté abierta.",
     voteCounted: "Tu último voto fue contado. Puedes cambiarlo mientras la encuesta esté abierta.",
+    pollOpen: "Abierta",
+    pollClosed: "Cerrada",
+    decisionRecorded: "Decisión registrada",
+    decisionOutcome: "Resultado",
+    decisionReason: "Motivo del organizador",
+    outcomeUnavailable: "Resultado no disponible",
+    pollDecisionRetained: "Esta decisión y tu recibo privado de voto se conservan después de reconectar.",
+    voteRecovered: "Tu voto anterior se recuperó del almacenamiento compartido.",
+    pollReceiptFailed: "No se pudo recuperar la última encuesta o tu recibo privado. Los demás controles en vivo siguen funcionando.",
+    retryPollReceipt: "Reintentar recibo de voto",
     safetyCheck: "Chequeo de seguridad",
     noSafetyCheck: "No hay chequeo de seguridad activo. Si hace falta pasar lista, aparecerá aquí.",
     incidentActive: "Aviso de incidente del organizador",
@@ -718,6 +746,16 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     noPoll: "Aucun sondage ouvert. Si l'organisateur pose une question, elle apparaîtra ici.",
     voteGuidance: "Choisissez une option. Vous pouvez changer votre vote tant que le sondage est ouvert.",
     voteCounted: "Votre vote est compté. Vous pouvez le changer tant que le sondage est ouvert.",
+    pollOpen: "Ouvert",
+    pollClosed: "Fermé",
+    decisionRecorded: "Décision enregistrée",
+    decisionOutcome: "Résultat",
+    decisionReason: "Motif de l’organisateur",
+    outcomeUnavailable: "Résultat indisponible",
+    pollDecisionRetained: "Cette décision et votre reçu de vote privé sont conservés après la reconnexion.",
+    voteRecovered: "Votre vote précédent a été récupéré depuis le stockage partagé.",
+    pollReceiptFailed: "Le dernier sondage ou votre reçu privé n’a pas pu être récupéré. Les autres commandes restent disponibles.",
+    retryPollReceipt: "Réessayer le reçu de vote",
     safetyCheck: "Contrôle de sécurité",
     noSafetyCheck: "Aucun contrôle de sécurité actif. Il apparaîtra ici si nécessaire.",
     incidentActive: "Alerte d’incident de l’organisateur",
@@ -936,6 +974,16 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     noPoll: "لا يوجد تصويت مفتوح الآن. إذا سأل المنظم سؤالاً سيظهر هنا.",
     voteGuidance: "اختر خياراً واحداً. يمكنك تغيير صوتك ما دام التصويت مفتوحاً.",
     voteCounted: "تم احتساب صوتك. يمكنك تغييره ما دام التصويت مفتوحاً.",
+    pollOpen: "مفتوح",
+    pollClosed: "مغلق",
+    decisionRecorded: "تم تسجيل القرار",
+    decisionOutcome: "النتيجة",
+    decisionReason: "سبب قرار المنظم",
+    outcomeUnavailable: "النتيجة غير متاحة",
+    pollDecisionRetained: "يُحتفظ بهذا القرار وإيصال تصويتك الخاص بعد إعادة الاتصال.",
+    voteRecovered: "تمت استعادة تصويتك السابق من التخزين المشترك.",
+    pollReceiptFailed: "تعذر استعادة آخر تصويت أو إيصال تصويتك الخاص. تبقى أدوات البث الأخرى متاحة.",
+    retryPollReceipt: "إعادة محاولة استعادة الإيصال",
     safetyCheck: "فحص السلامة",
     noSafetyCheck: "لا يوجد فحص سلامة نشط. سيظهر هنا عند الحاجة.",
     incidentActive: "تنبيه مباشر من المنظم",
@@ -1154,6 +1202,16 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     noPoll: "فعلاً نظرسنجی زنده‌ای نیست. اگر برگزارکننده سؤال گروهی بپرسد اینجا می‌آید.",
     voteGuidance: "یک گزینه انتخاب کنید. تا وقتی باز است می‌توانید رأی را تغییر دهید.",
     voteCounted: "آخرین رأی شما ثبت شد. تا وقتی باز است می‌توانید تغییر دهید.",
+    pollOpen: "باز",
+    pollClosed: "بسته",
+    decisionRecorded: "تصمیم ثبت شد",
+    decisionOutcome: "نتیجه",
+    decisionReason: "دلیل برگزارکننده",
+    outcomeUnavailable: "نتیجه در دسترس نیست",
+    pollDecisionRetained: "این تصمیم و رسید خصوصی رأی شما پس از اتصال دوباره نگهداری می‌شود.",
+    voteRecovered: "رأی قبلی شما از فضای ذخیره‌سازی مشترک بازیابی شد.",
+    pollReceiptFailed: "آخرین نظرسنجی یا رسید خصوصی رأی شما بازیابی نشد. سایر کنترل‌های زنده همچنان کار می‌کنند.",
+    retryPollReceipt: "تلاش دوباره برای رسید رأی",
     safetyCheck: "بررسی ایمنی",
     noSafetyCheck: "بررسی ایمنی فعال نیست. اگر لازم شود اینجا نمایش داده می‌شود.",
     incidentActive: "هشدار زنده برگزارکننده",
@@ -1387,6 +1445,7 @@ export default function Participant() {
   const [activePoll, setActivePoll] = useState<LivePoll | null>(null);
   const [pollVotes, setPollVotes] = useState<Record<string, string>>(getStoredPollVotes);
   const [pollStatus, setPollStatus] = useState<string | null>(null);
+  const [pollReceiptError, setPollReceiptError] = useState(false);
   const [activeSafetyCheck, setActiveSafetyCheck] = useState<SafetyCheck | null>(null);
   const [dismissedIncidentId, setDismissedIncidentId] = useState<string | null>(() => localStorage.getItem("chant_dismissed_incident"));
   const [safetyResponses, setSafetyResponses] = useState<Record<string, string>>(getStoredSafetyResponses);
@@ -1491,6 +1550,28 @@ export default function Participant() {
       setQuestionReceiptError(false);
     } catch {
       setQuestionReceiptError(true);
+    }
+  };
+  const refreshPollReceipt = async (announceRecovery = false) => {
+    try {
+      const response = await fetch(`/api/public/demos/${publicId}/polls/receipt`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: getSessionId() }),
+      });
+      if (!response.ok) throw new Error("Poll receipt unavailable");
+      const receipt = await response.json() as ParticipantPollReceipt | null;
+      setActivePoll(receipt?.poll ?? null);
+      if (receipt?.selectedOptionId) {
+        const previousSelection = pollVotes[receipt.poll.id];
+        const nextVotes = { ...getStoredPollVotes(), [receipt.poll.id]: receipt.selectedOptionId };
+        localStorage.setItem("chant_poll_votes", JSON.stringify(nextVotes));
+        setPollVotes(nextVotes);
+        if (announceRecovery && previousSelection !== receipt.selectedOptionId) setPollStatus(t.voteRecovered);
+      }
+      setPollReceiptError(false);
+    } catch {
+      setPollReceiptError(true);
     }
   };
   const refreshConductReports = async (announce = false) => {
@@ -1645,10 +1726,11 @@ export default function Participant() {
     socket.on("poll_update", (poll: LivePoll | null) => {
       setActivePoll(poll);
       setPollStatus(null);
+      setPollReceiptError(false);
     });
 
     socket.on("poll_results_update", (poll: LivePoll) => {
-      setActivePoll((current) => current?.id === poll.id ? poll : current);
+      setActivePoll((current) => current?.id === poll.id || poll.status === "closed" ? poll : current);
     });
 
     socket.on("safety_check_update", (check: SafetyCheck | null) => {
@@ -1717,10 +1799,7 @@ export default function Participant() {
       .catch(() => setAudienceQuestions([]));
     refreshQuestionReceipts();
 
-    fetch(`/api/public/demos/${publicId}/polls/active`)
-      .then((response) => response.ok ? response.json() : null)
-      .then((poll: LivePoll | null) => setActivePoll(poll))
-      .catch(() => setActivePoll(null));
+    void refreshPollReceipt(true);
 
     fetch(`/api/public/demos/${publicId}/safety-checks/current?sessionId=${encodeURIComponent(getSessionId())}`)
       .then((response) => response.ok ? response.json() : null)
@@ -2211,6 +2290,7 @@ export default function Participant() {
       localStorage.setItem("chant_poll_votes", JSON.stringify(nextVotes));
       setPollVotes(nextVotes);
       setActivePoll(poll);
+      setPollReceiptError(false);
       setPollStatus(t.voteSent);
       setTimeout(() => setPollStatus(null), 2500);
     } catch {
@@ -3459,7 +3539,12 @@ export default function Participant() {
               <p className="font-semibold text-sky-50">{t.livePoll}</p>
               {activePoll ? (
                 <div>
-                  <p className="mt-1 text-sm text-sky-100">{activePoll.question}</p>
+                  <div className="mt-1 flex flex-wrap items-start justify-between gap-2">
+                    <p className="text-sm text-sky-100">{activePoll.question}</p>
+                    <span className="rounded-full border border-sky-300/30 px-2 py-1 text-[11px] font-semibold text-sky-100">
+                      {activePoll.status === "open" ? t.pollOpen : t.pollClosed}
+                    </span>
+                  </div>
                   <div className="mt-3 grid gap-2 sm:grid-cols-3">
                     {activePoll.options.map((option) => {
                       const selected = pollVotes[activePoll.id] === option.id;
@@ -3469,10 +3554,12 @@ export default function Participant() {
                           key={option.id}
                           type="button"
                           onClick={() => submitPollVote(activePoll.id, option.id)}
+                          disabled={activePoll.status !== "open"}
+                          aria-pressed={selected}
                           className={`rounded-lg border p-3 text-start text-sm ${
                             selected
                               ? "border-sky-200 bg-sky-200/20 text-white"
-                              : "border-sky-300/30 text-sky-50 hover:bg-sky-300/10"
+                              : "border-sky-300/30 text-sky-50 hover:bg-sky-300/10 disabled:cursor-default disabled:opacity-80"
                           }`}
                           data-testid={`button-live-poll-option-${option.id}`}
                         >
@@ -3487,15 +3574,32 @@ export default function Participant() {
                       );
                     })}
                   </div>
-                  <p className="mt-2 text-xs text-sky-100/80">
-                    {pollVotes[activePoll.id] ? t.voteCounted : t.voteGuidance}
-                  </p>
+                  {activePoll.status === "closed" ? (
+                    <div className="mt-3 rounded-lg border border-sky-200/30 bg-black/20 p-3" role="status" aria-live="polite" data-testid="panel-participant-poll-decision">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-sky-100">{t.decisionRecorded}</p>
+                      <p className="mt-1 text-sm font-semibold text-white">
+                        {t.decisionOutcome}: {activePoll.options.find((option) => option.id === activePoll.decisionOptionId)?.label ?? t.outcomeUnavailable}
+                      </p>
+                      {activePoll.decisionNote ? <p className="mt-2 text-sm text-sky-100"><span className="font-semibold">{t.decisionReason}:</span> {activePoll.decisionNote}</p> : null}
+                      <p className="mt-2 text-xs text-sky-100/80">{t.pollDecisionRetained}</p>
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-xs text-sky-100/80">
+                      {pollVotes[activePoll.id] ? t.voteCounted : t.voteGuidance}
+                    </p>
+                  )}
                 </div>
               ) : (
                 <p className="mt-1 text-sm text-sky-100/80">{t.noPoll}</p>
               )}
               {pollStatus && (
                 <p className="mt-2 text-xs text-sky-50" role="status" data-testid="text-live-poll-status">{pollStatus}</p>
+              )}
+              {pollReceiptError && (
+                <div className="mt-3 rounded-lg border border-amber-300/40 bg-amber-300/10 p-3 text-xs text-amber-50" role="alert" data-testid="alert-poll-receipt-error">
+                  <p>{t.pollReceiptFailed}</p>
+                  <button type="button" className="mt-2 min-h-11 rounded-md border border-amber-200/50 px-3 py-2 font-semibold" onClick={() => void refreshPollReceipt(true)}>{t.retryPollReceipt}</button>
+                </div>
               )}
             </div>
             <div className="rounded-xl border border-red-400/30 bg-red-400/10 p-4 md:col-span-2" data-testid="card-participant-safety-check">
