@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.89 - 30 August 2026
+
+Weekly blog guidance for preparing backup admins before peaceful events go live.
+
+### Documentation
+
+- Backup admin readiness guide: A new weekly blog post helps organizers choose, brief, test, and coordinate backup admins so live event communication can continue if the primary organizer is busy or offline.
+
 ## 1.1.88 - 23 August 2026
 
 Weekly blog guidance for reviewing peaceful events and turning participant feedback into concrete improvements.

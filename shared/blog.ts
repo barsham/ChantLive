@@ -19,6 +19,104 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "invite-backup-admins-peaceful-events",
+    title: "How to Invite Backup Admins Before a Peaceful Event Goes Live",
+    description:
+      "A practical guide to choosing, briefing, and testing backup admins so peaceful event communication can continue if the main organizer is busy, offline, or handling another responsibility.",
+    publishedAt: "2026-08-30",
+    category: "Organizing",
+    readingMinutes: 7,
+    tags: ["backup-admins", "organizing", "communication", "reliability"],
+    disclaimer:
+      "This article is general event-planning information only. It is not legal, medical, emergency-response, or security advice. Follow local authority requirements, venue rules, and emergency services instructions for your event.",
+    sections: [
+      {
+        heading: "Decide Why You Need A Backup Admin",
+        paragraphs: [
+          "A backup admin is not just an extra person with access. The role exists because live events create practical interruptions: the main organizer may lose signal, answer a participant question, speak to venue staff, or need to step away from the device.",
+          "Define the backup admin's purpose before sending an invite. That keeps the role useful and prevents avoidable conflicts during a live moment.",
+        ],
+        bullets: [
+          "Keep live updates moving if the primary organizer is unavailable.",
+          "Help manage chants, announcements, questions, or participant support workflows.",
+          "Provide continuity if a device battery, browser session, or connection fails.",
+        ],
+      },
+      {
+        heading: "Choose Someone Who Understands The Plan",
+        paragraphs: [
+          "The best backup admin is usually a trusted person who already understands the event purpose, timing, communication style, and safety boundaries. Technical confidence helps, but judgment matters more than speed.",
+          "Do not add every enthusiastic volunteer as an admin. Keep editing access limited to people who need it and can follow the agreed live plan.",
+        ],
+        bullets: [
+          "They know the event schedule, meeting point, and fallback plan.",
+          "They can use short, neutral participant-facing language.",
+          "They know when to escalate rather than improvise a major decision.",
+        ],
+      },
+      {
+        heading: "Brief The Role In Plain Language",
+        paragraphs: [
+          "A backup admin should know exactly what they can do, what they should avoid changing, and who makes the final call if the plan changes. A short written brief is enough for most events.",
+          "Keep the brief operational. The person should be able to open the admin view and understand what action is expected under normal conditions and under a handoff.",
+        ],
+        bullets: [
+          "What they may update: chants, status messages, participant guidance, or approved announcements.",
+          "What they should not update without confirmation: route, timing, venue, or sensitive incident information.",
+          "Who confirms changes: the event lead, communication lead, or another named role.",
+        ],
+      },
+      {
+        heading: "Test Access Before Participants Arrive",
+        paragraphs: [
+          "Backup access should never be tested for the first time during a live event. Ask the backup admin to sign in, open the event, confirm they can see the right controls, and complete one harmless test action before the event starts.",
+          "This catches expired invites, wrong accounts, permission gaps, and device issues while there is still time to fix them.",
+        ],
+        bullets: [
+          "Confirm the backup admin can open the event from their own device.",
+          "Check that they can find the participant link and live controls.",
+          "Run one test handoff or status update before the event is public.",
+        ],
+      },
+      {
+        heading: "Agree On Handoff Signals",
+        paragraphs: [
+          "The most common backup-admin problem is not missing access; it is unclear control. If two people both think they are leading live updates, participants may receive inconsistent messages.",
+          "Before going live, decide how the primary organizer will ask for help, how the backup admin will confirm control, and how control returns afterward.",
+        ],
+        bullets: [
+          "Use one phrase for temporary help, such as 'please take live updates for five minutes'.",
+          "Use one phrase for return of control, such as 'I have the live page again'.",
+          "If the main device fails, define who is allowed to take over and when.",
+        ],
+      },
+      {
+        heading: "Keep Participant Communication Consistent",
+        paragraphs: [
+          "Backup admins should use the same participant language as the main organizer. This matters most when the event is delayed, moved, paused, or handling a support issue.",
+          "Prepare short message templates in advance. Consistent wording reduces confusion and makes handoffs easier for volunteers who repeat updates aloud or point people to a written version.",
+        ],
+        bullets: [
+          "Delay message: what changed, what participants should do now, and where to watch for updates.",
+          "Movement message: where to go, how to get help, and what landmark or sign to look for.",
+          "Support message: who can answer access, joining, or participant-support questions.",
+        ],
+      },
+      {
+        heading: "Use ChantLive To Make The Handoff Concrete",
+        paragraphs: [
+          "ChantLive supports this workflow when organizers invite trusted admins before the event, keep participant access details in one place, and use live controls as the shared source of truth.",
+          "Treat backup-admin setup as part of readiness, not a last-minute fix. The result should be simple: if the primary organizer loses access, another prepared person can continue the live flow without guessing.",
+        ],
+        bullets: [
+          "Invite at least one backup admin before the event goes live.",
+          "Give them the participant link, fallback instructions, and event role brief.",
+          "Confirm they can operate from their own device before participants arrive.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "post-event-review-questions-peaceful-events",
     title: "Post-Event Review Questions for Peaceful Events",
     description:

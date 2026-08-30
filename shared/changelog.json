@@ -1,6 +1,22 @@
 {
   "releases": [
     {
+      "version": "1.1.89",
+      "releasedAt": "2026-08-30",
+      "summary": "Weekly blog guidance for preparing backup admins before peaceful events go live.",
+      "items": [
+        {
+          "id": "cl-2026-08-30-backup-admin-readiness-guide",
+          "title": "Backup admin readiness guide",
+          "description": "A new weekly blog post helps organizers choose, brief, test, and coordinate backup admins so live event communication can continue if the primary organizer is busy or offline.",
+          "type": "docs",
+          "visibility": "public",
+          "dateAdded": "2026-08-30",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.88",
       "releasedAt": "2026-08-23",
       "summary": "Weekly blog guidance for reviewing peaceful events and turning participant feedback into concrete improvements.",
