@@ -147,13 +147,13 @@ Do not start the seven-day clock until a listing is publicly accepted.
 ## Immediate Next Step
 
 Complete one compliant listing in a community explicitly organized around
-website usability testing. Usability Testing Exchange was selected first from
-its official submission page and terms, and a verified ChantLive account was
-created, but its submission API currently rejects requests on the live Talkyard
-host as not being the exchange. External Edge control is unavailable because
-Edge is not running. Resume the listing through the UI once Edge is running; if
-the same platform error appears there, move once to Web Designer Forum's
-official Website Reviews and Feedback category. Do not use the in-app browser.
+website usability testing. Usability Testing Exchange rejected the submission
+through both its API and live UI, so that route is closed. Web Designer Forum's
+official Website Reviews and Feedback category explicitly permits review
+requests, and registration has reached its birthday and age-verification step.
+Barsham must enter that owner-only information directly; after that, complete
+the branded account and publish one transparent, task-specific review request.
+Do not open another acquisition channel while this blocker is pending.
 
 ## Run Report
 
