@@ -5,6 +5,8 @@ import {
   storage,
   type AssistanceType,
   type AudienceQuestionStatus,
+  type CrowdPulseSummary,
+  type CrowdPulseType,
   type ConductReportCategory,
   type ConductReportStatus,
   type ConductReportUrgency,
@@ -45,12 +47,6 @@ const demoViewers = new Map<string, Set<string>>();
 const autoRotateTimers = new Map<string, NodeJS.Timeout>();
 const autoRotateProgress = new Map<string, { phase: "leader" | "people"; cycle: number }>();
 type ChantPhase = "leader" | "people";
-type CrowdPulseType = "too_fast" | "too_slow" | "cant_hear" | "all_good";
-type CrowdPulse = {
-  sessionId: string;
-  type: CrowdPulseType;
-  createdAt: string;
-};
 type OrganizerAnnouncement = {
   id: string;
   message: string;
@@ -82,7 +78,6 @@ type ParticipantEngagement = {
   updatedAt: string;
 };
 
-const crowdPulses = new Map<string, Map<string, CrowdPulse>>();
 const organizerAnnouncements = new Map<string, OrganizerAnnouncement[]>();
 const participantCheckIns = new Map<string, Map<string, ParticipantCheckIn>>();
 const participantFeedback = new Map<string, Map<string, ParticipantFeedback>>();
@@ -368,23 +363,13 @@ function parseRunSheetTemplateInput(body: unknown) {
   return { data: { name, description } } as const;
 }
 
-function getCrowdPulseSummary(demoId: string) {
-  const pulses = Array.from(crowdPulses.get(demoId)?.values() ?? []);
-  const counts: Record<CrowdPulseType, number> = {
-    too_fast: 0,
-    too_slow: 0,
-    cant_hear: 0,
-    all_good: 0,
-  };
-
-  for (const pulse of pulses) {
-    counts[pulse.type] += 1;
-  }
-
+function serializeCrowdPulseSummary(summary: CrowdPulseSummary) {
   return {
-    counts,
-    total: pulses.length,
-    updatedAt: pulses[0]?.createdAt ?? null,
+    ...summary,
+    timeline: summary.timeline.map((point) => ({ ...point, startedAt: point.startedAt.toISOString() })),
+    updatedAt: summary.updatedAt?.toISOString() ?? null,
+    storage: "shared" as const,
+    privacy: "Event-scoped anonymous hashes only; no name, account, email, phone, IP address, device, location, or raw session key is stored.",
   };
 }
 
@@ -1358,7 +1343,8 @@ export async function registerRoutes(
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
       if (!(await canAccessDemo(user, demo.id))) return res.status(403).json({ message: "Access denied" });
 
-      res.json(getCrowdPulseSummary(demo.id));
+      res.setHeader("Cache-Control", "no-store");
+      res.json(serializeCrowdPulseSummary(await storage.getCrowdPulseSummary(demo.id)));
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch crowd pulse" });
     }
@@ -2117,27 +2103,44 @@ export async function registerRoutes(
       const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
       if (!demo) return res.status(404).json({ message: "Demonstration not found" });
 
-      const rawType = typeof req.body?.type === "string" ? req.body.type : "all_good";
-      const type: CrowdPulseType = ["too_fast", "too_slow", "cant_hear", "all_good"].includes(rawType)
-        ? rawType as CrowdPulseType
-        : "all_good";
+      const rawType = typeof req.body?.type === "string" ? req.body.type : "";
+      if (!["too_fast", "too_slow", "cant_hear", "all_good"].includes(rawType)) {
+        return res.status(400).json({ message: "Choose a valid crowd signal" });
+      }
+      const type = rawType as CrowdPulseType;
       const sessionId = typeof req.body?.sessionId === "string" && req.body.sessionId.trim()
         ? req.body.sessionId.trim().slice(0, 80)
-        : crypto.randomUUID();
-      const demoPulseMap = crowdPulses.get(demo.id) ?? new Map<string, CrowdPulse>();
-
-      demoPulseMap.set(sessionId, {
-        sessionId,
-        type,
-        createdAt: new Date().toISOString(),
-      });
-      crowdPulses.set(demo.id, demoPulseMap);
-      awardEngagement(demo.id, demo.publicId, sessionId, "pulse", io);
-      const summary = getCrowdPulseSummary(demo.id);
+        : "";
+      if (!sessionId) return res.status(400).json({ message: "A private participant session is required" });
+      const result = await storage.recordCrowdPulse(demo.id, hashAttendanceSession(demo.id, sessionId), type);
+      if (result.created) awardEngagement(demo.id, demo.publicId, sessionId, "pulse", io);
+      const summary = serializeCrowdPulseSummary(result.summary);
       io.to(`demo:${demo.publicId}`).emit("pulse_update", summary);
-      res.status(201).json(summary);
+      res.status(result.created ? 201 : 200).json({
+        ...summary,
+        receipt: { type: result.receipt.type, createdAt: result.receipt.createdAt.toISOString() },
+        created: result.created,
+      });
     } catch (err) {
       res.status(500).json({ message: "Failed to submit crowd pulse" });
+    }
+  });
+
+  app.post("/api/public/demos/:publicId/pulse/receipt", async (req, res) => {
+    try {
+      const demo = await storage.getDemonstrationByPublicId(getSingleParam(req.params.publicId) ?? "");
+      if (!demo) return res.status(404).json({ message: "Demonstration not found" });
+      const sessionId = typeof req.body?.sessionId === "string" ? req.body.sessionId.trim().slice(0, 80) : "";
+      if (!sessionId) return res.status(400).json({ message: "A private participant session is required" });
+      const receipt = await storage.getParticipantCrowdPulse(demo.id, hashAttendanceSession(demo.id, sessionId));
+      res.setHeader("Cache-Control", "no-store");
+      res.json(receipt ? {
+        type: receipt.type,
+        createdAt: receipt.createdAt.toISOString(),
+        privacy: "Only this event-scoped participant session can recover this receipt. No raw session key or identifying profile is stored.",
+      } : null);
+    } catch {
+      res.status(500).json({ message: "Failed to recover crowd pulse receipt" });
     }
   });
 

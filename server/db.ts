@@ -340,5 +340,20 @@ export async function ensureDemoColumnsAndTables(): Promise<void> {
 
     CREATE INDEX IF NOT EXISTS live_poll_votes_option_idx
     ON live_poll_votes (option_id);
+
+    CREATE TABLE IF NOT EXISTS crowd_pulse_signals (
+      id varchar(255) PRIMARY KEY,
+      demonstration_id varchar(255) NOT NULL REFERENCES demonstrations(id) ON DELETE CASCADE,
+      session_id text NOT NULL,
+      type text NOT NULL,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      CONSTRAINT crowd_pulse_signals_type_check CHECK (type IN ('too_fast', 'too_slow', 'cant_hear', 'all_good'))
+    );
+
+    CREATE INDEX IF NOT EXISTS crowd_pulse_signals_demo_created_idx
+    ON crowd_pulse_signals (demonstration_id, created_at DESC);
+
+    CREATE INDEX IF NOT EXISTS crowd_pulse_signals_receipt_idx
+    ON crowd_pulse_signals (demonstration_id, session_id, created_at DESC);
   `);
 }

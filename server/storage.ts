@@ -5,7 +5,7 @@ import {
   type DemoState, type DemoAdmin,
   type RunSheetTemplateStage,
   users, demonstrations, chants, demoAdmins, demoState, viewSessions, eventRegistrations, audienceQuestions, audienceQuestionVotes,
-  livePolls, livePollOptions, livePollVotes,
+  livePolls, livePollOptions, livePollVotes, crowdPulseSignals,
   safetyChecks, safetyCheckResponses, assistanceRequests, conductReports, runSheetItems, runSheetTemplates,
 } from "@shared/schema";
 import { db } from "./db";
@@ -107,6 +107,33 @@ export type ParticipantRegistrationReceipt = {
 
 export type AudienceQuestionStatus = "open" | "answering" | "answered" | "dismissed";
 export type LivePollStatus = "open" | "closed";
+export type CrowdPulseType = "too_fast" | "too_slow" | "cant_hear" | "all_good";
+
+export type CrowdPulseCounts = Record<CrowdPulseType, number>;
+
+export type CrowdPulseTimelinePoint = {
+  startedAt: Date;
+  tooFast: number;
+  tooSlow: number;
+  cantHear: number;
+  allGood: number;
+};
+
+export type CrowdPulseSummary = {
+  counts: CrowdPulseCounts;
+  total: number;
+  recentCounts: CrowdPulseCounts;
+  recentTotal: number;
+  historyCounts: CrowdPulseCounts;
+  historyTotal: number;
+  timeline: CrowdPulseTimelinePoint[];
+  updatedAt: Date | null;
+};
+
+export type ParticipantCrowdPulseReceipt = {
+  type: CrowdPulseType;
+  createdAt: Date;
+};
 
 export type StoredAudienceQuestion = {
   id: string;
@@ -266,6 +293,9 @@ export interface IStorage {
   closeLivePoll(demonstrationId: string, pollId: string, decisionOptionId: string, decisionNote: string | null): Promise<StoredLivePoll | null>;
   voteLivePoll(demonstrationId: string, pollId: string, optionId: string, sessionHash: string): Promise<{ poll: StoredLivePoll | null; created: boolean }>;
   getParticipantPollReceipt(demonstrationId: string, sessionHash: string): Promise<ParticipantPollReceipt | null>;
+  getCrowdPulseSummary(demonstrationId: string): Promise<CrowdPulseSummary>;
+  recordCrowdPulse(demonstrationId: string, sessionHash: string, type: CrowdPulseType): Promise<{ receipt: ParticipantCrowdPulseReceipt; created: boolean; summary: CrowdPulseSummary }>;
+  getParticipantCrowdPulse(demonstrationId: string, sessionHash: string): Promise<ParticipantCrowdPulseReceipt | null>;
 
   getChants(demonstrationId: string): Promise<Chant[]>;
   addChant(data: InsertChant): Promise<Chant>;
@@ -954,6 +984,95 @@ export class DatabaseStorage implements IStorage {
       eq(livePollVotes.sessionId, sessionHash),
     ));
     return { poll, selectedOptionId: vote?.optionId ?? null };
+  }
+
+  private emptyCrowdPulseCounts(): CrowdPulseCounts {
+    return { too_fast: 0, too_slow: 0, cant_hear: 0, all_good: 0 };
+  }
+
+  private summarizeCrowdPulseRows(rows: Array<typeof crowdPulseSignals.$inferSelect>): CrowdPulseSummary {
+    const counts = this.emptyCrowdPulseCounts();
+    const recentCounts = this.emptyCrowdPulseCounts();
+    const historyCounts = this.emptyCrowdPulseCounts();
+    const latestBySession = new Map<string, typeof crowdPulseSignals.$inferSelect>();
+    const recentThreshold = Date.now() - 15 * 60_000;
+    const timelineBuckets = new Map<number, CrowdPulseCounts>();
+
+    for (const row of rows) {
+      const type = row.type as CrowdPulseType;
+      historyCounts[type] += 1;
+      if (!latestBySession.has(row.sessionId)) latestBySession.set(row.sessionId, row);
+      if (row.createdAt.getTime() >= recentThreshold) recentCounts[type] += 1;
+      const bucket = Math.floor(row.createdAt.getTime() / 300_000) * 300_000;
+      const bucketCounts = timelineBuckets.get(bucket) ?? this.emptyCrowdPulseCounts();
+      bucketCounts[type] += 1;
+      timelineBuckets.set(bucket, bucketCounts);
+    }
+
+    for (const row of Array.from(latestBySession.values())) counts[row.type as CrowdPulseType] += 1;
+
+    return {
+      counts,
+      total: latestBySession.size,
+      recentCounts,
+      recentTotal: Object.values(recentCounts).reduce((sum, value) => sum + value, 0),
+      historyCounts,
+      historyTotal: rows.length,
+      timeline: Array.from(timelineBuckets.entries())
+        .sort(([left], [right]) => left - right)
+        .slice(-24)
+        .map(([startedAt, bucketCounts]) => ({
+          startedAt: new Date(startedAt),
+          tooFast: bucketCounts.too_fast,
+          tooSlow: bucketCounts.too_slow,
+          cantHear: bucketCounts.cant_hear,
+          allGood: bucketCounts.all_good,
+        })),
+      updatedAt: rows[0]?.createdAt ?? null,
+    };
+  }
+
+  async getCrowdPulseSummary(demonstrationId: string): Promise<CrowdPulseSummary> {
+    const rows = await db.select().from(crowdPulseSignals)
+      .where(eq(crowdPulseSignals.demonstrationId, demonstrationId))
+      .orderBy(desc(crowdPulseSignals.createdAt))
+      .limit(5000);
+    return this.summarizeCrowdPulseRows(rows);
+  }
+
+  async recordCrowdPulse(demonstrationId: string, sessionHash: string, type: CrowdPulseType): Promise<{ receipt: ParticipantCrowdPulseReceipt; created: boolean; summary: CrowdPulseSummary }> {
+    const result = await db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT id FROM demonstrations WHERE id = ${demonstrationId} FOR UPDATE`);
+      const [latest] = await tx.select().from(crowdPulseSignals).where(and(
+        eq(crowdPulseSignals.demonstrationId, demonstrationId),
+        eq(crowdPulseSignals.sessionId, sessionHash),
+      )).orderBy(desc(crowdPulseSignals.createdAt)).limit(1);
+      const now = new Date();
+      if (latest && latest.type === type && now.getTime() - latest.createdAt.getTime() < 10_000) {
+        return { signal: latest, created: false };
+      }
+      const [signal] = await tx.insert(crowdPulseSignals).values({
+        id: nanoid(),
+        demonstrationId,
+        sessionId: sessionHash,
+        type,
+        createdAt: now,
+      }).returning();
+      return { signal, created: true };
+    });
+    return {
+      receipt: { type: result.signal.type as CrowdPulseType, createdAt: result.signal.createdAt },
+      created: result.created,
+      summary: await this.getCrowdPulseSummary(demonstrationId),
+    };
+  }
+
+  async getParticipantCrowdPulse(demonstrationId: string, sessionHash: string): Promise<ParticipantCrowdPulseReceipt | null> {
+    const [signal] = await db.select().from(crowdPulseSignals).where(and(
+      eq(crowdPulseSignals.demonstrationId, demonstrationId),
+      eq(crowdPulseSignals.sessionId, sessionHash),
+    )).orderBy(desc(crowdPulseSignals.createdAt)).limit(1);
+    return signal ? { type: signal.type as CrowdPulseType, createdAt: signal.createdAt } : null;
   }
 
   async repeatDemonstration(

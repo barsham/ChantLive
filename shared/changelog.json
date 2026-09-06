@@ -1,6 +1,83 @@
 {
   "releases": [
     {
+      "version": "1.1.90",
+      "releasedAt": "2026-09-06",
+      "summary": "A restart-safe accessibility pulse that turns participant pace and audibility signals into recoverable receipts, live organiser guidance, and durable post-event evidence.",
+      "items": [
+        {
+          "id": "cl-2026-09-06-shared-restart-safe-pulse-ledger",
+          "title": "Shared restart-safe pulse ledger",
+          "description": "Pace and audibility signals now use shared storage with latest-per-participant counts, recent activity, and retained trends that survive restarts and deployments.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-09-06",
+          "links": [
+            {
+              "label": "Issue",
+              "url": "https://github.com/barsham/ChantLive/issues/13"
+            }
+          ]
+        },
+        {
+          "id": "cl-2026-09-06-private-participant-pulse-receipts",
+          "title": "Private participant pulse receipts",
+          "description": "Participants receive a timestamped event-scoped receipt for their latest signal and can recover it on the same device without exposing a name, account, or raw session key.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-09-06",
+          "links": [
+            {
+              "label": "Issue",
+              "url": "https://github.com/barsham/ChantLive/issues/13"
+            }
+          ]
+        },
+        {
+          "id": "cl-2026-09-06-live-accessibility-response-desk",
+          "title": "Live accessibility response desk",
+          "description": "Organisers see current needs, fifteen-minute activity, retained changes, and an immediate response recommendation for pace and audibility barriers.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-09-06",
+          "links": [
+            {
+              "label": "Issue",
+              "url": "https://github.com/barsham/ChantLive/issues/13"
+            }
+          ]
+        },
+        {
+          "id": "cl-2026-09-06-multilingual-accessible-signal-recovery",
+          "title": "Multilingual accessible signal recovery",
+          "description": "Signal controls provide pressed state, mobile-size targets, translated recovery and privacy guidance, plus non-blocking failure and retry states in all five participant languages.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-09-06",
+          "links": [
+            {
+              "label": "Issue",
+              "url": "https://github.com/barsham/ChantLive/issues/13"
+            }
+          ]
+        },
+        {
+          "id": "cl-2026-09-06-post-event-accessibility-trend-record",
+          "title": "Post-event accessibility trend record",
+          "description": "Visible and copied reports retain aggregate pulse counts and a timestamped trend so organisers can improve sound, pacing, and access at the next event.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-09-06",
+          "links": [
+            {
+              "label": "Issue",
+              "url": "https://github.com/barsham/ChantLive/issues/13"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "1.1.89",
       "releasedAt": "2026-08-30",
       "summary": "Weekly blog guidance for preparing backup admins before peaceful events go live.",

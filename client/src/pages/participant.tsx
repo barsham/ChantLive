@@ -57,6 +57,12 @@ type ParticipantPollReceipt = {
   selectedOptionId: string | null;
   privacy: string;
 };
+type CrowdPulseType = "too_fast" | "too_slow" | "cant_hear" | "all_good";
+type CrowdPulseReceipt = {
+  type: CrowdPulseType;
+  createdAt: string;
+  privacy?: string;
+};
 type SafetyCheck = {
   id: string;
   kind: "route_change" | "separation" | "weather" | "accessibility" | "general";
@@ -276,6 +282,11 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     cantHear: "Can't hear",
     allGood: "All good",
     signalSent: "Signal sent to the organizer.",
+    signalRecovered: "Your previous signal was recovered after reconnecting.",
+    signalReceiptFailed: "Your saved signal could not be recovered. Other live controls still work.",
+    retrySignal: "Retry signal receipt",
+    signalRecordedAt: "Recorded",
+    signalPrivate: "Only this device can recover this event-scoped receipt. Your name and raw device key are not stored.",
     supportTitle: "If you need support",
     supportBody: "Ask a marshal or accessibility helper for the plain link, a quieter place, repeated instructions, or help reading the chant.",
     needAccessibility: "Need accessibility help",
@@ -504,6 +515,11 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     cantHear: "No escucho",
     allGood: "Todo bien",
     signalSent: "Señal enviada al organizador.",
+    signalRecovered: "Tu señal anterior se recuperó después de reconectar.",
+    signalReceiptFailed: "No se pudo recuperar tu señal guardada. Los demás controles en vivo siguen funcionando.",
+    retrySignal: "Reintentar recibo de señal",
+    signalRecordedAt: "Registrada",
+    signalPrivate: "Solo este dispositivo puede recuperar este recibo de la actividad. No se guardan tu nombre ni la clave original del dispositivo.",
     supportTitle: "Si necesitas apoyo",
     supportBody: "Pide a un marshal o ayudante de accesibilidad el enlace simple, un lugar más tranquilo, instrucciones repetidas o ayuda para leer.",
     needAccessibility: "Necesito accesibilidad",
@@ -732,6 +748,11 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     cantHear: "Je n'entends pas",
     allGood: "Tout va bien",
     signalSent: "Signal envoyé.",
+    signalRecovered: "Votre signal précédent a été récupéré après la reconnexion.",
+    signalReceiptFailed: "Votre signal enregistré n’a pas pu être récupéré. Les autres commandes restent disponibles.",
+    retrySignal: "Réessayer le reçu du signal",
+    signalRecordedAt: "Enregistré",
+    signalPrivate: "Seul cet appareil peut récupérer ce reçu lié à l’événement. Votre nom et la clé brute de l’appareil ne sont pas stockés.",
     supportTitle: "Si vous avez besoin d'aide",
     supportBody: "Demandez le lien simple, un lieu plus calme, des consignes répétées ou de l'aide pour lire.",
     needAccessibility: "Besoin d'accessibilité",
@@ -960,6 +981,11 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     cantHear: "لا أسمع",
     allGood: "كل شيء جيد",
     signalSent: "تم إرسال الإشارة.",
+    signalRecovered: "تمت استعادة إشارتك السابقة بعد إعادة الاتصال.",
+    signalReceiptFailed: "تعذر استعادة إشارتك المحفوظة. تبقى أدوات البث الأخرى متاحة.",
+    retrySignal: "إعادة محاولة استعادة إيصال الإشارة",
+    signalRecordedAt: "سُجلت",
+    signalPrivate: "هذا الجهاز فقط يمكنه استعادة هذا الإيصال الخاص بالفعالية. لا يُحفظ اسمك أو مفتاح الجهاز الأصلي.",
     supportTitle: "إذا احتجت دعماً",
     supportBody: "اطلب الرابط البسيط أو مكاناً أهدأ أو تكرار التعليمات أو مساعدة في القراءة.",
     needAccessibility: "أحتاج مساعدة وصول",
@@ -1188,6 +1214,11 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     cantHear: "نمی‌شنوم",
     allGood: "همه چیز خوب است",
     signalSent: "علامت ارسال شد.",
+    signalRecovered: "علامت قبلی شما پس از اتصال دوباره بازیابی شد.",
+    signalReceiptFailed: "علامت ذخیره‌شده بازیابی نشد. سایر کنترل‌های زنده همچنان کار می‌کنند.",
+    retrySignal: "تلاش دوباره برای رسید علامت",
+    signalRecordedAt: "ثبت‌شده",
+    signalPrivate: "فقط این دستگاه می‌تواند این رسید مخصوص رویداد را بازیابی کند. نام و کلید خام دستگاه ذخیره نمی‌شود.",
     supportTitle: "اگر کمک لازم دارید",
     supportBody: "از راهنما یا کمک‌یار دسترسی لینک ساده، جای آرام‌تر، تکرار دستورها یا کمک برای خواندن بخواهید.",
     needAccessibility: "کمک دسترسی لازم دارم",
@@ -1435,7 +1466,10 @@ export default function Participant() {
   const [showHelp, setShowHelp] = useState(false);
   const [assistanceSent, setAssistanceSent] = useState<string | null>(null);
   const [assistanceError, setAssistanceError] = useState<string | null>(null);
-  const [pulseSent, setPulseSent] = useState<string | null>(null);
+  const [pulseReceipt, setPulseReceipt] = useState<CrowdPulseReceipt | null>(null);
+  const [pulseStatus, setPulseStatus] = useState<"sent" | "recovered" | null>(null);
+  const [pulseReceiptError, setPulseReceiptError] = useState(false);
+  const [pulsePending, setPulsePending] = useState(false);
   const [announcement, setAnnouncement] = useState<OrganizerAnnouncement | null>(null);
   const [audienceQuestions, setAudienceQuestions] = useState<AudienceQuestion[]>([]);
   const [questionReceipts, setQuestionReceipts] = useState<AudienceQuestion[]>([]);
@@ -1552,6 +1586,22 @@ export default function Participant() {
       setQuestionReceiptError(true);
     }
   };
+  const refreshPulseReceipt = async (announceRecovery = false) => {
+    try {
+      const response = await fetch(`/api/public/demos/${publicId}/pulse/receipt`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: getSessionId() }),
+      });
+      if (!response.ok) throw new Error("Pulse receipt unavailable");
+      const receipt = await response.json() as CrowdPulseReceipt | null;
+      setPulseReceipt(receipt);
+      if (announceRecovery && receipt) setPulseStatus("recovered");
+      setPulseReceiptError(false);
+    } catch {
+      setPulseReceiptError(true);
+    }
+  };
   const refreshPollReceipt = async (announceRecovery = false) => {
     try {
       const response = await fetch(`/api/public/demos/${publicId}/polls/receipt`, {
@@ -1656,6 +1706,7 @@ export default function Participant() {
     socket.on("connect", () => {
       setConnected(true);
       socket.emit("join_demo", { publicId, sessionId: getSessionId(), attendanceOptOut });
+      void refreshPulseReceipt(true);
     });
 
     socket.on("disconnect", () => {
@@ -1798,6 +1849,8 @@ export default function Participant() {
       .then((questions: AudienceQuestion[]) => setAudienceQuestions(questions))
       .catch(() => setAudienceQuestions([]));
     refreshQuestionReceipts();
+
+    void refreshPulseReceipt(true);
 
     void refreshPollReceipt(true);
 
@@ -2204,7 +2257,8 @@ export default function Participant() {
       setAssistanceError(t.assistanceFailed);
     }
   };
-  const sendPulse = async (type: "too_fast" | "too_slow" | "cant_hear" | "all_good") => {
+  const sendPulse = async (type: CrowdPulseType) => {
+    setPulsePending(true);
     try {
       const response = await fetch(`/api/public/demos/${publicId}/pulse`, {
         method: "POST",
@@ -2212,11 +2266,16 @@ export default function Participant() {
         body: JSON.stringify({ type, sessionId: getSessionId() }),
       });
 
-      if (!response.ok) return;
-      setPulseSent(type);
-      setTimeout(() => setPulseSent(null), 2500);
+      if (!response.ok) throw new Error("Could not save signal");
+      const result = await response.json() as { receipt: CrowdPulseReceipt };
+      setPulseReceipt(result.receipt);
+      setPulseStatus("sent");
+      setPulseReceiptError(false);
     } catch {
-      // Crowd pulse is optional feedback; avoid interrupting the live chant view on failure.
+      setPulseReceiptError(true);
+      setPulseStatus(null);
+    } finally {
+      setPulsePending(false);
     }
   };
   const submitQuestion = async () => {
@@ -3291,7 +3350,9 @@ export default function Participant() {
                 <button
                   type="button"
                   onClick={() => sendPulse("too_fast")}
-                  className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-900"
+                  disabled={pulsePending}
+                  aria-pressed={pulseReceipt?.type === "too_fast"}
+                  className={`min-h-11 rounded-md border px-3 py-2 text-xs font-medium ${pulseReceipt?.type === "too_fast" ? "border-amber-300 bg-amber-300/15 text-amber-100" : "border-neutral-700 text-neutral-200 hover:bg-neutral-900"}`}
                   data-testid="button-pulse-too-fast"
                 >
                   {t.tooFast}
@@ -3299,7 +3360,9 @@ export default function Participant() {
                 <button
                   type="button"
                   onClick={() => sendPulse("too_slow")}
-                  className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-900"
+                  disabled={pulsePending}
+                  aria-pressed={pulseReceipt?.type === "too_slow"}
+                  className={`min-h-11 rounded-md border px-3 py-2 text-xs font-medium ${pulseReceipt?.type === "too_slow" ? "border-amber-300 bg-amber-300/15 text-amber-100" : "border-neutral-700 text-neutral-200 hover:bg-neutral-900"}`}
                   data-testid="button-pulse-too-slow"
                 >
                   {t.tooSlow}
@@ -3307,7 +3370,9 @@ export default function Participant() {
                 <button
                   type="button"
                   onClick={() => sendPulse("cant_hear")}
-                  className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-200 hover:bg-neutral-900"
+                  disabled={pulsePending}
+                  aria-pressed={pulseReceipt?.type === "cant_hear"}
+                  className={`min-h-11 rounded-md border px-3 py-2 text-xs font-medium ${pulseReceipt?.type === "cant_hear" ? "border-amber-300 bg-amber-300/15 text-amber-100" : "border-neutral-700 text-neutral-200 hover:bg-neutral-900"}`}
                   data-testid="button-pulse-cant-hear"
                 >
                   {t.cantHear}
@@ -3315,16 +3380,26 @@ export default function Participant() {
                 <button
                   type="button"
                   onClick={() => sendPulse("all_good")}
-                  className="rounded-md border border-emerald-400/40 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-950/40"
+                  disabled={pulsePending}
+                  aria-pressed={pulseReceipt?.type === "all_good"}
+                  className={`min-h-11 rounded-md border px-3 py-2 text-xs font-medium ${pulseReceipt?.type === "all_good" ? "border-emerald-200 bg-emerald-300/20 text-white" : "border-emerald-400/40 text-emerald-100 hover:bg-emerald-950/40"}`}
                   data-testid="button-pulse-all-good"
                 >
                   {t.allGood}
                 </button>
               </div>
-              {pulseSent && (
-                <p className="mt-2 text-xs text-emerald-300" role="status" data-testid="text-pulse-sent">
-                  {t.signalSent}
-                </p>
+              {pulseReceipt && (
+                <div className="mt-3 rounded-lg border border-emerald-300/30 bg-emerald-300/10 p-3 text-xs text-emerald-100" role="status" aria-live="polite" data-testid="card-pulse-receipt">
+                  <p className="font-semibold">{pulseStatus === "recovered" ? t.signalRecovered : t.signalSent}</p>
+                  <p className="mt-1">{t.signalRecordedAt}: {new Intl.DateTimeFormat(participantLocales[participantLanguage], { timeStyle: "short" }).format(new Date(pulseReceipt.createdAt))}</p>
+                  <p className="mt-1 text-emerald-100/80">{t.signalPrivate}</p>
+                </div>
+              )}
+              {pulseReceiptError && (
+                <div className="mt-3 rounded-lg border border-amber-300/40 bg-amber-300/10 p-3 text-xs text-amber-50" role="alert" data-testid="alert-pulse-receipt-error">
+                  <p>{t.signalReceiptFailed}</p>
+                  <button type="button" className="mt-2 min-h-11 rounded-md border border-amber-200/50 px-3 py-2 font-semibold" onClick={() => void refreshPulseReceipt(true)}>{t.retrySignal}</button>
+                </div>
               )}
             </div>
             <div>

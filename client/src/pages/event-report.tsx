@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowLeft, CalendarCheck2, Check, ClipboardCheck, Copy, Download, ListOrdered, MessageCircleQuestion, Printer, ShieldCheck, Users, Vote } from "lucide-react";
+import { Activity, ArrowLeft, CalendarCheck2, Check, ClipboardCheck, Copy, Download, ListOrdered, MessageCircleQuestion, Printer, ShieldCheck, Users, Vote } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -116,6 +116,18 @@ type LivePoll = {
   closedAt: string | null;
   storage: "shared";
 };
+type CrowdPulseSummary = {
+  counts: { too_fast: number; too_slow: number; cant_hear: number; all_good: number };
+  total: number;
+  recentCounts: { too_fast: number; too_slow: number; cant_hear: number; all_good: number };
+  recentTotal: number;
+  historyCounts: { too_fast: number; too_slow: number; cant_hear: number; all_good: number };
+  historyTotal: number;
+  timeline: Array<{ startedAt: string; tooFast: number; tooSlow: number; cantHear: number; allGood: number }>;
+  updatedAt: string | null;
+  storage: "shared";
+  privacy: string;
+};
 
 function formatRuntime(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
@@ -124,7 +136,7 @@ function formatRuntime(totalSeconds: number) {
   return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`;
 }
 
-function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackSummary, conduct?: ConductReportSummary, runSheet?: RunSheetPayload, attendance?: AttendanceSummary, registration?: RegistrationSummary, questions?: AudienceQuestionPayload, polls?: LivePoll[]) {
+function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackSummary, conduct?: ConductReportSummary, runSheet?: RunSheetPayload, attendance?: AttendanceSummary, registration?: RegistrationSummary, questions?: AudienceQuestionPayload, polls?: LivePoll[], pulse?: CrowdPulseSummary) {
   const closedPolls = polls?.filter((poll) => poll.status === "closed") ?? [];
   return [
     `ChantLive Post-Event Report: ${data.demo.title}`,
@@ -146,6 +158,8 @@ function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackS
     `Run sheet: ${runSheet?.summary.total ?? 0} stages, ${runSheet?.summary.plannedDurationMinutes ?? 0} planned minutes, ${runSheet?.summary.completed ?? 0} completed, ${runSheet?.summary.skipped ?? 0} skipped`,
     `Audience Q&A: ${questions?.summary.total ?? 0} questions, ${questions?.summary.answered ?? 0} answered, ${questions?.summary.dismissed ?? 0} dismissed, ${questions?.summary.votes ?? 0} votes${questions?.summary.answerRate == null ? "" : `, ${questions.summary.answerRate}% answer rate`}`,
     `Crowd decisions: ${polls?.length ?? 0} polls, ${closedPolls.length} recorded outcomes, ${polls?.reduce((total, poll) => total + poll.totalVotes, 0) ?? 0} votes`,
+    `Accessibility pulse: ${pulse?.total ?? 0} current participant receipts, ${pulse?.recentTotal ?? 0} changes in the last 15 minutes, ${pulse?.historyTotal ?? 0} retained changes`,
+    `Latest pulse: ${pulse?.counts.too_fast ?? 0} too fast, ${pulse?.counts.too_slow ?? 0} too slow, ${pulse?.counts.cant_hear ?? 0} can't hear, ${pulse?.counts.all_good ?? 0} all good`,
     "",
     "Run-sheet delivery timeline:",
     ...(runSheet?.items.length ? runSheet.items.map((item, index) => `- ${index + 1}. ${item.title}: ${item.status}; ${item.plannedDurationMinutes} min planned${item.actualDurationMinutes == null ? "" : `; ${item.actualDurationMinutes} min actual`}`) : ["- No run sheet was prepared."]),
@@ -158,6 +172,9 @@ function buildReportText(data: DemoDetail, runtime: string, feedback?: FeedbackS
       const outcome = poll.options.find((option) => option.id === poll.decisionOptionId)?.label ?? (poll.status === "open" ? "Still open" : "Outcome unavailable");
       return `- ${poll.question}: ${outcome} (${poll.totalVotes} votes)${poll.decisionNote ? ` — ${poll.decisionNote}` : ""}`;
     }) : ["- No crowd decisions were recorded."]),
+    "",
+    "Accessibility pulse timeline:",
+    ...(pulse?.timeline.length ? pulse.timeline.map((point) => `- ${new Date(point.startedAt).toLocaleString()}: ${point.tooFast} too fast, ${point.tooSlow} too slow, ${point.cantHear} can't hear, ${point.allGood} all good`) : ["- No accessibility pulse signals were recorded."]),
     "",
     "Debrief checklist:",
     "- Did participants understand how to join?",
@@ -208,6 +225,10 @@ export default function EventReport() {
     queryKey: ["/api/demos", id, "polls"],
     enabled: Boolean(id),
   });
+  const { data: pulse, isLoading: pulseLoading, error: pulseError, refetch: refetchPulse } = useQuery<CrowdPulseSummary>({
+    queryKey: ["/api/demos", id, "pulse"],
+    enabled: Boolean(id),
+  });
 
   const runtimeSeconds = useMemo(() => {
     if (!data) return 0;
@@ -223,7 +244,7 @@ export default function EventReport() {
 
   const copyReport = async () => {
     if (!data) return;
-    await navigator.clipboard.writeText(buildReportText(data, runtime, feedback, conductQueue?.summary, runSheet, attendance, registration, audienceQuestions, polls));
+    await navigator.clipboard.writeText(buildReportText(data, runtime, feedback, conductQueue?.summary, runSheet, attendance, registration, audienceQuestions, polls, pulse));
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };
@@ -345,6 +366,54 @@ export default function EventReport() {
                     </ol>
                   ) : <p className="mt-4 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">No anonymous attendance was shared for this event.</p>}
                   <p className="mt-4 text-xs text-muted-foreground">{attendance?.privacy}</p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6 border-violet-500/30" data-testid="card-report-crowd-pulse">
+            <CardHeader>
+              <CardTitle className="flex flex-wrap items-center justify-between gap-2 text-base">
+                <span className="flex items-center gap-2"><Activity className="h-5 w-5 text-violet-700" aria-hidden="true" /> Accessibility pulse and response trend</span>
+                <Badge variant="secondary">Restart-safe evidence</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {pulseLoading ? (
+                <div className="grid gap-3 sm:grid-cols-4" aria-label="Loading accessibility pulse report"><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /></div>
+              ) : pulseError ? (
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4" role="alert">
+                  <p className="text-sm">Accessibility pulse evidence is temporarily unavailable; the rest of this report is still complete.</p>
+                  <Button className="mt-3 min-h-11" size="sm" variant="outline" onClick={() => void refetchPulse()}>Retry pulse evidence</Button>
+                </div>
+              ) : (
+                <>
+                  <p className="mb-4 text-sm text-muted-foreground">Review whether pace or audibility repeatedly blocked participation, without exposing participant identities or device keys.</p>
+                  <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-6">
+                    {[
+                      ["Current receipts", pulse?.total ?? 0],
+                      ["Too fast now", pulse?.counts.too_fast ?? 0],
+                      ["Too slow now", pulse?.counts.too_slow ?? 0],
+                      ["Can't hear now", pulse?.counts.cant_hear ?? 0],
+                      ["All good now", pulse?.counts.all_good ?? 0],
+                      ["Retained changes", pulse?.historyTotal ?? 0],
+                    ].map(([label, value]) => <div key={label} className="rounded-lg border bg-background p-3"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-lg font-semibold">{value}</p></div>)}
+                  </div>
+                  {(pulse?.timeline.length ?? 0) > 0 ? (
+                    <ol className="mt-4 grid gap-2" aria-label="Accessibility pulse timeline">
+                      {pulse?.timeline.map((point) => (
+                        <li key={point.startedAt} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-background p-3 text-sm">
+                          <time dateTime={point.startedAt}>{new Date(point.startedAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</time>
+                          <span>{point.tooFast} fast · {point.tooSlow} slow · {point.cantHear} can't hear · {point.allGood} good</span>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : <p className="mt-4 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">No participant pulse signals were recorded for this event.</p>}
+                  <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    <span>{pulse?.recentTotal ?? 0} changes in the last 15 minutes</span>
+                    <span>Latest update {pulse?.updatedAt ? new Date(pulse.updatedAt).toLocaleString() : "not available"}</span>
+                  </div>
+                  <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-violet-700" aria-hidden="true" />{pulse?.privacy}</p>
                 </>
               )}
             </CardContent>

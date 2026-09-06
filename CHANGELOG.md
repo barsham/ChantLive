@@ -4,6 +4,21 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.90 - 6 September 2026
+
+A restart-safe accessibility pulse that turns participant pace and audibility signals into recoverable receipts, live organiser guidance, and durable post-event evidence.
+
+### Added
+
+- Shared restart-safe pulse ledger: Pace and audibility signals now use shared storage with latest-per-participant counts, recent activity, and retained trends that survive restarts and deployments. [Issue](https://github.com/barsham/ChantLive/issues/13)
+- Private participant pulse receipts: Participants receive a timestamped event-scoped receipt for their latest signal and can recover it on the same device without exposing a name, account, or raw session key. [Issue](https://github.com/barsham/ChantLive/issues/13)
+- Live accessibility response desk: Organisers see current needs, fifteen-minute activity, retained changes, and an immediate response recommendation for pace and audibility barriers. [Issue](https://github.com/barsham/ChantLive/issues/13)
+- Post-event accessibility trend record: Visible and copied reports retain aggregate pulse counts and a timestamped trend so organisers can improve sound, pacing, and access at the next event. [Issue](https://github.com/barsham/ChantLive/issues/13)
+
+### Improved
+
+- Multilingual accessible signal recovery: Signal controls provide pressed state, mobile-size targets, translated recovery and privacy guidance, plus non-blocking failure and retry states in all five participant languages. [Issue](https://github.com/barsham/ChantLive/issues/13)
+
 ## 1.1.89 - 30 August 2026
 
 Weekly blog guidance for preparing backup admins before peaceful events go live.

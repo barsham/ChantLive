@@ -141,6 +141,14 @@ export const livePollVotes = pgTable("live_poll_votes", {
   pk: primaryKey({ columns: [table.pollId, table.sessionId] }),
 }));
 
+export const crowdPulseSignals = pgTable("crowd_pulse_signals", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  demonstrationId: varchar("demonstration_id", { length: 255 }).notNull().references(() => demonstrations.id, { onDelete: "cascade" }),
+  sessionId: text("session_id").notNull(),
+  type: text("type").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 export const safetyChecks = pgTable("safety_checks", {
   id: varchar("id", { length: 255 }).primaryKey(),
   demonstrationId: varchar("demonstration_id", { length: 255 }).notNull().references(() => demonstrations.id, { onDelete: "cascade" }),
@@ -240,6 +248,7 @@ export type StoredEventRegistration = typeof eventRegistrations.$inferSelect;
 export type StoredAudienceQuestionRow = typeof audienceQuestions.$inferSelect;
 export type StoredLivePollRow = typeof livePolls.$inferSelect;
 export type StoredLivePollOptionRow = typeof livePollOptions.$inferSelect;
+export type StoredCrowdPulseSignal = typeof crowdPulseSignals.$inferSelect;
 export type StoredSafetyCheck = typeof safetyChecks.$inferSelect;
 export type StoredSafetyCheckResponse = typeof safetyCheckResponses.$inferSelect;
 export type StoredAssistanceRequest = typeof assistanceRequests.$inferSelect;

@@ -69,7 +69,24 @@ type CrowdPulseSummary = {
     all_good: number;
   };
   total: number;
+  recentCounts: {
+    too_fast: number;
+    too_slow: number;
+    cant_hear: number;
+    all_good: number;
+  };
+  recentTotal: number;
+  historyCounts: {
+    too_fast: number;
+    too_slow: number;
+    cant_hear: number;
+    all_good: number;
+  };
+  historyTotal: number;
+  timeline: Array<{ startedAt: string; tooFast: number; tooSlow: number; cantHear: number; allGood: number }>;
   updatedAt: string | null;
+  storage: "shared";
+  privacy: string;
 };
 type AudienceQuestion = {
   id: string;
@@ -517,11 +534,18 @@ export default function CommandCenter() {
     refetchInterval: 3000,
     enabled: Boolean(id),
   });
-  const { data: pulse } = useQuery<CrowdPulseSummary>({
+  const { data: pulse, isLoading: pulseLoading, error: pulseError, refetch: refetchPulse } = useQuery<CrowdPulseSummary>({
     queryKey: ["/api/demos", id, "pulse"],
     refetchInterval: 3000,
     enabled: Boolean(id),
   });
+  const pulseRecommendation = useMemo(() => {
+    if (!pulse?.total) return "Invite participants to use the private pace and audibility controls when they need support.";
+    if (pulse.counts.cant_hear > 0) return "Repeat the current instruction aloud and check speaker coverage before continuing.";
+    if (pulse.counts.too_fast > pulse.counts.too_slow) return "Pause briefly, repeat the current instruction, and slow the next cycle.";
+    if (pulse.counts.too_slow > pulse.counts.too_fast) return "Confirm people are ready, then tighten the next cue.";
+    return "The latest participant signals are positive. Keep monitoring after the next change.";
+  }, [pulse]);
   const { data: audienceQuestionPayload, isLoading: audienceQuestionsLoading, error: audienceQuestionsError } = useQuery<AudienceQuestionPayload>({
     queryKey: ["/api/demos", id, "questions"],
     refetchInterval: 3000,
@@ -1841,27 +1865,58 @@ export default function CommandCenter() {
           </Card>
 
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            <Card data-testid="card-crowd-pulse">
+            <Card className="border-violet-500/30" data-testid="card-crowd-pulse">
               <CardHeader>
-                <CardTitle className="text-base">Crowd pulse</CardTitle>
+                <CardTitle className="flex flex-wrap items-center justify-between gap-2 text-base">
+                  <span className="flex items-center gap-2"><Activity className="h-5 w-5 text-violet-700" aria-hidden="true" /> Live accessibility pulse</span>
+                  <Badge variant="secondary">Shared after restart</Badge>
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  {[
-                    ["Too fast", pulse?.counts.too_fast ?? 0],
-                    ["Too slow", pulse?.counts.too_slow ?? 0],
-                    ["Can't hear", pulse?.counts.cant_hear ?? 0],
-                    ["All good", pulse?.counts.all_good ?? 0],
-                  ].map(([label, count]) => (
-                    <div key={label} className="rounded-lg border bg-background p-3">
-                      <p className="text-xs text-muted-foreground">{label}</p>
-                      <p className="mt-1 text-2xl font-bold">{count}</p>
+                {pulseLoading ? (
+                  <div className="grid grid-cols-2 gap-3" aria-label="Loading accessibility pulse"><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /><Skeleton className="h-20 w-full" /></div>
+                ) : pulseError ? (
+                  <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4" role="alert">
+                    <p className="text-sm">The shared pulse is temporarily unavailable. Live event controls still work.</p>
+                    <Button className="mt-3 min-h-11" size="sm" variant="outline" onClick={() => void refetchPulse()}>Retry accessibility pulse</Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      {[
+                        ["Too fast", pulse?.counts.too_fast ?? 0],
+                        ["Too slow", pulse?.counts.too_slow ?? 0],
+                        ["Can't hear", pulse?.counts.cant_hear ?? 0],
+                        ["All good", pulse?.counts.all_good ?? 0],
+                      ].map(([label, count]) => (
+                        <div key={label} className="rounded-lg border bg-background p-3">
+                          <p className="text-xs text-muted-foreground">{label}</p>
+                          <p className="mt-1 text-2xl font-bold">{count}</p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  {pulse?.total ? `${pulse.total} participants have sent their latest signal.` : "No participant pulse signals yet."}
-                </p>
+                    <div className="mt-3 rounded-lg border border-violet-500/20 bg-violet-500/5 p-3" role="status" aria-live="polite" data-testid="text-pulse-recommendation">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-violet-800 dark:text-violet-200">Suggested response</p>
+                      <p className="mt-1 text-sm">{pulseRecommendation}</p>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                      <span>{pulse?.total ?? 0} current participant receipts</span>
+                      <span>{pulse?.recentTotal ?? 0} signal changes in 15 minutes</span>
+                      <span>{pulse?.historyTotal ?? 0} retained changes</span>
+                    </div>
+                    {(pulse?.timeline.length ?? 0) > 0 ? (
+                      <ol className="mt-3 grid gap-1" aria-label="Recent accessibility pulse trend">
+                        {pulse?.timeline.slice(-4).map((point) => (
+                          <li key={point.startedAt} className="flex flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2 text-xs">
+                            <time dateTime={point.startedAt}>{new Date(point.startedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</time>
+                            <span>{point.tooFast} fast · {point.tooSlow} slow · {point.cantHear} can't hear · {point.allGood} good</span>
+                          </li>
+                        ))}
+                      </ol>
+                    ) : <p className="mt-3 rounded-lg border border-dashed p-3 text-xs text-muted-foreground">No participant pulse signals yet.</p>}
+                    <p className="mt-3 text-xs text-muted-foreground">{pulse?.privacy}</p>
+                  </>
+                )}
               </CardContent>
             </Card>
 
