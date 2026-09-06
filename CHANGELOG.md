@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.91 - 6 September 2026
+
+Weekly blog guidance for supporting quiet participation at peaceful events.
+
+### Documentation
+
+- Quiet participation guide: A new weekly blog post helps organizers support participants who follow quietly, need written prompts, join late, or prefer lower-pressure ways to take part.
+
 ## 1.1.90 - 6 September 2026
 
 A restart-safe accessibility pulse that turns participant pace and audibility signals into recoverable receipts, live organiser guidance, and durable post-event evidence.

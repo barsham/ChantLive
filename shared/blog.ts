@@ -19,6 +19,102 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "support-quiet-participation-peaceful-events",
+    title: "How to Support Quiet Participation at Peaceful Events",
+    description:
+      "A practical guide for organizers who want people to participate without requiring loud chanting, constant attention, or one fixed way of joining a peaceful event.",
+    publishedAt: "2026-09-06",
+    category: "Accessibility",
+    readingMinutes: 7,
+    tags: ["accessibility", "participation", "communication", "inclusion"],
+    sections: [
+      {
+        heading: "Treat Quiet Participation As Real Participation",
+        paragraphs: [
+          "Not every participant will chant loudly, hold a sign, stand in the front, or respond to every prompt. Some people contribute by being present, following quietly, helping one other person, taking notes, or joining for only part of the event.",
+          "If organizers define participation too narrowly, they can accidentally exclude people with access needs, anxiety, fatigue, language barriers, care responsibilities, or different comfort levels.",
+        ],
+        bullets: [
+          "Say explicitly that quiet presence is welcome.",
+          "Avoid treating volume as the only sign of support.",
+          "Give participants more than one useful way to follow the event.",
+        ],
+      },
+      {
+        heading: "Publish Expectations Before Arrival",
+        paragraphs: [
+          "People make better decisions when they know what the event will ask of them. Before arrival, describe whether the event includes chanting, speeches, walking, standing, silence, signs, or group responses.",
+          "This reduces uncertainty for people who need to plan transport, sensory load, mobility support, communication access, or a shorter attendance window.",
+        ],
+        bullets: [
+          "Share the expected start time, end time, and main activity.",
+          "Name any quieter areas, rest points, or lower-intensity ways to participate.",
+          "Explain whether participants can join late or leave early without disrupting the event.",
+        ],
+      },
+      {
+        heading: "Offer Written And Visual Paths",
+        paragraphs: [
+          "Quiet participation is easier when people do not have to rely only on spoken updates. Written and visual prompts help participants who cannot hear clearly, are processing a second language, use assistive technology, or need time to catch up.",
+          "Use simple formats. A clear live page, printed handout, large sign, or short volunteer script is usually more useful than a dense document.",
+        ],
+        bullets: [
+          "Put the current chant, status, or next step where participants can read it.",
+          "Use large plain text for key instructions and fallback links.",
+          "Keep QR codes paired with short written links for people who cannot scan.",
+        ],
+      },
+      {
+        heading: "Brief Volunteers To Notice Barriers",
+        paragraphs: [
+          "Volunteers should understand that quieter participants may still need support. The goal is not to pressure people into a louder role; it is to notice when instructions, movement, sound, or access points are not working.",
+          "A short volunteer brief can prevent common mistakes such as blocking access routes, repeating only spoken instructions, or assuming someone is disengaged because they are not chanting.",
+        ],
+        bullets: [
+          "Ask volunteers to point to written instructions as well as repeating them aloud.",
+          "Keep walkways, sign areas, and joining points clear.",
+          "Give participants a low-pressure way to ask for help or clarification.",
+        ],
+      },
+      {
+        heading: "Design Chants With Opt-In Energy",
+        paragraphs: [
+          "A chant can invite participation without forcing everyone into the same level of energy. Short call-and-response lines, predictable pauses, and visible prompts make it easier for people to join when they are ready.",
+          "Avoid shaming silence or treating quieter sections of the crowd as a failure. A steady, readable rhythm often supports wider participation than constant escalation.",
+        ],
+        bullets: [
+          "Use short lines that can be read at a glance.",
+          "Pause long enough for people reading from a phone or sign to respond.",
+          "Include moments where quiet presence or sign-holding still fits the flow.",
+        ],
+      },
+      {
+        heading: "Plan Feedback Channels That Do Not Require Speaking Up",
+        paragraphs: [
+          "Some participants will not raise a concern in front of a crowd. Provide private or low-pressure ways to signal that the pace, volume, location, or joining path is not working.",
+          "This gives organizers earlier information without requiring people to interrupt the event or identify themselves publicly.",
+        ],
+        bullets: [
+          "Offer a private support route for access or conduct concerns.",
+          "Use simple pulse checks for pace, audibility, or confusion when available.",
+          "Review aggregate feedback after the event rather than collecting unnecessary identities.",
+        ],
+      },
+      {
+        heading: "Use ChantLive To Support Different Participation Modes",
+        paragraphs: [
+          "ChantLive can help organizers support quiet participation by keeping live prompts, joining links, accessibility signals, and post-event review evidence in one participant-friendly flow.",
+          "Use it as one layer of an inclusive plan. Pair the live page with printed links, volunteer support, and clear expectations so people can follow the event even if they are not speaking loudly or constantly watching the front.",
+        ],
+        bullets: [
+          "Publish live prompts that participants can read from their own device.",
+          "Keep the short link available for late arrivals and people who cannot scan.",
+          "Use post-event feedback to improve the next invitation, chant list, and access plan.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "invite-backup-admins-peaceful-events",
     title: "How to Invite Backup Admins Before a Peaceful Event Goes Live",
     description:
