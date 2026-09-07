@@ -149,11 +149,13 @@ Do not start the seven-day clock until a listing is publicly accepted.
 Recover the qualified inbound test interest from Vanessa Teague before opening
 another acquisition channel. Her 31 August reply was discovered on 7 September:
 she created an account and intended to test ChantLive, but the verification
-email had not arrived. Send a short apology for the delayed response,
-acknowledge her authentication-library suggestion, and offer the zero-setup
-participant demo while verification delivery is investigated. Treat this as
-one qualified test interest, not a confirmed test start. Resume the Web Designer
-Forum listing only after this interested tester has been helped or declines.
+email had not arrived. Better Auth and the repaired SendGrid delivery path are
+now deployed. Send a short apology, thank her for the Better Auth suggestion,
+and direct her to sign in with her existing password or request a password
+reset. If the migrated account still requires verification, repeating
+registration sends a fresh verification link. Treat this as one qualified test
+interest, not a confirmed test start. Resume the Web Designer Forum listing only
+after this interested tester has been helped or declines.
 
 ## Run Report
 
