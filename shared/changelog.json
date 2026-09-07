@@ -3835,7 +3835,7 @@
         {
           "id": "cl-2026-06-08-release-checklist",
           "title": "Release checklist",
-          "description": "Deployment verification steps and common Replit Git recovery notes are documented.",
+          "description": "Deployment verification steps and Git recovery notes are documented.",
           "type": "docs",
           "visibility": "public",
           "dateAdded": "2026-06-08",

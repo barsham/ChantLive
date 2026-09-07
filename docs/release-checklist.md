@@ -11,6 +11,7 @@ Use this checklist before publishing ChantLive to the live system.
 - Run `npm run changelog:generate -- --version <version>` and review `CHANGELOG.md`.
 - Run `npm run check`.
 - Run `npm run build`.
+- Complete [SendGrid email setup](email-setup.md), including sender authentication and production environment values.
 - Confirm `/healthz` returns `status: "ok"` in the target environment.
 - Review [qr-accessibility.md](./qr-accessibility.md) before printing or sharing participant QR codes.
 
@@ -45,5 +46,4 @@ The deploy job runs checks/builds first, then updates the server checkout, creat
 
 - Do not retry with local uncommitted changes.
 - Capture the deploy error and current commit hash.
-- Verify Replit is not in the middle of a rebase with `git status`.
-- If Replit reports an unfinished rebase and no Replit-only changes need to be kept, run `git rebase --abort` before pulling again.
+- Inspect `git status` on the deployment checkout for an unfinished rebase or local changes before attempting recovery.

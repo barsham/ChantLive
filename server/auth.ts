@@ -6,7 +6,7 @@ import connectPgSimple from "connect-pg-simple";
 import { pool } from "./db";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { sendVerificationEmail, sendPasswordResetEmail } from "./email";
+import { sendVerificationEmail, sendPasswordResetEmail, shouldSkipEmailVerification, EmailDeliveryError, getPublicAppUrl } from "./email";
 
 function hashToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
@@ -81,10 +81,10 @@ export function setupAuth(app: Express) {
       const existing = await storage.getUserByEmail(trimmedEmail);
       if (existing) {
         if (!existing.emailVerified) {
-          const isLocal = !process.env.REPLIT_CONNECTORS_HOSTNAME;
+          const skipVerification = shouldSkipEmailVerification();
           const passwordHash = await bcrypt.hash(password, 12);
           
-          if (isLocal) {
+          if (skipVerification) {
             await storage.updateUser(existing.id, {
               emailVerified: true,
               verificationToken: null,
@@ -92,7 +92,7 @@ export function setupAuth(app: Express) {
               passwordHash,
               name: trimmedName,
             });
-            return res.json({ message: "Registration successful! (Local Dev: Email verified automatically)" });
+            return res.json({ status: "ready_to_sign_in", message: "Your account is ready. You can sign in now." });
           } else {
             const rawToken = crypto.randomBytes(32).toString("hex");
             const hashedToken = hashToken(rawToken);
@@ -105,13 +105,11 @@ export function setupAuth(app: Express) {
               name: trimmedName,
             });
 
-            const protocol = req.headers["x-forwarded-proto"] || req.protocol;
-            const host = req.headers["x-forwarded-host"] || req.headers.host;
-            const verificationUrl = `${protocol}://${host}/api/auth/verify?token=${rawToken}`;
+            const verificationUrl = getPublicAppUrl(`/api/auth/verify?token=${rawToken}`);
 
             await sendVerificationEmail(trimmedEmail, trimmedName, verificationUrl);
 
-            return res.json({ message: "A new verification email has been sent. Please check your inbox." });
+            return res.json({ status: "verification_email_sent", message: "A new verification email has been sent. Please check your inbox and spam folder." });
           }
         }
         return res.status(400).json({ message: "An account with this email already exists. Please sign in." });
@@ -131,8 +129,8 @@ export function setupAuth(app: Express) {
         role,
       });
 
-      const isLocal = !process.env.REPLIT_CONNECTORS_HOSTNAME;
-      if (isLocal) {
+      const skipVerification = shouldSkipEmailVerification();
+      if (skipVerification) {
         await storage.updateUser(user.id, {
           passwordHash,
           emailVerified: true,
@@ -140,14 +138,7 @@ export function setupAuth(app: Express) {
           verificationTokenExpires: null,
         });
         
-        // Log the user in directly for local dev convenience
-        req.login(user, (err) => {
-          if (err) {
-            return res.json({ message: "Registration successful! (Local Dev: Email verified automatically)" });
-          }
-          return res.json({ message: "Registration successful! (Local Dev: Email verified automatically)" });
-        });
-        return;
+        return res.json({ status: "ready_to_sign_in", message: "Your account is ready. You can sign in now." });
       }
 
       await storage.updateUser(user.id, {
@@ -156,14 +147,16 @@ export function setupAuth(app: Express) {
         verificationTokenExpires: expires,
       });
 
-      const protocol = req.headers["x-forwarded-proto"] || req.protocol;
-      const host = req.headers["x-forwarded-host"] || req.headers.host;
-      const verificationUrl = `${protocol}://${host}/api/auth/verify?token=${rawToken}`;
+      const verificationUrl = getPublicAppUrl(`/api/auth/verify?token=${rawToken}`);
 
       await sendVerificationEmail(trimmedEmail, trimmedName, verificationUrl);
 
-      res.json({ message: "Registration successful! Please check your email to verify your account." });
+      res.json({ status: "verification_email_sent", message: "Please check your inbox and spam folder for a link to verify your account." });
     } catch (err) {
+      if (err instanceof EmailDeliveryError) {
+        console.error("Registration verification email could not be sent.");
+        return res.status(503).json({ message: "We couldn't send your verification email. Please try registering again shortly. Your account still needs verification before you can sign in." });
+      }
       console.error("Registration error:", err);
       res.status(500).json({ message: "Registration failed. Please try again." });
     }
@@ -224,9 +217,7 @@ export function setupAuth(app: Express) {
           passwordResetExpires: expires,
         });
 
-        const protocol = req.headers["x-forwarded-proto"] || req.protocol;
-        const host = req.headers["x-forwarded-host"] || req.headers.host;
-        const resetUrl = `${protocol}://${host}/reset-password?token=${rawToken}`;
+        const resetUrl = getPublicAppUrl(`/reset-password?token=${rawToken}`);
         await sendPasswordResetEmail(trimmedEmail, user.name, resetUrl);
       }
 

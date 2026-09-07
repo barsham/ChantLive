@@ -2329,8 +2329,8 @@ export async function registerRoutes(
       await storage.addDemoAdmin(demo.id, targetUser.id);
 
       try {
-        const { sendInviteEmail } = await import("./email");
-        const demoUrl = `${req.protocol}://${req.get("host")}/admin/demos/${demo.id}`;
+        const { sendInviteEmail, getPublicAppUrl } = await import("./email");
+        const demoUrl = getPublicAppUrl(`/admin/demos/${demo.id}`);
         await sendInviteEmail(targetUser.email, targetUser.name, user.name, demo.title, demoUrl);
       } catch (emailErr) {
         console.error("Failed to send invite email:", emailErr);

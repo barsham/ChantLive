@@ -4,6 +4,12 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## Unreleased
+
+- Fixed registration showing “Check your email” when verification was skipped.
+- Production registration now requires email verification regardless of hosting provider. SendGrid configuration is supported, and failed sends show a retry message instead of success.
+- Development verification bypass now requires `DEV_SKIP_EMAIL_VERIFICATION=true` and is ignored in production.
+
 ## 1.1.91 - 6 September 2026
 
 Weekly blog guidance for supporting quiet participation at peaceful events.
@@ -1100,5 +1106,5 @@ Security, accessibility, deployment, and release communication improvements.
 
 ### Documentation
 
-- Release checklist: Deployment verification steps and common Replit Git recovery notes are documented.
+- Release checklist: Deployment verification steps and Git recovery notes are documented.
 - Project changelog: Community members can now review project changes before deploying or contributing.

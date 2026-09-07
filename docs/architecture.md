@@ -27,10 +27,10 @@ Preferred communication style: Simple, everyday language.
 - **Runtime:** Node.js with Express (TypeScript via tsx)
 - **HTTP server:** Node `http.createServer` wrapping Express (needed for Socket.IO)
 - **Real-time:** Socket.IO server for pushing chant changes and viewer counts to participants
-- **Authentication:** Email/password registration with email verification via Resend; sessions stored in PostgreSQL via `connect-pg-simple`
+- **Authentication:** Email/password registration with email verification via SendGrid; sessions stored in PostgreSQL via `connect-pg-simple`
 - **Session management:** Express-session with 30-day cookie, stored in a `session` table (auto-created)
 - **Password security:** bcryptjs with 12 rounds for hashing; verification tokens hashed with SHA-256 before storage
-- **Email service:** Resend integration for sending verification emails
+- **Email service:** SendGrid integration for sending verification emails
 - **QR Code generation:** `qrcode` library for generating participant join QR codes
 
 ### Roles & Authorization
@@ -112,4 +112,4 @@ script/
 - **Socket.IO** — WebSocket-based real-time communication between server and participant clients
 - **QRCode (npm)** — Server-side QR code generation for participant join links
 - **connect-pg-simple** — PostgreSQL session store for Express sessions
-- **SESSION_SECRET** — Environment variable for signing session cookies (falls back to a default)
+- **SESSION_SECRET** — Environment variable for signing session cookies (required; no default)

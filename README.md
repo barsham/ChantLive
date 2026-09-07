@@ -50,6 +50,20 @@ Optional variables:
 
 - `PORT`
 
+Email delivery requires `SENDGRID_API_KEY` and a `SENDGRID_FROM_EMAIL` address on a
+domain authenticated in SendGrid. Set `PUBLIC_BASE_URL` to the public app origin
+(`https://chantlive.online` in production). See [email setup](docs/email-setup.md). Configure
+these in the deployment environment as well as locally when testing delivery.
+Missing credentials and rejected sends now fail registration with a retry message;
+they never count as a verification email being sent. An unverified user can retry
+the registration form to request a new link after delivery is restored.
+
+For local development without email, explicitly set
+`DEV_SKIP_EMAIL_VERIFICATION=true` with `NODE_ENV=development`. The account is
+then ready to sign in and the screen says “Account created.” This bypass is
+ignored in production. Accounts previously auto-verified by the old bypass can
+already sign in; deploying this fix does not change those existing accounts.
+
 ### 4) Prepare database
 
 ```bash
