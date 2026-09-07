@@ -171,6 +171,7 @@ Would this be appropriate for someone in your team or network to review?
 | 2026-07-21 | Australian Federation of Disability Organisations | Office mailbox auto-reply | Receipt confirmed. The message identified AFDO's Amplify Network as its channel for product trials and accessibility feedback; no reply required and no test activity yet. |
 | 2026-07-23 | Open Source Industry Australia | Zoho delivery-status notification | Initially classified as delivery delayed: SMTP status 421, destination host unreachable. Zoho said it would retry for four days and that the message must not be resent. |
 | 2026-07-27 | Open Source Industry Australia | Zoho delivery-status notification | Classified as a permanent bounce after all retries failed with SMTP status 421. `admin@osia.com.au` is permanently suppressed. No further outreach was sent that day because this is evidence of deliverability trouble. |
+| 2026-08-31 | Democracy Developers | Vanessa Teague via vanessa@democracydevelopers.org.au | Qualified reply and test interest. Vanessa briefly reviewed `auth.ts`, considered the `bcrypt.hash` usage likely correct, suggested evaluating an established authentication library such as Better Auth to reduce subtle implementation risk, created the test account `vchanttest@greatcactus.org`, and intended to test ChantLive. Her verification email had not arrived when she wrote. No reply was sent before the message was discovered on 2026-09-07. |
 
 ## Suppression Log
 

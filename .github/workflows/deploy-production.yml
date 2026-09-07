@@ -6,6 +6,7 @@ on:
       - main
     paths-ignore:
       - "docs/**"
+      - "**/*.md"
   workflow_dispatch:
 
 concurrency:
@@ -63,7 +64,7 @@ jobs:
           chmod 600 ~/.ssh/hetzner_deploy
           ssh-keyscan -H "$HETZNER_HOST" >> ~/.ssh/known_hosts
 
-      - name: Deploy current main branch
+      - name: Deploy verified commit
         env:
           HETZNER_HOST: ${{ secrets.HETZNER_HOST || '178.105.99.151' }}
           HETZNER_USER: ${{ secrets.HETZNER_USER || 'root' }}
@@ -77,7 +78,8 @@ jobs:
 
           cd "$APP_DIR"
           git fetch --prune origin main
-          git reset --hard origin/main
+          git cat-file -e "$GITHUB_SHA^{commit}"
+          git reset --hard "$GITHUB_SHA"
           bash script/deploy-production.sh
           REMOTE
 

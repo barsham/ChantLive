@@ -5,19 +5,38 @@ Use this checklist before publishing ChantLive to the live system.
 ## Before Deploying
 
 - Confirm `main` is up to date with `origin/main`.
-- Confirm the working tree is clean.
+- Inspect `git status --short` and review all changed and untracked files,
+  including documentation. Identify which belong to this release before staging.
 - Confirm `package.json` and `package-lock.json` have the intended version.
 - Review `shared/changelog.json` for approved public release notes.
 - Run `npm run changelog:generate -- --version <version>` and review `CHANGELOG.md`.
 - Run `npm run check`.
+- Run `npx tsx --test server/auth.test.ts server/email.test.ts` when authentication
+  or email delivery is affected, plus any other checks relevant to the changes.
 - Run `npm run build`.
+- Inspect `git status --short` again after generation and validation. Review and
+  stage all files belonging to the release together: code, version files,
+  `shared/changelog.json`, `CHANGELOG.md`, release notes, and related documentation.
+  Do not leave generated release files for a second commit after deployment.
+- Run `git diff --cached --check` and review `git diff --cached --stat` before
+  making one release commit and pushing it once. Leave unrelated work untouched
+  and explicitly report any remaining uncommitted files.
 - Complete [SendGrid email setup](email-setup.md), including sender authentication and production environment values.
 - Confirm `/healthz` returns `status: "alive"` and `/readyz` reports `operational` in the target environment.
 - Review [qr-accessibility.md](./qr-accessibility.md) before printing or sharing participant QR codes.
 
 ## Automated Production Deploys
 
-Pushes to `main` deploy automatically through GitHub Actions.
+Pushes to `main` deploy automatically unless every changed file is under `docs/`
+or is Markdown (`**/*.md`, including root `README.md` and `CHANGELOG.md`).
+Documentation-only pushes skip the build and deploy workflow. Mixed code and
+documentation pushes still deploy once. Manual `workflow_dispatch` remains
+available when a deployment is explicitly needed.
+
+`shared/changelog.json` remains a deployment trigger because it supplies the
+public changelog shown in the app. Include its changes in the release commit.
+The server deploys the exact `github.sha` that CI verified, rather than a newer
+`origin/main` commit that might arrive while checks are running.
 
 Required repository secrets:
 
