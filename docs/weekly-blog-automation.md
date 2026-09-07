@@ -1,8 +1,10 @@
 # Weekly ChantLive Blog Automation
 
-Automation id: `weekly-chantlive-blog-post`
+Automation id: `chantlive-weekly-answerthepublic-blog-post`
 
-Suggested cadence: weekly, Sunday 6:30 PM Australia/Sydney.
+Part of **ChantLive - Promotion & Content**, weekly Monday 6 PM Australia/Sydney.
+See [scheduled-work.md](scheduled-work.md) for ownership, outreach coordination,
+release safeguards and notification rules. There is no separate blog schedule.
 
 ## Goal
 
