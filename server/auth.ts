@@ -1,353 +1,121 @@
-import passport from "passport";
+import type { Express, Request, Response, RequestHandler } from "express";
+import { fromNodeHeaders } from "better-auth/node";
+import { db } from "./db";
 import { storage } from "./storage";
-import type { Express, RequestHandler } from "express";
-import session from "express-session";
-import connectPgSimple from "connect-pg-simple";
-import { pool } from "./db";
-import bcrypt from "bcryptjs";
-import crypto from "crypto";
-import { sendVerificationEmail, sendPasswordResetEmail, shouldSkipEmailVerification, EmailDeliveryError, getPublicAppUrl } from "./email";
+import { createAuth } from "./better-auth";
+import { getPublicAppUrl, shouldSkipEmailVerification } from "./email";
+import type { User as AppUser } from "@shared/schema";
 
-function hashToken(token: string): string {
-  return crypto.createHash("sha256").update(token).digest("hex");
+const baseURL = getPublicAppUrl("/");
+export const auth = createAuth(db, baseURL, process.env.BETTER_AUTH_SECRET || process.env.SESSION_SECRET || "");
+
+declare global {
+  namespace Express { interface Request { authUser?: AppUser; user?: AppUser } }
 }
 
-export function setupAuth(app: Express) {
-  const PgSession = connectPgSimple(session);
-  const sessionSecret = process.env.SESSION_SECRET;
+function safeUser(user: AppUser) {
+  const { passwordHash, verificationToken, verificationTokenExpires, passwordResetToken, passwordResetExpires, ...safe } = user;
+  return safe;
+}
 
-  if (!sessionSecret) {
-    throw new Error("SESSION_SECRET must be set");
-  }
+async function forward(authentication: typeof auth, req: Request, path: string, body?: unknown) {
+  const headers = fromNodeHeaders(req.headers);
+  headers.delete("content-length");
+  headers.set("x-chantlive-client-ip", req.ip || req.socket.remoteAddress || "unknown");
+  if (body !== undefined) headers.set("content-type", "application/json");
+  // The stream has already been parsed by Express. Pass a fresh Fetch Request
+  // through the public handler so Better Auth's origin and rate checks still run.
+  return authentication.handler(new globalThis.Request(new URL(path, baseURL), {
+    method: req.method,
+    headers,
+    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+  }));
+}
 
-  app.use(
-    session({
-      store: new PgSession({
-        pool,
-        tableName: "session",
-        createTableIfMissing: true,
-      }),
-      secret: sessionSecret,
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        secure: false,
-        httpOnly: true,
-        sameSite: "lax",
-      },
-    })
-  );
-
-  app.use(passport.initialize());
-  app.use(passport.session());
-
-  passport.serializeUser((user: any, done) => {
-    done(null, user.id);
+async function sendResponse(res: Response, response: globalThis.Response) {
+  res.status(response.status);
+  response.headers.forEach((value, key) => {
+    if (key !== "set-cookie") res.setHeader(key, value);
   });
+  const cookies = response.headers.getSetCookie();
+  if (cookies.length) res.setHeader("set-cookie", cookies);
+  res.send(await response.text());
+}
 
-  passport.deserializeUser(async (id: string, done) => {
-    try {
-      const user = await storage.getUser(id);
-      done(null, user || null);
-    } catch (err) {
-      done(err, null);
-    }
-  });
+type UserStorage = Pick<typeof storage, "getUser" | "getUserByEmail" | "touchUserActivity">;
+
+export function setupAuth(app: Express, authentication = auth, userStorage: UserStorage = storage) {
+  const forwardRequest = (req: Request, path: string, body?: unknown) => forward(authentication, req, path, body);
+  app.get("/api/auth/me", createRequireAuth(authentication, userStorage), (req, res) => res.json(safeUser(req.authUser!)));
 
   app.post("/api/auth/register", async (req, res) => {
-    try {
-      const { email, password, name } = req.body;
-
-      if (!email || !password || !name) {
-        return res.status(400).json({ message: "Name, email, and password are required." });
-      }
-
-      const trimmedName = typeof name === "string" ? name.trim() : "";
-      const trimmedEmail = typeof email === "string" ? email.toLowerCase().trim() : "";
-
-      if (!trimmedEmail || !trimmedEmail.includes("@")) {
-        return res.status(400).json({ message: "Please enter a valid email address." });
-      }
-
-      if (!trimmedName || trimmedName.length < 1) {
-        return res.status(400).json({ message: "Please enter your name." });
-      }
-
-      if (typeof password !== "string" || password.length < 8) {
-        return res.status(400).json({ message: "Password must be at least 8 characters." });
-      }
-
-      const existing = await storage.getUserByEmail(trimmedEmail);
-      if (existing) {
-        if (!existing.emailVerified) {
-          const skipVerification = shouldSkipEmailVerification();
-          const passwordHash = await bcrypt.hash(password, 12);
-          
-          if (skipVerification) {
-            await storage.updateUser(existing.id, {
-              emailVerified: true,
-              verificationToken: null,
-              verificationTokenExpires: null,
-              passwordHash,
-              name: trimmedName,
-            });
-            return res.json({ status: "ready_to_sign_in", message: "Your account is ready. You can sign in now." });
-          } else {
-            const rawToken = crypto.randomBytes(32).toString("hex");
-            const hashedToken = hashToken(rawToken);
-            const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
-            
-            await storage.updateUser(existing.id, {
-              verificationToken: hashedToken,
-              verificationTokenExpires: expires,
-              passwordHash,
-              name: trimmedName,
-            });
-
-            const verificationUrl = getPublicAppUrl(`/api/auth/verify?token=${rawToken}`);
-
-            await sendVerificationEmail(trimmedEmail, trimmedName, verificationUrl);
-
-            return res.json({ status: "verification_email_sent", message: "A new verification email has been sent. Please check your inbox and spam folder." });
-          }
-        }
-        return res.status(400).json({ message: "An account with this email already exists. Please sign in." });
-      }
-
-      const passwordHash = await bcrypt.hash(password, 12);
-      const rawToken = crypto.randomBytes(32).toString("hex");
-      const hashedToken = hashToken(rawToken);
-      const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-      const userCount = await storage.getUserCount();
-      const role = userCount === 0 ? "super_admin" : "admin";
-
-      const user = await storage.createUser({
-        email: trimmedEmail,
-        name: trimmedName,
-        role,
-      });
-
-      const skipVerification = shouldSkipEmailVerification();
-      if (skipVerification) {
-        await storage.updateUser(user.id, {
-          passwordHash,
-          emailVerified: true,
-          verificationToken: null,
-          verificationTokenExpires: null,
-        });
-        
-        return res.json({ status: "ready_to_sign_in", message: "Your account is ready. You can sign in now." });
-      }
-
-      await storage.updateUser(user.id, {
-        passwordHash,
-        verificationToken: hashedToken,
-        verificationTokenExpires: expires,
-      });
-
-      const verificationUrl = getPublicAppUrl(`/api/auth/verify?token=${rawToken}`);
-
-      await sendVerificationEmail(trimmedEmail, trimmedName, verificationUrl);
-
-      res.json({ status: "verification_email_sent", message: "Please check your inbox and spam folder for a link to verify your account." });
-    } catch (err) {
-      if (err instanceof EmailDeliveryError) {
-        console.error("Registration verification email could not be sent.");
-        return res.status(503).json({ message: "We couldn't send your verification email. Please try registering again shortly. Your account still needs verification before you can sign in." });
-      }
-      console.error("Registration error:", err);
-      res.status(500).json({ message: "Registration failed. Please try again." });
+    const { name, email, password } = req.body ?? {};
+    const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+    const normalizedName = typeof name === "string" ? name.trim() : "";
+    if (!normalizedName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
+      || typeof password !== "string" || password.length < 8 || password.length > 128) {
+      return res.status(400).json({ message: "Enter your name, a valid email, and a password of 8–128 characters." });
     }
-  });
-
-  app.get("/api/auth/verify", async (req, res) => {
-    try {
-      const { token } = req.query;
-      if (!token || typeof token !== "string") {
-        return res.redirect("/login?error=invalid_token");
-      }
-
-      const hashedToken = hashToken(token);
-      const user = await storage.getUserByVerificationToken(hashedToken);
-      if (!user) {
-        return res.redirect("/login?error=invalid_token");
-      }
-
-      if (user.verificationTokenExpires && new Date() > user.verificationTokenExpires) {
-        return res.redirect("/login?error=expired_token");
-      }
-
-      await storage.updateUser(user.id, {
-        emailVerified: true,
-        verificationToken: null,
-        verificationTokenExpires: null,
-      });
-
-      req.login(user, (err) => {
-        if (err) {
-          return res.redirect("/login?verified=true");
-        }
-        res.redirect("/admin?verified=true");
-      });
-    } catch (err) {
-      console.error("Verification error:", err);
-      res.redirect("/login?error=verification_failed");
+    // Repeat registration resends verification without replacing the account's password or name.
+    const existing = await userStorage.getUserByEmail(normalizedEmail);
+    const response = existing && !existing.emailVerified && !shouldSkipEmailVerification()
+      ? await forwardRequest(req, "/api/auth/send-verification-email", { email: normalizedEmail, callbackURL: "/login?verified=true" })
+      : await forwardRequest(req, "/api/auth/sign-up/email", { name: normalizedName, email: normalizedEmail, password, callbackURL: "/login?verified=true" });
+    if (!response.ok) {
+      if (response.status >= 500) return res.status(503).json({ message: "We couldn't send your verification email. Please try registering again shortly." });
+      return sendResponse(res, response);
     }
-  });
-
-  app.post("/api/auth/forgot-password", async (req, res) => {
-    try {
-      const { email } = req.body;
-      const trimmedEmail = typeof email === "string" ? email.toLowerCase().trim() : "";
-
-      if (!trimmedEmail || !trimmedEmail.includes("@")) {
-        return res.status(400).json({ message: "Please enter a valid email address." });
-      }
-
-      const user = await storage.getUserByEmail(trimmedEmail);
-      if (user && user.emailVerified) {
-        const rawToken = crypto.randomBytes(32).toString("hex");
-        const hashedToken = hashToken(rawToken);
-        const expires = new Date(Date.now() + 60 * 60 * 1000);
-
-        await storage.updateUser(user.id, {
-          passwordResetToken: hashedToken,
-          passwordResetExpires: expires,
-        });
-
-        const resetUrl = getPublicAppUrl(`/reset-password?token=${rawToken}`);
-        await sendPasswordResetEmail(trimmedEmail, user.name, resetUrl);
-      }
-
-      res.json({ message: "If that email exists, a reset link has been sent." });
-    } catch (err) {
-      console.error("Forgot password error:", err);
-      res.status(500).json({ message: "Failed to process forgot password request." });
-    }
-  });
-
-  app.post("/api/auth/reset-password", async (req, res) => {
-    try {
-      const { token, password } = req.body;
-      if (!token || typeof token !== "string") {
-        return res.status(400).json({ message: "Invalid reset token." });
-      }
-
-      if (typeof password !== "string" || password.length < 8) {
-        return res.status(400).json({ message: "Password must be at least 8 characters." });
-      }
-
-      const hashedToken = hashToken(token);
-      const targetUser = await storage.getUserByPasswordResetToken(hashedToken);
-
-      if (!targetUser || !targetUser.passwordResetExpires || new Date() > targetUser.passwordResetExpires) {
-        return res.status(400).json({ message: "Reset link is invalid or expired." });
-      }
-
-      const passwordHash = await bcrypt.hash(password, 12);
-      await storage.updateUser(targetUser.id, {
-        passwordHash,
-        passwordResetToken: null,
-        passwordResetExpires: null,
-      });
-
-      res.json({ message: "Password reset successfully. You can now sign in." });
-    } catch (err) {
-      console.error("Reset password error:", err);
-      res.status(500).json({ message: "Failed to reset password." });
-    }
+    if (existing?.emailVerified) return res.status(400).json({ message: "An account with this email already exists. Please sign in." });
+    return res.json(shouldSkipEmailVerification()
+      ? { status: "ready_to_sign_in", message: "Your account is ready. You can sign in now." }
+      : { status: "verification_email_sent", message: "Please check your inbox and spam folder for a verification link. If you already have a verified account, sign in." });
   });
 
   app.post("/api/auth/login", async (req, res) => {
-    try {
-      const { email, password } = req.body;
-
-      if (!email || !password) {
-        return res.status(400).json({ message: "Email and password are required." });
-      }
-
-      const user = await storage.getUserByEmail(
-        typeof email === "string" ? email.toLowerCase().trim() : ""
-      );
-      if (!user) {
-        return res.status(401).json({ message: "Invalid email or password." });
-      }
-
-      if (!user.passwordHash) {
-        return res.status(401).json({ message: "Invalid email or password." });
-      }
-
-      const valid = await bcrypt.compare(password, user.passwordHash);
-      if (!valid) {
-        return res.status(401).json({ message: "Invalid email or password." });
-      }
-
-      if (!user.emailVerified) {
-        return res.status(403).json({ message: "Please verify your email before signing in. Check your inbox for the verification link." });
-      }
-
-      req.login(user, (err) => {
-        if (err) {
-          return res.status(500).json({ message: "Login failed. Please try again." });
-        }
-        void storage.touchUserActivity(user.id).catch((activityErr) => {
-          console.error("Failed to update user activity:", activityErr);
-        });
-        const { passwordHash, verificationToken, verificationTokenExpires, passwordResetToken, passwordResetExpires, ...safeUser } = user;
-        res.json(safeUser);
-      });
-    } catch (err) {
-      console.error("Login error:", err);
-      res.status(500).json({ message: "Login failed. Please try again." });
-    }
+    const { email, password } = req.body ?? {};
+    return sendResponse(res, await forwardRequest(req, "/api/auth/sign-in/email", {
+      email: typeof email === "string" ? email.trim().toLowerCase() : "", password,
+    }));
   });
-
-  app.get("/auth/logout", (req, res) => {
-    req.logout(() => {
-      res.redirect("/");
-    });
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    const { email } = req.body ?? {};
+    return sendResponse(res, await forwardRequest(req, "/api/auth/request-password-reset", {
+      email: typeof email === "string" ? email.trim().toLowerCase() : "", redirectTo: "/reset-password",
+    }));
   });
-
-  app.get("/api/auth/me", (req, res) => {
-    if (req.isAuthenticated && req.isAuthenticated() && req.user) {
-      const user = req.user as any;
-      void storage.touchUserActivity(user.id).catch((err) => {
-        console.error("Failed to update user activity:", err);
-      });
-      const { passwordHash, verificationToken, verificationTokenExpires, passwordResetToken, passwordResetExpires, ...safeUser } = user;
-      res.json(safeUser);
-    } else {
-      res.status(401).json({ message: "Not authenticated" });
-    }
+  app.post("/api/auth/reset-password", async (req, res) => {
+    return sendResponse(res, await forwardRequest(req, "/api/auth/reset-password", {
+      token: req.body?.token, newPassword: req.body?.password ?? req.body?.newPassword,
+    }));
+  });
+  // Legacy links were invalidated by migration; do not silently accept old tokens.
+  app.get("/api/auth/verify", (_req, res) => res.redirect("/login?error=expired_token"));
+  app.all("/api/auth/*splat", async (req, res) => {
+    return sendResponse(res, await forwardRequest(req, req.originalUrl, ["GET", "HEAD"].includes(req.method) ? undefined : req.body));
   });
 }
 
-export const requireAuth: RequestHandler = (req, res, next) => {
-  if (req.isAuthenticated && req.isAuthenticated() && req.user) {
-    const user = req.user as any;
-    void storage.touchUserActivity(user.id).catch((err) => {
-      console.error("Failed to update user activity:", err);
-    });
+export function createRequireAuth(authentication = auth, userStorage: UserStorage = storage): RequestHandler {
+  return async (req, res, next) => {
+    const session = await authentication.api.getSession({ headers: fromNodeHeaders(req.headers) });
+    const user = session ? await userStorage.getUser(session.user.id) : undefined;
+    if (!user || (!user.emailVerified && !shouldSkipEmailVerification())) {
+      res.status(401).json({ message: "Authentication required" });
+      return;
+    }
+    req.authUser = user;
+    req.user = user;
+    void userStorage.touchUserActivity(user.id).catch(() => console.error("Failed to update user activity"));
     next();
-  } else {
-    res.status(401).json({ message: "Authentication required" });
-  }
-};
+  };
+}
+
+export const requireAuth = createRequireAuth();
 
 export const requireSuperAdmin: RequestHandler = (req, res, next) => {
-  if (req.isAuthenticated && req.isAuthenticated() && req.user) {
-    const user = req.user as any;
-    if (user.role === "super_admin") {
-      void storage.touchUserActivity(user.id).catch((err) => {
-        console.error("Failed to update user activity:", err);
-      });
-      next();
-    } else {
-      res.status(403).json({ message: "Super admin access required" });
-    }
-  } else {
-    res.status(401).json({ message: "Authentication required" });
-  }
+  void Promise.resolve(requireAuth(req, res, (error?: unknown) => {
+    if (error) return next(error);
+    if (req.authUser?.role !== "super_admin") return res.status(403).json({ message: "Super admin access required" });
+    next();
+  })).catch(next);
 };

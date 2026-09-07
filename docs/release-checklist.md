@@ -12,7 +12,7 @@ Use this checklist before publishing ChantLive to the live system.
 - Run `npm run check`.
 - Run `npm run build`.
 - Complete [SendGrid email setup](email-setup.md), including sender authentication and production environment values.
-- Confirm `/healthz` returns `status: "ok"` in the target environment.
+- Confirm `/healthz` returns `status: "alive"` and `/readyz` reports `operational` in the target environment.
 - Review [qr-accessibility.md](./qr-accessibility.md) before printing or sharing participant QR codes.
 
 ## Automated Production Deploys
@@ -30,7 +30,12 @@ Optional repository variables:
 - `HETZNER_APP_DIR`: defaults to `/opt/chantlive`.
 - `HETZNER_SERVICE_NAME`: defaults to `chantlive`.
 
-The deploy job runs checks/builds first, then updates the server checkout, creates a database backup, applies Drizzle schema changes with `npm run db:push`, prunes dev dependencies, restarts systemd, and verifies the local HTTP response.
+The deploy job runs checks, authentication tests and builds. It then stops the old
+service, creates and checks a mandatory database backup, applies the additive
+authentication migration, prunes dev dependencies, updates systemd for the ESM
+bundle, and verifies local and public readiness. It never forces a Drizzle schema
+sync. The watchdog shares the deployment concurrency group so it cannot restart
+old code during a migration. See [authentication migration](authentication.md).
 
 ## After Deploying
 

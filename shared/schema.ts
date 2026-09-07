@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, primaryKey, boolean, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, primaryKey, boolean, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -17,7 +17,47 @@ export const users = pgTable("users", {
   passwordResetExpires: timestamp("password_reset_expires"),
   lastActivityAt: timestamp("last_activity_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const authSessions = pgTable("auth_sessions", {
+  id: text("id").primaryKey(),
+  token: text("token").notNull().unique(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+}, (table) => [index("auth_sessions_user_idx").on(table.userId)]);
+
+export const authAccounts = pgTable("auth_accounts", {
+  id: text("id").primaryKey(),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
+  password: text("password"),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  idToken: text("id_token"),
+  accessTokenExpiresAt: timestamp("access_token_expires_at"),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+  scope: text("scope"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("auth_accounts_provider_account_idx").on(table.providerId, table.accountId),
+  index("auth_accounts_user_idx").on(table.userId),
+]);
+
+export const authVerifications = pgTable("auth_verifications", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [index("auth_verifications_identifier_idx").on(table.identifier)]);
 
 export const demonstrations = pgTable("demonstrations", {
   id: varchar("id", { length: 255 }).primaryKey().default(sql`gen_random_uuid()`),

@@ -36,6 +36,9 @@ jobs:
       - name: Typecheck
         run: npm run check
 
+      - name: Test authentication and email delivery
+        run: npx tsx --test server/auth.test.ts server/email.test.ts
+
       - name: Build
         run: npm run build
 

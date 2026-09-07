@@ -37,6 +37,16 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
   exit 1
 fi
 
+node --input-type=module <<'NODE'
+const [major, minor] = process.versions.node.split('.').map(Number);
+if (major < 22 || (major === 22 && minor < 16)) throw new Error('Node.js 22.16+ is required');
+if ((process.env.BETTER_AUTH_SECRET || process.env.SESSION_SECRET || '').length < 32) {
+  throw new Error('A stable authentication secret of at least 32 characters is required');
+}
+const origin = new URL(process.env.PUBLIC_BASE_URL || '');
+if (origin.protocol !== 'https:') throw new Error('PUBLIC_BASE_URL must use HTTPS');
+NODE
+
 database_ready() {
   command -v pg_isready >/dev/null 2>&1 && pg_isready --dbname="$DATABASE_URL" --timeout=3 >/dev/null 2>&1
 }
@@ -117,32 +127,32 @@ npm ci --include=dev
 echo "Checking TypeScript"
 npm run check
 
+echo "Testing authentication and email delivery"
+npx tsx --test server/auth.test.ts server/email.test.ts
+
 echo "Building production bundle"
 npm run build
 
-database_recovered=false
-if recover_database_if_local; then
-  database_recovered=true
-fi
+recover_database_if_local
+command -v pg_dump >/dev/null
 
-if [[ "$database_recovered" == "true" ]]; then
+# Stop the old authentication implementation before the final backup and migration.
+# A failure after this point leaves the service stopped for explicit recovery;
+# never restart old code against credentials that have already been migrated.
+echo "Stopping $SERVICE_NAME for account migration"
+systemctl stop "$SERVICE_NAME"
+
   mkdir -p "$BACKUP_DIR"
   timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
   backup_file="$BACKUP_DIR/predeploy-${GITHUB_SHA:-manual}-$timestamp.dump"
 
-  if command -v pg_dump >/dev/null 2>&1; then
     echo "Creating database backup at $backup_file"
     pg_dump --format=custom --no-owner --no-privileges --file="$backup_file" "$DATABASE_URL"
     chmod 600 "$backup_file"
-  else
-    echo "pg_dump is not installed; skipping database backup" >&2
-  fi
+    pg_restore --list "$backup_file" >/dev/null
 
-  echo "Applying database schema changes"
-  npm run db:push -- --force
-else
-  echo "Database remains unavailable; deploying the safe degraded web shell without schema changes" >&2
-fi
+echo "Migrating authentication accounts"
+npx tsx script/migrate-auth.ts
 
 echo "Pruning development dependencies"
 npm prune --omit=dev
@@ -157,6 +167,12 @@ StartLimitBurst=10
 [Service]
 Restart=on-failure
 RestartSec=5s
+SYSTEMD
+cat > "/etc/systemd/system/${SERVICE_NAME}.service.d/runtime.conf" <<SYSTEMD
+[Service]
+ExecStart=
+ExecStart=$(command -v node) --env-file=$APP_DIR/.env $APP_DIR/dist/index.js
+Environment=NODE_ENV=production
 SYSTEMD
 systemctl daemon-reload
 
@@ -178,11 +194,6 @@ for attempt in {1..30}; do
 
   sleep 1
 done
-
-if [[ "$database_recovered" != "true" ]]; then
-  echo "Degraded web shell is live, but production is not ready because PostgreSQL did not recover" >&2
-  exit 1
-fi
 
 curl -fsS "http://127.0.0.1:$PORT/readyz" >/dev/null
 

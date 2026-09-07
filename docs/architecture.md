@@ -27,8 +27,8 @@ Preferred communication style: Simple, everyday language.
 - **Runtime:** Node.js with Express (TypeScript via tsx)
 - **HTTP server:** Node `http.createServer` wrapping Express (needed for Socket.IO)
 - **Real-time:** Socket.IO server for pushing chant changes and viewer counts to participants
-- **Authentication:** Email/password registration with email verification via SendGrid; sessions stored in PostgreSQL via `connect-pg-simple`
-- **Session management:** Express-session with 30-day cookie, stored in a `session` table (auto-created)
+- **Authentication:** Better Auth email/password registration with email verification via SendGrid; see [authentication setup](authentication.md)
+- **Session management:** Better Auth signed cookies with 30-day sessions stored in PostgreSQL `auth_sessions`
 - **Password security:** bcryptjs with 12 rounds for hashing; verification tokens hashed with SHA-256 before storage
 - **Email service:** SendGrid integration for sending verification emails
 - **QR Code generation:** `qrcode` library for generating participant join QR codes
@@ -52,7 +52,7 @@ Preferred communication style: Simple, everyday language.
 - **demo_admins** — composite PK (demonstrationId, userId) linking admins to demos
 - **demo_state** — demonstrationId (PK), currentChantId, autoRotate, rotationInterval, cycleCount, leaderDuration, peopleDuration, currentPhase, currentCycle, eventDurationMinutes (event timer in minutes, 1-300 max 5 hours), liveStartedAt (timestamp when demo went live for countdown timer), updatedAt
 - **view_sessions** — id, demonstrationId, sessionId, firstSeenAt (tracks anonymous viewers)
-- **session** — auto-created by connect-pg-simple for Express sessions
+- **auth_sessions**, **auth_accounts**, **auth_verifications** — Better Auth sessions, credentials and recovery tokens
 
 ### Key Routes
 - `/api/auth/me` — get current authenticated user
@@ -72,7 +72,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Build & Deploy
 - **Dev:** `npm run dev` — runs tsx with Vite dev middleware for HMR
-- **Build:** `npm run build` — Vite builds frontend to `dist/public`, esbuild bundles server to `dist/index.cjs`
+- **Build:** `npm run build` — Vite builds frontend to `dist/public`, esbuild bundles the ESM server to `dist/index.js`
 - **Production:** `npm start` — runs the bundled server which serves static files
 - The build script bundles select server dependencies to reduce cold start times
 
@@ -87,7 +87,9 @@ client/              # Frontend React app
 server/              # Backend Express app
   index.ts           # Entry point, Express + HTTP server setup
   routes.ts          # API routes + Socket.IO setup
-  auth.ts            # Passport.js + session configuration
+  auth.ts            # Better Auth Express adapter + authorization middleware
+  better-auth.ts     # Better Auth configuration and email delivery handling
+  auth-migration.ts  # Existing-account migration
   db.ts              # PostgreSQL pool + Drizzle instance
   storage.ts         # Data access layer (IStorage interface + DatabaseStorage)
   static.ts          # Production static file serving
@@ -111,5 +113,5 @@ script/
 - **PostgreSQL** — Primary database, required via `DATABASE_URL` environment variable
 - **Socket.IO** — WebSocket-based real-time communication between server and participant clients
 - **QRCode (npm)** — Server-side QR code generation for participant join links
-- **connect-pg-simple** — PostgreSQL session store for Express sessions
-- **SESSION_SECRET** — Environment variable for signing session cookies (required; no default)
+- **Better Auth** — Authentication and PostgreSQL session management through Drizzle
+- **BETTER_AUTH_SECRET** — At least 32 random characters; falls back to `SESSION_SECRET`

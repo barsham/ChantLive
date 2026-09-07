@@ -10,6 +10,14 @@ Use GitHub Issues and pull requests for implementation details, then add approve
 - Production registration now requires email verification regardless of hosting provider. SendGrid configuration is supported, and failed sends show a retry message instead of success.
 - Development verification bypass now requires `DEV_SKIP_EMAIL_VERIFICATION=true` and is ignored in production.
 
+## 1.1.92 - 7 September 2026
+
+Better Auth authentication with preserved accounts and reliable email delivery.
+
+### Added
+
+- Better Auth authentication: Sign-in, email verification, password recovery and sessions now use Better Auth. Existing accounts and roles are preserved; users must sign in again after the upgrade. [Issue](https://github.com/barsham/ChantLive/issues/16)
+
 ## 1.1.91 - 6 September 2026
 
 Weekly blog guidance for supporting quiet participation at peaceful events.

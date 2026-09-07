@@ -464,10 +464,15 @@ export default function AdminDashboard() {
               </Button>
             )}
             <span className="text-sm text-muted-foreground hidden sm:inline">{user?.name}</span>
-            <Button variant="ghost" size="icon" asChild data-testid="button-logout">
-              <a href="/auth/logout">
+            <Button variant="ghost" size="icon" data-testid="button-logout" onClick={async () => {
+              try {
+                await apiRequest("POST", "/api/auth/sign-out");
+                window.location.assign("/");
+              } catch {
+                toast({ title: "Sign out failed", description: "Please try again.", variant: "destructive" });
+              }
+            }}>
                 <LogOut className="w-4 h-4" />
-              </a>
             </Button>
           </div>
         </div>

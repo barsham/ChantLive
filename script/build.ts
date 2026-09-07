@@ -2,38 +2,7 @@ import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
 import { rm, readFile, writeFile } from "fs/promises";
 
-// server deps to bundle to reduce openat(2) syscalls
-// which helps cold start times
-const allowlist = [
-  "@google/generative-ai",
-  "axios",
-  "cors",
-  "date-fns",
-  "drizzle-orm",
-  "drizzle-zod",
-  "express",
-  "express-rate-limit",
-  "express-session",
-  "jsonwebtoken",
-  "memorystore",
-  "multer",
-  "nanoid",
-  "nodemailer",
-  "openai",
-  "passport",
-  "passport-local",
-  "pg",
-  "stripe",
-  "uuid",
-  "ws",
-  "xlsx",
-  "zod",
-  "zod-validation-error",
-];
-
-// Keep packages that load runtime assets from their own directories external.
-// `connect-pg-simple` reads `table.sql` via `__dirname`, which breaks when bundled
-// into `dist/index.cjs` on platforms like Render.
+// Better Auth is ESM; keep dependencies external to preserve their runtime imports.
 
 async function buildAll() {
   await rm("dist", { recursive: true, force: true });
@@ -78,23 +47,18 @@ self.addEventListener("fetch", (event) => {
   await writeFile("dist/public/sw.js", serviceWorker, "utf-8");
 
   console.log("building server...");
-  const allDeps = [
-    ...Object.keys(pkg.dependencies || {}),
-    ...Object.keys(pkg.devDependencies || {}),
-  ];
-  const externals = allDeps.filter((dep) => !allowlist.includes(dep));
 
   await esbuild({
     entryPoints: ["server/index.ts"],
     platform: "node",
     bundle: true,
-    format: "cjs",
-    outfile: "dist/index.cjs",
+    format: "esm",
+    outfile: "dist/index.js",
     define: {
       "process.env.NODE_ENV": '"production"',
     },
     minify: true,
-    external: externals,
+    packages: "external",
     logLevel: "info",
   });
 }

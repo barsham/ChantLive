@@ -1,6 +1,7 @@
 import pg from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "@shared/schema";
+import { betterAuthMigration } from "./auth-migration";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL must be set");
@@ -27,6 +28,18 @@ export async function ensureUserAuthColumns(): Promise<void> {
     ADD COLUMN IF NOT EXISTS password_reset_expires timestamp,
     ADD COLUMN IF NOT EXISTS last_activity_at timestamp;
   `);
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("SELECT pg_advisory_xact_lock(160016)");
+    await client.query(betterAuthMigration);
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function ensureDemoColumnsAndTables(): Promise<void> {

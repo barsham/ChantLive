@@ -7,7 +7,7 @@ Admins create demonstrations, manage chant lists, and push the current chant liv
 ## Features
 
 - Real-time chant updates via Socket.IO
-- Admin authentication (email/password)
+- Admin authentication with Better Auth (email/password)
 - Public participant view with no login required
 - Live viewer count tracking
 - PostgreSQL + Drizzle ORM backend
@@ -23,7 +23,7 @@ Admins create demonstrations, manage chant lists, and push the current chant liv
 
 ### 1) Prerequisites
 
-- Node.js 20+
+- Node.js 22.16+
 - npm 10+
 - PostgreSQL
 
@@ -44,11 +44,15 @@ cp .env.example .env
 Required variables:
 
 - `DATABASE_URL`
-- `SESSION_SECRET`
+- `BETTER_AUTH_SECRET` (at least 32 random characters; falls back to `SESSION_SECRET`)
 
 Optional variables:
 
 - `PORT`
+
+See [authentication setup and migration](docs/authentication.md) for the initial
+super admin email, proxy configuration, and existing-account migration. Users
+must sign in again after upgrading; existing passwords and roles are preserved.
 
 Email delivery requires `SENDGRID_API_KEY` and a `SENDGRID_FROM_EMAIL` address on a
 domain authenticated in SendGrid. Set `PUBLIC_BASE_URL` to the public app origin

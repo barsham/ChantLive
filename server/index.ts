@@ -14,6 +14,9 @@ const app = express();
 const httpServer = createServer(app);
 
 app.disable("x-powered-by");
+const proxyHops = Number(process.env.TRUST_PROXY_HOPS || 0);
+if (!Number.isInteger(proxyHops) || proxyHops < 0) throw new Error("TRUST_PROXY_HOPS must be a non-negative integer");
+app.set("trust proxy", proxyHops);
 
 declare module "http" {
   interface IncomingMessage {
@@ -103,7 +106,7 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
+      if (capturedJsonResponse && !path.startsWith("/api/auth/")) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
 
@@ -148,7 +151,7 @@ app.use((req, res, next) => {
   httpServer.listen(
     {
       port,
-      host: "0.0.0.0"
+      host: process.env.HOST || "0.0.0.0"
     },
     () => {
       log(`serving on port ${port}`);
