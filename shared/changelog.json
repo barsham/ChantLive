@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.93",
+      "releasedAt": "2026-09-13",
+      "summary": "A complete account activation recovery journey for organisers who miss, lose, or need to resend their verification email.",
+      "items": [
+        {
+          "id": "cl-2026-09-13-persistent-account-activation-centre",
+          "title": "Persistent account activation centre",
+          "description": "After registration, organisers get a session-resilient activation checklist with the exact destination address, link lifetime, inbox guidance, and direct next actions.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-09-13",
+          "links": []
+        },
+        {
+          "id": "cl-2026-09-13-safe-verification-email-resend",
+          "title": "Safe verification email resend",
+          "description": "A privacy-safe resend workflow provides validation, cooldown protection, clear delivery feedback, and retry guidance without revealing whether an address has an account.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-09-13",
+          "links": []
+        },
+        {
+          "id": "cl-2026-09-13-unverified-sign-in-rescue",
+          "title": "Unverified sign-in rescue",
+          "description": "A correct-password sign-in to an unverified account now opens activation help immediately instead of leaving the organiser with an opaque error.",
+          "type": "fix",
+          "visibility": "public",
+          "dateAdded": "2026-09-13",
+          "links": []
+        },
+        {
+          "id": "cl-2026-09-13-email-correction-recovery",
+          "title": "Email correction recovery",
+          "description": "Organisers who spot a mistyped address can return safely to registration and correct it without losing the current page context.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-09-13",
+          "links": []
+        },
+        {
+          "id": "cl-2026-09-13-accessible-activation-recovery",
+          "title": "Accessible activation recovery",
+          "description": "Activation, resend, loading, failure, and recovery states use announced status messages, keyboard-ready controls, mobile-size targets, and overflow-safe layouts.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-09-13",
+          "links": []
+        }
+      ]
+    },
+    {
       "version": "1.1.92",
       "releasedAt": "2026-09-07",
       "summary": "Better Auth authentication with preserved accounts and reliable email delivery.",

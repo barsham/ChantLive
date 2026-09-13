@@ -132,6 +132,18 @@ test("migrates accounts and exercises Better Auth verification, sessions and rec
       assert.equal(response.status, 200, await response.clone().text());
       assert.equal((await response.json()).status, "verification_email_sent");
       assert.equal((await database.select().from(schema.users).where(eq(schema.users.email, "retry@example.com")))[0].name, "Retry");
+      response = await http("/login", { email: "retry@example.com", password: "retry-password" });
+      assert.equal(response.status, 403);
+      assert.equal((await response.json()).code, "EMAIL_NOT_VERIFIED");
+      response = await http("/resend-verification", { email: "retry@example.com" });
+      assert.equal(response.status, 200, await response.clone().text());
+      assert.equal(response.headers.get("cache-control"), "no-store");
+      assert.equal((await response.json()).status, "verification_email_sent");
+      response = await http("/resend-verification", { email: "missing@example.com" });
+      assert.equal(response.status, 200, await response.clone().text());
+      assert.equal((await response.json()).status, "verification_email_sent");
+      assert.equal((await http("/resend-verification", { email: "not-an-email" })).status, 400);
+      assert.equal((await http("/resend-verification", { email: `${"a".repeat(245)}@example.com` })).status, 400);
       const verifyURL = messages.at(-1).content[0].value.match(/https:\/\/\S+/)[0];
       await auth.handler(new Request(verifyURL));
       assert.equal((await http("/login", { email: "retry@example.com", password: "retry-password" })).status, 200);

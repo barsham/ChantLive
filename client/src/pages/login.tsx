@@ -8,12 +8,17 @@ import { Link, useLocation, useSearch } from "wouter";
 import { AppVersion } from "@/components/app-version";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { ApiRequestError, apiRequest, queryClient } from "@/lib/queryClient";
+import { AccountActivation } from "@/components/account-activation";
+import { clearPendingActivation, readPendingActivation, rememberPendingActivation, type PendingActivation } from "@/lib/pending-activation";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const initialPending = readPendingActivation();
+  const [email, setEmail] = useState(() => initialPending?.email ?? "");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [pendingActivation, setPendingActivation] = useState<PendingActivation | null>(initialPending);
+  const [showActivation, setShowActivation] = useState(false);
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const search = useSearch();
@@ -24,6 +29,10 @@ export default function Login() {
       navigate("/admin");
     }
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    if (!email && pendingActivation?.email) setEmail(pendingActivation.email);
+  }, [email, pendingActivation]);
 
   useEffect(() => {
     const params = new URLSearchParams(search);
@@ -43,14 +52,47 @@ export default function Login() {
     setIsLoading(true);
     try {
       await apiRequest("POST", "/api/auth/login", { email, password });
+      clearPendingActivation();
       await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       navigate("/admin");
     } catch (err: any) {
+      if ((err instanceof ApiRequestError && err.code === "EMAIL_NOT_VERIFIED") || err?.message === "Email not verified") {
+        const normalizedEmail = email.trim().toLowerCase();
+        const existingPending = readPendingActivation();
+        const pending = existingPending?.email === normalizedEmail
+          ? existingPending
+          : rememberPendingActivation(normalizedEmail, null);
+        setPendingActivation(pending);
+        setShowActivation(true);
+        return;
+      }
       const message = err?.message || "Login failed. Please try again.";
       toast({ title: "Sign in failed", description: message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
+  }
+
+  if (showActivation && pendingActivation) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <AccountActivation
+              email={pendingActivation.email}
+              sentAt={pendingActivation.sentAt}
+              onSent={(sentAt) => setPendingActivation({ ...pendingActivation, sentAt })}
+              onSignIn={() => setShowActivation(false)}
+              onUseDifferentEmail={() => {
+                clearPendingActivation();
+                setPendingActivation(null);
+                navigate("/register");
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -69,6 +111,15 @@ export default function Login() {
           </p>
         </CardHeader>
         <CardContent>
+          {pendingActivation && (
+            <div className="mb-4 rounded-lg border border-amber-600/30 bg-amber-500/5 p-3 text-sm" role="status" data-testid="pending-activation-reminder">
+              <p className="font-medium">Still waiting to verify {pendingActivation.email}?</p>
+              <p className="mt-1 text-muted-foreground">You can resend the activation email without completing registration again.</p>
+              <Button variant="ghost" className="mt-1 h-11 px-0 text-primary hover:bg-transparent" onClick={() => setShowActivation(true)} data-testid="button-open-activation-centre">
+                Open activation help
+              </Button>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>

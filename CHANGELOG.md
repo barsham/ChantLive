@@ -4,11 +4,23 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
-## Unreleased
+## 1.1.93 - 13 September 2026
 
-- Fixed registration showing “Check your email” when verification was skipped.
-- Production registration now requires email verification regardless of hosting provider. SendGrid configuration is supported, and failed sends show a retry message instead of success.
-- Development verification bypass now requires `DEV_SKIP_EMAIL_VERIFICATION=true` and is ignored in production.
+A complete account activation recovery journey for organisers who miss, lose, or need to resend their verification email.
+
+### Added
+
+- Persistent account activation centre: After registration, organisers get a session-resilient activation checklist with the exact destination address, link lifetime, inbox guidance, and direct next actions.
+- Safe verification email resend: A privacy-safe resend workflow provides validation, cooldown protection, clear delivery feedback, and retry guidance without revealing whether an address has an account.
+
+### Fixed
+
+- Unverified sign-in rescue: A correct-password sign-in to an unverified account now opens activation help immediately instead of leaving the organiser with an opaque error.
+
+### Improved
+
+- Email correction recovery: Organisers who spot a mistyped address can return safely to registration and correct it without losing the current page context.
+- Accessible activation recovery: Activation, resend, loading, failure, and recovery states use announced status messages, keyboard-ready controls, mobile-size targets, and overflow-safe layouts.
 
 ## 1.1.92 - 7 September 2026
 

@@ -3,21 +3,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, Eye, EyeOff, Mail, Megaphone, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Megaphone, ShieldCheck } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { AppVersion } from "@/components/app-version";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { AccountActivation } from "@/components/account-activation";
+import { clearPendingActivation, readPendingActivation, rememberPendingActivation } from "@/lib/pending-activation";
 
 export default function Register() {
+  const [pendingActivation, setPendingActivation] = useState(readPendingActivation);
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => pendingActivation?.email ?? "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPasswords, setShowPasswords] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const { toast } = useToast();
   const [, navigate] = useLocation();
@@ -39,7 +41,13 @@ export default function Register() {
     try {
       const res = await apiRequest("POST", "/api/auth/register", { name, email, password });
       const data = await res.json();
-      setEmailSent(data.status === "verification_email_sent");
+      if (data.status === "verification_email_sent") {
+        const pending = rememberPendingActivation(email);
+        setPendingActivation(pending);
+      } else {
+        clearPendingActivation();
+        setPendingActivation(null);
+      }
       setSuccess(true);
       setSuccessMessage(data.message);
     } catch (err: any) {
@@ -50,19 +58,40 @@ export default function Register() {
     }
   }
 
+  if (pendingActivation) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <AccountActivation
+              email={pendingActivation.email}
+              sentAt={pendingActivation.sentAt}
+              onSent={(sentAt) => setPendingActivation({ ...pendingActivation, sentAt })}
+              onSignIn={() => navigate("/login")}
+              onUseDifferentEmail={() => {
+                clearPendingActivation();
+                setPendingActivation(null);
+                setSuccess(false);
+                setEmail(pendingActivation.email);
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (success) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6 text-center">
             <div className="w-12 h-12 rounded-md bg-green-500/10 flex items-center justify-center mx-auto mb-4">
-              {emailSent ? <Mail className="w-6 h-6 text-green-600" /> : <CheckCircle2 className="w-6 h-6 text-green-600" />}
+              <CheckCircle2 className="w-6 h-6 text-green-600" />
             </div>
-            <h2 className="text-xl font-semibold mb-2">{emailSent ? "Check your email" : "Account created"}</h2>
+            <h2 className="text-xl font-semibold mb-2">Account created</h2>
             <p className="text-muted-foreground text-sm mb-6">{successMessage}</p>
-            <Button variant="outline" onClick={() => navigate("/login")} data-testid="button-go-login">
-              Go to Sign In
-            </Button>
+            <Button variant="outline" onClick={() => navigate("/login")} data-testid="button-go-login">Go to Sign In</Button>
           </CardContent>
         </Card>
       </div>

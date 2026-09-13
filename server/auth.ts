@@ -77,6 +77,28 @@ export function setupAuth(app: Express, authentication = auth, userStorage: User
       email: typeof email === "string" ? email.trim().toLowerCase() : "", password,
     }));
   });
+  app.post("/api/auth/resend-verification", async (req, res) => {
+    const normalizedEmail = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+    res.setHeader("Cache-Control", "no-store");
+    if (normalizedEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      return res.status(400).json({ message: "Enter a valid email address." });
+    }
+    const response = await forwardRequest(req, "/api/auth/send-verification-email", {
+      email: normalizedEmail,
+      callbackURL: "/login?verified=true",
+    });
+    if (response.status === 429) {
+      return res.status(429).json({ message: "Too many resend attempts. Please wait a few minutes and try again." });
+    }
+    if (response.status >= 500) {
+      return res.status(503).json({ message: "We couldn't send the verification email. Please try again shortly." });
+    }
+    if (!response.ok) return sendResponse(res, response);
+    return res.json({
+      status: "verification_email_sent",
+      message: "If this address still needs verification, a fresh link has been sent. Check your inbox, spam, or quarantine folder.",
+    });
+  });
   app.post("/api/auth/forgot-password", async (req, res) => {
     const { email } = req.body ?? {};
     return sendResponse(res, await forwardRequest(req, "/api/auth/request-password-reset", {
