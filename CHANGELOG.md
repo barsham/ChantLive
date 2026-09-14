@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.94 - 14 September 2026
+
+A practical volunteer shift handover guide for peaceful community events.
+
+### Documentation
+
+- Volunteer shift handover checklist: A six-section guide with a five-field handover note, a welcome-desk example, and the existing ChantLive volunteer briefing workflow. [Read the guide](/blog/volunteer-shift-handover-checklist)
+
 ## 1.1.93 - 13 September 2026
 
 A complete account activation recovery journey for organisers who miss, lose, or need to resend their verification email.

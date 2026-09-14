@@ -19,6 +19,95 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "volunteer-shift-handover-checklist",
+    title: "A Volunteer Shift Handover Checklist for Peaceful Events",
+    description:
+      "Help incoming volunteers pick up where the last shift stopped, with a short handover note, a welcome-desk example, and a ChantLive briefing check.",
+    publishedAt: "2026-09-14",
+    category: "Organizing",
+    readingMinutes: 5,
+    tags: ["volunteers", "handover", "briefing", "communication"],
+    disclaimer:
+      "This is general event communication guidance, not legal, medical, security, or emergency-response advice. Use your event's approved procedures and follow venue and emergency services instructions.",
+    sections: [
+      {
+        heading: "Hand Over What Changed, Not Just The Role Name",
+        paragraphs: [
+          "A new welcome-desk volunteer arrives with the morning brief, but the afternoon programme now starts ten minutes later. The outgoing volunteer knows this; the incoming volunteer starts giving the old time. Everyone means well, yet participants receive two different answers.",
+          "A shift handover closes that gap. Its purpose is to make the next person ready for the situation that exists now. A role description explains the usual job; a handover explains the changes and unfinished work. This checklist is for routine volunteer coordination at peaceful gatherings and community events.",
+          "The UK Health and Safety Executive describes handover as preparation, an exchange of relevant information, and a check by the incoming team. Its industrial guidance also recommends written and spoken communication. Those communication principles inform this checklist; they are not event-specific legal requirements. Source: https://www.hse.gov.uk/humanfactors/topics/shift-handover.htm",
+        ],
+      },
+      {
+        heading: "Put A Real Handover In The Roster",
+        paragraphs: [
+          "Give the outgoing and incoming volunteers an agreed place and enough overlap to compare notes. For a simple welcome desk, try a five-minute overlap in rehearsal and extend it when the work needs more explanation. Five minutes is an example, not a safety standard.",
+          "Name a coordinator who can arrange cover when someone is delayed. A volunteer should know whom to contact before their shift ends, rather than having to find their own replacement or stay indefinitely. Keep the handover point out of the flow of arriving participants.",
+        ],
+        bullets: [
+          "Roster: role, incoming volunteer, outgoing volunteer, overlap time, and meeting point.",
+          "Cover: coordinator contact and an agreed plan for a missing replacement.",
+          "Materials: current programme, role brief, participant link, and any paper copies.",
+        ],
+      },
+      {
+        heading: "Use A Five-Field Handover Note",
+        paragraphs: [
+          "Keep one short note for each role. Update it before the changeover and date it so an old screenshot does not look current. A shared document or paper sheet is enough; use whichever format the team can reliably access.",
+          "Record the work someone needs to do, rather than a detailed account of the people involved. For a personal concern, direct the next volunteer to the designated coordinator through the event's agreed private route. Keep personal circumstances out of public chants and shared joining materials.",
+        ],
+        bullets: [
+          "NOW: Where are we in the programme, and when was this note updated?",
+          "CHANGED: Which time, location, wording, or instruction differs from the original brief?",
+          "NEXT: What is the next routine task, and when should it happen?",
+          "OPEN: What remains unresolved, who owns it, and when will they check back?",
+          "CONFIRMED: Who is taking over, and what have they checked?",
+        ],
+      },
+      {
+        heading: "Try This Welcome-Desk Example",
+        paragraphs: [
+          "Imagine a fictional neighbourhood gathering with a welcome desk staffed until 3 pm. At the afternoon changeover, the outgoing volunteer writes the following. The names, times, and tasks are examples to adapt, not a prescribed event plan.",
+          "The incoming volunteer then gives a short read-back: 'I will tell arrivals that the next activity starts at 2:10, offer the printed programme, and ask Alex about the replacement sign at 1:55.' That reply makes a misunderstanding visible while both people are still present.",
+        ],
+        bullets: [
+          "NOW, 1:45 pm: Welcome desk open; afternoon arrivals are joining.",
+          "CHANGED: The next activity starts at 2:10 pm, replacing the printed 2 pm time.",
+          "NEXT: Offer each arrival the current programme and the plain participant link.",
+          "OPEN: Alex is replacing the old programme sign; check back at 1:55 pm.",
+          "CONFIRMED: Sam has the revised programme, knows how to reach Alex, and takes over at 1:50 pm.",
+        ],
+      },
+      {
+        heading: "Check The ChantLive Joining Materials Together",
+        paragraphs: [
+          "For an event using ChantLive, open Volunteer briefing from the event editor. The existing role cards cover the speaker or chant leader, marshal or crowd guide, accessibility helper, and backup admin. Use Copy role card, Copy all, or Print briefing to prepare the relevant material. Add the current shift note separately: the role cards do not replace a changing roster or handover log.",
+          "Before the event, have two volunteers rehearse with a fictional test demonstration. Open its participant link, display a harmless sample chant, and check that both are looking at the same event and text. At a real changeover, compare the current participant view without pushing a test message to the audience.",
+        ],
+        bullets: [
+          "Confirm the event title and ordinary participant URL match the joining sign.",
+          "Pair the QR code with its written link and keep a paper option available.",
+          "Show the incoming volunteer the existing fallback instructions if updates stop.",
+          "Keep volunteer shift notes with the team; use the participant page for audience-facing content.",
+        ],
+      },
+      {
+        heading: "Close The Handover And Improve The Next One",
+        paragraphs: [
+          "Finish with a clear acceptance: the incoming person knows the next task, has the materials, and can reach the coordinator. If an answer is missing, give that question an owner and a check-back time instead of guessing. Follow the agreed cover plan when the handover cannot be completed.",
+          "After the event, ask one narrow question: 'What did you discover after taking over that you needed to know earlier?' Turn the answer into a better field, clearer wording, or a longer overlap for that role next time. A useful improvement might be replacing 'sign issue' with the exact sign, responsible person, and due time.",
+          "For broader preparation, Zoho Backstage's volunteer management guide discusses written briefs, shift details, and communication contacts. This article focuses on the changeover itself. Source: https://www.zoho.com/backstage/event-volunteer-management.html",
+        ],
+        bullets: [
+          "The incoming volunteer can explain the current change and next task.",
+          "Every open item has a named owner and a next check.",
+          "The coordinator knows who is now covering the role.",
+          "One useful lesson is added to the next event's brief.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "support-quiet-participation-peaceful-events",
     title: "How to Support Quiet Participation at Peaceful Events",
     description:
