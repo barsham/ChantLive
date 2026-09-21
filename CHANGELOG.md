@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.95 - 21 September 2026
+
+A reusable three-prompt rehearsal for clearer community workshop instructions.
+
+### Documentation
+
+- Workshop instruction rehearsal guide: A six-section practical guide with original sample prompts, a reusable rehearsal sheet, a paper fallback and the existing ChantLive display workflow. [Read the guide](/blog/three-prompt-workshop-rehearsal)
+
 ## 1.1.94 - 14 September 2026
 
 A practical volunteer shift handover guide for peaceful community events.

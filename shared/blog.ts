@@ -19,6 +19,87 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "three-prompt-workshop-rehearsal",
+    title: "Check Workshop Instructions With a Three-Prompt Rehearsal",
+    description: "Rehearse three community workshop prompts before people arrive, using a reusable check sheet, a reader check, and a paper fallback.",
+    publishedAt: "2026-09-21",
+    category: "Organizing",
+    readingMinutes: 4,
+    tags: ["workshops", "rehearsal", "instructions", "communication"],
+    disclaimer: "This is routine workshop communication guidance, not legal, medical, security, or emergency-response advice. The suggested rehearsal is not a validated assessment or an accessibility guarantee.",
+    sections: [
+      {
+        heading: "Test The Instruction, Not The Reader",
+        paragraphs: [
+          "A community workshop can have a thoughtful programme and still leave someone wondering what to do next. Before people arrive, ask a helper to read three ordinary prompts without your explanation. Compare the action they understand with the action you intended. A mismatch is a reason to improve the wording, not a judgement about the reader.",
+          "Facilitator David Lemus describes the familiar audience question, 'Wait...what are we doing?' His guidance highlights missing practical details in activity instructions. That is the problem this original rehearsal addresses. Source: https://www.lemusand.co/newsletter/4-questions-to-deliver-clear-activity-instructions",
+          "Allow roughly ten to fifteen minutes with a colleague, extending the time as needed. This is a suggested preparation exercise, not evidence that your actual participants will find every instruction clear. Invite their feedback too.",
+        ],
+      },
+      {
+        heading: "Prepare Three Ordinary Prompts",
+        paragraphs: [
+          "Choose welcome, reflection and close, or three other stages where instructions change. Write one small action per prompt. Include the materials, timing or group arrangement only when people need them to act. Use fictional examples in preparation and keep personal information out of shared displays.",
+          "SessionLab recommends clear step-by-step instructions and a written version on a slide, poster or other visible surface. A paper sheet or shared screen may be all your workshop needs. Source: https://www.sessionlab.com/blog/how-to-run-a-workshop/",
+        ],
+        bullets: [
+          "Welcome: Choose whether to listen, speak or pass during the introductions.",
+          "Reflection: Take two quiet minutes to write or think of one improvement to this session; sharing is optional.",
+          "Close: Choose one useful idea to take away. You may keep it to yourself.",
+        ],
+      },
+      {
+        heading: "Reuse This Rehearsal Sheet",
+        paragraphs: [
+          "Make one copy of these fields for each prompt in a notebook or shared document. Write the reader's interpretation before explaining your intention. This separates what the prompt communicated from what your additional coaching supplied.",
+          "For example, 'Discuss improvements' might leave the reader unsure whether to find a partner. Replace it with the reflection example above when the intended activity is individual. Repeat the check after the change.",
+        ],
+        bullets: [
+          "STAGE AND WORDING: Which prompt is this, and what exact words will appear?",
+          "INTENDED ACTION: What should a participant be able to do next?",
+          "READER INTERPRETATION: What did the helper understand without extra explanation?",
+          "CHANGE TO TRY: Which missing detail or unclear phrase will we revise?",
+          "RECHECK: Did the revised instruction resolve that specific confusion?",
+          "FALLBACK AND OWNER: Where is the paper copy, and who indicates the current stage?",
+        ],
+      },
+      {
+        heading: "Check A Change And A Return",
+        paragraphs: [
+          "Show the first prompt and ask, 'What would you do next?' The helper can answer aloud, write, point or pass. Agree on a comfortable format. Repeat with the remaining prompts, recording uncertainty without turning the exercise into a speed test.",
+          "Then ask the helper to look away while you change the instruction. Can they identify the current stage when they return? If using a phone page, close and reopen it once and compare its text with the operator's intended prompt. Record a mismatch instead of assuming the newest text arrived.",
+        ],
+        bullets: [
+          "Use a stage name or explicit pointer, not colour alone, to identify the current instruction.",
+          "Leave enough reading time before moving on; ask the reader what worked for them.",
+          "Note whether clarification was needed and what the operator did to help.",
+        ],
+      },
+      {
+        heading: "Try ChantLive Only When Individual Phones Help",
+        paragraphs: [
+          "When changing text on individual phones fits the gathering, create a separate fictional demonstration in ChantLive and add your three prompts as chants. In the event editor, use Participant Access to obtain the participant link or QR code. Open the participant link in a second browser or on a helper's phone; participants do not need an account.",
+          "Use Go Live and Push Live to display a chosen prompt, then compare the participant view with the intended text. Repeat with another prompt and reopen the participant page. These controls are part of the existing workflow; this exercise does not add an automatic comprehension test. End the fictional demonstration when finished, keeping it separate from any real event.",
+          "Live updates require internet access. ChantLive displays text; it is not an emergency communication channel or an audio synchronisation system. If paper or a shared slide is easier for the group, use that instead.",
+        ],
+      },
+      {
+        heading: "Practise Without The Device And Decide",
+        paragraphs: [
+          "Put the phone or display aside. Give the helper the three printed prompts and have another person announce the stage and point to its row. Check that someone can follow without scanning a code. A printout is static, so update it whenever you change the approved wording.",
+          "Finish by choosing one wording correction and one clear responsibility for changing the display or paper pointer. Keep unresolved questions visible. A colleague completing this exercise is preparation, not proof of audience adoption or a successful real event.",
+          "For the next community session, ask whether the revised instructions helped and whether a simpler display would have worked better. Record an actual observation, such as a participant identifying the correct reflection prompt after returning, instead of treating a page view as success.",
+        ],
+        bullets: [
+          "All three prompts have a clear next action and an optional way to pass where appropriate.",
+          "The helper can identify the current stage after a change.",
+          "The paper copy matches the approved words and has a named operator.",
+          "Any real-session trial has the organiser's agreement; no trial is claimed until it happens.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "volunteer-shift-handover-checklist",
     title: "A Volunteer Shift Handover Checklist for Peaceful Events",
     description:
