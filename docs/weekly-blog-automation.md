@@ -2,7 +2,10 @@
 
 Automation id: `chantlive-weekly-answerthepublic-blog-post`
 
-Part of **ChantLive - Promotion & Content**, weekly Monday 6 PM Australia/Sydney.
+Part of **ChantLive - Promotion & Content**, which runs Monday, Wednesday and
+Friday at 6 PM Australia/Sydney. The blog is still once weekly, on Monday only.
+Follow [Promotion Strategy V3](promotion-strategy-v3.md): content supports the
+prepared-rehearsal offer and must not consume the acquisition work for the week.
 See [scheduled-work.md](scheduled-work.md) for ownership, outreach coordination,
 release safeguards and notification rules. There is no separate blog schedule.
 

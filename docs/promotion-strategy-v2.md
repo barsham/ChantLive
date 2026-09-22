@@ -1,6 +1,10 @@
 # ChantLive Adoption Strategy V2
 
-Status: Active from 2026-08-03.
+Status: Historical. Superseded on 19 September 2026 by
+[Promotion Strategy V3](promotion-strategy-v3.md), following the user's request
+for a radical strategy reset. The waiting rules and next steps below are retained
+as history, not current instructions. Existing communication permissions and
+contact-specific holds still apply.
 
 ## Honest Baseline
 

@@ -1,11 +1,13 @@
 # ChantLive scheduled work
 
-Consolidated on 7 September 2026. All times are Australia/Sydney local time.
+Consolidated on 7 September 2026; promotion reset on 19 September 2026.
+All times are Australia/Sydney local time. The active adoption plan is
+[Promotion Strategy V3](promotion-strategy-v3.md); V2 is historical.
 
 | Job | Schedule | Responsibility |
 | --- | --- | --- |
 | Enhancement | Sunday 18:00 | GitHub issues, meaningful product workflows, quality checks and verified releases |
-| Promotion & Content | Monday 18:00 | Weekly blog, search visibility, public acquisition experiment and promotional assets |
+| Promotion & Content | Monday, Wednesday, Friday 18:00 | Prepared-rehearsal acquisition, distribution and evidence; weekly blog on Monday only |
 | Outreach & Feedback | Monday-Friday 10:00 | Inbox and public reply monitoring, interested testers, follow-up drafts and feedback |
 
 The blog is part of Promotion & Content, not a separate competing job. Old daily
@@ -17,10 +19,14 @@ Outreach & Feedback restores that responsibility in the existing outreach chat.
 
 - Read the current adoption strategy, experiment ledger, contact ledger and
   account records. Verify current status rather than blindly repeating an old
-  next step. Only one public-channel acquisition hypothesis runs at a time.
+  next step. One offer/audience hypothesis can use up to two separately tracked,
+  permitted public placements. Support for an existing contact runs independently
+  and must not freeze acquisition. An access blocker gets two business days before
+  that platform is parked and another permitted route is evaluated.
 - Promotion defines the audience, offer, permitted channel, prediction, review
   date and stop condition. Outreach monitors replies and helps interested testers.
   Enhancement uses reproducible feedback to improve the product.
+  Do not invent feature work or extra content to substitute for adoption evidence.
 - Keep direct communication drafts and sent messages clearly distinguished.
   Send or post only when explicit user authorization covers the action. Preserve
   the existing cold-email pause, suppressed contacts and opt-outs.
@@ -45,8 +51,8 @@ Outreach & Feedback restores that responsibility in the existing outreach chat.
   mailbox. The separate issue 16 task subsequently reports Better Auth v1.1.92
   deployed and migration/production checks completed. Reverify the live flow
   before claiming an interested tester's registration problem is resolved.
-- Outreach must check whether Vanessa's inbound message has since been answered
-  before preparing a recovery reply. Do not send the old draft automatically.
+- Vanessa's recovery reply and one follow-up were sent and verified in Zoho.
+  Outreach monitors for her response and must not send another follow-up.
 - The July 5 volunteer-role post exists in `shared/blog.ts`; its old blocked-run
   conversation should not cause another duplicate article. The interrupted July
   12 blog run had no completed implementation to resume.

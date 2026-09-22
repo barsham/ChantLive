@@ -173,6 +173,33 @@ Would this be appropriate for someone in your team or network to review?
 | 2026-07-27 | Open Source Industry Australia | Zoho delivery-status notification | Classified as a permanent bounce after all retries failed with SMTP status 421. `admin@osia.com.au` is permanently suppressed. No further outreach was sent that day because this is evidence of deliverability trouble. |
 | 2026-08-31 | Democracy Developers | Vanessa Teague via vanessa@democracydevelopers.org.au | Qualified reply and test interest. Vanessa briefly reviewed `auth.ts`, considered the `bcrypt.hash` usage likely correct, suggested evaluating an established authentication library such as Better Auth to reduce subtle implementation risk, created the test account `vchanttest@greatcactus.org`, and intended to test ChantLive. Her verification email had not arrived when she wrote. No reply was sent before the message was discovered on 2026-09-07. |
 | 2026-09-07 | Democracy Developers | Vanessa Teague via vanessa@democracydevelopers.org.au | Reply sent and accepted by Zoho after confirming that ChantLive has adopted Better Auth and fixed verification and recovery email delivery. The response thanked Vanessa for the suggestion, apologised for the delayed reply, and directed her to sign in with her existing password or use password recovery. If the migrated account still reports that verification is required, she can repeat registration to receive a fresh verification link. |
+| 2026-09-08 | Democracy Developers | Vanessa Teague via vanessa@democracydevelopers.org.au | Verified the complete available thread across Inbox, Sent and Archive. Vanessa has not replied since the recovery message sent on 7 September. A fresh production smoke account completed registration, received its verification email, followed the verification link and signed in successfully on live version 1.1.92. No further message was sent. Next review is due 14 September 2026; do not follow up before then. |
+| 2026-09-14 | Democracy Developers | Vanessa Teague via vanessa@democracydevelopers.org.au | Follow-up review completed. The full available thread was checked and no reply has arrived since 7 September. The participant-only demo at https://chantlive.online/d/lR4WSuUS returned HTTP 200. One brief follow-up draft was prepared below but not sent; it requires Barsham's approval. Next action: approve, revise, or decline the draft. Due date: 17 September 2026. |
+| 2026-09-19 | Democracy Developers | Vanessa Teague via vanessa@democracydevelopers.org.au | Follow-up sent by Barsham and verified in Zoho Sent at 11:19 am Australia/Sydney. The message remains correctly threaded, asks whether access worked, and offers the participant-only demo as an account-free alternative. Next action: monitor for a reply or test observation. Do not send another follow-up. |
+
+## Follow-up Messages
+
+### Vanessa Teague, Democracy Developers
+
+**Status:** Sent by Barsham on 19 September 2026 at 11:19 am Australia/Sydney and verified in Zoho Sent.
+
+**Subject:** Re: Could someone sanity-check a small open-source civic tool?
+
+Hi Vanessa,
+
+I just wanted to check whether you were able to access ChantLive after my last message. There is no need to troubleshoot the old account if it still causes trouble.
+
+The simplest way to try it now is this participant demo:
+
+https://chantlive.online/d/lR4WSuUS
+
+It needs no account or setup. If you have a minute, watching two or three changes and telling me one thing that feels confusing, unclear, or concerning would be genuinely useful.
+
+No pressure at all if the timing does not suit.
+
+Best wishes,
+Barsham Sotoudeh
+ChantLive
 
 ## Suppression Log
 
