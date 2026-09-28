@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.96 - 28 September 2026
+
+A practical catch-up card for welcoming late arrivals to community workshops.
+
+### Documentation
+
+- Workshop late-arrival guide: A six-section guide with a reusable catch-up card, an original workshop example and the existing ChantLive participant joining workflow. [Read the guide](/blog/welcome-late-arrivals-community-workshop)
+
 ## 1.1.95 - 21 September 2026
 
 A reusable three-prompt rehearsal for clearer community workshop instructions.

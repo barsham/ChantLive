@@ -19,6 +19,88 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "welcome-late-arrivals-community-workshop",
+    title: "How to Welcome Late Arrivals to a Community Workshop",
+    description: "Help late arrivals join the current activity with a reusable catch-up card, a quiet welcome, and a phone-or-paper prompt they can follow.",
+    publishedAt: "2026-09-28",
+    category: "Organizing",
+    readingMinutes: 4,
+    tags: ["workshops", "welcome", "participants", "communication"],
+    disclaimer: "This is routine workshop communication guidance, not legal, medical, security, or emergency-response advice. Follow your venue's agreed arrival procedures. The suggested card is not an accessibility guarantee.",
+    sections: [
+      {
+        heading: "Welcome Someone Without Restarting Everything",
+        paragraphs: [
+          "Someone arrives after your community workshop has started, or returns after stepping out. They can see people working but do not know whether to find a partner, write something, or wait. A short welcome and a current instruction can help them join without replaying the whole opening.",
+          "In his August 2026 article Protect the Punctual, facilitator Nick Martin raises the practical tension between helping someone catch up and taking time from the group. This guide addresses that question with an original catch-up card rather than assuming why anyone arrived late. Source: https://workshopbank.substack.com/p/protect-the-punctual",
+          "Plan for arrivals before the session. Decide who can offer a quiet explanation and when an activity needs an introduction before someone joins. Do not ask people to explain personal circumstances to the room.",
+        ],
+      },
+      {
+        heading: "Separate A Welcome From An Activity Brief",
+        paragraphs: [
+          "A welcome tells someone they are included. An activity brief tells them what to do now. Keep both available: a friendly gesture alone cannot explain a task, and a displayed instruction cannot answer every question.",
+          "Seeds for Change recommends adapting the welcome to what is happening: joining a small group may allow a quick explanation, while a whole-group presentation may need a natural pause. Its guidance supports a flexible approach rather than one rule for every arrival. Source: https://www.seedsforchange.org.uk/facilitatingworkshops",
+        ],
+        bullets: [
+          "Name a welcome helper when the group and volunteer capacity allow it.",
+          "Agree where routine questions can be answered without talking over others.",
+          "Offer a way to observe or wait for the next activity when joining midway is confusing.",
+          "Explain any essential session agreement before participation; a catch-up card does not replace it.",
+        ],
+      },
+      {
+        heading: "Reuse This Five-Field Catch-Up Card",
+        paragraphs: [
+          "Put these fields on one sheet or a shared display. Keep the wording short enough to review at a glance, but include what someone actually needs to begin. The facilitator or named helper updates the card at each activity change. A static printout needs a visible pointer or a replacement copy.",
+          "Use the same stage name on the card, programme and spoken instruction. Check it with a colleague who did not help write it. Do not put participant names, personal answers or reasons for absence on a public display.",
+        ],
+        bullets: [
+          "NOW: Current activity and time this card was updated.",
+          "DO: One concrete next action, including materials or group arrangement when needed.",
+          "CHOICE: How to listen, pass or wait for the next stage.",
+          "NEXT: What happens after this activity, without promising an unconfirmed time.",
+          "HELP: Where to find the designated helper or ask a routine question.",
+        ],
+      },
+      {
+        heading: "Try A Neighbourhood Workshop Example",
+        paragraphs: [
+          "Imagine a fictional workshop collecting ideas for a shared reading corner. Someone arrives during individual reflection. The helper can say, 'Welcome. We are on the reflection step; this card shows the task. You can listen first.' The card below supplies the missing context without asking everyone to stop.",
+          "If the next activity depends on a briefing the person missed, offer that explanation before inviting them into it. Do not rush someone through essential context just to keep the programme moving.",
+        ],
+        bullets: [
+          "NOW: Individual reflection; updated 2:10 pm.",
+          "DO: Use a blank card to write one idea for the reading corner, or think quietly.",
+          "CHOICE: Sharing is optional. You may listen instead.",
+          "NEXT: We will invite ideas from anyone who wants to contribute.",
+          "HELP: The welcome helper beside the programme sign can explain the activity.",
+        ],
+      },
+      {
+        heading: "Use ChantLive For The Current Prompt Only",
+        paragraphs: [
+          "Paper or a shared screen may be simpler. When individual phone displays genuinely help, add the short activity prompts as chants in a separate fictional ChantLive demonstration. Use Participant Access for the participant link or QR code, then Go Live and Push Live to show a selected prompt. Participants do not need accounts.",
+          "Open that participant link on a second device after the prompt is already live. Compare the displayed wording with the current activity, then reopen the page and check again. The existing join flow sends the current chant state; do not describe it as a transcript of everything the person missed. Keep the fuller catch-up card and a human explanation available separately.",
+          "Live changes need internet connectivity. Give people the written participant link as well as a QR code, and retain a phone-free option. If the display is stale or unclear, use the agreed paper or spoken instruction. End the fictional demonstration after rehearsal; do not push sample prompts into a real gathering.",
+        ],
+      },
+      {
+        heading: "Check The Return Path And Improve One Thing",
+        paragraphs: [
+          "Ask a helper to join midway through a fictional activity using only the welcome and card. Ask what they think the next action is, and offer a comfortable way to answer or pass. Record missing context, not a judgement about the person.",
+          "After a real session, ask whether the arrival explanation helped and which detail was missing. Change one confusing instruction or responsibility before the next gathering. A maintainer rehearsal, a scanned code or a page view is not evidence that a participant successfully joined the activity.",
+        ],
+        bullets: [
+          "The current activity is clear without hearing the opening announcement.",
+          "The card, displayed prompt and spoken instruction agree.",
+          "Someone without a phone has an equivalent explanation and participation choice.",
+          "A named helper can provide context that the short prompt leaves out.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "three-prompt-workshop-rehearsal",
     title: "Check Workshop Instructions With a Three-Prompt Rehearsal",
     description: "Rehearse three community workshop prompts before people arrive, using a reusable check sheet, a reader check, and a paper fallback.",
