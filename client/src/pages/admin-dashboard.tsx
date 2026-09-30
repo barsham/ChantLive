@@ -37,6 +37,7 @@ import { Plus, Megaphone, Radio, Archive, Eye, Trash2, Users, LogOut, Upload, Se
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppVersion } from "@/components/app-version";
+import { TrustLinks } from "@/components/trust-links";
 import { PlatformReadinessCard } from "@/components/platform-readiness-card";
 import {
   buildParticipantInvitation,
@@ -49,6 +50,7 @@ import {
 import type { Demonstration } from "@shared/schema";
 import type { ChangeEvent } from "react";
 import { useRef, useState } from "react";
+import { shareWithVisibleFallback } from "@/lib/share";
 
 const eventSetupTemplates = [
   { id: "march", label: "March or rally", title: "Community March", durationMinutes: 120, description: "Two-hour outdoor gathering" },
@@ -368,21 +370,23 @@ export default function AdminDashboard() {
 
   const shareParticipantInvitation = async (demo: DashboardDemonstration) => {
     const invitation = buildParticipantInvitation(demo, window.location.origin, invitationLanguage);
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: `${demo.title} — ChantLive`, text: invitation });
-        setInvitationFallback(null);
-        toast({
-          title: "Invitation shared",
-          description: `The complete ${invitationLanguageOptions.find((option) => option.code === invitationLanguage)?.label ?? "selected"} invitation was sent to your device share sheet.`,
-        });
-        return;
-      } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-      }
+    const result = await shareWithVisibleFallback({ title: `${demo.title} — ChantLive`, text: invitation, completeText: invitation });
+    if (result === "shared") {
+      setInvitationFallback(null);
+      toast({ title: "Invitation shared", description: `The complete ${invitationLanguageOptions.find((option) => option.code === invitationLanguage)?.label ?? "selected"} invitation was sent to your device share sheet.` });
+      return;
     }
-
-    await copyParticipantInvitation(demo);
+    if (result === "copied") {
+      setInvitationFallback(null);
+      toast({ title: "Complete invitation copied", description: "The event link, code, and saved logistics are ready to send." });
+      return;
+    }
+    setInvitationFallback({ text: invitation, direction: invitationDirections[invitationLanguage] });
+    toast({
+      title: result === "cancelled" ? "Sharing cancelled" : "Sharing unavailable",
+      description: "The complete invitation is open so you can copy it manually.",
+      variant: result === "manual" ? "destructive" : undefined,
+    });
   };
 
   const demoStats = {
@@ -979,6 +983,10 @@ export default function AdminDashboard() {
           </Card>
         )}
       </main>
+
+      <footer className="border-t px-4 py-5">
+        <TrustLinks className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground" />
+      </footer>
 
       <Dialog
         open={Boolean(repeatTarget)}

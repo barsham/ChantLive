@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { CheckCircle2, Eye, EyeOff, Megaphone, ShieldCheck } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { AppVersion } from "@/components/app-version";
+import { TrustLinks } from "@/components/trust-links";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { AccountActivation } from "@/components/account-activation";
@@ -214,6 +215,7 @@ export default function Register() {
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
             <p>Your account controls organiser tools only. Participants join event links anonymously without creating an account.</p>
           </div>
+          <TrustLinks className="mt-5 flex items-center justify-center gap-4 text-xs text-muted-foreground" />
         </CardContent>
       </Card>
     </div>

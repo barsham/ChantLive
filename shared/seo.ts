@@ -259,6 +259,17 @@ export function getSeoForPath(pathname: string, origin: string): SeoConfig {
     };
   }
 
+  if (normalizedPath === "/privacy") {
+    return {
+      title: "Privacy and Data Use | ChantLive",
+      description: "Understand what ChantLive stores for organisers and participants, how private event identifiers work, and how to delete attendance data.",
+      canonicalPath: "/privacy",
+      robots: "index,follow",
+      ogType: "website",
+      jsonLd: buildNoIndexJsonLd(origin),
+    };
+  }
+
   if (normalizedPath === "/blog") {
     return {
       title: "Blog | Peaceful Demonstration Guides | ChantLive",

@@ -5,6 +5,7 @@ import { Accessibility, QrCode, Shield, Zap, Users, ArrowRight, Megaphone, Wifi,
 import { useAuth } from "@/lib/auth";
 import { Link, useLocation } from "wouter";
 import { AppVersion } from "@/components/app-version";
+import { TrustLinks } from "@/components/trust-links";
 import { blogPosts } from "@shared/blog";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
@@ -540,8 +541,9 @@ export default function Landing() {
             Proudly sponsored by <a href="https://www.devectus.com.au/" target="_blank" rel="noopener noreferrer" className="font-medium text-foreground underline underline-offset-4">DEVECTUS</a>.
           </p>
           <p>
-            Open-source project for free speech worldwide. <a href="https://github.com/barsham/ChantLive" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">Source code on GitHub</a>. <AppVersion className="inline" />
+            Open-source project for free speech worldwide. <AppVersion className="inline" />
           </p>
+          <TrustLinks className="flex flex-wrap items-center justify-center gap-4" />
           <p>
             Learn more <Link href="/for-organizers" className="underline underline-offset-4">for organizers</Link>, check <Link href="/status" className="underline underline-offset-4">service status</Link>, explore the <Link href="/blog" className="underline underline-offset-4">community blog</Link>, or see what changed in the <Link href="/changelog" className="underline underline-offset-4">public changelog</Link>.
           </p>

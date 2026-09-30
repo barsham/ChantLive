@@ -30,6 +30,7 @@ import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 import StatusPage from "@/pages/status";
+import Privacy from "@/pages/privacy";
 import { PlatformStatusProvider } from "@/lib/platform-status";
 import { PlatformStatusBanner } from "@/components/platform-status-banner";
 import { useLocation } from "wouter";
@@ -64,6 +65,7 @@ function Router() {
       <Route path="/blog/:slug" component={BlogPost} />
       <Route path="/changelog" component={Changelog} />
       <Route path="/status" component={StatusPage} />
+      <Route path="/privacy" component={Privacy} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/forgot-password" component={ForgotPassword} />

@@ -1,6 +1,58 @@
 {
   "releases": [
     {
+      "version": "1.1.97",
+      "releasedAt": "2026-09-30",
+      "summary": "A trust and privacy release shaped by a real external test: no remote fonts, reliable sharing, a clear policy, visible source links, and genuinely separable attendance identity.",
+      "items": [
+        {
+          "id": "cl-2026-09-30-local-system-fonts",
+          "title": "No remote font requests",
+          "description": "Every ChantLive page now uses the device's system font stack instead of requesting Google Fonts at runtime.",
+          "type": "fix",
+          "visibility": "public",
+          "dateAdded": "2026-09-30",
+          "links": [{ "label": "Community feedback issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-09-30-visible-share-recovery",
+          "title": "Visible event-sharing recovery",
+          "description": "Participant and organiser sharing now reports success or cancellation and opens a selectable complete invitation when native sharing or clipboard access cannot finish.",
+          "type": "fix",
+          "visibility": "public",
+          "dateAdded": "2026-09-30",
+          "links": [{ "label": "Community feedback issue #13", "url": "https://github.com/barsham/ChantLive/issues/13" }]
+        },
+        {
+          "id": "cl-2026-09-30-privacy-policy",
+          "title": "Plain-language privacy policy",
+          "description": "A new accessible privacy page explains organiser accounts, participant hashes and content, browser storage, retention, third parties, and deletion limits.",
+          "type": "feature",
+          "visibility": "public",
+          "dateAdded": "2026-09-30",
+          "links": [{ "label": "Read the privacy policy", "url": "/privacy" }]
+        },
+        {
+          "id": "cl-2026-09-30-trust-links",
+          "title": "Privacy and source links in every core journey",
+          "description": "Landing, sign-in, registration, authenticated dashboard, and participant screens now keep the privacy policy and open-source repository discoverable.",
+          "type": "improvement",
+          "visibility": "public",
+          "dateAdded": "2026-09-30",
+          "links": [{ "label": "Source code", "url": "https://github.com/barsham/ChantLive" }]
+        },
+        {
+          "id": "cl-2026-09-30-separated-attendance-identity",
+          "title": "Attendance identity that is actually forgotten",
+          "description": "Attendance now uses its own random per-event identifier. Forgetting deletes and discards it, re-enabling creates a new identity, and the UI explains that unrelated reservations, votes, questions, safety responses, and reports remain available.",
+          "type": "fix",
+          "visibility": "public",
+          "dateAdded": "2026-09-30",
+          "links": [{ "label": "Privacy details", "url": "/privacy#attendance" }]
+        }
+      ]
+    },
+    {
       "version": "1.1.96",
       "releasedAt": "2026-09-28",
       "summary": "A practical catch-up card for welcoming late arrivals to community workshops.",

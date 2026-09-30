@@ -5,7 +5,9 @@ import { CalendarPlus, Clock3, Copy, Download, ExternalLink, Eye, HelpCircle, Li
 import { buildGoogleCalendarUrl, buildOutlookCalendarUrl, downloadCalendarFile, type CalendarEventDetails } from "@/lib/calendar";
 import { forgetRecentParticipantEvent, rememberParticipantEvent } from "@/lib/participant-history";
 import { ParticipantRegistration } from "@/components/participant-registration";
+import { TrustLinks } from "@/components/trust-links";
 import { forgetOfflineEvent, loadOfflineEvent, saveOfflineEvent, updateOfflineEventIfPrepared, type OfflineChantData, type OfflineEventSnapshot } from "@/lib/offline-event";
+import { shareWithVisibleFallback } from "@/lib/share";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -373,6 +375,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     shareEvent: "Share event",
     eventShared: "Event shared.",
     eventInvitationCopied: "Event invitation copied.",
+    shareCancelled: "Sharing was cancelled. You can select and copy the complete invitation below.",
     manualShareCopy: "Sharing and copying are unavailable. Select and copy the complete invitation below.",
     shareEventCode: "Share event code",
     join: "Join",
@@ -606,6 +609,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     shareEvent: "Compartir evento",
     eventShared: "Evento compartido.",
     eventInvitationCopied: "Invitación al evento copiada.",
+    shareCancelled: "Se canceló el uso compartido. Puedes seleccionar y copiar la invitación completa a continuación.",
     manualShareCopy: "No se puede compartir ni copiar. Selecciona y copia la invitación completa a continuación.",
     shareEventCode: "Comparte el código del evento",
     join: "Únete a",
@@ -839,6 +843,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     shareEvent: "Partager l'événement",
     eventShared: "Événement partagé.",
     eventInvitationCopied: "Invitation à l'événement copiée.",
+    shareCancelled: "Le partage a été annulé. Vous pouvez sélectionner et copier l’invitation complète ci-dessous.",
     manualShareCopy: "Le partage et la copie sont indisponibles. Sélectionnez et copiez l’invitation complète ci-dessous.",
     shareEventCode: "Partagez le code de l'événement",
     join: "Rejoindre",
@@ -1072,6 +1077,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     shareEvent: "مشاركة الفعالية",
     eventShared: "تمت مشاركة الفعالية.",
     eventInvitationCopied: "تم نسخ دعوة الفعالية.",
+    shareCancelled: "أُلغيت المشاركة. يمكنك تحديد دعوة الفعالية الكاملة أدناه ونسخها.",
     manualShareCopy: "المشاركة والنسخ غير متاحين. حدّد دعوة الفعالية الكاملة أدناه وانسخها.",
     shareEventCode: "شارك رمز الفعالية",
     join: "انضم إلى",
@@ -1305,6 +1311,7 @@ const participantCopy: Record<ParticipantLanguage, Record<string, string>> = {
     shareEvent: "اشتراک‌گذاری رویداد",
     eventShared: "رویداد به اشتراک گذاشته شد.",
     eventInvitationCopied: "دعوت‌نامه رویداد کپی شد.",
+    shareCancelled: "اشتراک‌گذاری لغو شد. می‌توانید دعوت‌نامه کامل زیر را انتخاب و کپی کنید.",
     manualShareCopy: "اشتراک‌گذاری و کپی در دسترس نیست. دعوت‌نامه کامل زیر را انتخاب و کپی کنید.",
     shareEventCode: "کد رویداد را به اشتراک بگذارید",
     join: "پیوستن به",
@@ -1355,11 +1362,11 @@ const attendanceCopy: Record<ParticipantLanguage, {
   title: string; body: string; exactPrivacy: string; firstJoin: string; visits: string; observed: string; lastSeen: string;
   forget: string; forgotten: string; restore: string; noRecord: string; error: string; pending: string; on: string; off: string; minutes: string;
 }> = {
-  en: { title: "Your anonymous attendance receipt", body: "This helps organisers understand reach and reconnection without knowing who you are.", exactPrivacy: "Stored: an event-only random session hash and join, last-seen, disconnect times. Never stored: IP address, device, location, account, chant activity, messages, or report content.", firstJoin: "First joined", visits: "Visits", observed: "Observed time", lastSeen: "Last seen", forget: "Forget this event's attendance", forgotten: "Attendance forgotten. This device is opted out for this event.", restore: "Share anonymous attendance again", noRecord: "No attendance is stored for this device and event.", error: "Your receipt is temporarily unavailable. Live chants are not affected.", pending: "The saved record will be erased automatically when this device reconnects.", on: "Anonymous attendance on", off: "Attendance sharing off", minutes: "min" },
-  es: { title: "Tu recibo de asistencia anónima", body: "Ayuda a los organizadores a entender el alcance y las reconexiones sin saber quién eres.", exactPrivacy: "Se guarda: un identificador aleatorio cifrado solo para este evento y las horas de entrada, última actividad y salida. Nunca: IP, dispositivo, ubicación, cuenta, actividad, mensajes ni informes.", firstJoin: "Primera entrada", visits: "Visitas", observed: "Tiempo observado", lastSeen: "Última actividad", forget: "Olvidar mi asistencia a este evento", forgotten: "Asistencia olvidada. Este dispositivo no compartirá asistencia en este evento.", restore: "Volver a compartir asistencia anónima", noRecord: "No hay asistencia guardada para este dispositivo y evento.", error: "Tu recibo no está disponible temporalmente. Los cánticos en directo no se ven afectados.", pending: "El registro guardado se borrará automáticamente cuando este dispositivo vuelva a conectarse.", on: "Asistencia anónima activa", off: "Asistencia desactivada", minutes: "min" },
-  fr: { title: "Votre reçu de présence anonyme", body: "Il aide les organisateurs à comprendre la portée et les reconnexions sans connaître votre identité.", exactPrivacy: "Conservé : un identifiant aléatoire haché propre à l’événement et les heures d’arrivée, de dernière activité et de départ. Jamais : adresse IP, appareil, position, compte, activité, messages ou signalements.", firstJoin: "Première arrivée", visits: "Visites", observed: "Temps observé", lastSeen: "Dernière activité", forget: "Oublier ma présence à cet événement", forgotten: "Présence oubliée. Cet appareil ne la partagera plus pour cet événement.", restore: "Partager à nouveau la présence anonyme", noRecord: "Aucune présence n’est conservée pour cet appareil et cet événement.", error: "Votre reçu est temporairement indisponible. Les chants en direct ne sont pas affectés.", pending: "L’enregistrement sera effacé automatiquement lorsque cet appareil se reconnectera.", on: "Présence anonyme active", off: "Partage de présence désactivé", minutes: "min" },
-  ar: { title: "إيصال حضورك المجهول", body: "يساعد المنظمين على فهم الوصول وإعادة الاتصال دون معرفة هويتك.", exactPrivacy: "يُحفظ: معرّف عشوائي مُجزأ خاص بالفعالية وأوقات الانضمام وآخر ظهور والمغادرة. لا يُحفظ أبداً: عنوان IP أو الجهاز أو الموقع أو الحساب أو النشاط أو الرسائل أو البلاغات.", firstJoin: "أول انضمام", visits: "الزيارات", observed: "الوقت المرصود", lastSeen: "آخر ظهور", forget: "نسيان حضوري لهذه الفعالية", forgotten: "تم نسيان الحضور. أُوقف الإرسال من هذا الجهاز لهذه الفعالية.", restore: "مشاركة الحضور المجهول مجدداً", noRecord: "لا يوجد حضور محفوظ لهذا الجهاز وهذه الفعالية.", error: "إيصالك غير متاح مؤقتاً. لا تتأثر الهتافات المباشرة.", pending: "سيُحذف السجل المحفوظ تلقائياً عند إعادة اتصال هذا الجهاز.", on: "الحضور المجهول مفعّل", off: "مشاركة الحضور متوقفة", minutes: "دقيقة" },
-  fa: { title: "رسید حضور ناشناس شما", body: "به برگزارکنندگان کمک می‌کند میزان دسترسی و اتصال دوباره را بدون شناخت هویت شما بفهمند.", exactPrivacy: "ذخیره می‌شود: شناسه تصادفی هش‌شده مخصوص رویداد و زمان‌های ورود، آخرین مشاهده و خروج. هرگز ذخیره نمی‌شود: IP، دستگاه، مکان، حساب، فعالیت، پیام یا گزارش.", firstJoin: "اولین ورود", visits: "بازدیدها", observed: "زمان مشاهده‌شده", lastSeen: "آخرین مشاهده", forget: "حضور این رویداد را فراموش کن", forgotten: "حضور حذف شد. این دستگاه برای این رویداد انصراف داده است.", restore: "اشتراک دوباره حضور ناشناس", noRecord: "هیچ حضوری برای این دستگاه و رویداد ذخیره نشده است.", error: "رسید شما موقتاً در دسترس نیست. شعارهای زنده تحت تأثیر نیستند.", pending: "رکورد ذخیره‌شده پس از اتصال دوباره این دستگاه خودکار حذف می‌شود.", on: "حضور ناشناس روشن", off: "اشتراک حضور خاموش", minutes: "دقیقه" },
+  en: { title: "Your anonymous attendance receipt", body: "This helps organisers understand reach and reconnection without knowing who you are.", exactPrivacy: "Attendance stores a hash of a separate random ID for this event plus join, last-seen, and disconnect times. Forget deletes those rows and discards that ID. Reservations, votes, questions, safety responses, and reports use a different private receipt ID and are not deleted.", firstJoin: "First joined", visits: "Visits", observed: "Observed time", lastSeen: "Last seen", forget: "Forget this event's attendance", forgotten: "Attendance deleted and its private ID discarded. This device is opted out for this event.", restore: "Share anonymous attendance again with a new ID", noRecord: "No attendance is stored for this device and event.", error: "Your receipt is temporarily unavailable. Live chants are not affected.", pending: "Deletion will retry automatically when this device reconnects; the old ID will not be reused.", on: "Anonymous attendance on", off: "Attendance sharing off", minutes: "min" },
+  es: { title: "Tu recibo de asistencia anónima", body: "Ayuda a los organizadores a entender el alcance y las reconexiones sin saber quién eres.", exactPrivacy: "La asistencia guarda un hash de un identificador aleatorio separado para este evento y las horas de entrada, última actividad y salida. Olvidar elimina esos registros y descarta el identificador. Reservas, votos, preguntas, respuestas de seguridad e informes usan otro identificador privado y no se eliminan.", firstJoin: "Primera entrada", visits: "Visitas", observed: "Tiempo observado", lastSeen: "Última actividad", forget: "Olvidar mi asistencia a este evento", forgotten: "La asistencia y su identificador privado se eliminaron. Este dispositivo no compartirá asistencia en este evento.", restore: "Compartir asistencia de nuevo con un identificador nuevo", noRecord: "No hay asistencia guardada para este dispositivo y evento.", error: "Tu recibo no está disponible temporalmente. Los cánticos en directo no se ven afectados.", pending: "El borrado se reintentará al reconectar; el identificador anterior no se reutilizará.", on: "Asistencia anónima activa", off: "Asistencia desactivada", minutes: "min" },
+  fr: { title: "Votre reçu de présence anonyme", body: "Il aide les organisateurs à comprendre la portée et les reconnexions sans connaître votre identité.", exactPrivacy: "La présence conserve le hachage d’un identifiant aléatoire distinct pour cet événement ainsi que les heures d’arrivée, de dernière activité et de départ. Oublier supprime ces données et l’identifiant. Réservations, votes, questions, réponses de sécurité et signalements utilisent un autre identifiant privé et ne sont pas supprimés.", firstJoin: "Première arrivée", visits: "Visites", observed: "Temps observé", lastSeen: "Dernière activité", forget: "Oublier ma présence à cet événement", forgotten: "La présence et son identifiant privé ont été supprimés. Cet appareil est désinscrit pour cet événement.", restore: "Partager à nouveau avec un nouvel identifiant", noRecord: "Aucune présence n’est conservée pour cet appareil et cet événement.", error: "Votre reçu est temporairement indisponible. Les chants en direct ne sont pas affectés.", pending: "La suppression sera retentée après reconnexion ; l’ancien identifiant ne sera pas réutilisé.", on: "Présence anonyme active", off: "Partage de présence désactivé", minutes: "min" },
+  ar: { title: "إيصال حضورك المجهول", body: "يساعد المنظمين على فهم الوصول وإعادة الاتصال دون معرفة هويتك.", exactPrivacy: "يستخدم الحضور تجزئة لمعرّف عشوائي منفصل لهذه الفعالية مع أوقات الانضمام وآخر ظهور والمغادرة. النسيان يحذف هذه السجلات ويتخلص من المعرّف. تستخدم الحجوزات والتصويت والأسئلة وردود السلامة والبلاغات معرّف إيصال خاصاً مختلفاً ولا تُحذف.", firstJoin: "أول انضمام", visits: "الزيارات", observed: "الوقت المرصود", lastSeen: "آخر ظهور", forget: "نسيان حضوري لهذه الفعالية", forgotten: "حُذف الحضور وتم التخلص من معرّفه الخاص. أُوقف الإرسال من هذا الجهاز لهذه الفعالية.", restore: "مشاركة الحضور مجدداً بمعرّف جديد", noRecord: "لا يوجد حضور محفوظ لهذا الجهاز وهذه الفعالية.", error: "إيصالك غير متاح مؤقتاً. لا تتأثر الهتافات المباشرة.", pending: "ستُعاد محاولة الحذف عند الاتصال ولن يُستخدم المعرّف القديم مجدداً.", on: "الحضور المجهول مفعّل", off: "مشاركة الحضور متوقفة", minutes: "دقيقة" },
+  fa: { title: "رسید حضور ناشناس شما", body: "به برگزارکنندگان کمک می‌کند میزان دسترسی و اتصال دوباره را بدون شناخت هویت شما بفهمند.", exactPrivacy: "حضور، هش یک شناسه تصادفی جداگانه برای این رویداد و زمان ورود، آخرین مشاهده و خروج را نگه می‌دارد. فراموش‌کردن این رکوردها و شناسه را حذف می‌کند. رزرو، رأی، پرسش، پاسخ ایمنی و گزارش‌ها از شناسه رسید خصوصی دیگری استفاده می‌کنند و حذف نمی‌شوند.", firstJoin: "اولین ورود", visits: "بازدیدها", observed: "زمان مشاهده‌شده", lastSeen: "آخرین مشاهده", forget: "حضور این رویداد را فراموش کن", forgotten: "حضور و شناسه خصوصی آن حذف شد. این دستگاه برای این رویداد انصراف داده است.", restore: "اشتراک دوباره حضور با شناسه‌ای جدید", noRecord: "هیچ حضوری برای این دستگاه و رویداد ذخیره نشده است.", error: "رسید شما موقتاً در دسترس نیست. شعارهای زنده تحت تأثیر نیستند.", pending: "حذف پس از اتصال دوباره تکرار می‌شود و شناسه قبلی دوباره استفاده نخواهد شد.", on: "حضور ناشناس روشن", off: "اشتراک حضور خاموش", minutes: "دقیقه" },
 };
 const runSheetCopy: Record<ParticipantLanguage, {
   title: string; now: string; next: string; progress: string; stageOf: string;
@@ -1505,7 +1512,7 @@ export default function Participant() {
   const [engagement, setEngagement] = useState<ParticipantEngagement | null>(null);
   const [attendanceReceipt, setAttendanceReceipt] = useState<AttendanceReceipt | null>(null);
   const [attendanceOptOut, setAttendanceOptOut] = useState(() => localStorage.getItem(`chant_attendance_opt_out_${publicId}`) === "true");
-  const [attendanceDeletionPending, setAttendanceDeletionPending] = useState(() => localStorage.getItem(`chant_attendance_delete_pending_${publicId}`) === "true");
+  const [attendanceDeletionPending, setAttendanceDeletionPending] = useState(() => Boolean(localStorage.getItem(`chant_attendance_delete_pending_${publicId}`)));
   const [attendanceStatus, setAttendanceStatus] = useState<string | null>(null);
   const [attendanceError, setAttendanceError] = useState(false);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
@@ -1571,6 +1578,33 @@ export default function Participant() {
     }
     return sessionId;
   };
+  const attendanceSessionKey = `chant_attendance_session_${publicId}`;
+  const attendanceDeletionKey = `chant_attendance_delete_pending_${publicId}`;
+  const getAttendanceSessionId = () => {
+    let sessionId = localStorage.getItem(attendanceSessionKey);
+    if (!sessionId) {
+      sessionId = crypto.randomUUID();
+      localStorage.setItem(attendanceSessionKey, sessionId);
+    }
+    return sessionId;
+  };
+  const getJoinIdentity = () => ({
+    publicId,
+    sessionId: getSessionId(),
+    attendanceSessionId: attendanceOptOut ? undefined : getAttendanceSessionId(),
+    attendanceOptOut,
+  });
+
+  useEffect(() => {
+    if (attendanceOptOut || localStorage.getItem(attendanceSessionKey)) return;
+
+    const legacySessionId = getSessionId();
+    if (!localStorage.getItem(attendanceDeletionKey)) {
+      localStorage.setItem(attendanceDeletionKey, legacySessionId);
+      setAttendanceDeletionPending(true);
+    }
+    localStorage.setItem(attendanceSessionKey, crypto.randomUUID());
+  }, [publicId]);
   const refreshQuestionReceipts = async () => {
     try {
       const [receiptsResponse, spotlightResponse] = await Promise.all([
@@ -1705,7 +1739,7 @@ export default function Participant() {
 
     socket.on("connect", () => {
       setConnected(true);
-      socket.emit("join_demo", { publicId, sessionId: getSessionId(), attendanceOptOut });
+      socket.emit("join_demo", getJoinIdentity());
       void refreshPulseReceipt(true);
     });
 
@@ -1810,7 +1844,7 @@ export default function Participant() {
     if (!socket.connected) {
       socket.connect();
     } else {
-      socket.emit("join_demo", { publicId, sessionId: getSessionId(), attendanceOptOut });
+      socket.emit("join_demo", getJoinIdentity());
     }
 
     return () => {
@@ -1996,24 +2030,16 @@ export default function Participant() {
     const completeInvitation = `${text}\n${url}`;
     setShareFallbackText(null);
 
-    try {
-      if (navigator.share) {
-        await navigator.share({ title, text, url });
-        setShareStatus(t.eventShared);
-        return;
-      }
-
-      await navigator.clipboard.writeText(completeInvitation);
-      setShareStatus(t.eventInvitationCopied);
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") return;
-      try {
-        await navigator.clipboard.writeText(completeInvitation);
-        setShareStatus(t.eventInvitationCopied);
-      } catch {
-        setShareFallbackText(completeInvitation);
-        setShareStatus(t.manualShareCopy);
-      }
+    const result = await shareWithVisibleFallback({ title, text, url, completeText: completeInvitation });
+    if (result === "shared") setShareStatus(t.eventShared);
+    if (result === "copied") setShareStatus(t.eventInvitationCopied);
+    if (result === "cancelled") {
+      setShareFallbackText(completeInvitation);
+      setShareStatus(t.shareCancelled);
+    }
+    if (result === "manual") {
+      setShareFallbackText(completeInvitation);
+      setShareStatus(t.manualShareCopy);
     }
   };
   const addParticipantEventToCalendar = () => {
@@ -2527,9 +2553,10 @@ export default function Participant() {
   const forgetAttendance = async () => {
     setAttendanceStatus(null);
     setAttendanceError(false);
-    const sessionId = getSessionId();
+    const sessionId = localStorage.getItem(attendanceSessionKey) ?? getAttendanceSessionId();
     localStorage.setItem(`chant_attendance_opt_out_${publicId}`, "true");
-    localStorage.setItem(`chant_attendance_delete_pending_${publicId}`, "true");
+    localStorage.setItem(attendanceDeletionKey, sessionId);
+    localStorage.removeItem(attendanceSessionKey);
     setAttendanceReceipt(null);
     setAttendanceOptOut(true);
     setAttendanceDeletionPending(true);
@@ -2540,7 +2567,7 @@ export default function Participant() {
         body: JSON.stringify({ sessionId }),
       });
       if (!response.ok) throw new Error("Could not forget attendance");
-      localStorage.removeItem(`chant_attendance_delete_pending_${publicId}`);
+      localStorage.removeItem(attendanceDeletionKey);
       setAttendanceDeletionPending(false);
       setAttendanceStatus(attendanceT.forgotten);
     } catch {
@@ -2550,9 +2577,7 @@ export default function Participant() {
   };
   const restoreAttendance = () => {
     localStorage.removeItem(`chant_attendance_opt_out_${publicId}`);
-    localStorage.removeItem(`chant_attendance_delete_pending_${publicId}`);
     setAttendanceOptOut(false);
-    setAttendanceDeletionPending(false);
     setAttendanceStatus(null);
     setAttendanceError(false);
   };
@@ -2560,14 +2585,21 @@ export default function Participant() {
   useEffect(() => {
     if (!attendanceDeletionPending || isOffline) return;
     const retryDeletion = async () => {
+      const storedPendingSessionId = localStorage.getItem(attendanceDeletionKey);
+      const pendingSessionId = storedPendingSessionId === "true" ? getSessionId() : storedPendingSessionId;
+      if (!pendingSessionId) {
+        setAttendanceDeletionPending(false);
+        return;
+      }
+      if (storedPendingSessionId === "true") localStorage.setItem(attendanceDeletionKey, pendingSessionId);
       try {
         const response = await fetch(`/api/public/demos/${publicId}/attendance-receipt`, {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId: getSessionId() }),
+          body: JSON.stringify({ sessionId: pendingSessionId }),
         });
         if (!response.ok) return;
-        localStorage.removeItem(`chant_attendance_delete_pending_${publicId}`);
+        localStorage.removeItem(attendanceDeletionKey);
         setAttendanceDeletionPending(false);
         setAttendanceError(false);
         setAttendanceStatus(attendanceT.forgotten);
@@ -4009,6 +4041,7 @@ export default function Participant() {
             {wakeLockError}
           </span>
         )}
+        <TrustLinks className="flex w-full items-center justify-center gap-4 pt-1 text-xs text-neutral-400" linkClassName="hover:text-white" />
       </footer>
     </div>
   );

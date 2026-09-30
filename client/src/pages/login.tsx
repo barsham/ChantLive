@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Megaphone } from "lucide-react";
 import { Link, useLocation, useSearch } from "wouter";
 import { AppVersion } from "@/components/app-version";
+import { TrustLinks } from "@/components/trust-links";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import { ApiRequestError, apiRequest, queryClient } from "@/lib/queryClient";
@@ -162,6 +163,7 @@ export default function Login() {
               Create one
             </Link>
           </div>
+          <TrustLinks className="mt-5 flex items-center justify-center gap-4 text-xs text-muted-foreground" />
         </CardContent>
       </Card>
     </div>

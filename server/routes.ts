@@ -2969,7 +2969,7 @@ export async function registerRoutes(
       if (viewSessionId) await storage.endViewSession(viewSessionId);
     };
 
-    socket.on("join_demo", async ({ publicId, sessionId, attendanceOptOut }) => {
+    socket.on("join_demo", async ({ publicId, sessionId, attendanceSessionId, attendanceOptOut }) => {
       try {
         const demo = await storage.getDemonstrationByPublicId(publicId);
         if (!demo) {
@@ -2988,7 +2988,10 @@ export async function registerRoutes(
         }
         socket.join(`demo:${publicId}`);
         const participantSessionId = typeof sessionId === "string" ? sessionId.trim().slice(0, 80) : "";
-        const sessionHash = participantSessionId ? hashAttendanceSession(demo.id, participantSessionId) : null;
+        const rawAttendanceSessionId = typeof attendanceSessionId === "string"
+          ? attendanceSessionId.trim().slice(0, 80)
+          : participantSessionId;
+        const sessionHash = rawAttendanceSessionId ? hashAttendanceSession(demo.id, rawAttendanceSessionId) : null;
         const viewSessionId = attendanceOptOut === true || !sessionHash ? null : await storage.startViewSession(demo.id, sessionHash);
         currentDemo = { publicId, demoId: demo.id, socketId: socket.id, sessionHash, viewSessionId };
         if (viewSessionId) {
