@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.98 - 5 October 2026
+
+A practical participant privacy briefing for community event organisers.
+
+### Documentation
+
+- Participant privacy briefing guide: A six-section guide with a reusable briefing card and clear distinctions between account-free joining, attendance controls and other participant records. [Read the guide](/blog/explain-participant-privacy-event-link)
+
 ## 1.1.97 - 30 September 2026
 
 A trust and privacy release shaped by a real external test: no remote fonts, reliable sharing, a clear policy, visible source links, and genuinely separable attendance identity.

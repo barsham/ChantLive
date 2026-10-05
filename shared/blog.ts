@@ -19,6 +19,74 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "explain-participant-privacy-event-link",
+    title: "Explain Participant Privacy Before Sharing an Event Link",
+    description: "Use a five-question briefing to explain account-free joining, optional features and attendance controls before a peaceful community event.",
+    publishedAt: "2026-10-05",
+    category: "Organizing",
+    readingMinutes: 4,
+    tags: ["privacy", "participants", "briefing", "communication"],
+    disclaimer: "This is practical communication guidance, not legal or security advice or a guarantee of anonymity. Consult the current service policy and your event's requirements before collecting information.",
+    sections: [
+      {
+        heading: "Start With What People Need To Know",
+        paragraphs: [
+          "A participant asks whether opening an event link identifies them. Saying 'no account needed' answers only the sign-in question. It does not explain browser storage, attendance records, optional submissions or ordinary server connection information.",
+          "Before a peaceful community gathering, prepare a short explanation of the service you will use. Separate what is required to see the prompts from what happens when someone chooses another feature. Avoid promising that a person is untraceable or that nothing is stored.",
+        ],
+      },
+      {
+        heading: "Use This Five-Question Briefing Card",
+        paragraphs: [
+          "Write a one-sentence answer to each question, then link to the current policy for detail. Date the card and name the organiser responsible for checking it. This is an original briefing template, not a compliance checklist.",
+          "Use ordinary language rather than a technical label alone. If you cannot explain a feature accurately, check it before asking participants to use it. Offer the same explanation verbally or on paper.",
+        ],
+        bullets: [
+          "JOIN: Do participants need an account to see the current prompt?",
+          "RECORDS: What information can this event or service store?",
+          "CHOICES: Which optional features are we using, and what happens if someone declines?",
+          "CONTROLS: What can a participant withdraw or forget, and what does that not remove?",
+          "QUESTIONS: Where is the current policy and who can clarify it?",
+        ],
+      },
+      {
+        heading: "Keep Optional Submissions Separate",
+        paragraphs: [
+          "Someone may want to read the words without sending a question, responding to a poll or entering a check-in name. Explain each activity separately instead of treating a shared event link as blanket agreement to every feature.",
+          "Keep fictional content in rehearsals. Ask for only the information the activity needs, and remind people not to put identifying details into a public question or shared display. A paper alternative also needs thoughtful handling: do not leave completed cards on an unattended welcome desk.",
+        ],
+      },
+      {
+        heading: "Describe ChantLive Without Overpromising",
+        paragraphs: [
+          "For the hosted ChantLive service, participants do not need an account. The current policy describes browser-held identifiers and feature-dependent records, including submitted text. Account-free joining is not a promise that the service receives no data. Read the policy for details about what organisers can see, hosting and retention: https://chantlive.online/privacy",
+          "An example briefing is: 'You can read the prompts without creating an account. Some features store activity or the text you submit. Please read the privacy policy before using optional features; you can also follow the printed prompts.' Adapt this to the features your event actually uses. Self-hosted organisers must explain their own hosting and retention choices.",
+        ],
+      },
+      {
+        heading: "Rehearse Attendance Controls On A Fictional Event",
+        paragraphs: [
+          "Before the gathering, open a separate fictional event's participant link and find the attendance controls. Review the explanatory text before choosing Forget this event's attendance. Under the current hosted policy, that action deletes attendance rows for its identifier, opts that browser out and discards the attendance identifier. Sharing attendance again creates a new one.",
+          "Attendance sharing is on by default unless this browser has opted out for the event. Explain that before inviting people to open the link. When trying the control, wait for confirmation: if the device is offline, deletion may be pending until it reconnects.",
+          "Do not describe this as deleting everything. A reservation, vote, question or other feature receipt is separate, and backups may temporarily retain deleted records. Use the feature's own controls where available and the policy's contact route for questions. Do not clear browser storage as a substitute for a server-side deletion request.",
+        ],
+      },
+      {
+        heading: "Check Understanding Before Sharing Widely",
+        paragraphs: [
+          "Ask a colleague what they think your briefing promises. If they hear 'nothing is stored' when you meant 'no account required', revise the sentence. Check that the policy link works and that the paper alternative is ready before distributing joining materials.",
+          "At the event, answer uncertainty honestly. Record unanswered questions for the organiser rather than improvising a privacy guarantee. Afterward, improve the briefing using specific observations, without publishing a participant's private feedback or treating a maintainer rehearsal as adoption.",
+        ],
+        bullets: [
+          "The briefing names the actual service and links to its current policy.",
+          "Account requirements and optional feature records are described separately.",
+          "Attendance deletion is not presented as deletion of all event records.",
+          "People have a practical way to follow without using a phone.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "welcome-late-arrivals-community-workshop",
     title: "How to Welcome Late Arrivals to a Community Workshop",
     description: "Help late arrivals join the current activity with a reusable catch-up card, a quiet welcome, and a phone-or-paper prompt they can follow.",
