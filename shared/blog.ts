@@ -19,6 +19,77 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "choose-paper-screen-phone-workshop-prompts",
+    title: "Choose Paper, a Shared Screen or Phone Prompts for Your Workshop",
+    description: "Use a practical decision card to choose how people follow changing workshop instructions, with examples and a paper fallback.",
+    publishedAt: "2026-10-12",
+    category: "Organizing",
+    readingMinutes: 4,
+    tags: ["workshops", "prompts", "facilitation", "planning"],
+    disclaimer: "This guide covers routine community workshop communication. It is not emergency-response advice or an accessibility guarantee; check the needs of the people attending.",
+    sections: [
+      {
+        heading: "Start With The Activity, Not The Equipment",
+        paragraphs: [
+          "A venue has no projector screen. Before replacing it with everyone's phone, ask what participants actually need to see: a fixed discussion question, a changing short instruction, or a detailed diagram. Those are different tasks.",
+          "AnswerThePublic's October 12 report for 'workshop without projector' included a question about alternatives to a projector screen. Facilitator Emily Knightley's August 2026 article also describes workshops built around physical boards. Neither establishes that phones are the best choice. This guide adapts that equipment question into a decision about a peaceful community workshop. Source: https://www.linkedin.com/pulse/why-my-workshops-dont-have-projectors-emily-knightley-4bade",
+        ],
+      },
+      {
+        heading: "Use This Format Decision Card",
+        paragraphs: [
+          "Complete this original card before preparing your joining instructions. Pick a primary format and a workable alternative, then assign someone to check both in the room. A blank answer is a planning question to resolve, not a reason to guess.",
+        ],
+        bullets: [
+          "CONTENT: What exact words or image must people see?",
+          "CHANGE: Will that content stay fixed or change during the activity?",
+          "ACCESS: Can everyone use the chosen format comfortably, and what alternative do they prefer?",
+          "CONNECTION: Does the format depend on power or internet that we have checked?",
+          "OWNER: Who announces changes and keeps the alternative on the same stage?",
+          "CHOICE: Our primary format is __; our alternative is __; we will review it on __.",
+        ],
+      },
+      {
+        heading: "Choose Paper For A Stable Sequence",
+        paragraphs: [
+          "For three questions that will not change, a printed sheet or table card may be enough. Label each stage so a helper can say which row is current. Keep a spare copy and check whether the print size and placement work for the people using it.",
+          "Example: a neighbourhood discussion uses Welcome, Reflection and Close on one sheet. The facilitator names the stage aloud. A phone link would add setup without changing the instructions, so the team starts with paper.",
+          "A printout cannot show later edits automatically. If wording changes, announce the correction and replace or clearly mark the affected copies. Do not quietly change a phone prompt while people using paper still see the old instruction.",
+        ],
+      },
+      {
+        heading: "Choose A Shared Screen For Shared Visual Material",
+        paragraphs: [
+          "A diagram, map or longer explanation may be easier to discuss when the group can refer to one shared view. Check sightlines, readable text, power and the actual connection before the session. Provide another way to follow when someone cannot use that view.",
+          "Example: a community design workshop discusses a drawing. Keep the drawing visible and offer a printed version. A short text-prompt tool cannot replace the drawing or the explanation.",
+          "W3C's writing guidance recommends clear instructions and concise language for web content. Apply those principles to your digital prompts while checking the workshop's own needs; wording alone does not establish accessibility. Source: https://www.w3.org/WAI/tips/writing/",
+        ],
+      },
+      {
+        heading: "Consider Phone Prompts When Short Words Change",
+        paragraphs: [
+          "Phone prompts can be useful when the group needs the current short instruction and there is no convenient shared display. First establish whether phones are welcome, people can open the link and the venue has usable internet. Avoid turning a reflective activity into a demand to watch a screen continuously.",
+          "For a fictional ChantLive rehearsal, prepare the short text in a chant list and open the event editor. Share the participant link or optional QR code, use Go Live for the event, then Push Live on the selected item. Check a second device before relying on the wording. Participants do not need an account; live changes require an internet connection.",
+          "Example: a facilitator changes from 'Think of one helpful idea' to 'Share with a partner, or pass'. A helper points to the matching row on the printed copy. Ask whether this change is easier to follow than the group's current method before adding more prompts. Review the service's data practices before inviting participants: https://chantlive.online/privacy",
+        ],
+      },
+      {
+        heading: "Make The Choice Reviewable",
+        paragraphs: [
+          "Try one ordinary activity with a colleague using the primary format and another using the alternative. Ask each to describe the current instruction. Note any extra explanation, stale words or distraction, then adjust the format before the real gathering.",
+          "After the session, ask which format helped and what they would choose next time. Record specific observations with permission rather than publishing personal feedback. A successful equipment check is preparation; useful participation must be observed in the actual session.",
+        ],
+        bullets: [
+          "The selected format fits the content, not just the available technology.",
+          "The current stage is clear on both primary and alternative formats.",
+          "Someone owns announcements and corrections.",
+          "People can follow without opening a phone link.",
+          "The team has a date to review the choice after use.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "explain-participant-privacy-event-link",
     title: "Explain Participant Privacy Before Sharing an Event Link",
     description: "Use a five-question briefing to explain account-free joining, optional features and attendance controls before a peaceful community event.",

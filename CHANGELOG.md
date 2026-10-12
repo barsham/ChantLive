@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.99 - 12 October 2026
+
+A practical guide to choosing how participants follow workshop prompts.
+
+### Documentation
+
+- Workshop prompt format decision guide: Compare paper, shared screens and phone prompts with an original decision card, concrete examples and a coordinated fallback. [Read the guide](/blog/choose-paper-screen-phone-workshop-prompts)
+
 ## 1.1.98 - 5 October 2026
 
 A practical participant privacy briefing for community event organisers.
