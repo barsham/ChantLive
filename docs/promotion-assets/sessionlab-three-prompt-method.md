@@ -1,6 +1,8 @@
 # SessionLab submission: Three-prompt clarity rehearsal
 
-Status: prepared for submission on 19 September 2026. Not submitted or published.
+Status: entered in SessionLab on 23 September 2026 with Public enabled.
+Saved method: https://www.sessionlab.com/methods/0UbO0q.
+Public visibility is not yet verified: a logged-out request redirects to the library.
 Destination: SessionLab public methods library, not its discussion community.
 Author: Barsham Sotoudeh, ChantLive maintainer.
 
