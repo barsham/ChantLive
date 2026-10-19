@@ -19,6 +19,77 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "close-community-workshop-clear-next-step",
+    title: "Close a Community Workshop With a Clear Next Step",
+    description: "Use a reusable closing card to finish a community workshop, explain what happens next and end live prompts without leaving people guessing.",
+    publishedAt: "2026-10-19",
+    category: "Organizing",
+    readingMinutes: 4,
+    tags: ["workshops", "closing", "facilitation", "communication"],
+    disclaimer: "This guide covers routine workshop communication, not emergency procedures. Adapt the closing to your venue and participants; it is not an accessibility guarantee.",
+    sections: [
+      {
+        heading: "Make The End Of The Activity Explicit",
+        paragraphs: [
+          "The last discussion trails off, a phone still shows the previous instruction and someone wonders whether another activity is about to start. A clear closing tells people the activity is finished and gives them one useful next step.",
+          "AnswerThePublic's October 19 report for 'closing a workshop' included the question 'How do I end an activity?' and searches for workshop closing remarks. This guide turns that question into a practical closing sequence for a peaceful community session. The sample wording is original, not a quotation from participants or a claim that one script suits every group.",
+          "Prepare the closing before the workshop. Name who will deliver it and protect a short space for it in the agenda. If time runs short, shorten the summary rather than leaving the ending ambiguous.",
+        ],
+      },
+      {
+        heading: "Use This Four-Line Closing Card",
+        paragraphs: [
+          "Fill in this original card and keep the same version with the facilitator and the person managing prompts. Read it aloud and make it available on paper or another agreed format. A phone link should not be the only way to hear what happens next.",
+          "Example: 'Our discussion is finished. Thank you for the ideas and for listening. If you want to see the summary, use the resource page listed on your handout. We will add it by Friday; Alex will update that page if the timing changes.' Only promise a date and owner after they have agreed.",
+        ],
+        bullets: [
+          "END: This activity is now finished.",
+          "THANKS: Thank you for __.",
+          "NEXT: If you would like to __, use __. Participation is optional.",
+          "OWNER: __ will provide __ by __, or explain an updated timeline there.",
+        ],
+      },
+      {
+        heading: "Offer One Optional Reflection",
+        paragraphs: [
+          "A closing reflection can help people name something useful without turning the final minute into a compulsory performance. Offer one prompt, such as 'What is one idea you want to keep?' Let people think quietly, write for themselves, speak briefly or pass.",
+          "Avoid introducing several new questions or asking everyone to explain why they stayed quiet. If the workshop has reached its agreed finishing time, provide the reflection on the handout for later rather than extending the session without agreement.",
+          "A reflection is not consent to publish someone's words. Ask separately before using a quotation, photograph or personal story in a public recap. Keep a team's later review separate from this participant-facing ending.",
+        ],
+      },
+      {
+        heading: "Give A Next Step You Can Deliver",
+        paragraphs: [
+          "Choose one practical next step: a resource page, an agreed summary or a confirmed next session. State what the link contains and whether any action is optional. If there is no follow-up planned, say so plainly instead of promising updates you cannot provide.",
+          "Do not treat attendance as permission to add everyone to a mailing list. If people want future updates, point them to a separate opt-in route and explain its purpose. A person should still be able to take the useful material without signing up.",
+          "Check the destination before the workshop and give it a readable label on the handout. If an agreed publication date changes, use the same destination to explain the change so people do not have to search several channels.",
+        ],
+      },
+      {
+        heading: "Finish The ChantLive Feed Deliberately",
+        paragraphs: [
+          "When using ChantLive, prepare a short closing item alongside the other prompts. While the demonstration is live, use Push Live for that item and give people time to read it. Speak the same closing and have a helper point to the matching printed words.",
+          "After the closing has been delivered, use End Demo in the event editor and confirm End Demonstration. The editor explains that this stops the live feed. Check a connected participant view: it should show that the demonstration has ended and that people can close the page or ask an organiser for the next link.",
+          "Test this sequence on a separate fictional event before relying on it. Live status updates require a connection; a disconnected device may still show earlier content. Announce the ending directly as well. Ending the feed is not deletion of all event or participant records; consult the service's policy for data questions: https://chantlive.online/privacy",
+        ],
+      },
+      {
+        heading: "Check The Ending From A Participant's View",
+        paragraphs: [
+          "Ask a colleague to follow the final minute using only the handout, then compare it with the phone view. Can they tell that the activity is over, what is optional and where any promised material will appear? Fix any disagreement before sharing the joining materials.",
+          "Afterward, record a concrete observation for your team's review, such as a stale instruction or a broken resource link. Use that to improve the next closing. A maintainer test or a published recap does not establish that participants found the session useful.",
+        ],
+        bullets: [
+          "The closing explicitly says the activity has finished.",
+          "The reflection and follow-up are optional.",
+          "The resource destination, owner and any promised date are confirmed.",
+          "Spoken, printed and live prompts agree.",
+          "The live feed is ended only after the closing is delivered.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "choose-paper-screen-phone-workshop-prompts",
     title: "Choose Paper, a Shared Screen or Phone Prompts for Your Workshop",
     description: "Use a practical decision card to choose how people follow changing workshop instructions, with examples and a paper fallback.",

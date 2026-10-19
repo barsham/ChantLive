@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.100 - 19 October 2026
+
+A practical workshop closing guide with a reusable next-step card.
+
+### Documentation
+
+- Community workshop closing guide: Plan a clear closing, optional reflection and confirmed next step, with a reusable card and the ChantLive event-ending workflow. [Read the guide](/blog/close-community-workshop-clear-next-step)
+
 ## 1.1.99 - 12 October 2026
 
 A practical guide to choosing how participants follow workshop prompts.
