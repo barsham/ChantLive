@@ -13,6 +13,12 @@ recovery codes, cookies, session tokens, or private contact details here.
 
 ## Rules
 
+SessionLab update, 23 September 2026: Barsham completed signup for
+info@chantlive.online. ChantLive workspace and authenticated library access
+confirmed. Method https://www.sessionlab.com/methods/0UbO0q saved with Public
+enabled, but logged-out visibility remains unconfirmed. No credential stored in
+the repository. See promotion-weekly/2026-09-23.md.
+
 - Accounts must clearly represent ChantLive or Barsham as its maintainer.
 - Use `info@chantlive.online` only when a public project email is required.
 - Store credentials in Windows Credential Manager or an equivalent secure
