@@ -5,6 +5,38 @@ strategy and make radical changes. Supersedes V2's acquisition choices and
 global waiting rules. Existing sending permissions, opt-outs, privacy and
 release safeguards remain in force. All dates use Australia/Sydney.
 
+## Standing communication direction: October 23, 2026
+
+Barsham requires real communication on every Promotion run, not research-only
+reports. This direction supersedes historical screening caps when they would
+defer all relevant communication; retain bounded experiments and all safety,
+platform, privacy and person-specific communication holds.
+
+- Check replies to active public conversations first and coordinate with
+  Outreach before responding. Promotion verifies monitoring coverage on each
+  run and owns it when no Outreach owner is available; never duplicate replies.
+- Initiate or advance at least one useful, tailored public communication with
+  a relevant organiser, facilitator or contributor through existing authorised
+  maintainer accounts. Prefer an existing conversation, otherwise an explicitly
+  invited recent discussion. Current authority includes DEV @barsham and its
+  existing GitHub sign-in, not new accounts or expanded OAuth permissions.
+- Read the full available context, disclose missing history and check duplicates.
+  Give practical advice or a concrete relevant question before suggesting a tool.
+  Disclose the maintainer relationship and AI assistance where required. No
+  product link or testing request unless an expressed matching need justifies it.
+- Do not manufacture comments, post off-topic, chase silence or bypass gates.
+  No new direct email, unsolicited private-message, spending, sensitive-data
+  sharing or person-specific-hold permission is granted. If blocked, record the
+  specific attempt, one reasonable recovery/alternative and required user action.
+- Record exact text, permalink, verification, owner, last reply check, next action
+  and review date. Outbound comments, inbound replies, qualified conversations
+  and actual use are separate measures. An unanswered opener is not a two-way
+  conversation. No automatic reminder comments.
+
+Initial active conversation: https://dev.to/barsham/comment/3ikdf with organiser
+Dhruv Jani. See [October 23 ledger](promotion-weekly/2026-10-23.md). Next review:
+October 26, Australia/Sydney. Weekly content remains Monday only.
+
 ## Diagnosis
 
 The recorded baseline is 59 first contacts, four substantive external

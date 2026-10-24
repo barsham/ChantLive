@@ -17,6 +17,16 @@ Outreach & Feedback restores that responsibility in the existing outreach chat.
 
 ## Shared workflow
 
+- Standing direction approved October 23: each Promotion run must initiate or
+  advance a useful relevant public communication, not stop at research-only
+  reporting. Review replies first; coordinate with Outreach, which monitors
+  existing conversations. Promotion verifies coverage on its runs and takes
+  ownership when needed. Existing authorised maintainer accounts may be used
+  for routine on-topic public comments under platform rules. Record exact text,
+  permalink, verification, owner, last reply check and next review. See V3 and
+  the October 23 promotion ledger for scope. Do not spam, chase silence, invent
+  engagement or lift person-specific holds; no new email/DM permission granted.
+
 - Read the current adoption strategy, experiment ledger, contact ledger and
   account records. Verify current status rather than blindly repeating an old
   next step. One offer/audience hypothesis can use up to two separately tracked,
