@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.101 - 26 October 2026
+
+A practical workshop recap guide with a reusable resource-sharing template.
+
+### Documentation
+
+- Community workshop recap guide: Share useful follow-up resources with a five-part recap template, checked links and clear separation from private event exports. [Read the guide](/blog/share-useful-community-workshop-recap)
+
 ## 1.1.100 - 19 October 2026
 
 A practical workshop closing guide with a reusable next-step card.

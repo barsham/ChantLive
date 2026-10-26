@@ -19,6 +19,78 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "share-useful-community-workshop-recap",
+    title: "Share a Useful Recap After a Community Workshop",
+    description: "Use a reusable recap template to share workshop resources, explain what remains open and keep private event records out of the public summary.",
+    publishedAt: "2026-10-26",
+    category: "Organizing",
+    readingMinutes: 4,
+    tags: ["workshops", "follow-up", "resources", "communication"],
+    disclaimer: "This guide covers routine, peaceful workshop communication, not legal advice or emergency procedures. Its template is an editorial aid, not an accessibility or privacy guarantee.",
+    sections: [
+      {
+        heading: "Answer The Reader's Next Question",
+        paragraphs: [
+          "A workshop has finished, but the slides, instructions and next steps are scattered across several places. A useful recap answers a smaller question than a full event report: what can someone understand or use now without having been in the room?",
+          "AnswerThePublic's October 26 Australia/English report for 'workshop follow up' surfaced searches for post-workshop follow-up and workshop follow-up questions. Those signals support this practical topic; they do not establish demand for ChantLive or prove that a particular format works for every group.",
+          "Choose the reader before writing. A participant may need the activity sheet; someone who missed the session needs a short explanation first. Keep your team's internal evaluation separate from this participant-facing resource. Do not promise a detailed write-up when a short, checked resource page is what you can deliver.",
+        ],
+      },
+      {
+        heading: "Fill In This Five-Part Recap Template",
+        paragraphs: [
+          "Copy these five labels into a page or document. Keep the first version short and make clear which materials are available now. A resource that is still being prepared should not look like a broken link.",
+          "Fictional example: 'Neighbourhood ideas workshop, 26 October. We compared ways to make shared activities easier to follow. Start with the three-step activity sheet; the optional background notes explain the examples. The group suggested a second session, but no date is confirmed. Alex maintains this page and will add an update by Friday if the notes are delayed.' Confirm the owner and any date before publishing.",
+        ],
+        bullets: [
+          "CONTEXT: Session title, date and one sentence explaining its purpose.",
+          "TAKEAWAY: One practical idea, described without claiming everyone agreed.",
+          "RESOURCES: Checked links with clear labels and a suggested starting point.",
+          "OPEN ITEMS: Unanswered questions, draft decisions and unconfirmed plans.",
+          "OWNER: Who maintains the page, its last-updated date and any agreed next update.",
+        ],
+      },
+      {
+        heading: "Make The Resources Usable Without The Room",
+        paragraphs: [
+          "Replace 'as you saw earlier' with a sentence explaining the activity. Define unfamiliar abbreviations and label links by what they contain, such as 'Three-step activity sheet, PDF', rather than 'click here'. Check whether an ordinary reader can open each destination without your organiser account.",
+          "Prefer readable text to a screenshot of a slide. If an image carries instructions, provide the information in text as well. Use headings to separate the summary, resources and open questions. W3C's writing guidance supports meaningful headings, descriptive links, text alternatives and clear language: https://www.w3.org/WAI/tips/writing/",
+          "Offer an agreed non-digital route where needed, such as a printed copy available through the organiser. Do not require a QR scan or a new mailing-list signup just to obtain the promised material. Ask a colleague to follow the first resource using only the recap.",
+        ],
+      },
+      {
+        heading: "Write A Summary, Not A Participant Record",
+        paragraphs: [
+          "Use your own description of the activity rather than copying chat logs, attendance lists or private notes. Ask separately before including identifiable quotations, images or stories. A person taking part in a discussion is not an invitation to publish everything they said.",
+          "Separate observations from conclusions. 'Two people asked where the handout was' is a concrete observation if you actually recorded it. 'Everyone found the session accessible' is not supported by a few compliments. Mark unresolved questions as unresolved and describe a suggested next session as a suggestion until it is confirmed.",
+          "Keep incident reports, contact details and internal disagreements out of a general public recap. Use the organiser's established process for restricted records. This is an editorial checklist, not a statement of the legal requirements in your location.",
+        ],
+      },
+      {
+        heading: "Use ChantLive As A Source, Not The Finished Recap",
+        paragraphs: [
+          "If you used ChantLive prompts, an authorised organiser can open the event editor and choose Export to download a .chantlive.json file. Review that file locally before using any of its contents. The export includes prompt text, event settings and admin names and email addresses; it is not a sanitised public handout.",
+          "Create a separate recap document and copy only the approved, relevant prompt wording into it. Explain what the prompt was for, remove out-of-context responses and add the checked resource links. Do not upload the raw export or share the organiser editor URL as a substitute for the summary.",
+          "The export is a snapshot, not a transcript of everything participants saw or said. A participant link is a live-event destination, not a permanent recap page. Prepare the recap independently, even when the original event remains available. If paper or a shared slide was used instead, the same five-part template works without ChantLive.",
+        ],
+      },
+      {
+        heading: "Publish Once, Then Maintain The Same Destination",
+        paragraphs: [
+          "Share the recap through the channel participants already agreed to use. If it is unfinished, publish a truthful short status at the promised destination rather than sending repeated reminders. Do not add attendees to a mailing list or pressure an organiser who has said a write-up is coming.",
+          "Before sharing, have someone other than the author check the page as a reader. If a link or claim changes later, update the same page and its date. A published recap, download or page view does not prove someone completed a rehearsal or used the materials at another session.",
+        ],
+        bullets: [
+          "The purpose and first useful resource are clear without attending the event.",
+          "Links work for the intended reader; drafts and access restrictions are labelled.",
+          "Only approved material is included, with no raw export or private contact list.",
+          "Suggestions, observations and confirmed commitments are distinguished.",
+          "An owner, update date and appropriate sharing channel are confirmed.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "close-community-workshop-clear-next-step",
     title: "Close a Community Workshop With a Clear Next Step",
     description: "Use a reusable closing card to finish a community workshop, explain what happens next and end live prompts without leaving people guessing.",
