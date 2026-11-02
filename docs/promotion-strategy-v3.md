@@ -32,10 +32,29 @@ platform, privacy and person-specific communication holds.
   and review date. Outbound comments, inbound replies, qualified conversations
   and actual use are separate measures. An unanswered opener is not a two-way
   conversation. No automatic reminder comments.
+- End every Promotion run with a candid effectiveness retrospective. Assess
+  whether the action reached a relevant person, delivered concrete value,
+  prompted a substantive response, revealed a real problem, or moved someone
+  toward a rehearsal or pilot. A post, comment, impression, acknowledgement or
+  unanswered opener is activity, not success by itself. Compare the evidence
+  with the active hypothesis, prediction, deadline and simpler alternatives,
+  then explicitly continue, modify or stop the approach. Record the lesson and
+  make the next action materially different when evidence is poor; do not repeat
+  a channel, message style or audience merely to satisfy the communication rule.
+  Correct an obviously weak tactic at the next permitted action rather than
+  waiting for a distant checkpoint, while preserving experiment bounds, platform
+  rules and communication holds.
 
-Initial active conversation: https://dev.to/barsham/comment/3ikdf with organiser
-Dhruv Jani. See [October 23 ledger](promotion-weekly/2026-10-23.md). Next review:
-October 26, Australia/Sydney. Weekly content remains Monday only.
+The initial DEV conversation with Dhruv Jani remains monitored through Outreach;
+see the [October 23 ledger](promotion-weekly/2026-10-23.md). The October 26 to
+November 2 adjacent-practitioner DEV test stopped after two openers produced no
+substantive reply. The November 2 to November 9 test instead contributes one
+concrete, product-independent practitioner observation to an open-source
+facilitation discussion that explicitly requests outcome-evidence input. Review
+November 4 and 6; stop or redesign on November 9 if no steward classification,
+critique or other substantive response. See the
+[November 2 ledger](promotion-weekly/2026-11-02.md). Weekly content remains
+Monday only.
 
 ## Diagnosis
 

@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.102 - 2 November 2026
+
+A practical guide to asking one useful live poll question at a community workshop.
+
+### Documentation
+
+- One-question workshop poll guide: Plan a low-stakes workshop poll with a reusable question card, balanced options, a non-phone route and a clearly recorded organiser decision. [Read the guide](/blog/ask-one-useful-live-poll-community-workshop)
+
 ## 1.1.101 - 26 October 2026
 
 A practical workshop recap guide with a reusable resource-sharing template.

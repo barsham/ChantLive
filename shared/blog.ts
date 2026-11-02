@@ -19,6 +19,79 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "ask-one-useful-live-poll-community-workshop",
+    title: "Ask One Useful Live Poll Question at a Community Workshop",
+    description: "Use a reusable one-question poll card to ask a clear workshop question, offer balanced options and decide what to do with the result.",
+    publishedAt: "2026-11-02",
+    category: "Organizing",
+    readingMinutes: 4,
+    tags: ["polls", "workshops", "feedback", "participation"],
+    disclaimer: "This guide covers low-stakes workshop feedback, not scientific survey research, voting, medical screening or emergency decisions. A poll reflects only the people who could and chose to respond; it is not an accessibility guarantee or proof of group agreement.",
+    sections: [
+      {
+        heading: "Start With A Decision, Not Engagement",
+        paragraphs: [
+          "A live poll is most useful when the facilitator already knows what the answer can change. 'How are we doing?' may create numbers without a next step. 'What would help you follow the next activity?' can support a specific adjustment before the activity begins.",
+          "A recent LivePoll article asked readers, 'What's the one question you'd ask your next audience?' That real invitation prompted this workshop example. AnswerThePublic could not provide an accessible report in this run, so no search volume or keyword ranking is claimed. The topic instead uses that current public question and primary question-writing guidance from AAPOR.",
+          "Write down the decision owner and the available changes before opening the poll. If none of the answers can affect the session, use a short announcement or optional reflection instead.",
+        ],
+      },
+      {
+        heading: "Fill In This One-Question Poll Card",
+        paragraphs: [
+          "Use this reusable card while planning. Keep it beside the facilitator rather than improvising a question after participants have joined. A blank field is a planning issue to resolve before the poll opens.",
+          "Example: PURPOSE: choose how to introduce the next exercise. QUESTION: 'What would help you follow the next activity?' OPTIONS: 'A worked example', 'Written steps', 'A slower pace'. ALTERNATIVE: people may pass or tell a helper 'No change needed'. ACTION: the facilitator names the adjustment they will make before continuing.",
+        ],
+        bullets: [
+          "PURPOSE: What low-stakes decision can this answer inform now?",
+          "QUESTION: Ask about one clear idea in plain language.",
+          "OPTIONS: Use two or three distinct, realistic choices.",
+          "ALTERNATIVE: How can someone pass or respond without a phone?",
+          "ACTION: Who interprets the result, and what will they announce?",
+        ],
+      },
+      {
+        heading: "Write One Neutral Question With Usable Options",
+        paragraphs: [
+          "Ask about one concept at a time. 'Was the activity clear and enjoyable?' combines two judgements, so a single answer is hard to interpret. Prefer 'Which part needs more explanation?' and name the parts people can actually choose between.",
+          "Avoid wording that praises one answer, assumes everyone had the same experience or treats silence as approval. Options should not overlap. If a reasonable response is missing, offer an explicit pass, 'no change' or another agreed route rather than forcing the nearest answer.",
+          "AAPOR recommends short, specific and unbiased questions, with response choices that fit the question and do not steer people toward an answer: https://aapor.org/standards-and-ethics/best-practices/ . Treat this as design guidance, not evidence that an informal workshop poll is representative research.",
+        ],
+      },
+      {
+        heading: "Offer A Real Choice Beyond The Phone",
+        paragraphs: [
+          "Say that responding is optional and explain what the result will be used for. Keep a spoken, paper or helper-assisted route available when that suits the group. Do not make a QR scan, account or public explanation the price of taking part.",
+          "Read the question and options aloud while keeping the words visible. Use the same labels in every format. W3C guidance supports visible labels and instructions where user input is expected: https://www.w3.org/WAI/WCAG22/Understanding/labels-or-instructions.html . Ask participants about their needs; a checklist alone does not establish accessibility.",
+          "Do not use a live workshop poll for sensitive disclosures or urgent safety decisions. Visible totals can influence later responses, and a phone result cannot replace direct support, an established incident process or professional judgement.",
+        ],
+      },
+      {
+        heading: "Run The Question In ChantLive",
+        paragraphs: [
+          "Rehearse with a fictional event first. In the ChantLive Command Center, open Live crowd poll, enter one decision question and two or three options, then choose Open live poll. Check the participant view on a second device before inviting responses.",
+          "Participants can tap one option and see the current vote totals and percentages. Because results are visible while the poll is open, use this workflow only when that visibility is appropriate. Announce the non-phone route at the same time and do not describe the count as everyone's view.",
+          "When enough time has been offered, the organiser selects the outcome they will act on, may add a short rationale, and chooses Record decision and close. ChantLive does not automatically turn the largest count into the decision. State what you chose and why, including when practical constraints mean the action differs from the leading option.",
+        ],
+      },
+      {
+        heading: "Close The Loop And Record A Concrete Observation",
+        paragraphs: [
+          "After announcing the action, make the adjustment and continue. If the options did not capture what people needed, say so and use the agreed alternative route. Do not run several new polls just to obtain a cleaner-looking result.",
+          "For the organiser's review, record one observable fact, such as 'five people selected written steps and two used the paper option'. Keep identities and private explanations out of a general recap. Separate the vote count, the organiser's decision and any later observation about whether the change helped.",
+          "A published poll, page view or friendly comment is activity, not proof that the workshop improved. Review the card after the session: did the question reach the right people, produce a usable answer and lead to a clear action? Keep, change or stop the format based on that evidence.",
+        ],
+        bullets: [
+          "The question informed a decision that could actually change.",
+          "Options were distinct, neutral and understandable.",
+          "Passing and a non-phone route were available.",
+          "Participants knew that totals were visible and not representative of everyone.",
+          "The organiser announced the recorded decision and next action.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "share-useful-community-workshop-recap",
     title: "Share a Useful Recap After a Community Workshop",
     description: "Use a reusable recap template to share workshop resources, explain what remains open and keep private event records out of the public summary.",
