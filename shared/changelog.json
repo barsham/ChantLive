@@ -1,6 +1,20 @@
 {
   "releases": [
     {
+      "version": "1.1.103",
+      "releasedAt": "2026-11-09",
+      "summary": "A practical guide to testing whether another facilitator can run a community workshop from its materials alone.",
+      "items": [{
+        "id": "cl-2026-11-09-independent-workshop-guide-test",
+        "title": "Independent workshop guide test",
+        "description": "Review a workshop handover with a reusable self-sufficiency card, fictional run-through and clear separation between material defects and participant outcomes.",
+        "type": "docs",
+        "visibility": "public",
+        "dateAdded": "2026-11-09",
+        "links": [{ "label": "Read the guide", "url": "/blog/test-community-workshop-guide-without-author" }]
+      }]
+    },
+    {
       "version": "1.1.102",
       "releasedAt": "2026-11-02",
       "summary": "A practical guide to asking one useful live poll question at a community workshop.",

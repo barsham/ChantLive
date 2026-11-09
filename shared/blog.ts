@@ -19,6 +19,93 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "test-community-workshop-guide-without-author",
+    title: "Test a Community Workshop Guide Without the Author Present",
+    description: "Use a self-sufficiency review card to find missing workshop instructions before inviting participants to a full field test.",
+    publishedAt: "2026-11-09",
+    category: "Organizing",
+    readingMinutes: 5,
+    tags: ["workshops", "facilitation", "testing", "handover"],
+    disclaimer: "This guide covers routine, low-stakes workshop preparation. A facilitator-only dry run is not proof of participant outcomes, accessibility, safety or legal compliance. Review those needs separately with appropriate participants and qualified people.",
+    sections: [
+      {
+        heading: "Test Whether The Guide Can Travel Without Its Author",
+        paragraphs: [
+          "A workshop guide may look complete to the person who wrote it because they already know where every file lives, what each activity means and how to recover when timing changes. A useful handover test asks a different question: can another facilitator prepare the workshop from the published materials without private coaching?",
+          "AnswerThePublic was available on 9 November for an Australia/English search for 'workshop dry run', but the free search returned no accessible report after processing, so this article makes no keyword-volume or ranking claim. The fallback is a current public workshop OER release issue that explicitly requires an external facilitator to run the workshop from the materials alone: https://github.com/maehr/diskriminierungssensible-metadatenpraxis-problembewusstsein-workshop/issues/3",
+          "Choose one low-stakes format to review first. A 60-minute version is easier to diagnose than testing every variation at once. Use fictional examples and do not invite participants until the facilitator can find the schedule, materials and fallback without the author filling the gaps.",
+        ],
+      },
+      {
+        heading: "Freeze A Review-Ready Workshop Pack",
+        paragraphs: [
+          "Give the reviewer the same starting point a future facilitator would receive: one guide link, a named schedule, the activity materials and any required account or equipment instructions. Do not quietly send a second folder of missing files after the review begins; record that as a pack defect.",
+          "Put a version or review date on the pack. Check every link from an ordinary account, label drafts clearly and distinguish required materials from optional background reading. If a slide deck, printable handout or template is still only an outline, the pack is not ready for a self-sufficiency claim.",
+        ],
+        bullets: [
+          "START: One clear page or document tells the facilitator where to begin.",
+          "SCHEDULE: Each activity has a duration, owner and transition.",
+          "MATERIALS: Every required file exists and opens for the intended account.",
+          "ALTERNATIVES: Spoken, printed or other agreed routes are named where needed.",
+          "VERSION: The reviewer records the exact pack and date they tested.",
+        ],
+      },
+      {
+        heading: "Use This Facilitator Self-Sufficiency Card",
+        paragraphs: [
+          "Ask the reviewer to fill in the card while preparing, before the author explains anything. Notes such as 'I think this means...' are valuable because they show where the guide is relying on inference. Record the first useful page the reviewer found, not the route the author expected them to take.",
+          "Fictional example: ENTRY: workshop overview page. PREP: 28 minutes. MISSING: printable activity sheet not linked. HANDOFF: unclear who changes the displayed prompt. TIMING: discussion ran four minutes over. ALTERNATIVE: spoken instruction present, paper copy absent. HELP: one message to the author. DECISION: revise the pack and repeat the dry run.",
+        ],
+        bullets: [
+          "ENTRY: Where did you begin, and was that starting point obvious?",
+          "PREP: How long did preparation take before the room could begin?",
+          "MISSING: Which file, permission, definition or prerequisite was absent?",
+          "HANDOFFS: Could you tell who speaks, displays, distributes and closes each activity?",
+          "TIMING: What was planned, and what happened in the run-through?",
+          "ALTERNATIVES: Could the activity continue when the primary format was unavailable?",
+          "HELP: What did you have to ask the author, and what must be added to the guide?",
+        ],
+      },
+      {
+        heading: "Observe Without Quietly Rescuing The Run",
+        paragraphs: [
+          "The author may observe, but should not answer routine questions during the timed run-through. When the reviewer pauses, record the page, task and missing information. Step in only when continuing would be unsafe, expose private information or create an unwanted external action.",
+          "Use fictional participant inputs and dummy logistics. Ask the reviewer to say what they believe the next step is before revealing the intended answer. At the end, compare the guide with the reviewer's interpretation and change the material, not the reviewer's memory of an off-record explanation.",
+          "A dry run can identify obvious barriers, but it cannot establish accessibility for everyone. W3C recommends combining conformance work with evaluation by relevant users and reporting the scope and parameters of the evaluation: https://www.w3.org/WAI/test-evaluate/involving-users/",
+        ],
+      },
+      {
+        heading: "Separate Material Defects From Participant Outcomes",
+        paragraphs: [
+          "Classify each finding before deciding what to do. A missing link, unexplained term or unclear handoff is a material defect. A facilitator choosing a different but workable sequence is a design decision to review. Whether participants understood, felt included or achieved the workshop goal is a separate question that needs a real session and an appropriate evaluation plan.",
+          "Do not report a clean dry run as proof that the workshop works for participants. Likewise, do not blame participants for a task that the independent facilitator could not explain from the pack. Keep preparation findings, run-time observations and later participant feedback in separate fields.",
+        ],
+      },
+      {
+        heading: "Run An Independent ChantLive Setup Check",
+        paragraphs: [
+          "When changing phone-readable prompts genuinely helps the workshop, give the reviewer only the written setup instructions and three fictional prompts. Using their own authorised ChantLive account, they create a separate demonstration, add the prompts and use Participant Access to open the participant link in another browser or device. Participants do not need accounts.",
+          "The reviewer then uses Go Live and Push Live to display each prompt, compares the participant view with the guide and ends the fictional demonstration. Keep a matching printed table or spoken route available. Live updates require internet access, so a successful online check does not validate an offline fallback.",
+          "Do not share an organiser password or test inside a real event. If the reviewer cannot complete the workflow without the author taking control, record the exact label or instruction that was missing. This is a test of the handover guide, not a completed community rehearsal or adoption evidence.",
+        ],
+      },
+      {
+        heading: "Choose Revise, Repeat Or Field Test",
+        paragraphs: [
+          "Revise when a required file is absent, a handoff is ambiguous or the reviewer needed author help. Repeat the same bounded format after the fix so you can check whether the gap is actually closed. Move to a participant field test only when the pack is complete enough that missing instructions will not dominate the session.",
+          "For the next stage, define the participant group, the workshop goal and the observations you will collect before the session begins. Invite feedback through an agreed route and avoid collecting names or private stories when broad, anonymous findings are enough. One successful facilitator dry run remains one preparation result, not a general guarantee.",
+        ],
+        bullets: [
+          "The reviewer started from the intended entry point without private directions.",
+          "Every required material existed and opened with the intended access.",
+          "Roles, transitions, timing and fallback choices were understandable.",
+          "Author help was recorded and converted into a guide change.",
+          "Dry-run findings were kept separate from participant and accessibility claims.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "ask-one-useful-live-poll-community-workshop",
     title: "Ask One Useful Live Poll Question at a Community Workshop",
     description: "Use a reusable one-question poll card to ask a clear workshop question, offer balanced options and decide what to do with the result.",
