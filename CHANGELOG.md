@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.104 - 16 November 2026
+
+A five-minute rehearsal guide for checking how late arrivals find the current community-event instruction.
+
+### Documentation
+
+- Live agenda late-arrival test: Rehearse a changing agenda with three fictional cues, an arrive-reopen-recover observation card and a simple fallback comparison. [Read the guide](/blog/test-live-agenda-late-arrivals-five-minutes)
+
 ## 1.1.103 - 9 November 2026
 
 A practical guide to testing whether another facilitator can run a community workshop from its materials alone.

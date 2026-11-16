@@ -19,6 +19,83 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "test-live-agenda-late-arrivals-five-minutes",
+    title: "Test a Live Agenda for Late Arrivals in Five Minutes",
+    description: "Use an arrive-reopen-recover rehearsal card to check whether someone joining late can find the current community-event instruction without interrupting the group.",
+    publishedAt: "2026-11-16",
+    category: "Organizing",
+    readingMinutes: 5,
+    tags: ["workshops", "late arrivals", "rehearsal", "live agenda"],
+    disclaimer: "This is a low-stakes communication rehearsal, not a safety, accessibility or emergency-response test. Keep the event's agreed safety plan, access arrangements and human support in place, and review them with appropriate participants and qualified people.",
+    sections: [
+      {
+        heading: "Test The Moment Someone Arrives Midway",
+        paragraphs: [
+          "A live agenda can be clear to the people who watched it develop and still be confusing to someone who joins halfway through. The useful question is small: can a late arrival tell what the group is doing now and what they may do next without stopping everyone for a recap?",
+          "AnswerThePublic's public site was accessible on 16 November, but its current question report was not available through the accessible page, so this article makes no keyword-volume claim. The fallback is a current public unconference-planning discussion that explicitly asks how late arrivals orient themselves while participants build the agenda: https://github.com/Citizen-Infra/social-internet-unconference/issues/19",
+          "Facilitation guidance from Seeds for Change recommends balancing a welcome with the needs of the group already working, using a quick explanation or a natural pause depending on the activity. Source: https://www.seedsforchange.org.uk/facilitatingworkshops",
+        ],
+      },
+      {
+        heading: "Prepare Three Fictional Agenda Cues",
+        paragraphs: [
+          "Choose one harmless event moment and write three short cues that could appear in sequence. Each cue should name one action, not reproduce the full programme. Keep the real agenda as the source of truth and use fictional room names, topics and links during the rehearsal.",
+          "Example: CUE 1: Propose one topic. CUE 2: Ask the other host before combining topics. CUE 3: Check the agenda for your room. Add a spoken or paper route for anyone who cannot or does not want to use the display.",
+        ],
+        bullets: [
+          "NOW: What is the group doing at this moment?",
+          "NEXT: What may the person do without waiting for a private briefing?",
+          "WHERE: Where is the full agenda or named room information?",
+          "HELP: Who can quietly answer a question?",
+          "FALLBACK: What works if the display, device or connection does not?",
+        ],
+      },
+      {
+        heading: "Run The Five-Minute Arrive-Reopen-Recover Test",
+        paragraphs: [
+          "Ask one helper who did not write the cues to act as the late arrival. Start with the second cue already visible. Give the helper only the same link, sign or paper instruction a participant would receive, then observe before explaining anything.",
+          "After the helper identifies the current action, ask them to close or leave the display, change to the third cue and have them reopen it. Finally, make the primary display unavailable and ask them to use the agreed fallback. Stop if the exercise would expose a real joining link, participant information or external action.",
+        ],
+        bullets: [
+          "ARRIVE: What does the helper believe is happening now?",
+          "REOPEN: Does the current instruction remain easy to find after returning?",
+          "RECOVER: Can the helper use the fallback without guessing?",
+          "INTERRUPTIONS: How many times did the facilitator need to step in?",
+          "MISSING CONTEXT: Which word, location or responsibility was unclear?",
+        ],
+      },
+      {
+        heading: "Compare The Simplest Display That Works",
+        paragraphs: [
+          "Run the same three cues with the formats your group can realistically maintain: pinned chat, a paper card, a shared screen or a phone-readable page. The best result is not the most technical one. It is the option a named person can keep current while facilitating and a participant can understand without special access.",
+          "Keep the full agenda somewhere stable. A current-instruction display should point to it rather than silently becoming a second schedule. If the rehearsal reveals that pinned chat already covers the moment well, record that result and stop adding tools.",
+        ],
+      },
+      {
+        heading: "Verify A Fictional ChantLive Workflow",
+        paragraphs: [
+          "When an individual phone display genuinely helps, create a separate fictional ChantLive demonstration and add the three cues as chants. In the event editor, open Participant Access and share the participant link with the helper. Participants do not need an account.",
+          "Use Go Live, then Push Live on the second cue before the helper opens the link. Change to the third cue while they are away and ask them to reopen the participant page. The current implementation sends the live state to a joining participant; it is not a transcript or a replacement for the full agenda. End the fictional demonstration after the check.",
+          "Live updates require internet access. Keep the participant link written out as well as encoded in any QR code, and retain the agreed paper, spoken or shared-screen fallback. Review the hosted service's data practices before involving real participants: https://chantlive.online/privacy",
+        ],
+      },
+      {
+        heading: "Make One Evidence-Based Decision",
+        paragraphs: [
+          "Record what the helper actually saw and did. 'Opened the link' is activity; 'identified the current cue after reopening without facilitator help' is an observation. One maintainer rehearsal is still not evidence that every participant can use the approach.",
+          "Choose one next step: KEEP the simplest format when it worked; REVISE one unclear cue or handoff and repeat the same test; or INVITE an appropriate participant review when the basic flow is ready. Do not add reminders, accounts or data collection merely to make the rehearsal look more complete.",
+        ],
+        bullets: [
+          "The current action was understood without a full-group interruption.",
+          "Reopening showed the current cue rather than stale or missing information.",
+          "The helper found the full agenda and quiet help route.",
+          "The fallback worked without the organiser improvising a new process.",
+          "The next change has one owner and a date for the repeat check.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "test-community-workshop-guide-without-author",
     title: "Test a Community Workshop Guide Without the Author Present",
     description: "Use a self-sufficiency review card to find missing workshop instructions before inviting participants to a full field test.",
