@@ -1,6 +1,20 @@
 {
   "releases": [
     {
+      "version": "1.1.105",
+      "releasedAt": "2026-11-23",
+      "summary": "A practical guide to publishing useful event accessibility information without turning unknown details into claims.",
+      "items": [{
+        "id": "cl-2026-11-23-event-accessibility-information",
+        "title": "Verified event accessibility information guide",
+        "description": "Separate venue facts from event arrangements with a reusable yes-no-unknown card, verification dates and a clear update route.",
+        "type": "docs",
+        "visibility": "public",
+        "dateAdded": "2026-11-23",
+        "links": [{ "label": "Read the guide", "url": "/blog/publish-event-accessibility-information-without-guessing" }]
+      }]
+    },
+    {
       "version": "1.1.104",
       "releasedAt": "2026-11-16",
       "summary": "A five-minute rehearsal guide for checking how late arrivals find the current community-event instruction.",

@@ -4,6 +4,14 @@ All notable public changes to ChantLive are generated from `shared/changelog.jso
 
 Use GitHub Issues and pull requests for implementation details, then add approved user-facing changes to the structured changelog data before a release.
 
+## 1.1.105 - 23 November 2026
+
+A practical guide to publishing useful event accessibility information without turning unknown details into claims.
+
+### Documentation
+
+- Verified event accessibility information guide: Separate venue facts from event arrangements with a reusable yes-no-unknown card, verification dates and a clear update route. [Read the guide](/blog/publish-event-accessibility-information-without-guessing)
+
 ## 1.1.104 - 16 November 2026
 
 A five-minute rehearsal guide for checking how late arrivals find the current community-event instruction.

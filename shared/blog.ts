@@ -19,6 +19,82 @@ export type BlogPost = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: "publish-event-accessibility-information-without-guessing",
+    title: "Publish Event Accessibility Information Without Guessing",
+    description: "Use a verified accessibility-information card to separate venue facts, event arrangements and unknown details before publishing a community event.",
+    publishedAt: "2026-11-23",
+    category: "Accessibility",
+    readingMinutes: 5,
+    tags: ["accessibility", "community events", "venue information", "event communication"],
+    disclaimer: "This practical communication guide is not an accessibility assessment or legal advice. Verify facts with the venue, event owner and relevant participants, and check the requirements that apply where your event takes place.",
+    sections: [
+      {
+        heading: "Answer The Questions People Need Before Travelling",
+        paragraphs: [
+          "Accessibility information is useful when it helps someone decide whether and how they can take part. A label such as 'accessible venue' hides too much. Publish concrete facts about the route, entrance, rooms, toilets, seating, communication support and contact point, then say clearly when a detail is not yet known.",
+          "The current audience question comes from an open community-calendar issue asking which accessibility facts belong to a venue, which belong to an event and how they should be worded: https://github.com/sarlam/queer-cal/issues/10",
+          "AnswerThePublic's public site was accessible on 23 November, but its current question report was not available through the accessible page, so this article makes no search-volume claim. W3C's event-accessibility checklist recommends checking the venue and providing practical information such as accessible routes between rooms: https://www.w3.org/WAI/teach-advocate/accessible-presentations/",
+        ],
+      },
+      {
+        heading: "Separate Venue Facts From Event Arrangements",
+        paragraphs: [
+          "A venue fact usually remains attached to the place: step-free entrance, lift, doorway route, accessible toilet or fixed hearing loop. An event arrangement may change for each booking: sign-language interpretation, captions, a quiet room, portable seating, an access host or a remote-participation option.",
+          "Keep the two groups separate so an organiser does not accidentally promise that a temporary arrangement is always available. When an event changes a venue fact, publish the event-specific exception beside the original information and identify who verified it.",
+        ],
+        bullets: [
+          "VENUE: What physical route and fixed facilities were checked?",
+          "EVENT: What support is arranged for this date and time?",
+          "EXCEPTION: Does this event use a different entrance, room or route?",
+          "OWNER: Who can confirm or correct each detail?",
+        ],
+      },
+      {
+        heading: "Use A Verified Accessibility-Information Card",
+        paragraphs: [
+          "Use yes, no and unknown as different states. A blank field should not silently become 'no', and an old 'yes' should not look permanently verified. Record the source and review date so a future organiser knows what needs checking again.",
+          "Fictional example: STEP-FREE ENTRANCE: yes, side entrance on Example Lane, verified with venue manager on 18 November. ACCESSIBLE TOILET: unknown, confirmation requested. QUIET ROOM: yes for this event only, Room B. CAPTIONS: no live captions arranged. CONTACT: access@example.invalid. Replace every fictional detail with verified event information before publishing.",
+        ],
+        bullets: [
+          "FACT: Name one specific feature or arrangement.",
+          "STATUS: Yes, no or unknown - never infer from an empty field.",
+          "DETAIL: Give the route, location, booking step or limitation.",
+          "SOURCE: Name the responsible venue or event contact.",
+          "VERIFIED: Record the date the information was checked.",
+          "UPDATE: Say where corrections and access questions should go.",
+        ],
+      },
+      {
+        heading: "Publish Details Where People Will Find Them",
+        paragraphs: [
+          "Put the essential information on the event page and link to a fuller venue guide when one exists. Include it in registration confirmation and joining instructions rather than expecting people to search several pages. GOV.UK's inclusive-communication guidance recommends mentioning facilities in event publicity and considering accessible formats for programmes, agendas and other written information: https://www.gov.uk/government/publications/inclusive-communication/using-a-range-of-communication-channels-to-reach-disabled-people",
+          "Write directions in plain language, provide a contact route for questions and offer the same core information in the formats your participants use. Photos, a simple route description and a named meeting point can clarify the written card, but they do not replace accurate text or individual discussion where needed.",
+        ],
+      },
+      {
+        heading: "Handle Live Changes Without Rewriting History",
+        paragraphs: [
+          "If a verified arrangement changes on the day, update the event page or other source of truth first. Mark what changed, when it changed and who confirmed it. Keep staff, signs, spoken announcements and agreed direct support aligned with the same information. Do not rely on a phone-only update for an access change.",
+          "When short live prompts genuinely help, an organiser can use ChantLive to display a temporary instruction such as 'Step-free entrance now uses Example Lane' or 'Quiet room moved to Room B'. Participants can open the participant link without an account, but the verified event page and human support remain the source of truth. Keep a printed and spoken route, and do not use ChantLive as an emergency-alert system.",
+        ],
+      },
+      {
+        heading: "Review The Information With The People Who Use It",
+        paragraphs: [
+          "Before publication, ask an appropriate reviewer to use the card to plan a fictional arrival. Can they identify the entrance, route, room, support and contact without guessing? Record unclear wording and missing facts rather than treating a completed checklist as proof that the event works for everyone.",
+          "After the event, correct verified details and keep unknowns visible until they are resolved. A useful outcome is not 'all fields filled'. It is that people can make informed choices, ask for what they need and receive consistent information from the page, organiser and venue.",
+        ],
+        bullets: [
+          "A participant can distinguish venue facts from event-only arrangements.",
+          "Unknown information is labelled and has an owner for follow-up.",
+          "Every positive claim has a source and recent verification date.",
+          "The event page, joining message and live update do not conflict.",
+          "Corrections have one clear contact route and review date.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "test-live-agenda-late-arrivals-five-minutes",
     title: "Test a Live Agenda for Late Arrivals in Five Minutes",
     description: "Use an arrive-reopen-recover rehearsal card to check whether someone joining late can find the current community-event instruction without interrupting the group.",
